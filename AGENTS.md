@@ -177,3 +177,13 @@ Conforme especificado no `docs/FSD.md`:
 * **Nomes Descritivos:** Usar nomes autoexplicativos para classes, variáveis e métodos em português ou padrão estabelecido no FSD.
 * **Trabalho Dentro do Escopo:** Não inventar funcionalidades fora do que foi especificado no `docs/FSD.md` e `docs/DESIGN.md`.
 * **Construção Incremental:** Desenvolver estritamente uma fase por vez conforme definido em `docs/PLANO.md`, sem tentar antecipar fases futuras.
+
+---
+
+# Diretrizes do Projeto
+
+## Frontend & UI/UX
+- Antes de criar, refatorar ou sugerir qualquer componente visual ou tela, SEMPRE consulte e siga as diretrizes da skill em `.agent/skills/design-taste-frontend/SKILL.md`.
+- Evite padrões genéricos de templates de IA ("AI slop").
+- Priorize microinterações sutis, tipografia bem calibrada, contraste correto e design autoral.
+
