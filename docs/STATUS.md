@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 1 — Infraestrutura, Base do Projeto e Assets Locais
-* **Status da Fase 1:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 2 — Núcleo Arquitetural MVC e Mecanismo de Logs/Contingência
-* **Última Atualização:** 2026-09-16 08:23:00 (Fase 1 finalizada)
+* **Fase Atual:** Fase 2 — Núcleo Arquitetural MVC e Mecanismo de Logs/Contingência
+* **Status da Fase 2:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 3 — Conexão de Banco de Dados e Migrações Estruturais/Cadastrais (001 a 012)
+* **Última Atualização:** 2026-09-16 12:05:00 (Fase 2 finalizada e validada)
 
 ---
 
@@ -39,12 +39,17 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 2 — Núcleo Arquitetural MVC e Mecanismo de Logs/Contingência
-* [ ] Implementação de `app/core/Router.php`.
-* [ ] Implementação de `app/core/Controller.php`.
-* [ ] Implementação de `app/core/Model.php` (wrapper PDO e Prepared Statements).
-* [ ] Implementação de `app/core/Session.php` (controle de timeout e CSRF).
-* [ ] Implementação de `app/core/ErrorHandler.php` com contingência em `storage/logs/error.log`.
+### [x] Fase 2 — Núcleo Arquitetural MVC e Mecanismo de Logs/Contingência
+* [x] Implementação de `app/core/Router.php` com suporte a verbos HTTP (`GET`, `POST`, `PUT`, `DELETE`), rotas dinâmicas `{param}`, middlewares e resolução transparente de subpastas.
+* [x] Implementação de `app/core/Controller.php` com métodos de renderização de views com injeção de dados (`render`), respostas estruturadas em JSON (`json`), redirecionamentos seguros (`redirect`), e sanitização/validação com CSRF (`validate`).
+* [x] Implementação de `app/core/Model.php` com Prepared Statements estritos nativos PDO, transações atômicas (`beginTransaction`, `commit`, `rollBack`), proteção contra SQL Injection e suporte a soft delete (`deleted_at`).
+* [x] Implementação de `app/core/Session.php` com cookies seguros (`HttpOnly`, `SameSite=Lax`, `Secure` em HTTPS), timeout por inatividade (60 min conforme FSD), regeneração de ID, mensagens Flash e tokens CSRF criptográficos (`generateCsrfToken`, `validateCsrfToken`, `csrfField`).
+* [x] Implementação de `app/core/ErrorHandler.php` com captura global (`set_exception_handler`, `set_error_handler`, `register_shutdown_function`), tela de erro segura com UUID rastreável e contingência formatada em `storage/logs/error.log` com rotação automática em 5 MB.
+* [x] Criação das views de erro institucionais `app/views/errors/404.php` e `app/views/errors/500.php` alinhadas ao `docs/DESIGN.md`.
+* [x] Criação de `app/controllers/HomeController.php` e `app/views/home/index.php` demonstrando o ciclo completo do MVC e tela interativa de testes.
+* [x] Atualização do Front Controller `index.php` integrando Autoloader PSR-4 nativo, inicialização de ErrorHandler, Session e despacho pelo Router.
+* [x] Bateria de testes unitários/integração (`tests/fase2_test.php`) com 23 asserções executadas e aprovadas com 100% de sucesso no PHP 8.2.
+* [x] Bateria de simulações de requisições web (`tests/web_simulation_test.php`) validando rotas estáticas, dinâmicas, API JSON, 404 e tela de contingência 500 com código UUID.
 
 ---
 

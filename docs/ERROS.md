@@ -21,4 +21,10 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 
 ## Histórico de Ocorrências
 
-*(Nenhum erro registrado até o momento. A infraestrutura inicial da Fase 1 foi preparada com sucesso.)*
+## 2026-09-16 - Recursão e estouro de memória na inicialização de Session em ambiente CLI
+
+- Sintoma: `Fatal error: Allowed memory size exhausted in app/Core/Session.php` durante a execução de simulações de requisições CLI.
+- Causa: Chamada cruzada de `Session::start()` com `Session::generateCsrfToken()` -> `Session::ensureStarted()` antes de a propriedade `$started` ser consolidada, gerando chamadas recursivas infinitas caso `@session_start()` não ativasse imediatamente a sessão nativa em tempo de teste CLI.
+- Solução aplicada: Adicionada flag de proteção reentrante `$isInitializing`, verificação de `!headers_sent()` antes da configuração de cookies e fallback garantindo `$_SESSION = []` em ambiente CLI.
+- Como evitar no futuro: Em classes singleton ou manipuladoras de estado global (como Sessão e Roteador), implementar flags explícitas de inicialização em andamento para neutralizar recursões circulares ao chamar métodos auxiliares internos.
+
