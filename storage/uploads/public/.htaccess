@@ -1,0 +1,21 @@
+# Permitir acesso apenas a arquivos de imagem estática e proibir execução de scripts
+<FilesMatch "(?i)\.(jpg|jpeg|png|webp|gif)$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Allow from all
+    </IfModule>
+</FilesMatch>
+
+# Bloqueia qualquer execução de arquivos executáveis/scripts nesta pasta
+<FilesMatch "(?i)\.(php|php[0-9]|phtml|pl|py|cgi|sh|bash|exe)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+Options -Indexes -ExecCGI

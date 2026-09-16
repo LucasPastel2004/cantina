@@ -1,0 +1,59 @@
+# ==============================================================================
+# Cantina Web — Colégio Monteiro Lobato
+# Arquivo de Atributos Git (.gitattributes)
+# ==============================================================================
+
+# Normalização automática de quebras de linha para todos os arquivos de texto
+* text=auto
+
+# ------------------------------------------------------------------------------
+# Arquivos de Código-Fonte e Configuração (Padronizado para LF)
+# ------------------------------------------------------------------------------
+*.php text eol=lf
+*.html text eol=lf
+*.htm text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.sql text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.log text eol=lf
+.htaccess text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Scripts de terminal Unix / Linux / Git Bash
+*.sh text eol=lf
+
+# Scripts de terminal Windows
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# ------------------------------------------------------------------------------
+# Arquivos Binários e Mídias (Sem conversão de quebra de linha)
+# ------------------------------------------------------------------------------
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.svg text eol=lf
+*.pdf binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.otf binary
+*.zip binary
+*.tar.gz binary
+*.tgz binary
+*.rar binary
+*.xlsx binary
+*.xls binary
+*.csv text eol=lf

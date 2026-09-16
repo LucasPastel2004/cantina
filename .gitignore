@@ -1,0 +1,103 @@
+# ==============================================================================
+# Cantina Web — Colégio Monteiro Lobato
+# Arquivo de Controle de Arquivos Ignorados (.gitignore)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Configurações Locais e Segredos (Senhas, Chaves e Tokens)
+# ------------------------------------------------------------------------------
+# Arquivo real de configuração local/produção (contém senhas de banco e tokens)
+config/config.php
+config/config.local.php
+*.local.php
+
+# Arquivos de ambiente (.env) caso sejam criados (a stack oficial usa config.php)
+.env
+.env.*
+!.env.example
+
+# Chaves privadas, certificados digitais e tokens
+*.key
+*.pem
+*.crt
+*.cer
+*.pfx
+*.p12
+
+# ------------------------------------------------------------------------------
+# 2. Dumps, Backups e Dados Sensíveis de Banco
+# ------------------------------------------------------------------------------
+*.sql
+*.sql.gz
+*.dump
+*.bak
+backups/
+dumps/
+
+# ------------------------------------------------------------------------------
+# 3. Logs do Sistema e Fallback em Disco
+# ------------------------------------------------------------------------------
+storage/logs/*.log
+!storage/logs/.gitkeep
+
+# ------------------------------------------------------------------------------
+# 4. Uploads, Planilhas e Documentos Privados (LGPD e Sigilo Fiscal)
+# ------------------------------------------------------------------------------
+storage/uploads/private/*
+!storage/uploads/private/.gitkeep
+
+# Uploads públicos gerados dinamicamente em tempo de execução
+storage/uploads/public/*
+!storage/uploads/public/.gitkeep
+!storage/uploads/public/.htaccess
+
+# ------------------------------------------------------------------------------
+# 5. Dependências e Gerenciadores de Pacotes
+# ------------------------------------------------------------------------------
+# Dependências PHP (instaladas via Composer se utilizadas)
+vendor/
+composer.phar
+
+# Arquivos temporários e caches
+*.tmp
+*.temp
+*.cache
+cache/
+
+# ------------------------------------------------------------------------------
+# 6. Docker e Volumes de Dados Locais
+# ------------------------------------------------------------------------------
+docker-data/
+.docker/
+
+# ------------------------------------------------------------------------------
+# 7. Arquivos do Sistema Operacional
+# ------------------------------------------------------------------------------
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+# ------------------------------------------------------------------------------
+# 8. Ambientes de Desenvolvimento e Editores (IDEs)
+# ------------------------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo

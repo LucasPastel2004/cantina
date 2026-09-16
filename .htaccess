@@ -1,0 +1,27 @@
+# Cantina Web — Colégio Monteiro Lobato
+# Configuração Apache / Rewrite Rules
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Bloqueia acesso a arquivos e pastas que comecem com ponto (.git, .env, etc.)
+    RewriteRule (^|/)\.(?!well-known/) - [F]
+
+    # Permite acesso direto a arquivos estáticos existentes (assets, imagens públicas, etc.)
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Redireciona todas as outras requisições para o Front Controller index.php
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Desabilita listagem de diretórios
+Options -Indexes
+
+# Cabeçalhos básicos de segurança
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
