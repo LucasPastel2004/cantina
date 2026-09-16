@@ -21,10 +21,10 @@
   --border-default: #cbd5e1;
   --border-subtle: #e2e8f0;
 
-  /* Tipografia */
+  /* Tipografia com Contraste Calibrado WCAG AA */
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-muted: #64748b;
   --text-on-primary: #ffffff;
 
   /* Ações e Estados Operacionais */
@@ -122,6 +122,9 @@ h2, .h2-title {
   display: flex;
   align-items: center;
   padding: 0 var(--space-4);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .app-header .header-logo {
@@ -130,10 +133,18 @@ h2, .h2-title {
   border-radius: 50%;
   object-fit: cover;
   margin-right: var(--space-3);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-/* Botões do Sistema */
-.btn {
+/* Foco Acessível em Toda a Aplicação (Anti-Slop Accessibility) */
+:focus-visible {
+  outline: 2px solid var(--primary-blue) !important;
+  outline-offset: 2px !important;
+}
+
+/* Botões do Sistema e Microinterações Táteis */
+.btn,
+.btn-enterprise {
   height: 34px;
   padding: 0 var(--space-3);
   font-size: 13px;
@@ -143,53 +154,79 @@ h2, .h2-title {
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.12s ease, border-color 0.12s ease, transform 0.08s ease, box-shadow 0.12s ease;
+  user-select: none;
 }
 
-.btn-primary {
+/* Feedback Tátil de Clique Físico (Skill: Tactile Feedback) */
+.btn:active,
+.btn-enterprise:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.btn-sm,
+.btn-enterprise.btn-sm {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.btn-primary,
+.btn-enterprise.btn-primary {
   background-color: var(--primary-blue);
   border: 1px solid var(--primary-blue-hover);
   color: var(--text-on-primary);
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-enterprise.btn-primary:hover {
   background-color: var(--primary-blue-hover);
   border-color: var(--primary-blue-active);
   color: var(--text-on-primary);
 }
 
-.btn-success {
+.btn-success,
+.btn-enterprise.btn-success {
   background-color: var(--action-success);
   border: 1px solid var(--action-success-hover);
   color: var(--text-on-primary);
 }
 
-.btn-success:hover {
+.btn-success:hover,
+.btn-enterprise.btn-success:hover {
   background-color: var(--action-success-hover);
   border-color: var(--action-success-active);
   color: var(--text-on-primary);
 }
 
-.btn-danger {
+.btn-danger,
+.btn-enterprise.btn-danger {
   background-color: var(--action-danger);
   border: 1px solid var(--action-danger-hover);
   color: var(--text-on-primary);
 }
 
-.btn-danger:hover {
+.btn-danger:hover,
+.btn-enterprise.btn-danger:hover {
   background-color: var(--action-danger-hover);
   color: var(--text-on-primary);
 }
 
-.btn-secondary {
+.btn-secondary,
+.btn-enterprise.btn-secondary {
   background-color: #ffffff;
-  color: #334155;
+  color: #1e293b;
   border: 1px solid var(--border-default);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover,
+.btn-enterprise.btn-secondary:hover {
   background-color: var(--surface-disabled);
-  border-color: var(--text-muted);
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
 .btn-icon {
@@ -205,6 +242,62 @@ h2, .h2-title {
 .btn-icon:hover {
   background-color: var(--surface-bg);
   color: var(--text-primary);
+}
+
+/* Faixa de Métricas e Indicadores de Alta Densidade (Stat Strip) */
+.stat-strip {
+  display: flex;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
+}
+
+.stat-strip-item {
+  flex: 1;
+  padding: 10px 16px;
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-strip-item:last-child {
+  border-right: none;
+}
+
+.stat-strip-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 2px;
+}
+
+.stat-strip-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Bento Card Interativo e Organizado */
+.bento-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bento-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px 0 rgba(15, 23, 42, 0.04);
 }
 
 /* Formulários Estruturados */

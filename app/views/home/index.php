@@ -3,167 +3,230 @@
  * Cantina Web — Colégio Monteiro Lobato
  * View Inicial — Demonstração do Núcleo Arquitetural MVC (Fase 2)
  * 
- * Conforme docs/FSD.md e docs/DESIGN.md
+ * Conforme docs/FSD.md, docs/DESIGN.md e skill design-taste-frontend
  */
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 $baseUrl = $baseUrl ?? '';
+$shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($appName, ENT_QUOTES, 'UTF-8'); ?> — Núcleo MVC</title>
-    <!-- Bootstrap Local -->
+    <title><?php echo htmlspecialchars($appName, ENT_QUOTES, 'UTF-8'); ?> — Núcleo Arquitetural</title>
+    <!-- Bootstrap Compilado Localmente -->
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
-    <!-- Design System Institucional - docs/DESIGN.md -->
+    <!-- Design System Institucional e Anti-Slop Guidelines -->
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css">
 </head>
 <body class="bg-surface d-flex flex-column min-vh-100">
-    <!-- Barra de Topo Institucional -->
+    <!-- Barra Superior Institucional Compacta (56px) -->
     <header class="app-header">
-        <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" class="header-logo">
-        <div class="d-flex flex-column">
-            <span class="fw-bold" style="font-size: 14px; color: var(--primary-blue);">Colégio Monteiro Lobato</span>
-            <span class="text-microcopy">Cantina Web — Gestão Operacional e Nutricional</span>
+        <div class="container-fluid d-flex align-items-center justify-content-between px-3" style="max-width: 1080px;">
+            <div class="d-flex align-items-center">
+                <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" class="header-logo">
+                <div class="d-flex flex-column">
+                    <span class="fw-bold" style="font-size: 13px; color: var(--primary-blue); letter-spacing: -0.01em;">Colégio Monteiro Lobato</span>
+                    <span class="text-microcopy">Cantina Web — Gestão Operacional e Nutricional</span>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge-status badge-success">● Sistema Ativo</span>
+            </div>
         </div>
     </header>
 
-    <main class="container my-4" style="max-width: 960px;">
+    <main class="container my-4" style="max-width: 1080px;">
+        <!-- Faixa de Métricas Executivas de Alta Densidade (Stat Strip) -->
+        <section class="stat-strip" aria-label="Métricas de Infraestrutura">
+            <div class="stat-strip-item">
+                <span class="stat-strip-label">Ambiente Ativo</span>
+                <span class="stat-strip-value text-capitalize"><?php echo htmlspecialchars($environment, ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+            <div class="stat-strip-item">
+                <span class="stat-strip-label">Interpretador</span>
+                <span class="stat-strip-value font-tabular">PHP <?php echo htmlspecialchars($phpVersion, ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+            <div class="stat-strip-item">
+                <span class="stat-strip-label">Sessão / CSRF</span>
+                <span class="stat-strip-value font-tabular text-success" title="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
+                    Ativa (<?php echo htmlspecialchars($shortCsrf, ENT_QUOTES, 'UTF-8'); ?>)
+                </span>
+            </div>
+            <div class="stat-strip-item">
+                <span class="stat-strip-label">Fase Vigente</span>
+                <span class="stat-strip-value">Fase 2 Implementada</span>
+            </div>
+        </section>
+
+        <!-- Card Corporativo: Componentes Estruturais da Arquitetura -->
         <div class="card-enterprise mb-4">
             <div class="card-enterprise-header">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge-status badge-success">✓ Operacional</span>
-                    <span>Núcleo Arquitetural MVC e Mecanismo de Logs/Contingência</span>
+                    <span class="badge-status badge-success">✓ 100% Homologado</span>
+                    <span class="fw-semibold">Componentes Fundamentais do Núcleo MVC</span>
                 </div>
-                <span class="text-microcopy">Fase 2 Implementada</span>
+                <span class="text-microcopy font-tabular"><?php echo htmlspecialchars($timestamp, ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
 
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <div class="p-3 bg-light rounded border">
-                        <label class="form-label">Ambiente do Sistema</label>
-                        <div class="fw-semibold text-capitalize"><?php echo htmlspecialchars($environment, ENT_QUOTES, 'UTF-8'); ?></div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-3 bg-light rounded border">
-                        <label class="form-label">Versão do Interpretador PHP</label>
-                        <div class="fw-semibold font-tabular"><?php echo htmlspecialchars($phpVersion, ENT_QUOTES, 'UTF-8'); ?></div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-3 bg-light rounded border">
-                        <label class="form-label">Controle de Sessão e CSRF</label>
-                        <div class="fw-semibold text-success font-tabular">Ativa (Token Gerado)</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tabela de Componentes Core -->
-            <div class="table-responsive mb-4">
+            <!-- Grade de Dados Operacionais (Data Grid) -->
+            <div class="table-responsive mb-2">
                 <table class="table-data-grid">
                     <thead>
                         <tr>
-                            <th class="cell-left">Componente Arquitetural</th>
-                            <th class="cell-center">Classe</th>
-                            <th class="cell-center">Status</th>
-                            <th class="cell-left">Responsabilidade / Funcionalidade</th>
+                            <th class="cell-left" style="width: 20%;">Módulo</th>
+                            <th class="cell-left" style="width: 25%;">Classe Implementada</th>
+                            <th class="cell-center" style="width: 12%;">Status</th>
+                            <th class="cell-left" style="width: 43%;">Responsabilidade e Regras de Negócio</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td><strong>Roteador</strong></td>
-                            <td class="cell-center"><code>App\Core\Router</code></td>
+                            <td><code>App\Core\Router</code></td>
                             <td class="cell-center"><span class="badge-status badge-success">Ativo</span></td>
-                            <td>Resolução HTTP, suporte a rotas dinâmicas <code>{param}</code>, subpastas e middlewares</td>
+                            <td>Roteamento HTTP nativo com parâmetros nomeados <code>{param}</code>, subpastas e 404 seguro.</td>
                         </tr>
                         <tr>
                             <td><strong>Controlador Base</strong></td>
-                            <td class="cell-center"><code>App\Core\Controller</code></td>
+                            <td><code>App\Core\Controller</code></td>
                             <td class="cell-center"><span class="badge-status badge-success">Ativo</span></td>
-                            <td>Métodos <code>render()</code>, <code>json()</code>, <code>redirect()</code> e validações com CSRF</td>
+                            <td>Métodos <code>render()</code> com XSS escape, <code>json()</code>, <code>redirect()</code> e validações com CSRF.</td>
                         </tr>
                         <tr>
                             <td><strong>Modelo Base</strong></td>
-                            <td class="cell-center"><code>App\Core\Model</code></td>
+                            <td><code>App\Core\Model</code></td>
                             <td class="cell-center"><span class="badge-status badge-success">Ativo</span></td>
-                            <td>Prepared Statements nativos via PDO, transações atômicas e suporte a soft delete</td>
+                            <td>Prepared Statements nativos via PDO, transações atômicas e soft delete com <code>deleted_at</code>.</td>
                         </tr>
                         <tr>
                             <td><strong>Sessão Segura</strong></td>
-                            <td class="cell-center"><code>App\Core\Session</code></td>
+                            <td><code>App\Core\Session</code></td>
                             <td class="cell-center"><span class="badge-status badge-success">Ativo</span></td>
-                            <td>Cookies HttpOnly/SameSite, timeout de 60min, tokens CSRF e proteção contra fixação</td>
+                            <td>Cookies HttpOnly/SameSite, controle de inatividade (60 min), antifixação e tokens CSRF.</td>
                         </tr>
                         <tr>
                             <td><strong>Tratamento de Erros</strong></td>
-                            <td class="cell-center"><code>App\Core\ErrorHandler</code></td>
+                            <td><code>App\Core\ErrorHandler</code></td>
                             <td class="cell-center"><span class="badge-status badge-success">Ativo</span></td>
-                            <td>Captura de exceções, resposta segura com UUID e fallback com rotação em 5 MB no <code>error.log</code></td>
+                            <td>Captura de exceções, tela segura com UUID e contingência com rotação de 5 MB em <code>error.log</code>.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+        </div>
 
-            <!-- Painel de Validação Interativa -->
-            <div class="card p-3 mb-4 bg-light border">
-                <h2 class="h6 fw-bold mb-3" style="color: var(--primary-blue);">Validação Interativa do Núcleo MVC</h2>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="p-3 bg-white border rounded">
-                            <label class="form-label fw-bold">1. Teste de Rota Dinâmica</label>
-                            <p class="text-secondary-label" style="font-size: 12px;">Testa o roteamento dinâmico com extração de parâmetro nomeado pelo Router.</p>
-                            <a href="<?php echo $baseUrl; ?>/teste/9876" target="_blank" class="btn-enterprise btn-secondary btn-sm">
-                                Testar Rota Dinâmica (/teste/9876) ↗
-                            </a>
+        <!-- Seção Bento Grid: Testes e Validação Interativa -->
+        <div class="card-enterprise mb-4">
+            <div class="card-enterprise-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge-status badge-warning">Painel de Aferição</span>
+                    <span class="fw-semibold">Validação Interativa do Núcleo Arquitetural</span>
+                </div>
+                <span class="text-microcopy">Verificação de Integridade em Tempo Real</span>
+            </div>
+
+            <div class="row g-3">
+                <!-- Bento Item 1: Rota Dinâmica -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="bento-card">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-strip-label">Roteamento</span>
+                                <span class="badge-status badge-success font-tabular">GET</span>
+                            </div>
+                            <h3 class="h2-title mb-1" style="font-size: 13px;">Parâmetro Dinâmico</h3>
+                            <p class="text-secondary-label mb-3" style="font-size: 12px; line-height: 1.4;">
+                                Captura de parâmetros dinâmicos na URL com tipagem e injeção no controlador.
+                            </p>
                         </div>
+                        <a href="<?php echo $baseUrl; ?>/teste/1542" target="_blank" class="btn-enterprise btn-secondary btn-sm w-100">
+                            Testar Rota (/teste/1542) ↗
+                        </a>
                     </div>
-                    <div class="col-md-6">
-                        <div class="p-3 bg-white border rounded">
-                            <label class="form-label fw-bold">2. Teste do Endpoint JSON</label>
-                            <p class="text-secondary-label" style="font-size: 12px;">Retorna payload estruturado via método <code>$this->json()</code>.</p>
-                            <a href="<?php echo $baseUrl; ?>/api/status" target="_blank" class="btn-enterprise btn-secondary btn-sm">
-                                Visualizar API Status (/api/status) ↗
-                            </a>
+                </div>
+
+                <!-- Bento Item 2: Resposta JSON -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="bento-card">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-strip-label">API REST</span>
+                                <span class="badge-status badge-success font-tabular">JSON</span>
+                            </div>
+                            <h3 class="h2-title mb-1" style="font-size: 13px;">Endpoint de Status</h3>
+                            <p class="text-secondary-label mb-3" style="font-size: 12px; line-height: 1.4;">
+                                Retorno serializado via <code>$this->json()</code> com cabeçalho <code>application/json</code>.
+                            </p>
                         </div>
+                        <a href="<?php echo $baseUrl; ?>/api/status" target="_blank" class="btn-enterprise btn-secondary btn-sm w-100">
+                            Abrir Endpoint (/api/status) ↗
+                        </a>
                     </div>
-                    <div class="col-md-6">
-                        <div class="p-3 bg-white border rounded">
-                            <label class="form-label fw-bold">3. Teste de Proteção CSRF (POST)</label>
-                            <form action="<?php echo $baseUrl; ?>/teste-csrf" method="POST" target="_blank">
+                </div>
+
+                <!-- Bento Item 3: Formulário POST e CSRF -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="bento-card">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-strip-label">Segurança</span>
+                                <span class="badge-status badge-warning font-tabular">POST</span>
+                            </div>
+                            <h3 class="h2-title mb-1" style="font-size: 13px;">Validação CSRF</h3>
+                            <p class="text-secondary-label mb-2" style="font-size: 12px; line-height: 1.4;">
+                                Submissão segura com verificação criptográfica estrita contra falsificação.
+                            </p>
+                            <form action="<?php echo $baseUrl; ?>/teste-csrf" method="POST" target="_blank" id="form-csrf-teste">
                                 <?php echo $csrf_field; ?>
-                                <div class="mb-2">
-                                    <input type="text" name="nome" value="Operador Teste" class="form-control form-control-sm" required>
-                                </div>
-                                <button type="submit" class="btn-enterprise btn-primary btn-sm">
-                                    Submeter com Token Válido ↗
+                                <input type="hidden" name="nome" value="Operador Homologado">
+                                <button type="submit" class="btn-enterprise btn-primary btn-sm w-100 mt-2">
+                                    Submeter POST Seguro ↗
                                 </button>
                             </form>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="p-3 bg-white border rounded">
-                            <label class="form-label fw-bold">4. Teste de Contingência de Erros</label>
-                            <p class="text-secondary-label" style="font-size: 12px;">Dispara exceção intencional para verificar a tela amigável (UUID) e gravação em <code>error.log</code>.</p>
-                            <a href="<?php echo $baseUrl; ?>/teste-erro" target="_blank" class="btn-enterprise btn-danger btn-sm">
-                                Disparar Erro de Simulação ↗
-                            </a>
+                </div>
+
+                <!-- Bento Item 4: Simulação de Contingência -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="bento-card">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-strip-label">Auditoria</span>
+                                <span class="badge-status badge-danger font-tabular">500</span>
+                            </div>
+                            <h3 class="h2-title mb-1" style="font-size: 13px;">Contingência de Erro</h3>
+                            <p class="text-secondary-label mb-3" style="font-size: 12px; line-height: 1.4;">
+                                Simulação de exceção não tratada com interceptação e gravação em disco.
+                            </p>
                         </div>
+                        <a href="<?php echo $baseUrl; ?>/teste-erro" target="_blank" class="btn-enterprise btn-danger btn-sm w-100">
+                            Disparar Erro de Teste ↗
+                        </a>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Caixa de Informações de Próximos Passos -->
-            <div class="p-3 bg-light rounded border">
-                <p class="mb-1 text-secondary-label"><strong>Próximo Passo Recomendado:</strong></p>
-                <p class="mb-0" style="font-size: 13px;">Avançar para a <strong>Fase 3 — Conexão de Banco de Dados e Migrações Estruturais/Cadastrais (001 a 012)</strong> conforme o plano de implementação em <code>docs/PLANO.md</code>.</p>
+        <!-- Próxima Fase do Projeto -->
+        <div class="p-3 bg-white rounded border d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge-status badge-warning font-tabular">Próxima Etapa</span>
+                <span class="text-secondary-label" style="font-size: 12px;">
+                    <strong>Fase 3:</strong> Conexão de Banco de Dados e Migrações Estruturais/Cadastrais (001 a 012).
+                </span>
             </div>
+            <a href="https://github.com/LucasPastel2004/cantina" target="_blank" class="btn-enterprise btn-secondary btn-sm">
+                Repositório GitHub ↗
+            </a>
         </div>
     </main>
 
+    <!-- Rodapé Corporativo Sóbrio -->
     <footer class="text-center py-3 text-microcopy border-top bg-white mt-auto">
-        &copy; <?php echo date('Y'); ?> Colégio Monteiro Lobato — Todos os direitos reservados.
+        Colégio Monteiro Lobato &copy; <?php echo date('Y'); ?> — Todos os direitos reservados.
     </footer>
 
     <!-- Bootstrap Bundle Local (Vanilla JS) -->
