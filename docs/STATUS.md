@@ -35,7 +35,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] Inicialização do repositório Git local com branch padrão `main`.
 * [x] Auditoria de segurança pré-commit confirmando que nenhum dado sensível ou segredo será rastreado.
 * [x] Execução do primeiro commit do projeto ("Estrutura inicial do projeto").
-* [x] Preparação para sincronização com o repositório remoto no GitHub (instruções e comandos prontos para criação do repo e push pelo usuário).
+* [x] Repositório remoto privado criado no GitHub (https://github.com/LucasPastel2004/cantina) e primeiro push realizado com sucesso para origin/main.
 
 ---
 
