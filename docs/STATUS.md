@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 3 — Conexão de Banco de Dados e Migrações Estruturais/Cadastrais (001 a 012)
-* **Status da Fase 3:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 4 — Migrações Transacionais, Fiscais, Financeiras e Auditoria (013 a 026)
-* **Última Atualização:** 2026-09-16 15:10:00 (Fase 3 finalizada e validada)
+* **Fase Atual:** Fase 4 — Migrações Transacionais, Fiscais, Financeiras e Auditoria (013 a 026)
+* **Status da Fase 4:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 5 — Identidade Visual Institucional e Layouts Base (DESIGN.md)
+* **Última Atualização:** 2026-09-16 15:58:00 (Fase 4 finalizada e validada)
 
 ---
 
@@ -75,9 +75,25 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 4 — Migrações Transacionais, Fiscais, Financeiras e Auditoria (013 a 026)
-* [ ] Execução das migrações 013 a 026 (`notas_fiscais_xml`, `itens_nota_fiscal_xml`, `estoque_movimentacoes`, `pedidos`, `itens_pedido`, `tickets`, `sessoes_caixa`, `vendas_balcao`, `itens_venda_balcao`, `transacoes_carteira`, `calendario_letivo`, `logs_auditoria`, `logs_erros`, `logs_seguranca`).
-* [ ] Criação de constraints e índices de alta performance nas tabelas transacionais.
+### [x] Fase 4 — Migrações Transacionais, Fiscais, Financeiras e Auditoria (013 a 026)
+* [x] Criação e execução das 14 migrações transacionais restantes (013 a 026), completando o schema relacional oficial de 26 tabelas do `docs/FSD.md`:
+  * `013_create_notas_fiscais_xml_table.php`: Tabela `notas_fiscais_xml` (cabeçalhos de NF-e importadas com chave de 44 dígitos, emitente e valores).
+  * `014_create_itens_nota_fiscal_xml_table.php`: Tabela `itens_nota_fiscal_xml` (itens da nota com memória de fator de conversão de embalagens em unidades e CASCADE na NF-e).
+  * `015_create_estoque_movimentacoes_table.php`: Tabela `estoque_movimentacoes` (entradas por fornecedor/XML/sobra, saídas de venda/encomenda e perdas com motivo padronizado 'avaria', 'vencimento', 'sobra_producao', 'ajuste_contagem').
+  * `016_create_pedidos_table.php`: Tabela `pedidos` (agendamentos com travas de corte matutino 08:00 e vespertino 13:30, status e índice composto de busca de corte).
+  * `017_create_itens_pedido_table.php`: Tabela `itens_pedido` (produtos solicitados, quantidade, preço unitário, subtotal e CASCADE no pedido).
+  * `018_create_tickets_table.php`: Tabela `tickets` (bobina térmica contínua de 80mm com tag de alérgenos, controle de 2ª via e status ativo/impresso/estornado/cancelado).
+  * `019_create_sessoes_caixa_table.php`: Tabela `sessoes_caixa` (abertura com Fundo de Troco, fechamentos matutino 11:00 e vespertino 16:00, apuração de sobras/faltas).
+  * `020_create_vendas_balcao_table.php`: Tabela `vendas_balcao` (vendas avulsas no PDV com troco e vendas para colaboradores sob Desconto em Folha).
+  * `021_create_itens_venda_balcao_table.php`: Tabela `itens_venda_balcao` (detalhamento dos itens comercializados no balcão).
+  * `022_create_transacoes_carteira_table.php`: Tabela `transacoes_carteira` (livro-razão contábil e extrato analítico da família com saldo linha a linha, recargas, débitos, estornos e MED).
+  * `023_create_calendario_letivo_table.php`: Tabela `calendario_letivo` (dias letivos, feriados, recessos e rotina de cancelamento emergencial em lote).
+  * `024_create_logs_auditoria_table.php`: Tabela `logs_auditoria` (trilha de negócio para estornos, 2ª via de tickets, baixas de perda e ajustes manuais com justificativa e IP).
+  * `025_create_logs_erros_table.php`: Tabela `logs_erros` (repositório centralizado de exceções com rastreabilidade técnica e contingência).
+  * `026_create_logs_seguranca_table.php`: Tabela `logs_seguranca` (trilha de eventos de segurança, falhas de login, bloqueios MED e acessos negados por RBAC).
+* [x] Criação e validação de chaves estrangeiras com regras estritas (`RESTRICT` para proteção contábil/histórica, `CASCADE` para itens/tickets filhos e `SET NULL` para trilhas opcionais).
+* [x] Criação de índices de alta performance para cortes operacionais, busca de tickets, sessões de caixa por turno e extrato familiar.
+* [x] Criação e aprovação com 100% de sucesso da suíte de testes `tests/fase4_test.php` (60 asserções cobrindo todas as 14 tabelas, ciclos de vida transacionais, deleções em cascata e restrições referenciais).
 
 ---
 
@@ -169,5 +185,5 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 4 — Migrações Transacionais, Fiscais, Financeiras e Auditoria (013 a 026)**, criando e aplicando as migrações restantes para pedidos, tickets, caixas, vendas balcão, extrato da carteira, movimentações/perdas, NF-e e logs de auditoria e segurança.
+Iniciar a **Fase 5 — Identidade Visual Institucional e Layouts Base (DESIGN.md)**, criando os templates mestres em `app/views/layouts/` (`header.php`, `footer.php`, `sidebar.php`) e componentes visuais corporativos anti-slop em `app/views/partials/` (`alert.php`, `modal.php`, `empty_state.php`, `loading.php`).
 

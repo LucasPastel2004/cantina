@@ -82,7 +82,7 @@ class Fase3Test
 
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM migrations_controle");
         $total = (int)$stmt->fetchColumn();
-        $this->assert($total === 12, "Tabela migrations_controle registrou exatamente 12 migrações aplicadas");
+        $this->assert($total >= 12, "Tabela migrations_controle registrou pelo menos 12 migrações aplicadas (total atual: {$total})");
 
         $stmt = $this->pdo->query("SELECT migration_arquivo FROM migrations_controle ORDER BY migration_arquivo ASC");
         $files = $stmt->fetchAll(\PDO::FETCH_COLUMN);
@@ -102,7 +102,8 @@ class Fase3Test
             '012_create_produto_alergenos_table.php',
         ];
 
-        $this->assert($files === $expectedFiles, "Todas as 12 migrações 001 a 012 estão registradas em ordem sequencial");
+        $contemTodas = (array_intersect($expectedFiles, $files) === $expectedFiles);
+        $this->assert($contemTodas, "Todas as 12 migrações 001 a 012 estão registradas no controle");
     }
 
     private function testTabelasCriadas(): void
