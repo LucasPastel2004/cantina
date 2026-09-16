@@ -27,7 +27,7 @@ $debug = $debug ?? false;
             <div class="d-flex align-items-center">
                 <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" class="header-logo">
                 <div class="d-flex flex-column">
-                    <span class="fw-bold" style="font-size: 13px; color: var(--primary-blue);">Colégio Monteiro Lobato</span>
+                    <span class="fw-bold" style="font-size: 13px; color: var(--text-main);">Colégio Monteiro Lobato</span>
                     <span class="text-microcopy">Cantina Web — Gestão Operacional e Nutricional</span>
                 </div>
             </div>
@@ -40,7 +40,9 @@ $debug = $debug ?? false;
     <main class="container my-auto py-5" style="max-width: 580px;">
         <div class="card-enterprise p-4" style="border-top: 3px solid var(--action-danger); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);">
             <div class="d-flex align-items-center justify-content-between mb-3">
-                <span class="badge-status badge-danger font-tabular">⚠ Falha Interceptada</span>
+                <span class="status-indicator status-danger font-tabular">
+                    <span class="bullet" aria-hidden="true">●</span> Incidente Operacional
+                </span>
                 <span class="text-microcopy">Transação Cancelada por Segurança</span>
             </div>
 

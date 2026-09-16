@@ -360,7 +360,7 @@ h2, .h2-title {
   font-feature-settings: 'tnum' 1, 'zero' 1;
 }
 
-/* Tabelas Corporativas de Alta Densidade (Data Grid) */
+/* Tabelas Corporativas Contemporâneas (Data Grid) */
 .table-data-grid {
   width: 100%;
   border-collapse: collapse;
@@ -369,15 +369,16 @@ h2, .h2-title {
 }
 
 .table-data-grid th {
-  background-color: var(--primary-blue);
-  color: #ffffff;
+  background-color: #f8fafc;
+  color: #475569;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  height: 36px;
+  height: 38px;
   padding: 0 var(--space-3);
-  border: none;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-default);
   vertical-align: middle;
 }
 
@@ -390,17 +391,18 @@ h2, .h2-title {
 }
 
 .table-data-grid tr:hover td {
-  background-color: #eff6ff;
+  background-color: #f8fafc;
 }
 
 .table-data-grid tr.row-active td {
-  background-color: var(--brand-light-blue);
+  background-color: #eff6ff;
 }
 
 .table-data-grid tfoot td {
-  background-color: var(--border-subtle);
+  background-color: #f8fafc;
   font-weight: 700;
   height: 38px;
+  border-top: 1px solid var(--border-default);
 }
 
 /* Alinhamento em Tabelas */
@@ -415,10 +417,11 @@ h2, .h2-title {
   border-radius: var(--radius-md);
   padding: var(--space-4);
   margin-bottom: var(--space-4);
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.02);
 }
 
 .card-enterprise-header {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-subtle);
@@ -429,32 +432,134 @@ h2, .h2-title {
   justify-content: space-between;
 }
 
-/* Badges e Tags de Status */
+/* Indicadores de Status Discretos (Substituição de Pílulas Fluorescentes) */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-indicator .bullet {
+  font-size: 8px;
+  line-height: 1;
+}
+
+.status-indicator.status-success {
+  color: #15803d;
+}
+
+.status-indicator.status-danger {
+  color: #b91c1c;
+}
+
+.status-indicator.status-warning {
+  color: #92400e;
+}
+
+.status-indicator.status-neutral {
+  color: #475569;
+}
+
+/* Tags de Código e Métodos HTTP Neutras */
+.code-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #334155;
+  letter-spacing: 0.02em;
+}
+
+/* Indicadores de Status Tipográficos Discretos (Substitui pílulas semáforo) */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.status-indicator .bullet {
+  font-size: 8px;
+  line-height: 1;
+}
+
+.status-indicator.status-success {
+  color: #166534;
+}
+.status-indicator.status-success .bullet {
+  color: #16a34a;
+}
+
+.status-indicator.status-danger {
+  color: #991b1b;
+}
+.status-indicator.status-danger .bullet {
+  color: #dc2626;
+}
+
+.status-indicator.status-warning {
+  color: #854d0e;
+}
+.status-indicator.status-warning .bullet {
+  color: #d97706;
+}
+
+.status-indicator.status-neutral {
+  color: #475569;
+}
+.status-indicator.status-neutral .bullet {
+  color: #94a3b8;
+}
+
+/* Tags de Código e Verbos HTTP Neutros */
+.code-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 1px 6px;
+  line-height: 1.3;
+}
+
+/* Badges e Tags de Status Suaves (Uso Restrito) */
 .badge-status {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   font-size: 11px;
   font-weight: 600;
 }
 
 .badge-status.badge-success {
-  background-color: var(--action-success-surface);
-  color: var(--action-success-text);
+  background-color: #f0fdf4;
+  color: #15803d;
   border: 1px solid #bbf7d0;
 }
 
 .badge-status.badge-danger {
-  background-color: var(--action-danger-surface);
-  color: var(--action-danger-text);
-  border: 1px solid #fca5a5;
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
 }
 
 .badge-status.badge-warning {
-  background-color: var(--action-warning-surface);
-  color: var(--action-warning-text);
-  border: 1px solid #fcd34d;
+  background-color: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
 }
 
 /* Alertas Alimentares */

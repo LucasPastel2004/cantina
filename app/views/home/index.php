@@ -27,12 +27,14 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
             <div class="d-flex align-items-center">
                 <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" class="header-logo">
                 <div class="d-flex flex-column">
-                    <span class="fw-bold" style="font-size: 13px; color: var(--primary-blue); letter-spacing: -0.01em;">Colégio Monteiro Lobato</span>
+                    <span class="fw-bold" style="font-size: 13px; color: var(--text-main); letter-spacing: -0.01em;">Colégio Monteiro Lobato</span>
                     <span class="text-microcopy">Cantina Web — Gestão Operacional e Nutricional</span>
                 </div>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge-status badge-success">● Sistema Ativo</span>
+            <div class="d-flex align-items-center">
+                <span class="status-indicator status-success">
+                    <span class="bullet" aria-hidden="true">●</span> Sistema Operacional
+                </span>
             </div>
         </div>
     </header>
@@ -64,8 +66,8 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
         <div class="card-enterprise mb-4">
             <div class="card-enterprise-header">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge-status badge-success">✓ 100% Homologado</span>
-                    <span class="fw-semibold">Componentes Fundamentais do Núcleo MVC</span>
+                    <span class="fw-semibold" style="font-size: 13px; color: var(--text-main);">Componentes Fundamentais do Núcleo MVC</span>
+                    <span class="text-microcopy">&bull; Homologado</span>
                 </div>
                 <span class="text-microcopy font-tabular"><?php echo htmlspecialchars($timestamp, ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
@@ -85,31 +87,31 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
                         <tr>
                             <td><strong>Roteador</strong></td>
                             <td><code>App\Core\Router</code></td>
-                            <td class="cell-center"><span class="badge-status badge-success">Ativo</span></td>
+                            <td class="cell-center"><span class="status-indicator status-success"><span class="bullet" aria-hidden="true">●</span> Ativo</span></td>
                             <td>Roteamento HTTP nativo com parâmetros nomeados <code>{param}</code>, subpastas e 404 seguro.</td>
                         </tr>
                         <tr>
                             <td><strong>Controlador Base</strong></td>
                             <td><code>App\Core\Controller</code></td>
-                            <td class="cell-center"><span class="badge-status badge-success">Ativo</span></td>
+                            <td class="cell-center"><span class="status-indicator status-success"><span class="bullet" aria-hidden="true">●</span> Ativo</span></td>
                             <td>Métodos <code>render()</code> com XSS escape, <code>json()</code>, <code>redirect()</code> e validações com CSRF.</td>
                         </tr>
                         <tr>
                             <td><strong>Modelo Base</strong></td>
                             <td><code>App\Core\Model</code></td>
-                            <td class="cell-center"><span class="badge-status badge-success">Ativo</span></td>
+                            <td class="cell-center"><span class="status-indicator status-success"><span class="bullet" aria-hidden="true">●</span> Ativo</span></td>
                             <td>Prepared Statements nativos via PDO, transações atômicas e soft delete com <code>deleted_at</code>.</td>
                         </tr>
                         <tr>
                             <td><strong>Sessão Segura</strong></td>
                             <td><code>App\Core\Session</code></td>
-                            <td class="cell-center"><span class="badge-status badge-success">Ativo</span></td>
+                            <td class="cell-center"><span class="status-indicator status-success"><span class="bullet" aria-hidden="true">●</span> Ativo</span></td>
                             <td>Cookies HttpOnly/SameSite, controle de inatividade (60 min), antifixação e tokens CSRF.</td>
                         </tr>
                         <tr>
                             <td><strong>Tratamento de Erros</strong></td>
                             <td><code>App\Core\ErrorHandler</code></td>
-                            <td class="cell-center"><span class="badge-status badge-success">Ativo</span></td>
+                            <td class="cell-center"><span class="status-indicator status-success"><span class="bullet" aria-hidden="true">●</span> Ativo</span></td>
                             <td>Captura de exceções, tela segura com UUID e contingência com rotação de 5 MB em <code>error.log</code>.</td>
                         </tr>
                     </tbody>
@@ -120,11 +122,10 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
         <!-- Seção Bento Grid: Testes e Validação Interativa -->
         <div class="card-enterprise mb-4">
             <div class="card-enterprise-header">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge-status badge-warning">Painel de Aferição</span>
-                    <span class="fw-semibold">Validação Interativa do Núcleo Arquitetural</span>
+                <div>
+                    <span class="fw-semibold" style="font-size: 13px; color: var(--text-main);">Validação Interativa do Núcleo Arquitetural</span>
+                    <span class="text-microcopy d-block">Aferição de integridade em tempo real dos serviços fundamentais</span>
                 </div>
-                <span class="text-microcopy">Verificação de Integridade em Tempo Real</span>
             </div>
 
             <div class="row g-3">
@@ -134,7 +135,7 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
                         <div>
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <span class="stat-strip-label">Roteamento</span>
-                                <span class="badge-status badge-success font-tabular">GET</span>
+                                <code class="code-tag">GET</code>
                             </div>
                             <h3 class="h2-title mb-1" style="font-size: 13px;">Parâmetro Dinâmico</h3>
                             <p class="text-secondary-label mb-3" style="font-size: 12px; line-height: 1.4;">
@@ -153,7 +154,7 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
                         <div>
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <span class="stat-strip-label">API REST</span>
-                                <span class="badge-status badge-success font-tabular">JSON</span>
+                                <code class="code-tag">JSON</code>
                             </div>
                             <h3 class="h2-title mb-1" style="font-size: 13px;">Endpoint de Status</h3>
                             <p class="text-secondary-label mb-3" style="font-size: 12px; line-height: 1.4;">
@@ -172,7 +173,7 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
                         <div>
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <span class="stat-strip-label">Segurança</span>
-                                <span class="badge-status badge-warning font-tabular">POST</span>
+                                <code class="code-tag">POST</code>
                             </div>
                             <h3 class="h2-title mb-1" style="font-size: 13px;">Validação CSRF</h3>
                             <p class="text-secondary-label mb-2" style="font-size: 12px; line-height: 1.4;">
@@ -195,7 +196,7 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
                         <div>
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <span class="stat-strip-label">Auditoria</span>
-                                <span class="badge-status badge-danger font-tabular">500</span>
+                                <code class="code-tag">500</code>
                             </div>
                             <h3 class="h2-title mb-1" style="font-size: 13px;">Contingência de Erro</h3>
                             <p class="text-secondary-label mb-3" style="font-size: 12px; line-height: 1.4;">
@@ -213,7 +214,7 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
         <!-- Próxima Fase do Projeto -->
         <div class="p-3 bg-white rounded border d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-3">
-                <span class="badge-status badge-warning font-tabular">Próxima Etapa</span>
+                <span class="status-indicator status-neutral font-tabular" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Próxima Etapa</span>
                 <span class="text-secondary-label" style="font-size: 12px;">
                     <strong>Fase 3:</strong> Conexão de Banco de Dados e Migrações Estruturais/Cadastrais (001 a 012).
                 </span>
