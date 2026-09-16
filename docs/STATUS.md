@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 2 — Núcleo Arquitetural MVC e Mecanismo de Logs/Contingência
-* **Status da Fase 2:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 3 — Conexão de Banco de Dados e Migrações Estruturais/Cadastrais (001 a 012)
-* **Última Atualização:** 2026-09-16 12:05:00 (Fase 2 finalizada e validada)
+* **Fase Atual:** Fase 3 — Conexão de Banco de Dados e Migrações Estruturais/Cadastrais (001 a 012)
+* **Status da Fase 3:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 4 — Migrações Transacionais, Fiscais, Financeiras e Auditoria (013 a 026)
+* **Última Atualização:** 2026-09-16 15:10:00 (Fase 3 finalizada e validada)
 
 ---
 
@@ -54,10 +54,24 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 3 — Conexão de Banco de Dados e Migrações Estruturais/Cadastrais (001 a 012)
-* [ ] Implementação de `config/database.php` (Singleton PDO).
-* [ ] Implementação do runner com controle de execução em `database/runner.php`.
-* [ ] Execução das migrações 001 a 012 (`migrations_controle`, `configuracoes_globais`, `usuarios`, `responsaveis`, `turmas`, `alunos`, `restricoes_alimentares`, `aluno_restricoes`, `colaboradores`, `categorias`, `produtos`, `produto_alergenos`).
+### [x] Fase 3 — Conexão de Banco de Dados e Migrações Estruturais/Cadastrais (001 a 012)
+* [x] Implementação de `config/database.php` (Singleton PDO com Prepared Statements estritos nativos `ATTR_EMULATE_PREPARES => false`, charset `utf8mb4` e contingência automática em `storage/logs/error.log`).
+* [x] Implementação do runner robusto e idempotente em `database/runner.php` com suporte a CLI (`--status`, `--rollback`) e HTTP seguro protegido por token (`?token=...`).
+* [x] Criação e execução com 100% de sucesso das migrações estruturais e cadastrais 001 a 012:
+  * `001_create_migrations_table.php`: Tabela `migrations_controle`.
+  * `002_create_configuracoes_globais_table.php`: Tabela `configuracoes_globais` e carga com parâmetros oficiais da instituição.
+  * `003_create_usuarios_table.php`: Tabela `usuarios` (operadores e administradores) com soft delete e inserção de admin inicial para testes.
+  * `004_create_responsaveis_table.php`: Tabela `responsaveis` (titulares familiares, CPF único e travas MED).
+  * `005_create_turmas_table.php`: Tabela `turmas` (série, nome e ordenação por turno com soft delete).
+  * `006_create_alunos_table.php`: Tabela `alunos` (matrícula única, vínculo a responsável e turma com soft delete).
+  * `007_create_restricoes_alimentares_table.php`: Catálogo oficial dos 8 alérgenos do FSD (Glúten, Lactose, Amendoim, etc.).
+  * `008_create_aluno_restricoes_table.php`: Pivot N:N entre alunos e alérgenos com `CASCADE` e `RESTRICT`.
+  * `009_create_colaboradores_table.php`: Tabela `colaboradores` (desconto em folha com foto e soft delete).
+  * `010_create_categorias_table.php`: Tabela `categorias` e carga das 4 categorias padrão do FSD.
+  * `011_create_produtos_table.php`: Tabela `produtos` (salgados diários e industrializados com pausa rápida e soft delete).
+  * `012_create_produto_alergenos_table.php`: Pivot N:N entre produtos e alérgenos.
+* [x] Proteção granular de acesso web no `.htaccess` de `database/` liberando `runner.php` (com autenticação mandatória por token) e blindagem absoluta de `database/migrations/.htaccess`.
+* [x] Criação e aprovação da suíte de testes `tests/fase3_test.php` (41 asserções cobrindo conexão, dados mestres, chaves estrangeiras, constraints e soft delete do `Model`).
 
 ---
 
@@ -155,4 +169,5 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 2 — Núcleo Arquitetural MVC e Mecanismo de Logs/Contingência**, criando as classes base `Router`, `Controller`, `Model`, `Session`, `Auth`, `RBAC` e `ErrorHandler` em `app/core/`.
+Iniciar a **Fase 4 — Migrações Transacionais, Fiscais, Financeiras e Auditoria (013 a 026)**, criando e aplicando as migrações restantes para pedidos, tickets, caixas, vendas balcão, extrato da carteira, movimentações/perdas, NF-e e logs de auditoria e segurança.
+

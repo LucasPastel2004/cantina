@@ -1,7 +1,17 @@
-# Bloqueio absoluto de acesso via navegador para o diretório database
+# Bloqueio geral para o diretório database, com exceção controlada para o runner.php
 <IfModule mod_authz_core.c>
     Require all denied
 </IfModule>
 <IfModule !mod_authz_core.c>
     Deny from all
 </IfModule>
+
+# Permite acesso HTTP ao runner.php para hospedagem compartilhada (Hostnet), protegido por token interno
+<Files "runner.php">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Allow from all
+    </IfModule>
+</Files>

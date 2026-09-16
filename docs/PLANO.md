@@ -76,20 +76,20 @@ Fase 17 - Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança
 
 * **Objetivo:** Estabelecer a fábrica singleton de conexão PDO em `config/database.php`, o controle de execução em `database/runner.php` e as 12 primeiras migrações com constraints e índices.
 * **Checklist de Tarefas:**
-  - [ ] Implementar `config/database.php` (Singleton PDO com charset utf8mb4 e modo de exceção).
-  - [ ] Desenvolver `database/runner.php` para gerenciar a tabela `migrations_controle` e aplicar migrações de forma idempotente.
-  - [ ] Migration 001: Criação da tabela `migrations_controle`.
-  - [ ] Migration 002: Tabela `configuracoes_globais` (parâmetros da cantina e dados institucionais).
-  - [ ] Migration 003: Tabela `usuarios` (operadores e administradores da cantina com rastreabilidade).
-  - [ ] Migration 004: Tabela `responsaveis` (titulares das famílias, CPF, WhatsApp, bloqueio MED e termos).
-  - [ ] Migration 005: Tabela `turmas` (ano letivo, série, turma, turno com soft delete).
-  - [ ] Migration 006: Tabela `alunos` (matrícula, nome, turma_id, responsavel_id, turno com soft delete).
-  - [ ] Migration 007: Tabela `restricoes_alimentares` (catálogo oficial de alérgenos padronizados).
-  - [ ] Migration 008: Tabela associativa `aluno_restricoes` (relação N:N aluno e alérgeno).
-  - [ ] Migration 009: Tabela `colaboradores` (professores e funcionários para desconto em folha).
-  - [ ] Migration 010: Tabela `categorias` (classificação de alimentos com soft delete).
-  - [ ] Migration 011: Tabela `produtos` (código, nome, tipo salgado/industrializado, preço, estoque, pausa rápida).
-  - [ ] Migration 012: Tabela associativa `produto_alergenos` (alérgenos presentes nos alimentos).
+  - [x] Implementar `config/database.php` (Singleton PDO com charset utf8mb4 e modo de exceção).
+  - [x] Desenvolver `database/runner.php` para gerenciar a tabela `migrations_controle` e aplicar migrações de forma idempotente.
+  - [x] Migration 001: Criação da tabela `migrations_controle`.
+  - [x] Migration 002: Tabela `configuracoes_globais` (parâmetros da cantina e dados institucionais).
+  - [x] Migration 003: Tabela `usuarios` (operadores e administradores da cantina com rastreabilidade).
+  - [x] Migration 004: Tabela `responsaveis` (titulares das famílias, CPF, WhatsApp, bloqueio MED e termos).
+  - [x] Migration 005: Tabela `turmas` (ano letivo, série, turma, turno com soft delete).
+  - [x] Migration 006: Tabela `alunos` (matrícula, nome, turma_id, responsavel_id, turno com soft delete).
+  - [x] Migration 007: Tabela `restricoes_alimentares` (catálogo oficial de alérgenos padronizados).
+  - [x] Migration 008: Tabela associativa `aluno_restricoes` (relação N:N aluno e alérgeno).
+  - [x] Migration 009: Tabela `colaboradores` (professores e funcionários para desconto em folha).
+  - [x] Migration 010: Tabela `categorias` (classificação de alimentos com soft delete).
+  - [x] Migration 011: Tabela `produtos` (código, nome, tipo salgado/industrializado, preço, estoque, pausa rápida).
+  - [x] Migration 012: Tabela associativa `produto_alergenos` (alérgenos presentes nos alimentos).
 * **Critérios de Pronto:**
   - Migrações 001 a 012 executadas com sucesso via `php database/runner.php`.
   - Chaves estrangeiras e índices cadastrais criados no MySQL.
