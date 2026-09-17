@@ -39,105 +39,111 @@ $isAdmin = ($user['perfil'] ?? '') === 'administrador';
     <!-- Navegação Agrupada por Contexto Funcional -->
     <nav class="sidebar-nav">
         <!-- Grupo 1: Operação de Balcão e Turno -->
-        <div class="nav-section-label">Operacional</div>
-        <ul class="nav-list">
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/operacional/corte" class="nav-link <?php echo ($activeMenu === 'corte') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Corte do Turno</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/operacional/recebimento" class="nav-link <?php echo ($activeMenu === 'recebimento') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Conferência Fornecedor</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/operacional/tickets" class="nav-link <?php echo ($activeMenu === 'tickets') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Tickets Térmicos</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="nav-link <?php echo ($activeMenu === 'pdv') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">PDV Balcão</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/operacional/caixa" class="nav-link <?php echo ($activeMenu === 'caixa') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Caixa do Turno</span>
-                </a>
-            </li>
-        </ul>
-
-        <!-- Grupo 2: Estoque e Mercadorias -->
-        <div class="nav-section-label">Estoque</div>
-        <ul class="nav-list">
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/estoque" class="nav-link <?php echo ($activeMenu === 'estoque') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Saldos & Pausa</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/estoque/perdas" class="nav-link <?php echo ($activeMenu === 'perdas') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Lançamento de Perdas</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/estoque/importar-xml" class="nav-link <?php echo ($activeMenu === 'xml') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Entrada XML NF-e</span>
-                </a>
-            </li>
-        </ul>
-
-        <!-- Grupo 3: Administração e Relatórios -->
-        <div class="nav-section-label">Administração</div>
-        <ul class="nav-list">
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/admin/alunos" class="nav-link <?php echo ($activeMenu === 'alunos') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Alunos & Turmas</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/admin/colaboradores" class="nav-link <?php echo ($activeMenu === 'colaboradores') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Colaboradores</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/admin/produtos" class="nav-link <?php echo ($activeMenu === 'produtos') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Cardápio & Preços</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/admin/calendario" class="nav-link <?php echo ($activeMenu === 'calendario') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Calendário Escolar</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios" class="nav-link <?php echo ($activeMenu === 'relatorios') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Relatórios Gerenciais</span>
-                </a>
-            </li>
-            <?php if ($isAdmin): ?>
+        <div class="nav-section-box">
+            <div class="nav-section-label">Operacional</div>
+            <ul class="nav-list">
                 <li class="nav-item">
-                    <a href="<?php echo $baseUrl; ?>/admin/configuracoes" class="nav-link <?php echo ($activeMenu === 'configuracoes') ? 'active' : ''; ?>">
+                    <a href="<?php echo $baseUrl; ?>/operacional/corte" class="nav-link <?php echo ($activeMenu === 'corte') ? 'active' : ''; ?>">
                         <span class="nav-bullet">●</span>
-                        <span class="nav-label">Configurações Globais</span>
+                        <span class="nav-label">Corte do Turno</span>
                     </a>
                 </li>
-            <?php endif; ?>
-        </ul>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/operacional/recebimento" class="nav-link <?php echo ($activeMenu === 'recebimento') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Conferência Fornecedor</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/operacional/tickets" class="nav-link <?php echo ($activeMenu === 'tickets') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Tickets Térmicos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="nav-link <?php echo ($activeMenu === 'pdv') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">PDV Balcão</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/operacional/caixa" class="nav-link <?php echo ($activeMenu === 'caixa') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Caixa do Turno</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Grupo 2: Estoque e Mercadorias -->
+        <div class="nav-section-box">
+            <div class="nav-section-label">Estoque</div>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/estoque" class="nav-link <?php echo ($activeMenu === 'estoque') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Saldos & Pausa</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/estoque/perdas" class="nav-link <?php echo ($activeMenu === 'perdas') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Lançamento de Perdas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/estoque/importar-xml" class="nav-link <?php echo ($activeMenu === 'xml') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Entrada XML NF-e</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Grupo 3: Administração e Relatórios -->
+        <div class="nav-section-box">
+            <div class="nav-section-label">Administração</div>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/admin/alunos" class="nav-link <?php echo ($activeMenu === 'alunos') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Alunos & Turmas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/admin/colaboradores" class="nav-link <?php echo ($activeMenu === 'colaboradores') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Colaboradores</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/admin/produtos" class="nav-link <?php echo ($activeMenu === 'produtos') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Cardápio & Preços</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/admin/calendario" class="nav-link <?php echo ($activeMenu === 'calendario') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Calendário Escolar</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/relatorios" class="nav-link <?php echo ($activeMenu === 'relatorios') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Relatórios Gerenciais</span>
+                    </a>
+                </li>
+                <?php if ($isAdmin): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo $baseUrl; ?>/admin/configuracoes" class="nav-link <?php echo ($activeMenu === 'configuracoes') ? 'active' : ''; ?>">
+                            <span class="nav-bullet">●</span>
+                            <span class="nav-label">Configurações Globais</span>
+                        </a>
+                    </li>
+                <?php endif; ?>
+            </ul>
+        </div>
     </nav>
 
     <!-- Rodapé da Sidebar: Usuário Logado e Logout -->
