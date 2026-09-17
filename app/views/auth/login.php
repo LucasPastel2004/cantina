@@ -83,13 +83,13 @@ $tab = $tab ?? 'familia';
                    class="form-control form-control-enterprise" 
                    id="usuario" 
                    name="usuario" 
-                   placeholder="ex: operador-maria ou admin" 
+                   placeholder="Digite seu identificador" 
                    required>
             <div class="text-microcopy text-muted mt-1">Identificador individual fornecido pela administração.</div>
         </div>
 
         <div class="mb-3">
-            <label for="senha" class="form-label-enterprise">Senha do Operador</label>
+            <label for="senha" class="form-label-enterprise">Senha de Acesso</label>
             <input type="password" 
                    class="form-control form-control-enterprise" 
                    id="senha" 
