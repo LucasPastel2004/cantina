@@ -165,10 +165,14 @@ class Fase3Test
         $this->assert(in_array('Amendoim', $alergenos), "Alérgeno 'Amendoim' presente");
         $this->assert(in_array('Ovos', $alergenos), "Alérgeno 'Ovos' presente");
 
-        // 4.4 Categorias de Produtos
-        $stmt = $this->pdo->query("SELECT COUNT(*) FROM categorias");
-        $totalCategorias = (int)$stmt->fetchColumn();
-        $this->assert($totalCategorias === 4, "Catálogo de categorias contém as 4 classificações oficiais do FSD");
+        // 4.4 Categorias de Produtos (Verifica a presença das 4 oficiais do FSD)
+        $stmt = $this->pdo->query("SELECT nome FROM categorias WHERE deleted_at IS NULL");
+        $nomesCategorias = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $possuiAs4Oficiais = in_array('Salgados Assados', $nomesCategorias) 
+                          && in_array('Sucos Naturais', $nomesCategorias) 
+                          && in_array('Industrializados', $nomesCategorias) 
+                          && in_array('Sobremesas', $nomesCategorias);
+        $this->assert($possuiAs4Oficiais, "Catálogo de categorias contém as 4 classificações oficiais do FSD");
     }
 
     private function testIntegridadeReferencial(): void
@@ -185,8 +189,8 @@ class Fase3Test
         }
         $this->assert($violouFk, "Inserção com chave estrangeira inexistente foi bloqueada pelo MySQL (Foreign Key Constraint)");
 
-        // 5.2 Criação controlada de registro para teste
-        $cpfTeste = '99988877766';
+        // 5.2 Criação controlada de registro para teste com CPF dinâmico
+        $cpfTeste = '88' . str_pad((string)random_int(100000000, 999999999), 9, '0', STR_PAD_LEFT);
         $stmt = $this->pdo->prepare("INSERT INTO responsaveis (cpf, nome, email, whatsapp, senha_hash) VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([$cpfTeste, 'Pai de Teste FK', 'pai@teste.com', '(11) 99999-0000', 'hash_teste']);
         $respId = (int)$this->pdo->lastInsertId();

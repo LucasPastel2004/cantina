@@ -127,9 +127,9 @@ $isAdmin = ($user['perfil'] ?? '') === 'administrador';
             </button>
             <ul class="nav-list">
                 <li class="nav-item">
-                    <a href="<?php echo $baseUrl; ?>/admin/alunos" class="nav-link <?php echo ($activeMenu === 'alunos') ? 'active' : ''; ?>">
+                    <a href="<?php echo $baseUrl; ?>/admin/turmas" class="nav-link <?php echo ($activeMenu === 'alunos') ? 'active' : ''; ?>">
                         <span class="nav-bullet">●</span>
-                        <span class="nav-label">Alunos & Turmas</span>
+                        <span class="nav-label">Turmas Escolares</span>
                     </a>
                 </li>
                 <li class="nav-item">

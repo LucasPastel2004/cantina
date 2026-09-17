@@ -96,8 +96,65 @@ $router->get('/operacional/corte', [\App\Controllers\AdminController::class, 'in
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 
-// 3. Área Administrativa Restrita: Acesso exclusivo para 'administrador'
-$router->get('/admin/configuracoes', [\App\Controllers\AdminController::class, 'index'], [
+// 3. Área Administrativa e Cadastros Mestres (Fase 7 — FSD Módulos 6, 7 e 9)
+// 3.1. Configurações Globais (Acesso exclusivo para 'administrador')
+$router->get('/admin/configuracoes', [\App\Controllers\AdminController::class, 'configuracoes'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/configuracoes/salvar', [\App\Controllers\AdminController::class, 'configuracoesSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
+// 3.2. Categorias de Cardápio (Acesso exclusivo para 'administrador')
+$router->get('/admin/categorias', [\App\Controllers\AdminController::class, 'categorias'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/categorias/salvar', [\App\Controllers\AdminController::class, 'categoriasSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/categorias/excluir', [\App\Controllers\AdminController::class, 'categoriasExcluir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
+// 3.3. Produtos e Cardápio (Consulta e Pausa para operador/admin; Criação/Edição/Exclusão para admin)
+$router->get('/admin/produtos', [\App\Controllers\AdminController::class, 'produtos'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/admin/produtos/salvar', [\App\Controllers\AdminController::class, 'produtosSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/produtos/toggle-pausa', [\App\Controllers\AdminController::class, 'produtosTogglePausa'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/admin/produtos/excluir', [\App\Controllers\AdminController::class, 'produtosExcluir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
+// 3.4. Colaboradores / Desconto em Folha (Acesso exclusivo para 'administrador')
+$router->get('/admin/colaboradores', [\App\Controllers\AdminController::class, 'colaboradores'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/colaboradores/salvar', [\App\Controllers\AdminController::class, 'colaboradoresSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/colaboradores/toggle-ativo', [\App\Controllers\AdminController::class, 'colaboradoresToggleAtivo'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/colaboradores/excluir', [\App\Controllers\AdminController::class, 'colaboradoresExcluir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
+// 3.5. Turmas Escolares (Acesso exclusivo para 'administrador')
+$router->get('/admin/turmas', [\App\Controllers\AdminController::class, 'turmas'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/admin/alunos', [\App\Controllers\AdminController::class, 'turmas'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/turmas/salvar', [\App\Controllers\AdminController::class, 'turmasSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/turmas/excluir', [\App\Controllers\AdminController::class, 'turmasExcluir'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 

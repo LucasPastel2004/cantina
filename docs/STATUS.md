@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 6 — Autenticação, Sessão Segura e Controle de Acesso (RBAC)
-* **Status da Fase 6:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 7 — Configurações Globais e Cadastros Mestres com Soft Delete
-* **Última Atualização:** 2026-09-17 10:18:00 (Fase 6 finalizada e validada)
+* **Fase Atual:** Fase 7 — Configurações Globais e Cadastros Mestres com Soft Delete
+* **Status da Fase 7:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 8 — Importação Escolar em Lote e Gestão Ativa de Restrições Alimentares
+* **Última Atualização:** 2026-09-17 16:30:00 (Fase 7 finalizada e validada)
 
 ---
 
@@ -187,9 +187,37 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 7 — Configurações Globais e Cadastros Mestres com Soft Delete
-* [ ] Tela de Configurações Globais (`app/views/admin/configuracoes.php`).
-* [ ] CRUDs com soft delete: Categorias, Produtos (com botão ativo/pausado), Colaboradores e Turmas.
+### [x] Fase 7 — Configurações Globais e Cadastros Mestres com Soft Delete
+* [x] Implementação de `app/models/Configuracao.php`:
+  * Modelo singleton para obtenção e persistência de parâmetros institucionais em `configuracoes_globais`.
+  * Validações de recarga mínima Pix (>= R$ 1,00), alerta de saldo baixo, timeout de sessão e limite de tentativas de login.
+* [x] Implementação de `app/models/Categoria.php`:
+  * CRUD com soft delete (`deleted_at`), rastreabilidade de auditoria (`created_by`, `updated_by`) e ordenação visual de exibição.
+  * Validação de integridade referencial impedindo exclusão de categorias com produtos vinculados.
+* [x] Implementação de `app/models/Produto.php`:
+  * CRUD completo com suporte a tipo (`salgado_diario`, `industrializado_continuo`), turnos (`matutino`, `vespertino`, `ambos`), preços em reais e controle de estoque mínimo.
+  * Botão e método de pausa rápida instantânea `togglePausa()` ("ativo" <-> "pausado") com resposta assíncrona para operação no balcão.
+  * Relacionamento N:N com alérgenos (`produto_alergenos`) e sincronização atômica (`syncAlergenos`).
+  * Soft delete preservando o histórico contábil de pedidos e caixas anteriores.
+* [x] Implementação de `app/models/RestricaoAlimentar.php`:
+  * Consulta aos 8 alérgenos oficiais do FSD para vinculação declaratória nos alimentos.
+* [x] Implementação de `app/models/Colaborador.php`:
+  * Gestão de professores e funcionários para desconto em folha com matrícula funcional única, cargo, status ativo e upload de foto de identificação para conferência presencial no PDV.
+* [x] Implementação de `app/models/Turma.php`:
+  * Gestão de turmas escolares por turno (`matutino`, `vespertino`), série e ordem de impressão sequencial na bobina térmica de 80mm com soft delete.
+* [x] Atualização de `app/controllers/AdminController.php`:
+  * Ações de leitura, formulários, gravação com CSRF, soft delete e alternância de pausa de produtos para todos os cadastros mestres.
+  * Manipulador seguro de uploads de imagem com validação de extensão, MIME type, limite de 10 MB e renomeação aleatória (hash/UUID) em `storage/uploads/public/`.
+* [x] Construção das Telas em `app/views/admin/` alinhadas ao `docs/DESIGN.md` (Anti-Slop Enterprise Edition):
+  * `configuracoes.php`: Formulário institucional com prévia de logotipo e dados da cantina.
+  * `categorias.php`: Tabela corporativa com ordenação de exibição, status pontual e modal de cadastro/edição.
+  * `produtos.php`: Catálogo em alta densidade com miniaturas, badges de alérgenos discretos, valores com fonte tabular, filtros rápidos e botão de pausa instantânea.
+  * `colaboradores.php`: Tabela com fotos circulares de identificação para o PDV e matrícula funcional.
+  * `turmas.php`: Tabela com série, turno e ordem de impressão contínua.
+* [x] Registro e proteção de rotas RBAC em `index.php` e sincronização dos links em `app/views/layouts/sidebar.php`.
+* [x] Bateria de testes automatizados `tests/fase7_test.php` executada com 68 asserções aprovadas com 100% de sucesso.
+* [x] Suíte de testes de rotas web HTTP `tests/admin_web_test.php` aprovada com 9/9 requisições validadas.
+* [x] Suítes de regressão (Fases 2, 3, 4, 5, 6 e simulação web) reexecutadas e 100% aprovadas.
 
 ---
 
@@ -261,5 +289,6 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 7 — Configurações Globais e Cadastros Mestres com Soft Delete**, implementando os modelos `Configuracao.php`, `Categoria.php`, `Produto.php`, `Colaborador.php`, `Turma.php`, o controlador administrativo e as telas de gestão de parâmetros da cantina, cardápio de produtos com botão "Ativo/Pausado", colaboradores e turmas escolares.
+Iniciar a **Fase 8 — Importação Escolar em Lote e Gestão Ativa de Restrições Alimentares**, implementando o serviço `SpreadsheetService.php` (leitor em streaming CSV e suporte a `.xlsx`), os modelos `Aluno.php` e a interface de upload em lote de turmas, alunos e responsáveis com conferência prévia e gestão de alérgenos por estudante.
+
 
