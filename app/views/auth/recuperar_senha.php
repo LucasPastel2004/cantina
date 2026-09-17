@@ -29,8 +29,7 @@ $baseUrl = $baseUrl ?? '';
                name="cpf" 
                placeholder="000.000.000-00" 
                maxlength="14" 
-               required 
-               autofocus>
+               required>
     </div>
 
     <button type="submit" class="btn btn-enterprise btn-primary w-100 py-2">

@@ -31,8 +31,7 @@ $primeiroNome = explode(' ', trim($nome))[0];
                name="senha" 
                placeholder="Mínimo 6 caracteres" 
                minlength="6" 
-               required 
-               autofocus>
+               required>
     </div>
 
     <div class="mb-3">

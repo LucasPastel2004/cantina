@@ -31,8 +31,7 @@ $cpfPreenchido = $cpfPreenchido ?? '';
                value="<?php echo $cpfPreenchido; ?>" 
                placeholder="000.000.000-00" 
                maxlength="14" 
-               required 
-               autofocus>
+               required>
         <div class="text-microcopy text-muted mt-1">Apenas os números ou no formato com pontos e traço.</div>
     </div>
 

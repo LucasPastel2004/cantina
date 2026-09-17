@@ -30,8 +30,7 @@ $baseUrl = $baseUrl ?? '';
                placeholder="000000" 
                maxlength="6" 
                style="letter-spacing: 8px; font-size: 20px; font-weight: 700; max-width: 220px;" 
-               required 
-               autofocus>
+               required>
     </div>
 
     <div class="mb-3">

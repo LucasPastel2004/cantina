@@ -39,8 +39,7 @@ $mockCode = $mockCode ?? null;
                maxlength="6" 
                pattern="\d{6}" 
                style="letter-spacing: 8px; font-size: 22px; font-weight: 700; max-width: 220px;" 
-               required 
-               autofocus>
+               required>
         <div class="text-microcopy text-muted mt-2">O código expira em 15 minutos.</div>
     </div>
 
