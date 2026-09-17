@@ -30,7 +30,7 @@ $isSaldoBaixo = ($saldoAtual < 15.00);
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
 
     <!-- Design System Corporativo Anti-Slop -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=5.0.1">
 
     <!-- Favicon Oficial -->
     <link rel="icon" type="image/jpeg" href="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg">
@@ -42,7 +42,7 @@ $isSaldoBaixo = ($saldoAtual < 15.00);
     <div class="container-fluid px-3 px-md-4 d-flex align-items-center justify-content-between" style="max-width: 1140px;">
         <!-- Identidade Oficial -->
         <a href="<?php echo $baseUrl; ?>/portal" class="d-flex align-items-center text-decoration-none">
-            <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" class="header-logo">
+            <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" width="38" height="38" class="header-logo" style="width: 38px; height: 38px; max-width: 38px; max-height: 38px; border-radius: 50%; object-fit: cover;">
             <div class="d-flex flex-column">
                 <span class="portal-brand-title">Monteiro Lobato</span>
                 <span class="text-microcopy">Portal da Família</span>

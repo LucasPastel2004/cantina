@@ -25,7 +25,7 @@ $isAdmin = ($user['perfil'] ?? '') === 'administrador';
     <!-- Cabeçalho da Sidebar com Logotipo Oficial -->
     <div class="sidebar-header">
         <a href="<?php echo $baseUrl; ?>/operacional/corte" class="sidebar-brand">
-            <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" class="header-logo">
+            <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" width="38" height="38" class="header-logo" style="width: 38px; height: 38px; max-width: 38px; max-height: 38px; border-radius: 50%; object-fit: cover;">
             <div class="sidebar-brand-text">
                 <span class="sidebar-brand-name">Monteiro Lobato</span>
                 <span class="sidebar-brand-sub">Painel da Cantina</span>

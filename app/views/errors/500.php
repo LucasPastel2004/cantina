@@ -19,13 +19,13 @@ $debug = $debug ?? false;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Falha Operacional Interceptada | Cantina Web</title>
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=5.0.1">
 </head>
 <body class="d-flex flex-column min-vh-100 bg-surface">
     <header class="app-header">
         <div class="container-fluid d-flex align-items-center justify-content-between px-3" style="max-width: 1080px;">
             <div class="d-flex align-items-center">
-                <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" class="header-logo">
+                <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" width="38" height="38" class="header-logo" style="width: 38px; height: 38px; max-width: 38px; max-height: 38px; border-radius: 50%; object-fit: cover;">
                 <div class="d-flex flex-column">
                     <span class="fw-bold" style="font-size: 13px; color: var(--text-main);">Colégio Monteiro Lobato</span>
                     <span class="text-microcopy">Cantina Web — Gestão Operacional e Nutricional</span>

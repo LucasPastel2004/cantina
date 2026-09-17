@@ -47,7 +47,7 @@ ob_start();
 require __DIR__ . '/../index.php';
 $html = ob_get_clean();
 
-$passouHome = str_contains($html, 'Colégio Monteiro Lobato') && str_contains($html, 'Fase 2 Implementada');
+$passouHome = str_contains($html, 'Colégio Monteiro Lobato') && str_contains($html, 'Fase 5 Concluída');
 echo "1. Rota GET / -> " . ($passouHome ? "SUCESSO (HTML Renderizado)" : "FALHA") . PHP_EOL;
 
 // 2. Teste da API /api/status via script separado

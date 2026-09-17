@@ -24,8 +24,8 @@ $title = !empty($pageTitle)
     <!-- Bootstrap 5 Compilado Localmente -->
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
 
-    <!-- Design System Corporativo Anti-Slop -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css">
+    <!-- Design System Corporativo Anti-Slop (Enterprise High-Density) -->
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=5.0.1">
 
     <!-- Favicon Oficial -->
     <link rel="icon" type="image/jpeg" href="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg">
@@ -36,7 +36,7 @@ $title = !empty($pageTitle)
     <div class="auth-card-container">
         <!-- Logotipo Oficial Centralizado (80px - 88px) -->
         <div class="text-center mb-4">
-            <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" class="auth-logo mb-2">
+            <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" width="84" height="84" class="auth-logo mb-2" style="width: 84px; height: 84px; max-width: 84px; max-height: 84px; border-radius: 50%; object-fit: cover;">
             <h1 class="auth-brand-name mb-0">Colégio Monteiro Lobato</h1>
             <span class="auth-brand-sub">Cantina Web &bull; Valores para o Futuro!</span>
         </div>

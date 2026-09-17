@@ -120,6 +120,11 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] Registro das rotas `/design/portal`, `/design/admin` e `/design/components` no Front Controller `index.php`.
 * [x] Suíte de testes automatizados `tests/fase5_test.php` criada e aprovada com 74 asserções (100% de sucesso).
 * [x] Testes de regressão das fases 2, 3 e 4 executados e aprovados com 100% de sucesso.
+* [x] **Ajustes Pós-Validação Visual da Fase 5:**
+  * Correção de escala da logo circular institucional no Portal da Família (`portal.php`), aplicando atributos defensivos `width="38" height="38"` e `style="width: 38px; height: 38px; ..."` em todos os layouts.
+  * Implementação de query de versão (`?v=5.0.1`) nos links de `custom.css` para invalidar caches antigos do navegador.
+  * Atualização da métrica executiva de infraestrutura na tela Home (`/`) e na API (`/api/status`) sincronizando o indicador para "Fase 5 Concluída".
+  * Teste `tests/web_simulation_test.php` atualizado e aprovado com 5/5 requisições simuladas com sucesso.
 
 ---
 
