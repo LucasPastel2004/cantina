@@ -173,6 +173,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Remoção do atributo `autofocus` nos campos de entrada de login (CPF e usuário), impedindo o foco automático indesejado ao carregar a página ou alternar abas.
   * Suavização do foco acessível em campos de texto (`assets/css/custom.css`), removendo o contorno agressivo com offset (`outline: none !important; box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14)`) para um visual corporativo refinado.
   * Substituição das abas de texto por um alternador segmentado com botões encapsulados (`.auth-toggle-group` e `.auth-toggle-btn`), destacando visualmente as opções de login ("Portal da Família" e "Equipe da Cantina") dentro do padrão corporativo sóbrio.
+  * Remoção do exemplo de nomes de usuário (`ex: operador-maria ou admin`) no campo de identificador, prevenindo vazamento de padrões de login e tentativas de enumeração de contas.
   * Atualização da versão dos assets nos layouts para `?v=5.0.2` para invalidação imediata de cache no navegador.
 
 ---
