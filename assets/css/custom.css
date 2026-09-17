@@ -141,10 +141,36 @@ h2, .h2-title {
   display: inline-block;
 }
 
-/* Foco Acessível em Toda a Aplicação (Anti-Slop Accessibility) */
+/* Foco Acessível em Elementos Interativos (Anti-Slop Accessibility) */
 :focus-visible {
-  outline: 2px solid var(--primary-blue) !important;
-  outline-offset: 2px !important;
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+/* Foco refinado em campos de texto e formulário (sem duplo outline ou contorno agressivo) */
+.form-control:focus,
+.form-control:focus-visible,
+.form-control-enterprise:focus,
+.form-control-enterprise:focus-visible,
+.form-select:focus,
+.form-select:focus-visible,
+input.form-control:focus-visible,
+input.form-control:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="text"]:focus-visible,
+input[type="password"]:focus-visible,
+input[type="number"]:focus-visible,
+input[type="email"]:focus-visible,
+input[type="tel"]:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none !important;
+  border-color: var(--primary-blue) !important;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14) !important;
 }
 
 /* Botões do Sistema e Microinterações Táteis */
@@ -329,9 +355,9 @@ h2, .h2-title {
 }
 
 .form-control:focus, .form-select:focus {
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-  outline: none;
+  border-color: var(--primary-blue) !important;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14) !important;
+  outline: none !important;
 }
 
 .form-control:disabled {
@@ -1286,4 +1312,105 @@ h2, .h2-title {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ==========================================================================
+   Módulo de Autenticação & Primeiro Acesso (Auth UI)
+   ========================================================================== */
+
+.auth-card-container {
+  width: 100%;
+  max-width: 440px;
+}
+
+.auth-brand-name {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.auth-brand-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.auth-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+}
+
+/* Alternador de Opções de Login em Formato de Botões (Segmented Control) */
+.auth-toggle-group {
+  display: flex;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 6px;
+  margin-bottom: var(--space-4);
+}
+
+.auth-toggle-btn {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.auth-toggle-btn:hover {
+  color: #0f172a;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-color: #cbd5e1;
+  text-decoration: none;
+}
+
+.auth-toggle-btn.active {
+  background-color: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.08);
+}
+
+.auth-toggle-btn:focus-visible {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 1px;
+}
+
+/* Linha divisória com microcopy centralizado */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 16px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.auth-divider span {
+  padding: 0 10px;
+}
+
 

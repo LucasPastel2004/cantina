@@ -12,15 +12,19 @@ $baseUrl = $baseUrl ?? '';
 $tab = $tab ?? 'familia';
 ?>
 
-<!-- Alternador Sóbrio de Contexto (Família vs Equipe) -->
-<div class="auth-tabs d-flex border-bottom mb-4">
+<!-- Alternador de Contexto em Botões (Família vs Equipe) -->
+<div class="auth-toggle-group mb-4" role="tablist" aria-label="Opções de Acesso">
     <a href="<?php echo $baseUrl; ?>/login?tab=familia" 
-       class="auth-tab-item flex-fill text-center py-2 px-3 text-decoration-none font-weight-semibold <?php echo $tab === 'familia' ? 'active' : ''; ?>">
-        <span class="d-inline-block py-1">Portal da Família</span>
+       class="auth-toggle-btn <?php echo $tab === 'familia' ? 'active' : ''; ?>"
+       role="tab"
+       aria-selected="<?php echo $tab === 'familia' ? 'true' : 'false'; ?>">
+        <span>Portal da Família</span>
     </a>
     <a href="<?php echo $baseUrl; ?>/login?tab=equipe" 
-       class="auth-tab-item flex-fill text-center py-2 px-3 text-decoration-none font-weight-semibold <?php echo $tab === 'equipe' ? 'active' : ''; ?>">
-        <span class="d-inline-block py-1">Equipe da Cantina</span>
+       class="auth-toggle-btn <?php echo $tab === 'equipe' ? 'active' : ''; ?>"
+       role="tab"
+       aria-selected="<?php echo $tab === 'equipe' ? 'true' : 'false'; ?>">
+        <span>Equipe da Cantina</span>
     </a>
 </div>
 
@@ -38,8 +42,7 @@ $tab = $tab ?? 'familia';
                    name="cpf" 
                    placeholder="000.000.000-00" 
                    maxlength="14" 
-                   required 
-                   autofocus>
+                   required>
             <div class="text-microcopy text-muted mt-1">Informe o CPF cadastrado na matrícula escolar.</div>
         </div>
 
@@ -81,8 +84,7 @@ $tab = $tab ?? 'familia';
                    id="usuario" 
                    name="usuario" 
                    placeholder="ex: operador-maria ou admin" 
-                   required 
-                   autofocus>
+                   required>
             <div class="text-microcopy text-muted mt-1">Identificador individual fornecido pela administração.</div>
         </div>
 
