@@ -340,6 +340,9 @@ class Fase6Test
         $loginAtivado = \App\Core\Auth::attemptResponsavel('55566677788', $novaSenha);
         $this->assert($loginAtivado['success'] === true, "Login com a senha recém-ativada efetuado com sucesso");
         \App\Core\Auth::logout();
+
+        // Restaura responsável de teste para estado pendente para não interferir em testes manuais do usuário
+        $this->pdo->exec("UPDATE responsaveis SET senha_hash = '', termos_aceitos_em = NULL WHERE cpf = '55566677788'");
     }
 
     private function testarRecuperacaoSenha(): void
