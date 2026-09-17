@@ -987,17 +987,28 @@ h2, .h2-title {
 .portal-wallet-card {
   display: flex;
   align-items: center;
-  gap: 12px;
   background-color: #f0fdf4;
   border: 1px solid #bbf7d0;
   border-radius: var(--radius-md);
-  padding: 5px 12px;
-  transition: all 0.12s ease;
+  padding: 5px 14px;
+  text-decoration: none;
+  transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.portal-wallet-card:hover {
+  background-color: #dcfce7;
+  border-color: #86efac;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .portal-wallet-card.wallet-low {
   background-color: #fffbeb;
   border-color: #fde68a;
+}
+
+.portal-wallet-card.wallet-low:hover {
+  background-color: #fef3c7;
+  border-color: #fcd34d;
 }
 
 .wallet-label {

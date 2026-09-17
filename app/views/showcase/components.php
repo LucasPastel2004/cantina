@@ -84,9 +84,9 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
             <div class="mb-4">
                 <label class="form-label">Tags de Segurança Alimentar e Métodos:</label>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                    <span class="tag-alergeno">[CONTÉM GLÚTEN]</span>
-                    <span class="tag-alergeno">[CONTÉM LACTOSE]</span>
-                    <span class="tag-alergeno">[CONTÉM AMENDOIM]</span>
+                    <span class="tag-alergeno">CONTÉM GLÚTEN</span>
+                    <span class="tag-alergeno">CONTÉM LACTOSE</span>
+                    <span class="tag-alergeno">CONTÉM AMENDOIM</span>
                     <code class="code-tag">GET /api/v1/corte</code>
                     <code class="code-tag">POST /api/v1/pix</code>
                 </div>

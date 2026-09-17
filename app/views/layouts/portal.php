@@ -49,20 +49,16 @@ $isSaldoBaixo = ($saldoAtual < 15.00);
             </div>
         </a>
 
-        <!-- Widget de Saldo e Ações da Carteira Familiar -->
+        <!-- Widget de Saldo da Carteira Familiar (Informativo e Discreto) -->
         <div class="d-flex align-items-center gap-3">
-            <div class="portal-wallet-card <?php echo $isSaldoBaixo ? 'wallet-low' : ''; ?>">
+            <a href="<?php echo $baseUrl; ?>/portal/carteira" class="portal-wallet-card <?php echo $isSaldoBaixo ? 'wallet-low' : ''; ?> text-decoration-none" title="Ver Carteira Familiar e Extrato">
                 <div class="d-flex flex-column text-end">
                     <span class="wallet-label">Saldo Disponível</span>
                     <span class="wallet-value font-tabular">
                         R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
                     </span>
                 </div>
-                <a href="<?php echo $baseUrl; ?>/portal/recarga" class="btn btn-enterprise btn-sm btn-success" title="Recarregar via Pix">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z"/></svg>
-                    <span>Recarregar</span>
-                </a>
-            </div>
+            </a>
 
             <!-- Perfil do Responsável e Logout -->
             <div class="dropdown d-none d-md-block">

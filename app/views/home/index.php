@@ -226,7 +226,7 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
                         <div>
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <strong style="font-size: 13px;">Portal da Família</strong>
-                                <span class="tag-alergeno" style="font-size: 10px;">Responsáveis</span>
+                                <code class="code-tag" style="font-size: 10px;">Responsáveis</code>
                             </div>
                             <p class="text-muted" style="font-size: 12px; line-height: 1.4;">
                                 Layout completo para pais e responsáveis com saldo familiar em destaque, dependentes vinculados e agendamentos.

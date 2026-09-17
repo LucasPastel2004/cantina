@@ -125,6 +125,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Implementação de query de versão (`?v=5.0.1`) nos links de `custom.css` para invalidar caches antigos do navegador.
   * Atualização da métrica executiva de infraestrutura na tela Home (`/`) e na API (`/api/status`) sincronizando o indicador para "Fase 5 Concluída".
   * Teste `tests/web_simulation_test.php` atualizado e aprovado com 5/5 requisições simuladas com sucesso.
+  * **Refinamento de UX & Despoluição Visual (Feedback do Usuário):**
+    * Remoção do botão redundante `+ Recarregar` da barra superior no Portal da Família, transformando o widget de saldo em um componente informativo discreto com link para o extrato.
+    * Centralização da ação de recarga dentro do contexto do card "Carteira Familiar" com o botão sóbrio `Recarregar Saldo`.
+    * Remoção dos colchetes e caixas pesadas da indicação de alérgenos (`[LACTOSE]`), substituindo por destaque limpo em negrito (`Lactose`) com cor âmbar corporativa.
 
 ---
 

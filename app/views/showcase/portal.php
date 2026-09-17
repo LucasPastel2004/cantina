@@ -30,8 +30,8 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
                 </div>
             </div>
             <div class="mt-4 d-flex gap-2">
-                <a href="<?php echo $baseUrl; ?>/portal/recarga" class="btn btn-enterprise btn-success w-100">
-                    Recarga Pix Imediata
+                <a href="<?php echo $baseUrl; ?>/portal/recarga" class="btn btn-enterprise btn-primary w-100">
+                    Recarregar Saldo
                 </a>
                 <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary w-100">
                     Ver Extrato
@@ -63,10 +63,12 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
                                     </div>
                                 </div>
                             </div>
-                            <div>
+                            <div class="text-end">
                                 <?php if (!empty($dep['alergias'])): ?>
                                     <?php foreach ($dep['alergias'] as $alergia): ?>
-                                        <span class="tag-alergeno" title="Restrição alimentar declarada">[<?php echo htmlspecialchars($alergia, ENT_QUOTES, 'UTF-8'); ?>]</span>
+                                        <span class="fw-bold" style="font-size: 13px; color: #b45309;" title="Restrição alimentar declarada">
+                                            <?php echo htmlspecialchars($alergia, ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <span class="text-microcopy text-muted">Sem restrições</span>
