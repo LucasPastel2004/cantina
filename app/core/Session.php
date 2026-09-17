@@ -117,7 +117,7 @@ class Session
      */
     public static function regenerate(bool $deleteOldSession = true): void
     {
-        if (session_status() === PHP_SESSION_ACTIVE) {
+        if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
             session_regenerate_id($deleteOldSession);
         }
     }
@@ -165,7 +165,7 @@ class Session
     {
         if (session_status() === PHP_SESSION_ACTIVE) {
             $_SESSION = [];
-            if (ini_get('session.use_cookies')) {
+            if (ini_get('session.use_cookies') && !headers_sent()) {
                 $params = session_get_cookie_params();
                 setcookie(
                     session_name(),

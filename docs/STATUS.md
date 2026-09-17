@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 5 — Identidade Visual Institucional e Layouts Base (DESIGN.md)
-* **Status da Fase 5:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 6 — Autenticação, Sessão Segura e Controle de Acesso (RBAC)
-* **Última Atualização:** 2026-09-17 09:45:00 (Fase 5 finalizada e validada)
+* **Fase Atual:** Fase 6 — Autenticação, Sessão Segura e Controle de Acesso (RBAC)
+* **Status da Fase 6:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 7 — Configurações Globais e Cadastros Mestres com Soft Delete
+* **Última Atualização:** 2026-09-17 10:18:00 (Fase 6 finalizada e validada)
 
 ---
 
@@ -133,11 +133,42 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 6 — Autenticação, Sessão Segura e Controle de Acesso (RBAC)
-* [ ] Implementação de `app/core/Auth.php` e `app/core/RBAC.php`.
-* [ ] Tela de login unificada (`app/views/auth/login.php`).
-* [ ] Fluxo de primeiro acesso e recuperação com WhatsApp.
-* [ ] Modal de aceite dos Termos e Políticas da Cantina.
+### [x] Fase 6 — Autenticação, Sessão Segura e Controle de Acesso (RBAC)
+* [x] Implementação de `app/core/Auth.php`:
+  * Autenticação segregada: Responsáveis familiares via CPF e senha; Equipe interna via usuário e senha.
+  * Hashing seguro de senhas com algoritmo Bcrypt (`password_hash` / `password_verify`).
+  * Regeneração de identificador de sessão (`Session::regenerate(true)`) no login para neutralizar ataques de Session Fixation.
+  * Mecanismo de bloqueio automático por força bruta (rate limiting) após 5 tentativas incorretas na janela de 15 minutos com auditoria.
+  * Encerramento seguro de sessão com limpeza de chaves e trilha de logout.
+* [x] Implementação de `app/core/RBAC.php`:
+  * Matriz completa de permissões funcionais baseada na Seção 8 do `docs/FSD.md` cobrindo os 4 perfis (`responsavel`, `operador`, `administrador`, `colaborador`).
+  * Middlewares de rota: `requireAuth`, `requireGuest` e `requireRole` com redirecionamento amigável e resposta JSON 403 para requisições assíncronas.
+  * Trilha de auditoria automática em `logs_seguranca` para infrações de acesso negado.
+* [x] Implementação dos Modelos de Domínio em `app/models/`:
+  * `Usuario.php`: Gestão de operadores e administradores com suporte a soft delete (`deleted_at`).
+  * `Responsavel.php`: Gestão de titulares familiares, higienização de CPF, verificação de pendência de primeiro acesso, consulta de dependentes e formalização de termos.
+* [x] Implementação do Adaptador `app/services/WhatsAppService.php`:
+  * Geração de códigos criptográficos de 6 dígitos (`random_int(100000, 999999)`).
+  * Envio transacional de códigos de primeiro acesso e recuperação com suporte a modo mock/local gravando em `storage/logs/security.log` e integração via API REST.
+* [x] Desenvolvimento do Controlador `app/controllers/AuthController.php`:
+  * `login` e `loginPost`: Tela unificada em abas com validação CSRF, máscara de CPF e redirecionamento dinâmico.
+  * `logout`: Encerramento seguro com limpeza de sessão.
+  * `primeiroAcesso`, `primeiroAcessoSolicitar`, `primeiroAcessoCodigo`, `primeiroAcessoValidarCodigo`, `primeiroAcessoSenha` e `primeiroAcessoConcluir`: Fluxo de ativação em 3 etapas com validação de código WhatsApp, criação de senha e gravação de timestamp de aceite dos termos.
+  * `recuperarSenha`, `recuperarSenhaSolicitar`, `recuperarSenhaCodigo` e `recuperarSenhaRedefinir`: Fluxo de redefinição de senha com código temporário.
+  * `termos`: Visualização dos Termos e Políticas da Cantina.
+* [x] Desenvolvimento dos Controladores e Telas de Destino:
+  * `PortalController.php` & `app/views/portal/index.php`: Dashboard familiar com saldo em destaque, alerta MED (se houver) e lista de alunos vinculados.
+  * `AdminController.php` & `app/views/admin/index.php`: Dashboard operacional com stat-strip executivo e atalhos para corte, tickets, PDV e caixa.
+* [x] Construção das Telas em `app/views/auth/` alinhadas ao `docs/DESIGN.md`:
+  * `login.php`: Alternador sóbrio entre Portal da Família e Equipe da Cantina.
+  * `primeiro_acesso_cpf.php`: Inserção de CPF com máscara.
+  * `primeiro_acesso_codigo.php`: Campo centralizado de 6 dígitos com fonte tabular e dica de código em ambiente local.
+  * `primeiro_acesso_senha.php`: Definição de senha com confirmação e checkbox obrigatório de termos.
+  * `recuperar_senha.php` & `recuperar_senha_codigo.php`: Telas de recuperação de credenciais.
+  * `termos.php`: Termos de uso e políticas nutricionais/operacionais oficiais da escola.
+* [x] Registro das rotas públicas de autenticação e rotas protegidas por middleware RBAC no Front Controller `index.php`.
+* [x] Bateria de testes automatizados `tests/fase6_test.php` executada e homologada com 87 asserções aprovadas com 100% de sucesso.
+* [x] Suítes de testes de regressão (Fases 2, 3, 4, 5 e simulação web) reexecutadas e 100% aprovadas.
 
 ---
 
@@ -215,6 +246,5 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 6 — Autenticação, Sessão Segura e Controle de Acesso (RBAC)**, implementando `app/core/Auth.php`, `app/core/RBAC.php`, modelos `Usuario.php` e `Responsavel.php`, o controlador `AuthController.php`, as telas de login no layout `auth` (`app/views/auth/login.php`), primeiro acesso com WhatsApp e modal de aceite dos Termos da Cantina.
-
+Iniciar a **Fase 7 — Configurações Globais e Cadastros Mestres com Soft Delete**, implementando os modelos `Configuracao.php`, `Categoria.php`, `Produto.php`, `Colaborador.php`, `Turma.php`, o controlador administrativo e as telas de gestão de parâmetros da cantina, cardápio de produtos com botão "Ativo/Pausado", colaboradores e turmas escolares.
 

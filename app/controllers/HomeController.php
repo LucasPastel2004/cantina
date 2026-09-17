@@ -27,7 +27,7 @@ class HomeController extends Controller
             'appName'     => $config['app']['name'] ?? 'Cantina Web',
             'environment' => $config['app']['env'] ?? 'production',
             'phpVersion'  => PHP_VERSION,
-            'faseAtual'   => 'Fase 5 Concluída (Identidade Visual e Layouts Base)',
+            'faseAtual'   => 'Fase 6 Concluída (Autenticação, Sessão e RBAC)',
             'timestamp'   => date('d/m/Y H:i:s'),
             'sessionActive' => session_status() === PHP_SESSION_ACTIVE,
             'csrfToken'   => Session::getCsrfToken()
@@ -49,7 +49,7 @@ class HomeController extends Controller
             'app'         => $config['app']['name'] ?? 'Cantina Web',
             'environment' => $config['app']['env'] ?? 'production',
             'php_version' => PHP_VERSION,
-            'fase_atual'  => 'Fase 5 Concluída (Identidade Visual e Layouts Base)',
+            'fase_atual'  => 'Fase 6 Concluída (Autenticação, Sessão e RBAC)',
             'mvc_core'    => [
                 'router'       => 'App\Core\Router',
                 'controller'   => 'App\Core\Controller',

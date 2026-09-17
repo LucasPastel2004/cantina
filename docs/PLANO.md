@@ -148,21 +148,21 @@ Fase 17 - Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança
 
 * **Objetivo:** Construir a autenticação segregada por perfil (Responsável vs Equipe da Cantina), fluxo de primeiro acesso com WhatsApp, termos de uso e middleware RBAC.
 * **Checklist de Tarefas:**
-  - [ ] Implementar `app/core/Auth.php` e `app/core/RBAC.php` com as 4 permissões do FSD (Responsável, Operador, Administrador, Colaborador).
-  - [ ] Criar `app/models/Usuario.php` e `app/models/Responsavel.php`.
-  - [ ] Desenvolver `app/controllers/AuthController.php`.
-  - [ ] Construir telas de login (`app/views/auth/login.php`) com seletor de perfil e logo centralizado.
-  - [ ] Construir fluxo de primeiro acesso (`app/views/auth/primeiro_acesso.php`) com código WhatsApp de 6 dígitos.
-  - [ ] Construir modal de aceite dos Termos e Políticas da Cantina com registro da data/hora e IP.
-  - [ ] Implementar fluxo de recuperação de senha via código temporário no WhatsApp.
-  - [ ] Proteger rotas contra acessos não autorizados gravando infrações em `logs_seguranca`.
+  - [x] Implementar `app/core/Auth.php` e `app/core/RBAC.php` com as 4 permissões do FSD (Responsável, Operador, Administrador, Colaborador).
+  - [x] Criar `app/models/Usuario.php` e `app/models/Responsavel.php`.
+  - [x] Desenvolver `app/controllers/AuthController.php`.
+  - [x] Construir telas de login (`app/views/auth/login.php`) com seletor de perfil e logo centralizado.
+  - [x] Construir fluxo de primeiro acesso (`app/views/auth/primeiro_acesso_*.php`) com código WhatsApp de 6 dígitos.
+  - [x] Construir modal e tela de aceite dos Termos e Políticas da Cantina com registro da data/hora e IP.
+  - [x] Implementar fluxo de recuperação de senha via código temporário no WhatsApp.
+  - [x] Proteger rotas contra acessos não autorizados gravando infrações em `logs_seguranca`.
 * **Critérios de Pronto:**
   - Responsáveis acessam exclusivamente o Portal da Família.
   - Operadores e Administradores acessam o Painel Interno conforme seu nível de acesso.
   - Bloqueio por excesso de tentativas de senha com registro em auditoria.
 * **Arquivos e Pastas Alterados:**
-  - `app/core/Auth.php`, `app/core/RBAC.php`, `app/controllers/AuthController.php`, `app/views/auth/*`, `app/models/Usuario.php`, `app/models/Responsavel.php`.
-* **Observações de Dependência:** Depende das Fases 2, 4 e 5.
+  - `app/core/Auth.php`, `app/core/RBAC.php`, `app/core/Session.php`, `app/controllers/AuthController.php`, `app/controllers/PortalController.php`, `app/controllers/AdminController.php`, `app/views/auth/*`, `app/views/portal/*`, `app/views/admin/*`, `app/models/Usuario.php`, `app/models/Responsavel.php`, `app/services/WhatsAppService.php`, `tests/fase6_test.php`.
+* **Observações de Dependência:** Depende das Fases 2, 4 e 5. Concluída com 87 asserções aprovadas.
 
 ---
 

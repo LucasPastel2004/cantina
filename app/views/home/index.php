@@ -58,7 +58,7 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
             </div>
             <div class="stat-strip-item">
                 <span class="stat-strip-label">Fase Vigente</span>
-                <span class="stat-strip-value text-primary font-tabular">Fase 5 Concluída</span>
+                <span class="stat-strip-value text-primary font-tabular"><?php echo htmlspecialchars($faseAtual ?? 'Fase 6 Concluída', ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
         </section>
 

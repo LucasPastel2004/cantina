@@ -61,5 +61,44 @@ $router->get('/design/portal', [\App\Controllers\ShowcaseController::class, 'por
 $router->get('/design/admin', [\App\Controllers\ShowcaseController::class, 'admin']);
 $router->get('/design/components', [\App\Controllers\ShowcaseController::class, 'components']);
 
+// Rotas de Autenticação e Primeiro Acesso (Fase 6 — FSD Área 1 & RBAC)
+$router->get('/login', [\App\Controllers\AuthController::class, 'login']);
+$router->post('/login', [\App\Controllers\AuthController::class, 'loginPost']);
+$router->post('/logout', [\App\Controllers\AuthController::class, 'logout']);
+
+$router->get('/primeiro-acesso', [\App\Controllers\AuthController::class, 'primeiroAcesso']);
+$router->post('/primeiro-acesso/solicitar', [\App\Controllers\AuthController::class, 'primeiroAcessoSolicitar']);
+$router->get('/primeiro-acesso/codigo', [\App\Controllers\AuthController::class, 'primeiroAcessoCodigo']);
+$router->post('/primeiro-acesso/validar-codigo', [\App\Controllers\AuthController::class, 'primeiroAcessoValidarCodigo']);
+$router->post('/primeiro-acesso/reenviar', [\App\Controllers\AuthController::class, 'primeiroAcessoReenviar']);
+$router->get('/primeiro-acesso/senha', [\App\Controllers\AuthController::class, 'primeiroAcessoSenha']);
+$router->post('/primeiro-acesso/concluir', [\App\Controllers\AuthController::class, 'primeiroAcessoConcluir']);
+
+$router->get('/recuperar-senha', [\App\Controllers\AuthController::class, 'recuperarSenha']);
+$router->post('/recuperar-senha/solicitar', [\App\Controllers\AuthController::class, 'recuperarSenhaSolicitar']);
+$router->get('/recuperar-senha/codigo', [\App\Controllers\AuthController::class, 'recuperarSenhaCodigo']);
+$router->post('/recuperar-senha/redefinir', [\App\Controllers\AuthController::class, 'recuperarSenhaRedefinir']);
+
+$router->get('/termos', [\App\Controllers\AuthController::class, 'termos']);
+
+// Rotas Protegidas por Perfil (RBAC)
+// 1. Portal da Família: Acesso exclusivo do perfil 'responsavel'
+$router->get('/portal', [\App\Controllers\PortalController::class, 'index'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+
+// 2. Painel Operacional: Acesso permitido para 'operador' e 'administrador'
+$router->get('/admin', [\App\Controllers\AdminController::class, 'index'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/corte', [\App\Controllers\AdminController::class, 'index'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+
+// 3. Área Administrativa Restrita: Acesso exclusivo para 'administrador'
+$router->get('/admin/configuracoes', [\App\Controllers\AdminController::class, 'index'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
 // 9. Despacha a requisição HTTP atual
 $router->dispatch();
