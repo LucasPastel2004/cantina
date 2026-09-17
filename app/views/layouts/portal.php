@@ -30,7 +30,7 @@ $isSaldoBaixo = ($saldoAtual < 15.00);
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
 
     <!-- Design System Corporativo Anti-Slop -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=5.0.1">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=5.0.3">
 
     <!-- Favicon Oficial -->
     <link rel="icon" type="image/jpeg" href="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg">

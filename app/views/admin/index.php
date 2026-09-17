@@ -40,39 +40,55 @@ require __DIR__ . '/../partials/stat_strip.php';
 
 <div class="row g-4 mt-1">
     <div class="col-12 col-md-6 col-lg-3">
-        <div class="card-enterprise p-3 h-100">
-            <h6 class="font-weight-bold text-dark mb-2">Corte de Fornecedor</h6>
-            <p class="text-microcopy text-secondary mb-3">Consolidação automática de salgados encomendados pontualmente no corte.</p>
-            <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-secondary btn-sm w-100">
-                Acessar Corte
-            </a>
+        <div class="card-enterprise h-100">
+            <div class="card-enterprise-header">
+                <span class="font-weight-bold text-dark">Corte de Fornecedor</span>
+            </div>
+            <div class="card-enterprise-body p-3">
+                <p class="text-microcopy text-secondary mb-3">Consolidação automática de salgados encomendados pontualmente no corte.</p>
+                <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                    Acessar Corte
+                </a>
+            </div>
         </div>
     </div>
     <div class="col-12 col-md-6 col-lg-3">
-        <div class="card-enterprise p-3 h-100">
-            <h6 class="font-weight-bold text-dark mb-2">Tickets Térmicos</h6>
-            <p class="text-microcopy text-secondary mb-3">Impressão contínua em bobina de 80mm e reemissão de 2ª via com auditoria.</p>
-            <a href="<?php echo $baseUrl; ?>/operacional/tickets" class="btn btn-enterprise btn-secondary btn-sm w-100">
-                Imprimir Tickets
-            </a>
+        <div class="card-enterprise h-100">
+            <div class="card-enterprise-header">
+                <span class="font-weight-bold text-dark">Tickets Térmicos</span>
+            </div>
+            <div class="card-enterprise-body p-3">
+                <p class="text-microcopy text-secondary mb-3">Impressão contínua em bobina de 80mm e reemissão de 2ª via com auditoria.</p>
+                <a href="<?php echo $baseUrl; ?>/operacional/tickets" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                    Imprimir Tickets
+                </a>
+            </div>
         </div>
     </div>
     <div class="col-12 col-md-6 col-lg-3">
-        <div class="card-enterprise p-3 h-100">
-            <h6 class="font-weight-bold text-dark mb-2">Ponto de Venda (PDV)</h6>
-            <p class="text-microcopy text-secondary mb-3">Vendas avulsas no balcão e consumo de professores com desconto em folha.</p>
-            <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="btn btn-enterprise btn-secondary btn-sm w-100">
-                Abrir PDV
-            </a>
+        <div class="card-enterprise h-100">
+            <div class="card-enterprise-header">
+                <span class="font-weight-bold text-dark">Ponto de Venda (PDV)</span>
+            </div>
+            <div class="card-enterprise-body p-3">
+                <p class="text-microcopy text-secondary mb-3">Vendas avulsas no balcão e consumo de professores com desconto em folha.</p>
+                <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                    Abrir PDV
+                </a>
+            </div>
         </div>
     </div>
     <div class="col-12 col-md-6 col-lg-3">
-        <div class="card-enterprise p-3 h-100">
-            <h6 class="font-weight-bold text-dark mb-2">Sessão de Caixa</h6>
-            <p class="text-microcopy text-secondary mb-3">Abertura com troco e conferência de fechamento por turno (11:00 / 16:00).</p>
-            <a href="<?php echo $baseUrl; ?>/operacional/caixa" class="btn btn-enterprise btn-secondary btn-sm w-100">
-                Gerenciar Caixa
-            </a>
+        <div class="card-enterprise h-100">
+            <div class="card-enterprise-header">
+                <span class="font-weight-bold text-dark">Sessão de Caixa</span>
+            </div>
+            <div class="card-enterprise-body p-3">
+                <p class="text-microcopy text-secondary mb-3">Abertura com troco e conferência de fechamento por turno (11:00 / 16:00).</p>
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                    Gerenciar Caixa
+                </a>
+            </div>
         </div>
     </div>
 </div>

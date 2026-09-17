@@ -176,8 +176,14 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Remoção do exemplo de nomes de usuário (`ex: operador-maria ou admin`) no campo de identificador, prevenindo vazamento de padrões de login e tentativas de enumeração de contas.
   * Correção do componente `app/views/partials/alert.php` para desempacotar arrays de mensagens flash de `Session::getFlash()`, eliminando o `TypeError` em `htmlspecialchars()` nas rotas `/portal` e `/login`.
   * Suporte a logout seguro via GET e POST com validação flexível de CSRF em `app/controllers/AuthController.php` e registro de rota em `index.php`.
-  * Criação da suíte `tests/auth_flow_test.php` aprovada com 6/6 testes de renderização de alertas, login e logout.
-  * Atualização da versão dos assets nos layouts para `?v=5.0.2` para invalidação imediata de cache no navegador.
+  * Criação da suíte `tests/auth_flow_test.php` aprovada com 7/7 testes de renderização de alertas, login, logout e código mock.
+  * Resolução de persistência de código mock entre requisições HTTP e adição de limpeza automática (teardown) em `tests/fase6_test.php`.
+  * **Refinamento Visual Anti-Monotonia (Opção 1 + Opção 4 combinadas):**
+    * Contraste estrutural de fundo com `--surface-bg: #edf2f7` (Cool Slate Corporativo), eliminando a sensação de "folha contínua branca" e conferindo profundidade imediata à interface.
+    * Elevação tátil nítida nos cards (`.card-enterprise`, `.auth-card`) com micro-sombras e hover refinado.
+    * Estruturação de cabeçalhos de cards divididos com camada neutra suave (`.card-enterprise-header` em `#f8fafc` com divisor de 1px `#e2e8f0`) no Portal da Família e Painel da Cantina.
+    * Divisor visual no cabeçalho dos formulários de autenticação (`.auth-header-block`) e estilização do `.portal-header`.
+    * Atualização da versão dos assets nos layouts para `?v=5.0.3` para invalidação imediata de cache no navegador.
 
 ---
 

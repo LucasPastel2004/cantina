@@ -13,9 +13,10 @@
   --brand-light-blue: #eff6ff;
   --brand-cyan: #0284c7;
 
-  /* Superfícies e Fundos */
-  --surface-bg: #f1f5f9;
+  /* Superfícies e Fundos (Anti-Monotonia: Opção 1) */
+  --surface-bg: #edf2f7;
   --surface-card: #ffffff;
+  --surface-header: #f8fafc;
   --surface-disabled: #f8fafc;
 
   /* Bordas */
@@ -61,7 +62,8 @@
 }
 
 /* Reset Geral e Tipografia Base */
-body {
+body,
+.bg-surface {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--surface-bg);
   color: var(--text-primary);
@@ -441,26 +443,38 @@ select:focus-visible {
 .cell-right { text-align: right; }
 .cell-left { text-align: left; }
 
-/* Cards e Contêineres */
+/* Cards e Contêineres Corporativos (Anti-Monotonia: Opção 1 + Opção 4) */
 .card-enterprise {
   background-color: var(--surface-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: var(--space-4);
   margin-bottom: var(--space-4);
-  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.02);
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.card-enterprise:hover {
+  border-color: var(--border-default);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
 }
 
 .card-enterprise-header {
+  background-color: var(--surface-header);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 18px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: var(--space-2);
-  margin-bottom: var(--space-3);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  letter-spacing: -0.01em;
+}
+
+.card-enterprise-body {
+  padding: 18px 20px;
+  background-color: var(--surface-card);
 }
 
 /* Indicadores de Status Discretos (Substituição de Pílulas Fluorescentes) */
@@ -1061,6 +1075,13 @@ select:focus-visible {
   color: #b45309;
 }
 
+.portal-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 10px 0;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
+}
+
 .portal-nav-bar {
   background-color: #ffffff;
   border-bottom: 1px solid var(--border-subtle);
@@ -1337,10 +1358,16 @@ select:focus-visible {
 
 .auth-card {
   background-color: #ffffff;
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 24px;
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  padding: 26px 24px;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+}
+
+.auth-header-block {
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 /* Alternador de Opções de Login em Formato de Botões (Segmented Control) */

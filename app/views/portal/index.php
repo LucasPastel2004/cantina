@@ -41,62 +41,66 @@ $bloqueadoMed = $bloqueadoMed ?? false;
 <div class="row g-4 mb-4">
     <!-- Card de Saldo e Carteira -->
     <div class="col-12 col-md-5">
-        <div class="card-enterprise p-4 h-100">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <span class="text-microcopy text-uppercase font-weight-bold text-muted">Saldo Disponível</span>
-                <span class="status-indicator status-active font-microcopy"><span class="bullet">●</span> Carteira Ativa</span>
+        <div class="card-enterprise h-100">
+            <div class="card-enterprise-header">
+                <span class="text-microcopy text-uppercase font-weight-bold text-secondary">Carteira Familiar</span>
+                <span class="status-indicator status-success font-microcopy"><span class="bullet">●</span> Carteira Ativa</span>
             </div>
-            <div class="font-tabular font-weight-bold mb-3" style="font-size: 28px; color: #0f172a;">
-                R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
-            </div>
-            <p class="text-microcopy text-secondary mb-4">
-                Saldo unificado e compartilhado automaticamente entre todos os seus dependentes.
-            </p>
-            <div class="d-flex gap-2">
-                <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary flex-fill text-center">
-                    Recarregar Saldo
-                </a>
-                <a href="<?php echo $baseUrl; ?>/portal/extrato" class="btn btn-enterprise btn-secondary flex-fill text-center">
-                    Ver Extrato
-                </a>
+            <div class="card-enterprise-body">
+                <span class="text-microcopy text-muted d-block mb-1">Saldo Disponível</span>
+                <div class="font-tabular font-weight-bold mb-3" style="font-size: 28px; color: #0f172a;">
+                    R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
+                </div>
+                <p class="text-microcopy text-secondary mb-4">
+                    Saldo unificado e compartilhado automaticamente entre todos os seus dependentes.
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary flex-fill text-center">
+                        Recarregar Saldo
+                    </a>
+                    <a href="<?php echo $baseUrl; ?>/portal/extrato" class="btn btn-enterprise btn-secondary flex-fill text-center">
+                        Ver Extrato
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Dependentes Vinculados -->
     <div class="col-12 col-md-7">
-        <div class="card-enterprise p-4 h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="card-enterprise h-100">
+            <div class="card-enterprise-header">
                 <h2 class="h6 font-weight-bold text-dark mb-0">Dependentes Cadastrados</h2>
                 <span class="text-microcopy text-muted font-tabular"><?php echo count($dependentes); ?> aluno(s)</span>
             </div>
-
-            <?php if (empty($dependentes)): ?>
-                <div class="text-center py-4 text-muted text-microcopy">
-                    <p class="mb-0">Nenhum dependente vinculado à sua conta no momento.</p>
-                    <small>Seus dependentes serão vinculados pela secretaria escolar.</small>
-                </div>
-            <?php else: ?>
-                <div class="list-group list-group-flush">
-                    <?php foreach ($dependentes as $dep): ?>
-                        <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="font-weight-semibold text-dark"><?php echo htmlspecialchars($dep['nome'], ENT_QUOTES, 'UTF-8'); ?></div>
-                                <div class="text-microcopy text-muted font-tabular">
-                                    Matrícula: <?php echo htmlspecialchars($dep['matricula'], ENT_QUOTES, 'UTF-8'); ?> &bull; 
-                                    Turma: <?php echo htmlspecialchars($dep['nome_turma'] ?? 'A definir', ENT_QUOTES, 'UTF-8'); ?> &bull; 
-                                    Turno: <?php echo ucfirst($dep['turno'] ?? 'matutino'); ?>
+            <div class="card-enterprise-body">
+                <?php if (empty($dependentes)): ?>
+                    <div class="text-center py-4 text-muted text-microcopy">
+                        <p class="mb-0">Nenhum dependente vinculado à sua conta no momento.</p>
+                        <small>Seus dependentes serão vinculados pela secretaria escolar.</small>
+                    </div>
+                <?php else: ?>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($dependentes as $dep): ?>
+                            <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="font-weight-semibold text-dark"><?php echo htmlspecialchars($dep['nome'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-microcopy text-muted font-tabular">
+                                        Matrícula: <?php echo htmlspecialchars($dep['matricula'], ENT_QUOTES, 'UTF-8'); ?> &bull; 
+                                        Turma: <?php echo htmlspecialchars($dep['nome_turma'] ?? 'A definir', ENT_QUOTES, 'UTF-8'); ?> &bull; 
+                                        Turno: <?php echo ucfirst($dep['turno'] ?? 'matutino'); ?>
+                                    </div>
+                                </div>
+                                <div>
+                                    <a href="<?php echo $baseUrl; ?>/portal/alergias?aluno=<?php echo $dep['id']; ?>" class="btn btn-enterprise btn-secondary btn-sm">
+                                        Restrições
+                                    </a>
                                 </div>
                             </div>
-                            <div>
-                                <a href="<?php echo $baseUrl; ?>/portal/alergias?aluno=<?php echo $dep['id']; ?>" class="btn btn-enterprise btn-secondary btn-sm">
-                                    Restrições
-                                </a>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </div>

@@ -19,7 +19,7 @@ $debug = $debug ?? false;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Falha Operacional Interceptada | Cantina Web</title>
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=5.0.1">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=5.0.3">
 </head>
 <body class="d-flex flex-column min-vh-100 bg-surface">
     <header class="app-header">
