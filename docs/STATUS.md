@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 4 — Migrações Transacionais, Fiscais, Financeiras e Auditoria (013 a 026)
-* **Status da Fase 4:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 5 — Identidade Visual Institucional e Layouts Base (DESIGN.md)
-* **Última Atualização:** 2026-09-16 15:58:00 (Fase 4 finalizada e validada)
+* **Fase Atual:** Fase 5 — Identidade Visual Institucional e Layouts Base (DESIGN.md)
+* **Status da Fase 5:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 6 — Autenticação, Sessão Segura e Controle de Acesso (RBAC)
+* **Última Atualização:** 2026-09-17 09:45:00 (Fase 5 finalizada e validada)
 
 ---
 
@@ -97,9 +97,29 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 5 — Identidade Visual Institucional e Layouts Base (DESIGN.md)
-* [ ] Criação dos templates mestres em `app/views/layouts/` (`header.php`, `footer.php`, `sidebar.php`).
-* [ ] Criação dos componentes visuais em `app/views/partials/` (`alert.php`, `modal.php`, `empty_state.php`, `loading.php`).
+### [x] Fase 5 — Identidade Visual Institucional e Layouts Base (DESIGN.md)
+* [x] Criação dos templates mestres em `app/views/layouts/`:
+  * `header.php`: Topo base HTML5 com metadados responsivos, favicon institucional e injeção de assets locais (sem CDN externa).
+  * `footer.php`: Rodapé institucional com scripts locais e lema "Valores para o Futuro!".
+  * `sidebar.php`: Barra lateral operacional de alta densidade (240px fixa em desktop) com seções Operacional, Estoque e Administração, badge do operador e logout seguro.
+  * `portal.php`: Layout mestre completo para o Portal da Família com widget de saldo familiar em destaque com tipografia tabular (`font-variant-numeric: tabular-nums`) e navegação limpa.
+  * `admin.php`: Layout mestre completo para o Painel da Cantina com duas colunas (Sidebar + Topbar operacional com chips de turno/caixa e área dinâmica `$content`).
+  * `auth.php`: Layout minimalista centralizado para telas de autenticação e primeiro acesso com logotipo circular oficial ampliado para 84px com micro-aro sutil.
+* [x] Desenvolvimento de componentes parciais reutilizáveis em `app/views/partials/`:
+  * `alert.php`: Alertas corporativos com alto contraste WCAG AA, ícones SVG semáforo-free e integração automática com mensagens flash da `Session`.
+  * `modal.php`: Modais acessíveis com foco visível nítido (`:focus-visible`) e botões com feedback tátil físico.
+  * `empty_state.php`: Estado vazio padronizado com a frase obrigatória *"Não há nada para mostrar aqui"*.
+  * `loading.php`: Estado de carregamento com spinner azul cobalto institucional (`#1d4ed8`) e skeletons com efeito shimmer.
+  * `stat_strip.php`: Faixa contínua de métricas executivas com divisores finos verticais e números tabulares.
+* [x] Refinamento do Design System em `assets/css/custom.css` e `assets/js/app.js`:
+  * Acento único no azul cobalto institucional `#1d4ed8` (hover `#1e40af`, foco `#2563eb`).
+  * Numerais tabulares obrigatórios (`.font-tabular`).
+  * Microinteração tátil de clique físico nos botões (`:active { transform: translateY(1px) scale(0.985); }`).
+  * Funções utilitárias JavaScript para toggle da sidebar no mobile (`toggleSidebar()`) e controle de modais (`abrirModal()`, `fecharModal()`).
+* [x] Criação do controlador de vitrine `app/controllers/ShowcaseController.php` e views de homologação visual (`app/views/showcase/portal.php`, `admin.php` e `components.php`).
+* [x] Registro das rotas `/design/portal`, `/design/admin` e `/design/components` no Front Controller `index.php`.
+* [x] Suíte de testes automatizados `tests/fase5_test.php` criada e aprovada com 74 asserções (100% de sucesso).
+* [x] Testes de regressão das fases 2, 3 e 4 executados e aprovados com 100% de sucesso.
 
 ---
 
@@ -185,5 +205,6 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 5 — Identidade Visual Institucional e Layouts Base (DESIGN.md)**, criando os templates mestres em `app/views/layouts/` (`header.php`, `footer.php`, `sidebar.php`) e componentes visuais corporativos anti-slop em `app/views/partials/` (`alert.php`, `modal.php`, `empty_state.php`, `loading.php`).
+Iniciar a **Fase 6 — Autenticação, Sessão Segura e Controle de Acesso (RBAC)**, implementando `app/core/Auth.php`, `app/core/RBAC.php`, modelos `Usuario.php` e `Responsavel.php`, o controlador `AuthController.php`, as telas de login no layout `auth` (`app/views/auth/login.php`), primeiro acesso com WhatsApp e modal de aceite dos Termos da Cantina.
+
 

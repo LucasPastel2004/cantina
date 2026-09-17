@@ -56,5 +56,10 @@ $router->get('/teste/{id}', [\App\Controllers\HomeController::class, 'testeParam
 $router->post('/teste-csrf', [\App\Controllers\HomeController::class, 'testeCsrf']);
 $router->get('/teste-erro', [\App\Controllers\HomeController::class, 'testeErro']);
 
+// Rotas de Demonstração e Homologação Visual (Fase 5 — DESIGN.md)
+$router->get('/design/portal', [\App\Controllers\ShowcaseController::class, 'portal']);
+$router->get('/design/admin', [\App\Controllers\ShowcaseController::class, 'admin']);
+$router->get('/design/components', [\App\Controllers\ShowcaseController::class, 'components']);
+
 // 9. Despacha a requisição HTTP atual
 $router->dispatch();

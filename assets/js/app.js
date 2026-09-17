@@ -41,3 +41,46 @@ function formatarMoeda(valor) {
     currency: 'BRL'
   }).format(valor || 0);
 }
+
+/**
+ * Alterna visibilidade da barra lateral (Sidebar) em dispositivos móveis
+ */
+function toggleSidebar() {
+  const sidebar = document.getElementById('appSidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+
+  if (sidebar) {
+    sidebar.classList.toggle('sidebar-open');
+  }
+
+  if (backdrop) {
+    backdrop.classList.toggle('show');
+  }
+}
+
+/**
+ * Abre um modal do Bootstrap pelo ID
+ * @param {string} modalId 
+ */
+function abrirModal(modalId) {
+  const modalEl = document.getElementById(modalId);
+  if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+  }
+}
+
+/**
+ * Fecha um modal do Bootstrap pelo ID
+ * @param {string} modalId 
+ */
+function fecharModal(modalId) {
+  const modalEl = document.getElementById(modalId);
+  if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) {
+      modal.hide();
+    }
+  }
+}
+

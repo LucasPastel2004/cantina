@@ -130,17 +130,17 @@ Fase 17 - Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança
 
 * **Objetivo:** Construir as estruturas visuais mestras do sistema em HTML5 e CSS/JS seguindo o Design System utilitário corporativo de alta densidade do Colégio Monteiro Lobato.
 * **Checklist de Tarefas:**
-  - [ ] Criar layout mestre do Portal da Família (`app/views/layouts/header.php`, `footer.php`).
-  - [ ] Criar layout mestre do Painel da Cantina com sidebar operacional (`app/views/layouts/sidebar.php`).
-  - [ ] Desenvolver componentes parciais (`app/views/partials/alert.php`, `modal.php`, `empty_state.php`, `loading.php`).
-  - [ ] Garantir alinhamento de numerais e valores monetários com a classe `.font-tabular`.
-  - [ ] Implementar visualização da logo institucional circular (`assets/img/logo-colegio.jpg`) no topo e cabeçalhos.
+  - [x] Criar layout mestre do Portal da Família (`app/views/layouts/portal.php`, `header.php`, `footer.php`).
+  - [x] Criar layout mestre do Painel da Cantina com sidebar operacional (`app/views/layouts/admin.php`, `sidebar.php`).
+  - [x] Desenvolver componentes parciais (`app/views/partials/alert.php`, `modal.php`, `empty_state.php`, `loading.php`, `stat_strip.php`).
+  - [x] Garantir alinhamento de numerais e valores monetários com a classe `.font-tabular`.
+  - [x] Implementar visualização da logo institucional circular (`assets/img/logo-colegio.jpg`) no topo e cabeçalhos.
 * **Critérios de Pronto:**
   - Layouts responsivos e consistentes renderizados com o Bootstrap local e `custom.css`.
-  - Conformidade visual com as cores institucional `#2563eb`, `#16a34a`, `#dc2626`, `#eab308`.
+  - Conformidade visual com as cores institucional `#1d4ed8` (acento cobalto), `#15803d`, `#b91c1c`, `#92400e`.
 * **Arquivos e Pastas Alterados:**
-  - `app/views/layouts/*`, `app/views/partials/*`.
-* **Observações de Dependência:** Depende das Fases 1 e 2.
+  - `app/views/layouts/*`, `app/views/partials/*`, `assets/css/custom.css`, `assets/js/app.js`, `app/controllers/ShowcaseController.php`, `app/views/showcase/*`.
+* **Observações de Dependência:** Depende das Fases 1 e 2. Concluída com 74 asserções aprovadas.
 
 ---
 

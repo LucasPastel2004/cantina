@@ -211,12 +211,73 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
             </div>
         </div>
 
+        <!-- Seção de Demonstração da Fase 5: Identidade Visual e Layouts Base -->
+        <div class="card-enterprise mb-4">
+            <div class="card-enterprise-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold" style="font-size: 13px; color: var(--text-main);">Fase 5 — Identidade Visual Institucional e Layouts Base</span>
+                    <span class="status-indicator status-success"><span class="bullet" aria-hidden="true">●</span> Concluída</span>
+                </div>
+                <span class="text-microcopy">docs/DESIGN.md</span>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="border rounded p-3 bg-white h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <strong style="font-size: 13px;">Portal da Família</strong>
+                                <span class="tag-alergeno" style="font-size: 10px;">Responsáveis</span>
+                            </div>
+                            <p class="text-muted" style="font-size: 12px; line-height: 1.4;">
+                                Layout completo para pais e responsáveis com saldo familiar em destaque, dependentes vinculados e agendamentos.
+                            </p>
+                        </div>
+                        <a href="<?php echo $baseUrl; ?>/design/portal" class="btn btn-enterprise btn-primary btn-sm w-100">
+                            Ver Portal da Família ↗
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 bg-white h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <strong style="font-size: 13px;">Painel da Cantina</strong>
+                                <code class="code-tag" style="font-size: 10px;">Sidebar 240px</code>
+                            </div>
+                            <p class="text-muted" style="font-size: 12px; line-height: 1.4;">
+                                Layout operacional com barra lateral de alta densidade, topbar com badge de turno e consolidação de salgados.
+                            </p>
+                        </div>
+                        <a href="<?php echo $baseUrl; ?>/design/admin" class="btn btn-enterprise btn-primary btn-sm w-100">
+                            Ver Painel da Cantina ↗
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 bg-white h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <strong style="font-size: 13px;">Galeria de Componentes</strong>
+                                <span class="status-indicator status-neutral"><span class="bullet" aria-hidden="true">●</span> Anti-Slop</span>
+                            </div>
+                            <p class="text-muted" style="font-size: 12px; line-height: 1.4;">
+                                Demonstração de alertas acessíveis, modais corporativos, empty states, loading states e botões táteis.
+                            </p>
+                        </div>
+                        <a href="<?php echo $baseUrl; ?>/design/components" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                            Ver Componentes ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Próxima Fase do Projeto -->
         <div class="p-3 bg-white rounded border d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-3">
                 <span class="status-indicator status-neutral font-tabular" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Próxima Etapa</span>
                 <span class="text-secondary-label" style="font-size: 12px;">
-                    <strong>Fase 3:</strong> Conexão de Banco de Dados e Migrações Estruturais/Cadastrais (001 a 012).
+                    <strong>Fase 6:</strong> Autenticação, Sessão Segura e Controle de Acesso (RBAC).
                 </span>
             </div>
             <a href="https://github.com/LucasPastel2004/cantina" target="_blank" class="btn-enterprise btn-secondary btn-sm">
