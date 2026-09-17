@@ -64,6 +64,7 @@ $router->get('/design/components', [\App\Controllers\ShowcaseController::class, 
 // Rotas de Autenticação e Primeiro Acesso (Fase 6 — FSD Área 1 & RBAC)
 $router->get('/login', [\App\Controllers\AuthController::class, 'login']);
 $router->post('/login', [\App\Controllers\AuthController::class, 'loginPost']);
+$router->get('/logout', [\App\Controllers\AuthController::class, 'logout']);
 $router->post('/logout', [\App\Controllers\AuthController::class, 'logout']);
 
 $router->get('/primeiro-acesso', [\App\Controllers\AuthController::class, 'primeiroAcesso']);

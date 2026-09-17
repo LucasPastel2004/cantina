@@ -17,41 +17,53 @@ $alertsToRender = [];
 
 // 1. Alerta explícito passado como parâmetro
 if (!empty($message)) {
-    $alertsToRender[] = [
-        'type' => $type ?? 'info',
-        'title' => $title ?? null,
-        'message' => $message,
-        'dismissible' => $dismissible ?? true,
-    ];
+    $explicitMessages = is_array($message) ? $message : [$message];
+    foreach ($explicitMessages as $msg) {
+        if (is_string($msg) && trim($msg) !== '') {
+            $alertsToRender[] = [
+                'type'        => $type ?? 'info',
+                'title'       => $title ?? null,
+                'message'     => $msg,
+                'dismissible' => $dismissible ?? true,
+            ];
+        }
+    }
 }
 
-// 2. Alertas provenientes de mensagens flash da Session
+// 2. Alertas provenientes de mensagens flash da Session (suporta 'success', 'danger', 'error', 'warning', 'info')
 if (class_exists(Session::class)) {
-    $flashSuccess = Session::getFlash('success');
-    if ($flashSuccess) {
-        $alertsToRender[] = ['type' => 'success', 'title' => 'Sucesso', 'message' => $flashSuccess, 'dismissible' => true];
-    }
+    $flashCategories = [
+        'success' => ['type' => 'success', 'title' => 'Sucesso'],
+        'danger'  => ['type' => 'danger',  'title' => 'Atenção'],
+        'error'   => ['type' => 'danger',  'title' => 'Atenção'],
+        'warning' => ['type' => 'warning', 'title' => 'Alerta'],
+        'info'    => ['type' => 'info',    'title' => 'Informação'],
+    ];
 
-    $flashError = Session::getFlash('error');
-    if ($flashError) {
-        $alertsToRender[] = ['type' => 'danger', 'title' => 'Atenção', 'message' => $flashError, 'dismissible' => true];
-    }
-
-    $flashWarning = Session::getFlash('warning');
-    if ($flashWarning) {
-        $alertsToRender[] = ['type' => 'warning', 'title' => 'Alerta', 'message' => $flashWarning, 'dismissible' => true];
-    }
-
-    $flashInfo = Session::getFlash('info');
-    if ($flashInfo) {
-        $alertsToRender[] = ['type' => 'info', 'title' => 'Informação', 'message' => $flashInfo, 'dismissible' => true];
+    foreach ($flashCategories as $flashKey => $meta) {
+        $flashMsgs = Session::getFlash($flashKey);
+        if (!empty($flashMsgs)) {
+            $items = is_array($flashMsgs) ? $flashMsgs : [$flashMsgs];
+            foreach ($items as $msg) {
+                if (is_string($msg) && trim($msg) !== '') {
+                    $alertsToRender[] = [
+                        'type'        => $meta['type'],
+                        'title'       => $meta['title'],
+                        'message'     => $msg,
+                        'dismissible' => true,
+                    ];
+                }
+            }
+        }
     }
 }
 
 foreach ($alertsToRender as $alert):
-    $alertType = htmlspecialchars($alert['type'], ENT_QUOTES, 'UTF-8');
-    $alertTitle = $alert['title'] ? htmlspecialchars($alert['title'], ENT_QUOTES, 'UTF-8') : null;
-    $alertMsg = htmlspecialchars($alert['message'], ENT_QUOTES, 'UTF-8');
+    $alertType = htmlspecialchars((string)$alert['type'], ENT_QUOTES, 'UTF-8');
+    $alertTitle = !empty($alert['title']) ? htmlspecialchars((string)$alert['title'], ENT_QUOTES, 'UTF-8') : null;
+    $alertMsg = is_string($alert['message']) 
+        ? htmlspecialchars($alert['message'], ENT_QUOTES, 'UTF-8') 
+        : htmlspecialchars(json_encode($alert['message']), ENT_QUOTES, 'UTF-8');
     $isDismissible = !empty($alert['dismissible']);
 
     // Mapeamento semântico austero de cores e ícones discretos

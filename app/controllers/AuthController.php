@@ -131,11 +131,13 @@ class AuthController extends Controller
     {
         $dados = $this->all();
 
-        // Validação CSRF
-        if (!Session::validateCsrfToken($dados['csrf_token'] ?? '')) {
-            Session::setFlash('danger', 'Falha na validação de segurança. Tente novamente.');
-            $this->redirect('/');
-            return;
+        // Validação CSRF quando submetido com token
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($dados['csrf_token'])) {
+            if (!Session::validateCsrfToken($dados['csrf_token'])) {
+                Session::setFlash('danger', 'Falha na validação de segurança. Tente novamente.');
+                $this->redirect('/');
+                return;
+            }
         }
 
         Auth::logout();
