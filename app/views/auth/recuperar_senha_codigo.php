@@ -9,6 +9,7 @@
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
+$mockCode = $mockCode ?? null;
 ?>
 
 <div class="auth-header-block text-center mb-3">
@@ -17,6 +18,12 @@ $baseUrl = $baseUrl ?? '';
         Digite o código de 6 dígitos recebido no seu WhatsApp e crie uma nova senha.
     </p>
 </div>
+
+<?php if ($mockCode): ?>
+    <div class="alert alert-secondary py-2 px-3 mb-3 text-microcopy text-center border font-tabular" style="background-color: #f1f5f9; color: #334155;">
+        <span>Ambiente Local &bull; Código gerado: <strong><?php echo htmlspecialchars($mockCode, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+    </div>
+<?php endif; ?>
 
 <form action="<?php echo $baseUrl; ?>/recuperar-senha/redefinir" method="POST" autocomplete="off" class="auth-form" id="form-recuperar-senha-redefinir">
     <?php echo $csrf_field ?? ''; ?>

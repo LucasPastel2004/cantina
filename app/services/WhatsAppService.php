@@ -118,7 +118,25 @@ class WhatsAppService
     public static function getLastCode(string $whatsapp): ?string
     {
         $cleanPhone = preg_replace('/\D/', '', $whatsapp);
-        return self::$mockSentCodes[$cleanPhone]['code'] ?? null;
+        if (isset(self::$mockSentCodes[$cleanPhone]['code'])) {
+            return self::$mockSentCodes[$cleanPhone]['code'];
+        }
+
+        // Em requisições HTTP segregadas, recupera o último código gravado no log de contingência
+        $logPath = __DIR__ . '/../../storage/logs/security.log';
+        if (file_exists($logPath)) {
+            $lines = @file($logPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if ($lines !== false) {
+                for ($i = count($lines) - 1; $i >= 0; $i--) {
+                    $line = $lines[$i];
+                    if (str_contains($line, "[Destino: {$cleanPhone}]") && preg_match('/\[Código: (\d{6})\]/', $line, $matches)) {
+                        return $matches[1];
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

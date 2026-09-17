@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Teste do Ciclo Completo de Login, Alertas e Logout
  */
@@ -85,10 +85,21 @@ $htmlLogin = ob_get_clean();
 
 $passouLogin = str_contains($htmlLogin, 'Você saiu da sua conta com segurança.')
             && str_contains($htmlLogin, 'Colégio Monteiro Lobato');
-echo "6. Renderização da Tela de Login pós Logout -> " . ($passouLogin ? "PASS" : "FAIL") . PHP_EOL;
+// 7. Renderização da Tela de Primeiro Acesso com Código de Depuração
+\App\Core\Session::set('_pa_responsavel_id', 3);
+\App\Core\Session::set('_pa_whatsapp', '(11) 97777-6666');
+\App\Core\Session::set('_pa_codigo', '256098');
 
-if ($passouSuccess && $passouInfo && $passouDanger && $passouMulti && $passouPortal && $passouLogin) {
-    echo PHP_EOL . "STATUS: TODAS AS 6 ETAPAS FORAM APROVADAS COM 100% DE SUCESSO!" . PHP_EOL;
+ob_start();
+$authController->primeiroAcessoCodigo();
+$htmlCodigo = ob_get_clean();
+
+$passouCodigo = str_contains($htmlCodigo, 'Ambiente Local')
+             && str_contains($htmlCodigo, '256098');
+echo "7. Renderização de Código de Depuração no Primeiro Acesso -> " . ($passouCodigo ? "PASS" : "FAIL") . PHP_EOL;
+
+if ($passouSuccess && $passouInfo && $passouDanger && $passouMulti && $passouPortal && $passouLogin && $passouCodigo) {
+    echo PHP_EOL . "STATUS: TODAS AS 7 ETAPAS FORAM APROVADAS COM 100% DE SUCESSO!" . PHP_EOL;
     exit(0);
 } else {
     echo PHP_EOL . "STATUS: FALHA NAS ETAPAS!" . PHP_EOL;

@@ -233,10 +233,15 @@ class AuthController extends Controller
         // Mascara o número do WhatsApp para privacidade (ex: (11) 9****-1234)
         $maskedPhone = self::maskPhone($whatsapp);
 
+        $configFile = __DIR__ . '/../../config/config.php';
+        $config = file_exists($configFile) ? require $configFile : [];
+        $isDev = ($config['app']['env'] ?? '') === 'development' || ($config['app']['debug'] ?? false);
+        $mockCode = $isDev ? (Session::get('_pa_codigo') ?: WhatsAppService::getLastCode($whatsapp)) : null;
+
         $this->render('auth/primeiro_acesso_codigo', [
             'pageTitle'   => 'Confirmação de Código — Cantina Web',
             'maskedPhone' => $maskedPhone,
-            'mockCode'    => WhatsAppService::getLastCode($whatsapp) // Útil para depuração em desenvolvimento
+            'mockCode'    => $mockCode
         ], 'auth');
     }
 
@@ -445,8 +450,14 @@ class AuthController extends Controller
             return;
         }
 
+        $configFile = __DIR__ . '/../../config/config.php';
+        $config = file_exists($configFile) ? require $configFile : [];
+        $isDev = ($config['app']['env'] ?? '') === 'development' || ($config['app']['debug'] ?? false);
+        $mockCode = $isDev ? Session::get('_rec_codigo') : null;
+
         $this->render('auth/recuperar_senha_codigo', [
-            'pageTitle' => 'Redefinir Senha — Cantina Web'
+            'pageTitle' => 'Redefinir Senha — Cantina Web',
+            'mockCode'  => $mockCode
         ], 'auth');
     }
 
