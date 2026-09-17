@@ -129,6 +129,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Remoção do botão redundante `+ Recarregar` da barra superior no Portal da Família, transformando o widget de saldo em um componente informativo discreto com link para o extrato.
     * Centralização da ação de recarga dentro do contexto do card "Carteira Familiar" com o botão sóbrio `Recarregar Saldo`.
     * Remoção dos colchetes e caixas pesadas da indicação de alérgenos (`[LACTOSE]`), substituindo por destaque limpo em negrito (`Lactose`) com cor âmbar corporativa.
+    * Padronização de botões de texto/widgets informativos no padrão corporativo neutro sem cores (`.btn.btn-enterprise.btn-secondary`), alinhando o botão de saldo exatamente ao design do botão de menu do usuário. Regra formalizada em `AGENTS.md` e `docs/DESIGN.md`.
 
 ---
 

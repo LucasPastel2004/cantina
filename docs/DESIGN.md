@@ -116,6 +116,8 @@ Os botões possuem altura fixa, tipografia nítida e **feedback tátil físico**
      Fundo `#16a34a`, borda `#15803d`, texto `#ffffff`. Para liquidações e aprovações.
   5. **Tamanho Compacto (`.btn-sm`):**
      Altura `30px`, padding `0 10px`, fonte `12px`.
+  6. **Botões de Texto e Widgets Informativos Clicáveis (Sem Cores / Padrão Neutro Obrigatório):**
+     Sempre que um elemento textual, valor de métrica/saldo ou gatilho de navegação contextual funcionar como botão ou link clicável, **NUNCA usar fundos coloridos saturados** (verde, amarelo, azul forte). Deve-se seguir estritamente o padrão corporativo neutro do botão de menu do usuário (`.btn-enterprise.btn-secondary`): fundo branco/neutro, borda sutil cinza `#cbd5e1`, texto neutro `#1e293b` e hover suave `#f8fafc`.
 
 ---
 

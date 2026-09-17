@@ -186,4 +186,5 @@ Conforme especificado no `docs/FSD.md`:
 - Antes de criar, refatorar ou sugerir qualquer componente visual ou tela, SEMPRE consulte e siga as diretrizes da skill em `.agent/skills/design-taste-frontend/SKILL.md`.
 - Evite padrões genéricos de templates de IA ("AI slop").
 - Priorize microinterações sutis, tipografia bem calibrada, contraste correto e design autoral.
+- **Botões de Texto e Widgets Interativos (Sem Cores / Padrão Neutro):** Sempre que um texto, valor ou widget informativo (como exibição de saldo, filtros ou atalhos) também funcionar como botão ou link clicável, **NUNCA usar fundos coloridos** (como verde, amarelo ou azul chamativo). Seguir rigorosamente o padrão corporativo neutro do botão de menu do usuário (`.btn.btn-enterprise.btn-secondary`: fundo branco/neutro, borda sutil cinza `#e2e8f0`, texto neutro escuro `#0f172a` e hover sutil `#f8fafc`).
 

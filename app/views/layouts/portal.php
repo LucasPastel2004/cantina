@@ -49,15 +49,11 @@ $isSaldoBaixo = ($saldoAtual < 15.00);
             </div>
         </a>
 
-        <!-- Widget de Saldo da Carteira Familiar (Informativo e Discreto) -->
-        <div class="d-flex align-items-center gap-3">
-            <a href="<?php echo $baseUrl; ?>/portal/carteira" class="portal-wallet-card <?php echo $isSaldoBaixo ? 'wallet-low' : ''; ?> text-decoration-none" title="Ver Carteira Familiar e Extrato">
-                <div class="d-flex flex-column text-end">
-                    <span class="wallet-label">Saldo Disponível</span>
-                    <span class="wallet-value font-tabular">
-                        R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
-                    </span>
-                </div>
+        <!-- Widget de Saldo da Carteira Familiar (Botão Neutro sem cores, padrão menu do usuário) -->
+        <div class="d-flex align-items-center gap-2">
+            <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary btn-sm text-decoration-none" title="Ver Carteira Familiar e Extrato">
+                <span class="text-secondary" style="font-size: 12px;">Saldo:</span>
+                <strong class="font-tabular ms-1" style="font-size: 13px; color: var(--text-primary, #0f172a);">R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?></strong>
             </a>
 
             <!-- Perfil do Responsável e Logout -->
