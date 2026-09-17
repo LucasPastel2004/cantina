@@ -703,11 +703,12 @@ select:focus-visible {
   top: 0;
   z-index: 1020;
   user-select: none;
+  transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-header {
   height: 56px;
-  padding: 0 16px;
+  padding: 0 12px 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -747,6 +748,26 @@ select:focus-visible {
   line-height: 1.2;
 }
 
+.btn-sidebar-collapse {
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.btn-sidebar-collapse:hover {
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
 .btn-sidebar-close {
   background: none;
   border: none;
@@ -767,8 +788,33 @@ select:focus-visible {
   background-color: var(--surface-bg); /* #edf2f7 */
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 6px;
+  padding: 4px 6px;
   margin-bottom: 12px;
+  transition: all 0.15s ease;
+}
+
+.nav-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.12s ease;
+  text-align: left;
+}
+
+.nav-section-header:hover {
+  background-color: rgba(255, 255, 255, 0.75);
+}
+
+.nav-section-header:focus-visible {
+  outline: 2px solid var(--primary-focus);
+  outline-offset: 1px;
 }
 
 .nav-section-label {
@@ -777,8 +823,27 @@ select:focus-visible {
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 4px 8px 6px;
   display: block;
+}
+
+.nav-section-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.12s ease;
+}
+
+.nav-section-header:hover .nav-section-arrow {
+  color: var(--text-primary);
+}
+
+.nav-section-box.collapsed .nav-section-arrow {
+  transform: rotate(-90deg);
+}
+
+.nav-section-box.collapsed .nav-list {
+  display: none;
 }
 
 .nav-list {
@@ -900,7 +965,7 @@ select:focus-visible {
 .app-topbar {
   height: 54px;
   padding: 0 20px;
-  background-color: var(--surface-bg); /* #edf2f7 - Fundo Integrado */
+  background-color: #ffffff; /* Revertido para branco puro conforme solicitação */
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -908,21 +973,27 @@ select:focus-visible {
   position: sticky;
   top: 0;
   z-index: 1010;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .btn-sidebar-toggle {
   background: #ffffff;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 4px 8px;
+  padding: 5px 8px;
   color: var(--text-secondary);
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
 }
 
 .btn-sidebar-toggle:hover {
   background-color: #f8fafc;
   color: var(--text-primary);
+  border-color: var(--border-default);
 }
 
 .topbar-title-group {
@@ -950,12 +1021,11 @@ select:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: #ffffff;
+  background-color: #f8fafc;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 4px 10px;
   font-size: 12px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
 .topbar-chip .chip-label {
@@ -973,10 +1043,9 @@ select:focus-visible {
   font-weight: 500;
   color: var(--text-secondary);
   padding: 4px 10px;
-  background-color: #ffffff;
+  background-color: #f8fafc;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
 .app-page-content {
@@ -1001,6 +1070,31 @@ select:focus-visible {
   z-index: 1030;
 }
 
+/* Colapso da Barra Lateral no Desktop (>= 992px) */
+@media (min-width: 992px) {
+  .app-admin-wrapper.sidebar-collapsed .app-sidebar {
+    margin-left: -240px;
+  }
+
+  /* No desktop, se a sidebar NÃO estiver colapsada, oculta o botão toggle da topbar */
+  .app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle {
+    display: none !important;
+  }
+
+  /* Quando colapsada no desktop, exibe o botão na topbar com a seta para reabertura */
+  .app-admin-wrapper.sidebar-collapsed .btn-sidebar-toggle {
+    display: inline-flex !important;
+  }
+
+  .app-admin-wrapper.sidebar-collapsed .btn-sidebar-toggle .icon-toggle-bars {
+    display: none !important;
+  }
+
+  .app-admin-wrapper.sidebar-collapsed .btn-sidebar-toggle .icon-toggle-arrow {
+    display: inline-block !important;
+  }
+}
+
 @media (max-width: 991.98px) {
   .app-sidebar {
     position: fixed;
@@ -1019,6 +1113,14 @@ select:focus-visible {
 
   .sidebar-backdrop.show {
     display: block;
+  }
+
+  .btn-sidebar-toggle .icon-toggle-bars {
+    display: inline-block !important;
+  }
+
+  .btn-sidebar-toggle .icon-toggle-arrow {
+    display: none !important;
   }
 }
 

@@ -31,16 +31,28 @@ $isAdmin = ($user['perfil'] ?? '') === 'administrador';
                 <span class="sidebar-brand-sub">Painel da Cantina</span>
             </div>
         </a>
-        <button type="button" class="btn-sidebar-close d-lg-none" onclick="toggleSidebar()" aria-label="Fechar menu">
-            <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg>
-        </button>
+        <div class="d-flex align-items-center gap-1">
+            <button type="button" class="btn-sidebar-collapse d-none d-lg-inline-flex" onclick="toggleSidebarCollapse()" title="Recolher barra lateral" aria-label="Recolher barra lateral">
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                    <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+                </svg>
+            </button>
+            <button type="button" class="btn-sidebar-close d-lg-none" onclick="toggleSidebar()" aria-label="Fechar menu">
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg>
+            </button>
+        </div>
     </div>
 
     <!-- Navegação Agrupada por Contexto Funcional -->
     <nav class="sidebar-nav">
         <!-- Grupo 1: Operação de Balcão e Turno -->
-        <div class="nav-section-box">
-            <div class="nav-section-label">Operacional</div>
+        <div class="nav-section-box" id="navSectionOperacional">
+            <button type="button" class="nav-section-header" onclick="toggleNavSection('navSectionOperacional')" aria-expanded="true">
+                <span class="nav-section-label">Operacional</span>
+                <span class="nav-section-arrow" aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                </span>
+            </button>
             <ul class="nav-list">
                 <li class="nav-item">
                     <a href="<?php echo $baseUrl; ?>/operacional/corte" class="nav-link <?php echo ($activeMenu === 'corte') ? 'active' : ''; ?>">
@@ -76,8 +88,13 @@ $isAdmin = ($user['perfil'] ?? '') === 'administrador';
         </div>
 
         <!-- Grupo 2: Estoque e Mercadorias -->
-        <div class="nav-section-box">
-            <div class="nav-section-label">Estoque</div>
+        <div class="nav-section-box" id="navSectionEstoque">
+            <button type="button" class="nav-section-header" onclick="toggleNavSection('navSectionEstoque')" aria-expanded="true">
+                <span class="nav-section-label">Estoque</span>
+                <span class="nav-section-arrow" aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                </span>
+            </button>
             <ul class="nav-list">
                 <li class="nav-item">
                     <a href="<?php echo $baseUrl; ?>/estoque" class="nav-link <?php echo ($activeMenu === 'estoque') ? 'active' : ''; ?>">
@@ -101,8 +118,13 @@ $isAdmin = ($user['perfil'] ?? '') === 'administrador';
         </div>
 
         <!-- Grupo 3: Administração e Relatórios -->
-        <div class="nav-section-box">
-            <div class="nav-section-label">Administração</div>
+        <div class="nav-section-box" id="navSectionAdmin">
+            <button type="button" class="nav-section-header" onclick="toggleNavSection('navSectionAdmin')" aria-expanded="true">
+                <span class="nav-section-label">Administração</span>
+                <span class="nav-section-arrow" aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                </span>
+            </button>
             <ul class="nav-list">
                 <li class="nav-item">
                     <a href="<?php echo $baseUrl; ?>/admin/alunos" class="nav-link <?php echo ($activeMenu === 'alunos') ? 'active' : ''; ?>">

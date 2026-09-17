@@ -28,6 +28,36 @@ document.addEventListener('DOMContentLoaded', function () {
       e.target.value = value;
     });
   });
+
+  // Restaurar estado de colapso da sidebar no Desktop
+  try {
+    const savedSidebar = localStorage.getItem('cantina_sidebar_collapsed');
+    const wrapper = document.querySelector('.app-admin-wrapper');
+    if (wrapper && savedSidebar === 'true' && window.innerWidth >= 992) {
+      wrapper.classList.add('sidebar-collapsed');
+    }
+  } catch (e) {}
+
+  // Restaurar estado dos blocos de categoria na sidebar
+  document.querySelectorAll('.nav-section-box').forEach(function (box) {
+    const id = box.id;
+    if (!id) return;
+    // Se contiver item ativo, mantém SEMPRE expandido
+    if (box.querySelector('.nav-link.active')) {
+      box.classList.remove('collapsed');
+      const btn = box.querySelector('.nav-section-header');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+      return;
+    }
+    try {
+      const state = localStorage.getItem('cantina_nav_' + id);
+      if (state === 'collapsed') {
+        box.classList.add('collapsed');
+        const btn = box.querySelector('.nav-section-header');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }
+    } catch (e) {}
+  });
 });
 
 /**
@@ -56,6 +86,47 @@ function toggleSidebar() {
   if (backdrop) {
     backdrop.classList.toggle('show');
   }
+}
+
+/**
+ * Alterna o colapso da barra lateral inteira no Desktop
+ */
+function toggleSidebarCollapse() {
+  const wrapper = document.querySelector('.app-admin-wrapper');
+  if (!wrapper) return;
+  const isCollapsed = wrapper.classList.toggle('sidebar-collapsed');
+  try {
+    localStorage.setItem('cantina_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+  } catch (e) {}
+}
+
+/**
+ * Manipulador inteligente do botão toggle da topbar
+ * No desktop colapsa/expande; no mobile abre/fecha o offcanvas
+ */
+function handleSidebarToggle() {
+  if (window.innerWidth >= 992) {
+    toggleSidebarCollapse();
+  } else {
+    toggleSidebar();
+  }
+}
+
+/**
+ * Expande ou colapsa um bloco de categorias na sidebar
+ * @param {string} sectionId 
+ */
+function toggleNavSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (!section) return;
+  const isCollapsed = section.classList.toggle('collapsed');
+  const btn = section.querySelector('.nav-section-header');
+  if (btn) {
+    btn.setAttribute('aria-expanded', !isCollapsed);
+  }
+  try {
+    localStorage.setItem('cantina_nav_' + sectionId, isCollapsed ? 'collapsed' : 'expanded');
+  } catch (e) {}
 }
 
 /**

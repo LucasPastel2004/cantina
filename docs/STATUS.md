@@ -178,12 +178,12 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Suporte a logout seguro via GET e POST com validação flexível de CSRF em `app/controllers/AuthController.php` e registro de rota em `index.php`.
   * Criação da suíte `tests/auth_flow_test.php` aprovada com 7/7 testes de renderização de alertas, login, logout e código mock.
   * Resolução de persistência de código mock entre requisições HTTP e adição de limpeza automática (teardown) em `tests/fase6_test.php`.
-  * **Refinamento Visual Anti-Monotonia (Opção 1 + Opção 4 combinadas):**
-    * Contraste estrutural de fundo com `--surface-bg: #edf2f7` (Cool Slate Corporativo), eliminando a sensação de "folha contínua branca" e conferindo profundidade imediata à interface.
-    * Elevação tátil nítida nos cards (`.card-enterprise`, `.auth-card`) com micro-sombras e hover refinado.
-    * Estruturação de cabeçalhos de cards divididos com camada neutra suave (`.card-enterprise-header` em `#f8fafc` com divisor de 1px `#e2e8f0`) no Portal da Família e Painel da Cantina.
-    * Divisor visual no cabeçalho dos formulários de autenticação (`.auth-header-block`) e estilização do `.portal-header`.
-    * Atualização da versão dos assets nos layouts para `?v=5.0.3` para invalidação imediata de cache no navegador.
+  * **Refinamentos Visuais e Controles Interativos da Barra Superior e Lateral:**
+    * Restauração da barra superior (`.app-topbar`) para fundo branco puro (`#ffffff`) com linha divisória sutil e micro-sombra corporativa.
+    * Calibração dos chips de turno, caixa e data para fundo suave `#f8fafc` com borda neutra sobre a topbar branca.
+    * Implementação de acordeão retrátil com setas de rotação suave (`.nav-section-arrow`) para os blocos de categorias do menu (`Operacional`, `Estoque`, `Administração`) com memorização no `localStorage`.
+    * Implementação de botão com seta (`◀`, `.btn-sidebar-collapse`) no cabeçalho da sidebar e botão inteligente com seta (`▶`, `.btn-sidebar-toggle`) na topbar para recolher e expandir a barra lateral inteira no desktop, com transição CSS suave e persistência no navegador.
+    * Atualização da versão dos assets nos layouts para `?v=5.0.5` para invalidação imediata de cache no cliente.
 
 ---
 
