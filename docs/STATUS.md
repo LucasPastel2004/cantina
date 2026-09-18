@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 9 — Carteira Digital Familiar e Gateway Pix Dinâmico
-* **Status da Fase 9:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 10 — Agendamento Semanal de Lanches e Regras Rígidas de Corte
-* **Última Atualização:** 2026-09-18 10:00:00 (Fase 9 finalizada, testada e validada)
+* **Fase Atual:** Fase 10 — Agendamento Semanal de Lanches e Regras Rígidas de Corte
+* **Status da Fase 10:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 11 — Operação de Encomendas e Gestão de Fornecedores
+* **Última Atualização:** 2026-09-18 12:05:00 (Fase 10 finalizada, testada e validada)
 
 ---
 
@@ -334,10 +334,46 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 10 — Agendamento Semanal de Lanches e Regras Rígidas de Corte
-* [ ] Catálogo semanal com liberação às sextas 18:00 e travas de corte às 08:00 e 13:30.
-* [ ] Cancelamento e edição com estorno/compensação imediata.
-* [ ] Modal de alerta amarelo em caso de conflito de alérgenos.
+---
+
+### [x] Fase 10 — Agendamento Semanal de Lanches e Regras Rígidas de Corte
+* [x] Implementação do modelo `app/models/CalendarioEscolar.php`:
+  * Determinação precisa de dias letivos, feriados e recessos escolares com consulta integrada à tabela `calendario_letivo`.
+  * Regra RN-01: liberação pontual da semana seguinte toda sexta-feira às 18:00 (`isSemanaSeguinteLiberada`).
+  * Utilitário `obterDiasSemanaLetiva` retornando a estrutura dos 5 dias úteis (Segunda a Sexta) com metadados de status (passado, hoje, letivo).
+* [x] Implementação do modelo `app/models/ItemPedido.php`:
+  * Gestão de itens detalhados associados a pedidos (`itens_pedido`) com relacionamentos a produtos e categorias.
+* [x] Implementação do modelo central `app/models/Pedido.php`:
+  * Trava rígida de corte operacional (RN-02): encerramento pontual às 08:00 para o turno matutino e às 13:30 para o vespertino (`podeSerAlteradoOuCancelado` e `obterStatusCorte`).
+  * Criação atômica de pedido (`criarPedido`) com validação de titularidade familiar, verificação de saldo livre na carteira (modelo pré-pago), reserva física de estoque para industrializados (`estoque_reservado`), débito financeiro imediato via `TransacaoCarteira` e geração de tickets térmicos individuais para bobina de 80mm.
+  * Cancelamento autônomo (`cancelarPedido`, RN-03) com estorno integral de 100% creditado na carteira familiar no mesmo instante, liberação da reserva de estoque e cancelamento dos tickets.
+  * Edição autônoma com compensação contábil imediata (`editarPedido`, RN-04): recálculo financeiro com cobrança adicional se mais caro ou estorno automático se mais barato, e reajuste preciso das reservas de estoque.
+  * Detecção preventiva de alérgenos (RN-16 e RN-17): verificação cruzada entre as restrições alimentares do aluno e a composição dos lanches, gravando tag indelével de alerta nos tickets térmicos (`tag_alergenos`).
+  * Consultas estruturadas `listarPorResponsavel` e `buscarDetalhado` com enriquecimento de metadados operacionais e status de corte.
+* [x] Harmonização contábil em `app/models/TransacaoCarteira.php`:
+  * Ajuste na consolidação de saldos da carteira familiar (`obterResumoCarteira`), separando claramente `saldo_atual` (já deduzido do pedido), `saldo_reservado` (total de pedidos futuros agendados) e `saldo_total` em custódia institucional, evitando dupla dedução contábil.
+* [x] Expansão do catálogo de produtos em `app/models/Produto.php`:
+  * Adição do método `listarParaCardapio(string $turno)` com apuração do estoque disponível (`estoque_atual - estoque_reservado`), flag `esgotado` (RN-13) e agregação de IDs de alérgenos por produto.
+  * Adição de alias idiomático `sincronizarAlergenos()`.
+* [x] Implementação dos fluxos operacionais no controller `app/controllers/PortalController.php`:
+  * `agendamento()`: exibição do catálogo semanal de lanches por dia letivo e dependente familiar.
+  * `agendamentoSalvar()`: processamento seguro de agendamento com validação CSRF, checagem de corte e feedback visual.
+  * `pedidos()`: listagem de pedidos com filtros por aluno e período, exibição de status tipográfico e ações contextuais.
+  * `pedidoCancelar()`: ação de cancelamento autônomo com validação prévia de horário de corte.
+  * `pedidoEditar()` e `pedidoEditarSalvar()`: interface e ação de alteração de pedido com demonstrativo de compensação financeira.
+* [x] Criação das views com Design System Enterprise Anti-Slop (`docs/DESIGN.md`):
+  * `app/views/portal/agendamento.php`: abas de dias da semana com indicador de status e dia atual, seletor de dependentes, grade de produtos com itens esgotados desabilitados (opacidade atenuada 0.5), modal corporativo de advertência em amarelo/âmbar (`#eab308`) para alérgenos com confirmação consciente obrigatória, e resumo lateral flutuante com totalizador tabular.
+  * `app/views/portal/meus_pedidos.php`: data-grid de pedidos com indicadores de corte e status tipográficos, botões de ação neutros discretos (`.btn-enterprise`), modal de cancelamento com informação explícita de estorno integral imediato de 100%.
+  * `app/views/portal/pedido_editar.php`: tela de edição com comparativo de valores em tempo real, calculando a diferença a pagar ou estorno a receber na carteira familiar.
+* [x] Registro e blindagem de 6 novas rotas no `index.php` com RBAC `ROLE_RESPONSAVEL`:
+  * `GET /portal/agendamento`
+  * `POST /portal/agendamento/salvar`
+  * `GET /portal/pedidos`
+  * `POST /portal/pedidos/{id}/cancelar`
+  * `GET /portal/pedidos/{id}/editar`
+  * `POST /portal/pedidos/{id}/editar`
+* [x] Criação da suíte automatizada `tests/fase10_test.php` com 71 asserções cobrindo todos os fluxos e regras da Fase 10 (100% de sucesso).
+* [x] Execução e homologação de 100% dos testes de regressão das fases anteriores (Fases 7, 8 e 9).
 
 ---
 
@@ -389,7 +425,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 10 — Agendamento Semanal de Lanches e Regras Rígidas de Corte**, implementando o catálogo semanal de lanches com liberação às sextas-feiras às 18:00, controle rígido de corte matutino (08:00) e vespertino (13:30), modal de advertência para restrições alimentares conflitantes, fluxo de agendamento por dependente e cancelamento com compensação financeira automática na carteira familiar.
+Iniciar a **Fase 11 — Operação de Encomendas e Gestão de Fornecedores**, implementando o painel de corte do turno para consolidação automática e matemática da quantidade necessária de salgados diários, botão "Copiar para WhatsApp" formatado para pedidos de compras, relatório espelho de corte em PDF timbrado e fluxo de recebimento físico de mercadorias com confirmação de entrega e liquidação financeira.
 
 
 

@@ -239,6 +239,14 @@ class Produto extends Model
     }
 
     /**
+     * Alias em português para syncAlergenos
+     */
+    public static function sincronizarAlergenos(int $produtoId, array $alergenosIds): void
+    {
+        self::syncAlergenos($produtoId, $alergenosIds);
+    }
+
+    /**
      * Alterna instantaneamente o status de pausa rápida ("ativo" <-> "pausado")
      * 
      * @return string Novo status ('ativo' ou 'pausado') ou null se não encontrado
@@ -295,5 +303,49 @@ class Produto extends Model
                   AND estoque_atual <= estoque_minimo";
         $stmt = self::query($sql);
         return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Lista os produtos disponíveis para o cardápio de um determinado turno
+     * 
+     * @param string $turno 'matutino' ou 'vespertino'
+     * @return array
+     */
+    public static function listarParaCardapio(string $turno): array
+    {
+        $sql = "SELECT p.*, c.nome AS categoria_nome, c.ordem_exibicao
+                FROM produtos p
+                INNER JOIN categorias c ON c.id = p.categoria_id AND c.ativo = 1 AND c.deleted_at IS NULL
+                WHERE p.deleted_at IS NULL
+                  AND p.status_pausa = 'ativo'
+                  AND (p.turno_disponibilidade = :turno OR p.turno_disponibilidade = 'ambos')
+                ORDER BY c.ordem_exibicao ASC, c.nome ASC, p.descricao ASC";
+
+        $produtos = self::fetchAll($sql, ['turno' => $turno]);
+
+        foreach ($produtos as &$prod) {
+            $prodId = (int)$prod['id'];
+            // Calcula estoque disponível para industrializados
+            if ($prod['tipo'] === 'industrializado_continuo') {
+                $estoqueDisponivel = (int)$prod['estoque_atual'] - (int)$prod['estoque_reservado'];
+                $prod['estoque_disponivel'] = max(0, $estoqueDisponivel);
+                $prod['esgotado'] = ($estoqueDisponivel <= 0);
+            } else {
+                $prod['estoque_disponivel'] = null; // Salgados diários sob encomenda
+                $prod['esgotado'] = false;
+            }
+
+            // Alérgenos vinculados
+            $sqlAlerg = "SELECT ra.id, ra.nome 
+                         FROM produto_alergenos pa
+                         INNER JOIN restricoes_alimentares ra ON ra.id = pa.restricao_id
+                         WHERE pa.produto_id = :prod_id
+                         ORDER BY ra.nome ASC";
+            $prod['alergenos'] = self::fetchAll($sqlAlerg, ['prod_id' => $prodId]);
+            $prod['alergenos_ids'] = array_map(fn($a) => (int)$a['id'], $prod['alergenos']);
+        }
+        unset($prod);
+
+        return $produtos;
     }
 }

@@ -51,6 +51,15 @@ class Categoria extends Model
     }
 
     /**
+     * Busca uma categoria pelo Nome
+     */
+    public static function buscarPorNome(string $nome): ?array
+    {
+        $sql = "SELECT * FROM categorias WHERE nome = :nome AND deleted_at IS NULL LIMIT 1";
+        return self::fetchOne($sql, ['nome' => trim($nome)]);
+    }
+
+    /**
      * Cria uma nova categoria
      */
     public static function criar(array $dados, ?int $usuarioId = null): int

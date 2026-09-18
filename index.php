@@ -98,6 +98,26 @@ $router->post('/portal/alergias/salvar', [\App\Controllers\PortalController::cla
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
 ]);
 
+// 1.1. Agendamento Semanal de Lanches e Pedidos (Fase 10)
+$router->get('/portal/agendamento', [\App\Controllers\PortalController::class, 'agendamento'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->post('/portal/agendamento/salvar', [\App\Controllers\PortalController::class, 'agendamentoSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->get('/portal/pedidos', [\App\Controllers\PortalController::class, 'pedidos'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->post('/portal/pedidos/cancelar', [\App\Controllers\PortalController::class, 'pedidoCancelar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->get('/portal/pedidos/editar/{id}', [\App\Controllers\PortalController::class, 'pedidoEditar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->post('/portal/pedidos/editar/{id}', [\App\Controllers\PortalController::class, 'pedidoEditarSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+
 // 1.1. Carteira Digital Familiar e Recargas Pix (Fase 9)
 $router->get('/portal/carteira', [\App\Controllers\CarteiraController::class, 'index'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)

@@ -246,8 +246,21 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Em `CarteiraController::simularPagamento()`, adicionada reconstituição defensiva: se o ambiente estiver em modo de desenvolvimento local (`$isDev === true`) e o arquivo temporário não estiver disponível, o controller reconstitui a cobrança a partir do valor enviado no POST (com fallback para R$ 50,00) e liquida a transação normalmente.
   4. Atualizado o JavaScript `simularPagamentoDev()` em `app/views/portal/carteira.php` para repassar `valor` e `csrf_token`.
   5. Adicionado teste automatizado na suíte `tests/fase9_test.php` cobrindo a action de simulação tanto para cobranças em cache quanto para cobranças avulsas (69/69 asserções aprovadas).
-- Como evitar no futuro: Em ambientes dockerizados ou servidores compartilhados onde CLI e Web rodam com usuários distintos (`root` vs `www-data`), sempre assegurar permissões plenas de escrita nas pastas de cache/storage e adotar redundância de armazenamento em sessão para recursos efêmeros de desenvolvimento.
+---
 
+## 2026-09-18 - Métodos utilitários ausentes e sensibilidade temporal na suíte de testes da Fase 10
+
+- Sintoma: Erros fatais disparados durante a execução de `tests/fase10_test.php`: (1) `Call to undefined method App\Models\Categoria::buscarPorNome()`; (2) `DomainException: O cardápio da próxima semana só é liberado na sexta-feira às 18:00`; (3) `Call to undefined method App\Models\Pedido::buscarPorId()`; (4) `Call to undefined method App\Models\Produto::sincronizarAlergenos()`.
+- Causa:
+  1. Os modelos `Categoria` e `Pedido` possuíam métodos especializados (`listarTodas`, `buscarDetalhado`), mas não continham os métodos de consulta padronizados `buscarPorNome` e `buscarPorId`.
+  2. O modelo `Produto` continha o método `syncAlergenos`, enquanto a suíte de testes e o padrão em português adotavam `sincronizarAlergenos`.
+  3. A regra RN-01 de liberação semanal restringe agendamentos da semana seguinte para sextas-feiras a partir das 18:00. Como a suíte de testes calculava datas para a semana seguinte e era executada às sextas-feiras pela manhã (antes das 18:00), a exceção de negócio legítima era disparada devido à hora real do relógio do servidor.
+- Solução aplicada:
+  1. Implementado `Categoria::buscarPorNome(string $nome): ?array` em `app/models/Categoria.php`.
+  2. Implementado `Pedido::buscarPorId(int $id): ?array` em `app/models/Pedido.php`.
+  3. Adicionado o alias em português `Produto::sincronizarAlergenos(int $produtoId, array $alergenosIds): void` em `app/models/Produto.php`.
+  4. Adicionado o método auxiliar `obterMomentoAberto(string $dataConsumo): \DateTimeImmutable` em `tests/fase10_test.php` para simular momentos canônicos válidos em que a semana está aberta e antes do horário de corte, tornando a suíte de testes determinística e independente da hora exata em que for executada.
+- Como evitar no futuro: Em regras de negócio com dependência rígida de calendário e relógio (`DateTime`), projetar sempre os modelos para receberem instâncias opcionais de `DateTimeInterface` e parametrizar as suítes de teste com momentos simulados explícitos. Padronizar todos os modelos com métodos canônicos de busca (`buscarPorId`, `buscarPorNome`).
 
 
 

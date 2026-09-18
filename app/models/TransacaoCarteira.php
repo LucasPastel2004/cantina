@@ -302,13 +302,16 @@ class TransacaoCarteira extends Model
         $sqlReservado = "SELECT COALESCE(SUM(valor_total), 0) AS total_reservado 
                          FROM pedidos 
                          WHERE responsavel_id = :resp_id 
-                         AND status = 'agendado' 
+                         AND status IN ('agendado', 'editado') 
                          AND data_consumo >= CURDATE()";
         $rowReservado = self::fetchOne($sqlReservado, ['resp_id' => $responsavelId]);
         $saldoReservado = (float)($rowReservado['total_reservado'] ?? 0.0);
 
-        // 3. Saldo Disponível para novos agendamentos
-        $saldoDisponivel = max(0.00, round($saldoAtual - $saldoReservado, 2));
+        // 3. Saldo Disponível: como o valor do pedido já é debitado compulsoriamente
+        // no ato do agendamento (Fluxo 3 / FSD), o saldo_atual da carteira familiar já é o saldo líquido
+        // disponível para novas compras.
+        $saldoDisponivel = $saldoAtual;
+        $saldoTotalCustodia = round($saldoAtual + $saldoReservado, 2);
 
         // 4. Parâmetros globais da cantina
         $configGlobal = Configuracao::obter();
@@ -329,6 +332,8 @@ class TransacaoCarteira extends Model
             'saldo_reservado_fmt'       => 'R$ ' . number_format($saldoReservado, 2, ',', '.'),
             'saldo_disponivel'          => $saldoDisponivel,
             'saldo_disponivel_fmt'      => 'R$ ' . number_format($saldoDisponivel, 2, ',', '.'),
+            'saldo_total'               => $saldoTotalCustodia,
+            'saldo_total_fmt'           => 'R$ ' . number_format($saldoTotalCustodia, 2, ',', '.'),
             'bloqueado_med'             => $bloqueadoMed,
             'alerta_saldo_baixo'        => $isSaldoBaixo,
             'alerta_saldo_baixo_valor'  => $alertaSaldoBaixoValor,
