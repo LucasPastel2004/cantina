@@ -100,6 +100,9 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     } catch (e) {}
   });
+
+  // Auto-dismiss de alertas de notificação após 5 segundos (com pausa no hover)
+  iniciarAutoDismissAlertas();
 });
 
 /**
@@ -243,16 +246,56 @@ function abrirModal(modalId) {
 }
 
 /**
- * Fecha um modal do Bootstrap pelo ID
- * @param {string} modalId 
+ * Inicializa temporizadores de auto-fechamento para mensagens de notificação (.alert-enterprise)
+ * Padrão: 5 segundos (5000ms), com pausa se o cursor do mouse estiver sobre o alerta
  */
-function fecharModal(modalId) {
-  const modalEl = document.getElementById(modalId);
-  if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) {
-      modal.hide();
+function iniciarAutoDismissAlertas() {
+  const alerts = document.querySelectorAll('.alert-enterprise');
+  alerts.forEach(function (alertEl) {
+    // Se o alerta estiver configurado explicitamente como permanente, não fecha
+    if (alertEl.dataset.autoDismiss === 'false' || alertEl.classList.contains('alert-permanent')) {
+      return;
     }
-  }
+
+    // Tempo configurável via atributo data-auto-dismiss (padrão: 5000ms = 5 segundos)
+    const timeoutMs = parseInt(alertEl.dataset.autoDismiss, 10) || 5000;
+    let timer = null;
+
+    function armarTimer() {
+      desarmarTimer();
+      timer = setTimeout(function () {
+        fecharAlerta(alertEl);
+      }, timeoutMs);
+    }
+
+    function desarmarTimer() {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    }
+
+    // Inicia contagem regressiva
+    armarTimer();
+
+    // Pausa no Hover para o usuário poder ler sem pressa
+    alertEl.addEventListener('mouseenter', desarmarTimer);
+    alertEl.addEventListener('mouseleave', armarTimer);
+  });
 }
+
+/**
+ * Fecha um alerta com animação suave de recolhimento e remoção do DOM
+ * @param {HTMLElement} alertEl
+ */
+function fecharAlerta(alertEl) {
+  if (!alertEl || alertEl.classList.contains('alert-dismissing')) return;
+  alertEl.classList.add('alert-dismissing');
+  setTimeout(function () {
+    if (alertEl.parentNode) {
+      alertEl.parentNode.removeChild(alertEl);
+    }
+  }, 350);
+}
+
 

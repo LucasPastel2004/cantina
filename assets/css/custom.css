@@ -1408,7 +1408,7 @@ input[type="number"].text-end {
    COMPONENTES PARCIAIS (Enterprise Partials)
    ========================================================================== */
 
-/* Alertas com Alto Contraste WCAG AA */
+/* Alertas com Alto Contraste WCAG AA e Saída Suave */
 .alert-enterprise {
   display: flex;
   align-items: flex-start;
@@ -1419,6 +1419,22 @@ input[type="number"].text-end {
   margin-bottom: 16px;
   border: 1px solid transparent;
   line-height: 1.45;
+  transition: opacity 0.35s ease, transform 0.35s ease, max-height 0.35s ease, margin 0.35s ease, padding 0.35s ease;
+  max-height: 200px;
+  overflow: hidden;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.alert-enterprise.alert-dismissing {
+  opacity: 0;
+  transform: translateY(-8px);
+  max-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
 }
 
 .alert-enterprise-icon {

@@ -230,8 +230,15 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Reestruturação da tela de Categorias em layout de grid corporativo equilibrado de duas colunas (coluna principal com tabela data-grid, cabeçalho de card e contagem; coluna lateral com resumo de métricas da grade, sincronização com PDV e diretrizes de integridade de dados).
   * **Cache Busting:**
     * Atualização da versão dos assets nos layouts para `?v=5.0.7`.
+* [x] Correção de compatibilidade de Prepared Statements PDO com MySQL nativo (`ATTR_EMULATE_PREPARES => false`) na busca com filtros de texto de produtos (`Produto.php`), colaboradores (`Colaborador.php`) e turmas (`Turma.php`), eliminando a exceção `SQLSTATE[HY093]: Invalid parameter number` por placeholders duplicados.
+* [x] Implementação de **Auto-Dismiss de Alertas de Notificação em 5 Segundos**:
+  * Fechamento automático suave com animação CSS (`opacity 0.35s`, `transform: translateY(-8px)`, `max-height 0`, `margin 0`) após 5 segundos em `assets/js/app.js` e `assets/css/custom.css`.
+  * Recurso de **Pause on Hover**: o temporizador pausa automaticamente se o usuário passar o cursor do mouse por cima do alerta para leitura, reiniciando apenas quando o cursor sai do elemento.
+  * Fechamento manual com botão `x` aprimorado para também disparar a transição suave com `fecharAlerta()`.
+  * Atualização da versão de cache dos assets em todos os layouts (`admin.php`, `auth.php`, `portal.php`) para `?v=5.0.8`.
+  * Criação da suíte de testes automatizados `tests/alert_auto_dismiss_test.php` com 8/8 asserções aprovadas com 100% de sucesso.
 * [x] Bateria de testes automatizados `tests/fase7_test.php` executada com 68 asserções aprovadas com 100% de sucesso.
-* [x] Suíte de testes de rotas web HTTP `tests/admin_web_test.php` aprovada com 9/9 requisições validadas.
+* [x] Suíte de testes de rotas web HTTP `tests/admin_web_test.php` aprovada com 10/10 requisições validadas (incluindo filtro via query string).
 * [x] Suíte de testes de visibilidade da sidebar `tests/sidebar_visibility_test.php` aprovada com 7/7 asserções com 100% de sucesso.
 * [x] Suíte de testes de máscaras automáticas `tests/mask_test.php` aprovada com 14/14 asserções com 100% de sucesso.
 * [x] Suítes de regressão (Fases 2, 3, 4, 5, 6 e simulação web) reexecutadas e 100% aprovadas.
