@@ -217,7 +217,19 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] Registro e proteção de rotas RBAC em `index.php` e sincronização dos links em `app/views/layouts/sidebar.php`.
 * [x] Correção e garantia de visibilidade permanente da opção "Configurações Globais" na seção Administração da sidebar, compatibilizando chaves `role` e `perfil` em `Auth.php`, injetando `$user` automaticamente no `Controller::render()` e adicionando atalhos diretos na página inicial (`app/views/home/index.php`).
 * [x] Refinamento visual em `app/views/admin/configuracoes.php` e `assets/css/custom.css` alinhando os campos numéricos à esquerda e eliminando a colisão de numerais com as setas de incremento (spin buttons) nativas do navegador.
-* [x] Implementação de formatação automática (máscaras) para CNPJ (`00.000.000/0000-00`), Telefone/WhatsApp celular/fixo (`(00) 00000-0000` / `(00) 0000-0000`) e CPF (`000.000.000-00`) em `assets/js/app.js` e pré-formatação inicial na view PHP de configurações.
+* [x] Redesign visual completo e contemporâneo das interfaces de **Cardápio & Produtos** (`app/views/admin/produtos.php`) e **Categorias de Alimentos** (`app/views/admin/categorias.php`):
+  * **Unificação e Padronização de Tabelas no CSS (`assets/css/custom.css`):**
+    * Equiparação de `.table-enterprise` com `.table-data-grid` (cabeçalhos suaves em `#f8fafc` com texto em caixa alta discreto `#475569`, padding `10px 14px`, linhas de `40px` e hover sutil).
+    * Eliminação da quebra feia de código de produtos (`PROD-TEST-F4`) com `white-space: nowrap;` e fonte mono tabular na classe `.code-tag`.
+  * **Erradicação de Botões Vermelhos Berrantes ("Anti-Slop"):**
+    * Criação do componente `.btn-action`: botões compactos (`28px`), neutros, de fundo branco com borda sutil cinza. O botão de exclusão só ganha leve realce avermelhado no hover (`#fef2f2`, texto `#dc2626`), mantendo a tabela limpa e profissional.
+    * Criação do botão pílula interativo `.btn-status-toggle` para alternância rápida de pausa no balcão com bullet pontual verde (`● Ativo`) ou âmbar (`● Pausado`).
+  * **Miniatura Elegante de Produto (`.product-thumb`):**
+    * Substituição da caixa tosca com traço cinza solto (`&mdash;`) pelo componente `.product-thumb` (`38x38px` com cantos suaves e ícone SVG minimalista de alimento quando não houver foto).
+  * **Eliminação de Tabela Esticada em Categorias:**
+    * Reestruturação da tela de Categorias em layout de grid corporativo equilibrado de duas colunas (coluna principal com tabela data-grid, cabeçalho de card e contagem; coluna lateral com resumo de métricas da grade, sincronização com PDV e diretrizes de integridade de dados).
+  * **Cache Busting:**
+    * Atualização da versão dos assets nos layouts para `?v=5.0.7`.
 * [x] Bateria de testes automatizados `tests/fase7_test.php` executada com 68 asserções aprovadas com 100% de sucesso.
 * [x] Suíte de testes de rotas web HTTP `tests/admin_web_test.php` aprovada com 9/9 requisições validadas.
 * [x] Suíte de testes de visibilidade da sidebar `tests/sidebar_visibility_test.php` aprovada com 7/7 asserções com 100% de sucesso.

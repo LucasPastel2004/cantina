@@ -33,71 +33,142 @@ $csrfToken = $csrf_token ?? '';
     </div>
 </div>
 
-<div class="card-enterprise">
-    <div class="card-enterprise-body p-0">
-        <?php if (empty($categorias)): ?>
-            <?php 
-            $emptyMessage = 'Nenhuma categoria cadastrada no momento.';
-            require __DIR__ . '/../partials/empty_state.php'; 
-            ?>
-        <?php else: ?>
-            <div class="table-responsive">
-                <table class="table-enterprise mb-0">
-                    <thead>
-                        <tr>
-                            <th class="cell-center" style="width: 80px;">Ordem</th>
-                            <th class="cell-left">Nome da Categoria</th>
-                            <th class="cell-right" style="width: 160px;">Itens Vinculados</th>
-                            <th class="cell-center" style="width: 120px;">Status</th>
-                            <th class="cell-right" style="width: 140px;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($categorias as $cat): ?>
-                            <tr>
-                                <td class="cell-center font-tabular text-muted">
-                                    <?php echo (int)$cat['ordem_exibicao']; ?>
-                                </td>
-                                <td class="cell-left font-weight-semibold text-dark">
-                                    <?php echo htmlspecialchars($cat['nome'], ENT_QUOTES, 'UTF-8'); ?>
-                                </td>
-                                <td class="cell-right font-tabular">
-                                    <?php echo (int)($cat['total_produtos'] ?? 0); ?> produto(s)
-                                </td>
-                                <td class="cell-center">
-                                    <?php if (!empty($cat['ativo'])): ?>
-                                        <span class="status-indicator status-active">
-                                            <span class="bullet" aria-hidden="true">●</span> Ativo
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="status-indicator status-inactive">
-                                            <span class="bullet" aria-hidden="true">●</span> Inativo
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="cell-right">
-                                    <div class="d-inline-flex gap-1">
-                                        <button type="button" class="btn btn-enterprise btn-secondary btn-sm" 
-                                                onclick='editarCategoria(<?php echo json_encode($cat, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>)'
-                                                title="Editar Categoria">
-                                            Editar
-                                        </button>
-                                        <form action="<?php echo $baseUrl; ?>/admin/categorias/excluir" method="POST" class="d-inline m-0"
-                                              onsubmit="return confirm('Deseja realmente excluir esta categoria? Ela será ocultada via exclusão lógica.');">
-                                            <?php echo $csrfField; ?>
-                                            <input type="hidden" name="id" value="<?php echo (int)$cat['id']; ?>">
-                                            <button type="submit" class="btn btn-enterprise btn-danger btn-sm" title="Excluir Categoria">
-                                                Excluir
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+<?php
+$totalCategorias = count($categorias);
+$categoriasAtivas = count(array_filter($categorias, static function($c) {
+    return !empty($c['ativo']);
+}));
+$totalProdutosVinculados = array_sum(array_map(static function($c) {
+    return (int)($c['total_produtos'] ?? 0);
+}, $categorias));
+?>
+
+<div class="row g-4">
+    <!-- Coluna Principal: Listagem de Categorias -->
+    <div class="col-12 col-xl-8">
+        <div class="card-enterprise">
+            <div class="card-enterprise-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span>Categorias Cadastradas</span>
+                    <span class="badge-count"><?php echo $totalCategorias; ?> <?php echo $totalCategorias === 1 ? 'categoria' : 'categorias'; ?></span>
+                </div>
+                <div class="text-secondary font-microcopy d-none d-sm-block">
+                    <?php echo $categoriasAtivas; ?> ativas no cardápio
+                </div>
             </div>
-        <?php endif; ?>
+            <div class="card-enterprise-body p-0">
+                <?php if (empty($categorias)): ?>
+                    <?php 
+                    $emptyMessage = 'Nenhuma categoria cadastrada no momento.';
+                    require __DIR__ . '/../partials/empty_state.php'; 
+                    ?>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table-data-grid table-enterprise mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="cell-center" style="width: 70px;">Ordem</th>
+                                    <th class="cell-left">Nome da Categoria</th>
+                                    <th class="cell-center" style="width: 140px;">Itens Vinculados</th>
+                                    <th class="cell-center" style="width: 110px;">Status</th>
+                                    <th class="cell-right" style="width: 130px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($categorias as $cat): ?>
+                                    <tr>
+                                        <td class="cell-center font-tabular text-muted">
+                                            <code class="code-tag font-tabular"><?php echo (int)$cat['ordem_exibicao']; ?></code>
+                                        </td>
+                                        <td class="cell-left font-weight-semibold text-dark">
+                                            <?php echo htmlspecialchars($cat['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </td>
+                                        <td class="cell-center font-tabular">
+                                            <span class="badge-count">
+                                                <?php echo (int)($cat['total_produtos'] ?? 0); ?> <?php echo ((int)($cat['total_produtos'] ?? 0) === 1) ? 'item' : 'itens'; ?>
+                                            </span>
+                                        </td>
+                                        <td class="cell-center">
+                                            <?php if (!empty($cat['ativo'])): ?>
+                                                <span class="status-indicator status-active">
+                                                    <span class="bullet" aria-hidden="true">●</span> Ativa
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="status-indicator status-inactive">
+                                                    <span class="bullet" aria-hidden="true">●</span> Inativa
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="cell-right">
+                                            <div class="btn-action-group">
+                                                <button type="button" class="btn-action" 
+                                                        onclick='editarCategoria(<?php echo json_encode($cat, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>)'
+                                                        title="Editar Categoria">
+                                                    Editar
+                                                </button>
+                                                <form action="<?php echo $baseUrl; ?>/admin/categorias/excluir" method="POST" class="d-inline m-0"
+                                                      onsubmit="return confirm('Deseja realmente inativar/excluir esta categoria? Ela será mantida no histórico de produtos.');">
+                                                    <?php echo $csrfField; ?>
+                                                    <input type="hidden" name="id" value="<?php echo (int)$cat['id']; ?>">
+                                                    <button type="submit" class="btn-action btn-action-danger" title="Excluir Categoria">
+                                                        Excluir
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Lateral de Apoio: Métricas e Diretrizes Operacionais -->
+    <div class="col-12 col-xl-4">
+        <div class="card-enterprise mb-4">
+            <div class="card-enterprise-header">
+                <span>Resumo da Grade</span>
+            </div>
+            <div class="card-enterprise-body p-3">
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <span class="text-secondary" style="font-size: 12px;">Categorias Ativas</span>
+                    <span class="font-tabular font-weight-bold text-dark"><?php echo $categoriasAtivas; ?> / <?php echo $totalCategorias; ?></span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <span class="text-secondary" style="font-size: 12px;">Total de Produtos Vinculados</span>
+                    <span class="font-tabular font-weight-bold text-dark"><?php echo $totalProdutosVinculados; ?> itens</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2">
+                    <span class="text-secondary" style="font-size: 12px;">Visibilidade no PDV</span>
+                    <span class="status-indicator status-active" style="font-size: 11px;">
+                        <span class="bullet">●</span> Sincronizado
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-enterprise">
+            <div class="card-enterprise-header">
+                <span>Diretrizes de Segmentação</span>
+            </div>
+            <div class="card-enterprise-body p-3">
+                <div class="mb-3">
+                    <div class="font-weight-semibold text-dark mb-1" style="font-size: 12px;">Ordem de Exibição no PDV</div>
+                    <p class="text-secondary font-microcopy mb-0">
+                        A ordem numérica define a disposição das abas rápidas nas telas do caixa e no aplicativo das famílias. Menores números aparecem primeiro na navegação.
+                    </p>
+                </div>
+                <div class="border-top pt-3">
+                    <div class="font-weight-semibold text-dark mb-1" style="font-size: 12px;">Integridade e Histórico</div>
+                    <p class="text-secondary font-microcopy mb-0">
+                        Categorias com produtos cadastrados não são excluídas fisicamente do banco de dados, protegendo a integridade de relatórios de fechamento de caixa e auditoria contábil.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

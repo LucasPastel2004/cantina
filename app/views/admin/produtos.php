@@ -38,15 +38,24 @@ $csrfToken = $csrf_token ?? '';
 <div class="card-enterprise mb-4">
     <div class="card-enterprise-body p-3">
         <form action="<?php echo $baseUrl; ?>/admin/produtos" method="GET" class="row g-2 align-items-end">
-            <div class="col-12 col-sm-6 col-md-3">
-                <label for="busca" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">Busca</label>
-                <input type="text" class="form-control form-control-sm" id="busca" name="busca" 
-                       placeholder="Código ou descrição..." value="<?php echo htmlspecialchars($filtros['busca'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+            <div class="col-12 col-md-4">
+                <label for="busca" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Buscar Produto</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: #cbd5e1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </span>
+                    <input type="text" class="form-control form-control-sm border-start-0" id="busca" name="busca" 
+                           placeholder="Código interno ou descrição..." value="<?php echo htmlspecialchars($filtros['busca'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                           style="border-color: #cbd5e1;">
+                </div>
             </div>
             <div class="col-6 col-md-2">
-                <label for="filtro_categoria" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">Categoria</label>
-                <select class="form-select form-select-sm" id="filtro_categoria" name="categoria_id">
-                    <option value="">Todas</option>
+                <label for="filtro_categoria" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Categoria</label>
+                <select class="form-select form-select-sm" id="filtro_categoria" name="categoria_id" style="border-color: #cbd5e1;">
+                    <option value="">Todas as categorias</option>
                     <?php foreach ($categorias as $cat): ?>
                         <option value="<?php echo $cat['id']; ?>" <?php echo ((string)($filtros['categoria_id'] ?? '') === (string)$cat['id']) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($cat['nome'], ENT_QUOTES, 'UTF-8'); ?>
@@ -55,26 +64,26 @@ $csrfToken = $csrf_token ?? '';
                 </select>
             </div>
             <div class="col-6 col-md-2">
-                <label for="filtro_tipo" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">Tipo</label>
-                <select class="form-select form-select-sm" id="filtro_tipo" name="tipo">
-                    <option value="">Todos</option>
+                <label for="filtro_tipo" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Tipo de Item</label>
+                <select class="form-select form-select-sm" id="filtro_tipo" name="tipo" style="border-color: #cbd5e1;">
+                    <option value="">Todos os tipos</option>
                     <option value="salgado_diario" <?php echo (($filtros['tipo'] ?? '') === 'salgado_diario') ? 'selected' : ''; ?>>Salgado Diário</option>
                     <option value="industrializado_continuo" <?php echo (($filtros['tipo'] ?? '') === 'industrializado_continuo') ? 'selected' : ''; ?>>Industrializado</option>
                 </select>
             </div>
             <div class="col-6 col-md-2">
-                <label for="filtro_status" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">Pausa</label>
-                <select class="form-select form-select-sm" id="filtro_status" name="status_pausa">
+                <label for="filtro_status" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Status Pausa</label>
+                <select class="form-select form-select-sm" id="filtro_status" name="status_pausa" style="border-color: #cbd5e1;">
                     <option value="">Todos</option>
-                    <option value="ativo" <?php echo (($filtros['status_pausa'] ?? '') === 'ativo') ? 'selected' : ''; ?>>Ativos</option>
-                    <option value="pausado" <?php echo (($filtros['status_pausa'] ?? '') === 'pausado') ? 'selected' : ''; ?>>Pausados</option>
+                    <option value="ativo" <?php echo (($filtros['status_pausa'] ?? '') === 'ativo') ? 'selected' : ''; ?>>Ativos para venda</option>
+                    <option value="pausado" <?php echo (($filtros['status_pausa'] ?? '') === 'pausado') ? 'selected' : ''; ?>>Venda pausada</option>
                 </select>
             </div>
-            <div class="col-6 col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-grow-1">
+            <div class="col-6 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-grow-1" style="height: 31px;">
                     Filtrar
                 </button>
-                <a href="<?php echo $baseUrl; ?>/admin/produtos" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
+                <a href="<?php echo $baseUrl; ?>/admin/produtos" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros" style="height: 31px; padding: 0 10px;">
                     Limpar
                 </a>
             </div>
@@ -84,6 +93,15 @@ $csrfToken = $csrf_token ?? '';
 
 <!-- Tabela de Produtos -->
 <div class="card-enterprise">
+    <div class="card-enterprise-header">
+        <div class="d-flex align-items-center gap-2">
+            <span>Itens do Cardápio</span>
+            <span class="badge-count"><?php echo count($produtos); ?> <?php echo count($produtos) === 1 ? 'item' : 'itens'; ?></span>
+        </div>
+        <div class="text-secondary font-microcopy d-none d-sm-block">
+            Clique no status para pausar ou liberar um item instantaneamente
+        </div>
+    </div>
     <div class="card-enterprise-body p-0">
         <?php if (empty($produtos)): ?>
             <?php 
@@ -92,16 +110,16 @@ $csrfToken = $csrf_token ?? '';
             ?>
         <?php else: ?>
             <div class="table-responsive">
-                <table class="table-enterprise mb-0">
+                <table class="table-data-grid table-enterprise mb-0">
                     <thead>
                         <tr>
-                            <th class="cell-center" style="width: 44px;">Foto</th>
-                            <th class="cell-center" style="width: 90px;">Código</th>
-                            <th class="cell-left">Descrição & Alérgenos</th>
-                            <th class="cell-left" style="width: 140px;">Categoria</th>
-                            <th class="cell-center" style="width: 110px;">Turno</th>
+                            <th class="cell-center" style="width: 52px;">Foto</th>
+                            <th class="cell-center" style="width: 120px;">Código</th>
+                            <th class="cell-left" style="min-width: 220px;">Descrição & Alérgenos</th>
+                            <th class="cell-left" style="width: 150px;">Categoria</th>
+                            <th class="cell-center" style="width: 90px;">Turno</th>
                             <th class="cell-right" style="width: 100px;">Preço</th>
-                            <th class="cell-center" style="width: 110px;">Estoque</th>
+                            <th class="cell-center" style="width: 100px;">Estoque</th>
                             <th class="cell-center" style="width: 130px;">Disponibilidade</th>
                             <th class="cell-right" style="width: 130px;">Ações</th>
                         </tr>
@@ -109,28 +127,34 @@ $csrfToken = $csrf_token ?? '';
                     <tbody>
                         <?php foreach ($produtos as $prod): ?>
                             <tr>
-                                <td class="cell-center py-1">
-                                    <?php if (!empty($prod['foto_url'])): ?>
-                                        <img src="<?php echo $baseUrl . '/' . htmlspecialchars($prod['foto_url'], ENT_QUOTES, 'UTF-8'); ?>" 
-                                             alt="<?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>" 
-                                             width="28" height="28" style="width: 28px; height: 28px; border-radius: 4px; object-fit: cover;">
-                                    <?php else: ?>
-                                        <div style="width: 28px; height: 28px; border-radius: 4px; background: #f1f5f9; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: #94a3b8;">
-                                            &mdash;
-                                        </div>
-                                    <?php endif; ?>
+                                <td class="cell-center py-2">
+                                    <div class="product-thumb">
+                                        <?php if (!empty($prod['foto_url'])): ?>
+                                            <img src="<?php echo $baseUrl . '/' . htmlspecialchars($prod['foto_url'], ENT_QUOTES, 'UTF-8'); ?>" 
+                                                 alt="<?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                 loading="lazy">
+                                        <?php else: ?>
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                                                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                                                <line x1="6" y1="1" x2="6" y2="4"></line>
+                                                <line x1="10" y1="1" x2="10" y2="4"></line>
+                                                <line x1="14" y1="1" x2="14" y2="4"></line>
+                                            </svg>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 <td class="cell-center">
                                     <code class="code-tag font-tabular"><?php echo htmlspecialchars($prod['codigo_interno'], ENT_QUOTES, 'UTF-8'); ?></code>
                                 </td>
                                 <td class="cell-left">
-                                    <div class="font-weight-semibold text-dark">
+                                    <div class="font-weight-semibold text-dark" style="font-size: 13px;">
                                         <?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>
                                     </div>
                                     <?php if (!empty($prod['alergenos_nomes'])): ?>
                                         <div class="d-inline-flex flex-wrap gap-1 mt-1">
                                             <?php 
-                                            $nomesAlergenos = explode(', ', $prod['alergenos_nomes']);
+                                             $nomesAlergenos = explode(', ', $prod['alergenos_nomes']);
                                             foreach ($nomesAlergenos as $al): ?>
                                                 <span class="tag-alergeno"><?php echo htmlspecialchars($al, ENT_QUOTES, 'UTF-8'); ?></span>
                                             <?php endforeach; ?>
@@ -150,7 +174,7 @@ $csrfToken = $csrf_token ?? '';
                                     echo $turnos[$prod['turno_disponibilidade']] ?? ucfirst($prod['turno_disponibilidade']);
                                     ?>
                                 </td>
-                                <td class="cell-right font-tabular font-weight-semibold text-dark">
+                                <td class="cell-right font-tabular font-weight-bold text-dark">
                                     R$ <?php echo number_format((float)$prod['preco_venda'], 2, ',', '.'); ?>
                                 </td>
                                 <td class="cell-center font-tabular" style="font-size: 12px;">
@@ -167,27 +191,27 @@ $csrfToken = $csrf_token ?? '';
                                     <?php endif; ?>
                                 </td>
                                 <td class="cell-center">
-                                    <!-- Botão de Alternância Rápida: Ativo / Pausado (Padrão Corporativo Neutro) -->
+                                    <!-- Botão de Alternância Rápida de Pausa (Padrão Corporativo Neutro) -->
                                     <form action="<?php echo $baseUrl; ?>/admin/produtos/toggle-pausa" method="POST" class="d-inline m-0 form-toggle-pausa">
                                         <?php echo $csrfField; ?>
                                         <input type="hidden" name="id" value="<?php echo (int)$prod['id']; ?>">
-                                        <button type="submit" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1"
-                                                title="Clique para alternar o status de pausa deste item">
+                                        <button type="submit" class="btn-status-toggle"
+                                                title="Clique para alternar: <?php echo ($prod['status_pausa'] === 'ativo') ? 'Pausar venda' : 'Liberar para venda'; ?>">
                                             <?php if ($prod['status_pausa'] === 'ativo'): ?>
-                                                <span class="status-indicator status-active" style="padding: 0;">
-                                                    <span class="bullet">●</span> Ativo
+                                                <span class="status-indicator status-active">
+                                                    <span class="bullet" aria-hidden="true">●</span> Ativo
                                                 </span>
                                             <?php else: ?>
-                                                <span class="status-indicator status-inactive" style="padding: 0;">
-                                                    <span class="bullet">●</span> Pausado
+                                                <span class="status-indicator status-inactive">
+                                                    <span class="bullet" aria-hidden="true">●</span> Pausado
                                                 </span>
                                             <?php endif; ?>
                                         </button>
                                     </form>
                                 </td>
                                 <td class="cell-right">
-                                    <div class="d-inline-flex gap-1">
-                                        <button type="button" class="btn btn-enterprise btn-secondary btn-sm" 
+                                    <div class="btn-action-group">
+                                        <button type="button" class="btn-action" 
                                                 onclick='editarProduto(<?php echo json_encode($prod, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>)'
                                                 title="Editar Produto">
                                             Editar
@@ -196,7 +220,7 @@ $csrfToken = $csrf_token ?? '';
                                               onsubmit="return confirm('Deseja realmente inativar este produto do cardápio? Ele será mantido no histórico contábil.');">
                                             <?php echo $csrfField; ?>
                                             <input type="hidden" name="id" value="<?php echo (int)$prod['id']; ?>">
-                                            <button type="submit" class="btn btn-enterprise btn-danger btn-sm" title="Excluir Produto">
+                                            <button type="submit" class="btn-action btn-action-danger" title="Excluir Produto">
                                                 Excluir
                                             </button>
                                         </form>
