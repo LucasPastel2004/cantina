@@ -63,7 +63,7 @@ abstract class Model
         }
 
         $config = require $configFile;
-        $db = $config['database'] ?? [];
+        $db = $config['database'] ?? $config['db'] ?? [];
 
         $host     = $db['host'] ?? '127.0.0.1';
         $port     = $db['port'] ?? 3306;
@@ -88,6 +88,14 @@ abstract class Model
             // Lança exceção para que o ErrorHandler capture e registre no log de contingência
             throw new \RuntimeException("Falha ao estabelecer conexão com o banco de dados: " . $e->getMessage(), (int)$e->getCode(), $e);
         }
+    }
+
+    /**
+     * Alias para getConnection()
+     */
+    public static function getPdo(): \PDO
+    {
+        return self::getConnection();
     }
 
     /**

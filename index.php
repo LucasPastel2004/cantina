@@ -82,6 +82,10 @@ $router->post('/recuperar-senha/redefinir', [\App\Controllers\AuthController::cl
 
 $router->get('/termos', [\App\Controllers\AuthController::class, 'termos']);
 
+// 0.1. Integrações Externas e Webhooks Bancários (Público de Servidor para Servidor - Fase 9)
+$router->post('/webhook/pix', [\App\Controllers\WebhookController::class, 'pix']);
+$router->get('/webhook/pix', [\App\Controllers\WebhookController::class, 'pix']);
+
 // Rotas Protegidas por Perfil (RBAC)
 // 1. Portal da Família: Acesso exclusivo do perfil 'responsavel'
 $router->get('/portal', [\App\Controllers\PortalController::class, 'index'], [
@@ -91,6 +95,20 @@ $router->get('/portal/alergias', [\App\Controllers\PortalController::class, 'ale
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
 ]);
 $router->post('/portal/alergias/salvar', [\App\Controllers\PortalController::class, 'alergiasSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+
+// 1.1. Carteira Digital Familiar e Recargas Pix (Fase 9)
+$router->get('/portal/carteira', [\App\Controllers\CarteiraController::class, 'index'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->post('/portal/recarga/gerar', [\App\Controllers\CarteiraController::class, 'gerarPix'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->get('/portal/recarga/status/{txid}', [\App\Controllers\CarteiraController::class, 'statusPix'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->post('/portal/recarga/simular/{txid}', [\App\Controllers\CarteiraController::class, 'simularPagamento'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
 ]);
 

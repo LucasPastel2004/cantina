@@ -48,6 +48,31 @@ class WhatsAppService
     }
 
     /**
+     * Envia confirmação de recarga Pix creditada na carteira familiar
+     */
+    public function sendRecargaConfirmada(string $whatsapp, float $valor, float $novoSaldo, string $nome = ''): bool
+    {
+        $primeiroNome = !empty($nome) ? explode(' ', trim($nome))[0] : 'Responsável';
+        $valorFmt = number_format($valor, 2, ',', '.');
+        $saldoFmt = number_format($novoSaldo, 2, ',', '.');
+        $mensagem = "Olá, {$primeiroNome}! Sua recarga Pix no valor de *R$ {$valorFmt}* foi confirmada com sucesso. Seu novo saldo disponível na Cantina Web é: *R$ {$saldoFmt}*.";
+
+        return $this->sendMessage($whatsapp, $mensagem, 'recarga_confirmada');
+    }
+
+    /**
+     * Envia alerta preventivo de saldo baixo na carteira familiar
+     */
+    public function sendAlertaSaldoBaixo(string $whatsapp, float $saldoAtual, string $nome = ''): bool
+    {
+        $primeiroNome = !empty($nome) ? explode(' ', trim($nome))[0] : 'Responsável';
+        $saldoFmt = number_format($saldoAtual, 2, ',', '.');
+        $mensagem = "Olá, {$primeiroNome}! O saldo da sua família na Cantina Web atingiu *R$ {$saldoFmt}* (abaixo do limite de segurança de R$ 15,00). Recarregue via Pix no Portal da Família para garantir os lanches escolares dos seus filhos!";
+
+        return $this->sendMessage($whatsapp, $mensagem, 'alerta_saldo_baixo');
+    }
+
+    /**
      * Dispara a mensagem via REST ou armazena no provedor mock para testes
      */
     public function sendMessage(string $whatsapp, string $mensagem, string $tipo = 'geral', ?string $code = null): bool

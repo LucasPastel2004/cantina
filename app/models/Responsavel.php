@@ -220,4 +220,33 @@ class Responsavel extends Model
 
         return self::fetchAll($sql, $params);
     }
+
+    /**
+     * Consulta o saldo atual em tempo real do responsável no banco
+     */
+    public static function consultarSaldo(int $id): float
+    {
+        $resp = self::fetchOne("SELECT saldo_atual FROM responsaveis WHERE id = :id LIMIT 1", ['id' => $id]);
+        return (float)($resp['saldo_atual'] ?? 0.00);
+    }
+
+    /**
+     * Verifica se o responsável está com bloqueio preventivo de contestação bancária (MED)
+     */
+    public static function isBloqueadoMed(int $id): bool
+    {
+        $resp = self::fetchOne("SELECT bloqueado_med FROM responsaveis WHERE id = :id LIMIT 1", ['id' => $id]);
+        return (int)($resp['bloqueado_med'] ?? 0) === 1;
+    }
+
+    /**
+     * Atualiza a flag de bloqueio MED do responsável
+     */
+    public static function definirBloqueioMed(int $id, bool $bloquear): bool
+    {
+        return self::execute(
+            "UPDATE responsaveis SET bloqueado_med = :bloqueado, updated_at = NOW() WHERE id = :id",
+            ['bloqueado' => $bloquear ? 1 : 0, 'id' => $id]
+        ) > 0;
+    }
 }

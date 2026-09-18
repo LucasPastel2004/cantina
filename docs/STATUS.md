@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 8 — Importação Escolar em Lote e Gestão Ativa de Restrições Alimentares
-* **Status da Fase 8:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 9 — Carteira Digital Familiar e Gateway Pix Dinâmico
-* **Última Atualização:** 2026-09-18 09:00:00 (Fase 8 finalizada, testada e validada)
+* **Fase Atual:** Fase 9 — Carteira Digital Familiar e Gateway Pix Dinâmico
+* **Status da Fase 9:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 10 — Agendamento Semanal de Lanches e Regras Rígidas de Corte
+* **Última Atualização:** 2026-09-18 10:00:00 (Fase 9 finalizada, testada e validada)
 
 ---
 
@@ -283,9 +283,54 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 9 — Carteira Digital Familiar e Gateway Pix Dinâmico
-* [ ] Serviço `app/services/PixService.php` e `app/controllers/WebhookController.php`.
-* [ ] Interface da carteira familiar e recargas com QR Code e Copia e Cola.
+### [x] Fase 9 — Carteira Digital Familiar e Gateway Pix Dinâmico
+* [x] Implementação de `app/services/QrCodeService.php`:
+  * Gerador nativo e autônomo de QR Code Modelo 2 em PHP puro sem dependências externas.
+  * Codificação numérica/alfanumérica/byte com correção de erros Reed-Solomon oficial ISO/IEC 18004.
+  * Renderização direta de vetor SVG nítido e geração de Data URI em Base64 para exibição imediata no navegador.
+* [x] Implementação de `app/services/PixService.php`:
+  * Montagem estrita do padrão BR Code / EMVCo oficial do Banco Central do Brasil com formatação TLV (Tag-Length-Value) e cálculo polinomial CRC16-CCITT (0x1021).
+  * Geração de Pix dinâmico com identificador único (`txid`) institucional, nome da instituição recebedora, cidade, valor formatado e chave Pix institucional.
+  * Gestão de validade temporária da cobrança (15 minutos / 900 segundos) e armazenamento em cache protegido `storage/cache/pix/`.
+  * Consulta em tempo real de status da cobrança (`pendente`, `pago`, `expirado`) e mecanismo de simulação em ambiente local.
+* [x] Implementação do Modelo `app/models/TransacaoCarteira.php`:
+  * Gestão do livro-razão contábil e financeiro sobre a tabela `transacoes_carteira` (Migration 022).
+  * Métodos transacionais atômicos com bloqueio pessimista (`FOR UPDATE`) para `creditar()` e `debitar()`.
+  * Rastreabilidade financeira completa linha a linha: `saldo_anterior`, `valor` e `saldo_resultante`.
+  * Trava rigorosa do modelo pré-pago contra saldo negativo com disparo de `DomainException`.
+  * Consulta do resumo da carteira familiar (`saldo_atual`, `saldo_reservado`, `saldo_disponivel`, alertas de saldo baixo e alertas de bloqueio MED).
+  * Extrato analítico paginado com filtros por tipo de lançamento (`recarga_pix`, `debito_pedido`, `estorno_pedido`, `ajuste_manual`, `estorno_med`), badges semânticos e formatação brasileira.
+  * Validador de unicidade contábil (`buscarPorReferencia`) para garantia mandatória de idempotência contra repetições de webhook ou chamadas duplicadas.
+* [x] Extensão de modelos e serviços auxiliares:
+  * Em `app/models/Responsavel.php`: adição dos métodos `consultarSaldo()`, `isBloqueadoMed()`, `definirBloqueioMed()`.
+  * Em `app/services/WhatsAppService.php`: adição dos métodos `sendRecargaConfirmada()` e `sendAlertaSaldoBaixo()`.
+* [x] Implementação de `app/controllers/WebhookController.php`:
+  * Endpoint público seguro `/webhook/pix` para recepção de notificações transacionais de gateways Pix (Mercado Pago, Efí/Gerencianet, etc.).
+  * Validação de token de webhook configurado, normalização de payload e conferência de `txid` e valor.
+  * Garantia estrita de idempotência: verificação de duplicidade antes do processamento, retornando HTTP 200 `ja_processado` sem duplicar saldo financeiro.
+  * Liquidação contábil automática na carteira familiar e disparo imediato de WhatsApp confirmando a recarga.
+* [x] Implementação de `app/controllers/CarteiraController.php`:
+  * Controle de acesso familiar (RBAC para responsável titular).
+  * Action `index()`: painel financeiro consolidado com bento grid de saldos, cards de alerta (saldo baixo / bloqueio MED) e extrato analítico paginado.
+  * Action `gerarPix()`: validação de valor mínimo (R$ 1,00), geração do BR Code Pix e QR Code SVG, com retorno JSON estruturado.
+  * Action `statusPix()`: endpoint de polling assíncrono para atualização do status em tempo real na interface da família.
+  * Action `simularPagamento()`: facilitador seguro de desenvolvimento/testes para liquidação imediata da cobrança Pix via interface web.
+* [x] Criação da view `app/views/portal/carteira.php` com Design System Enterprise Anti-Slop:
+  * Bento grid de alta densidade com métricas de Saldo Total, Saldo Reservado em Pedidos e Saldo Disponível Livre (`.font-tabular`).
+  * Botões de atalho rápido de valor (+R$ 20, +R$ 50, +R$ 100, +R$ 200) e input monetário com máscara de centavos.
+  * Visualização de QR Code vetorial SVG nítido centralizado e área de código Copia e Cola com botão ágil de cópia via Clipboard API.
+  * Cronômetro regressivo visual em tempo real (15:00) com aviso de expiração da cobrança.
+  * Polling assíncrono transparente a cada 2,5 segundos que detecta a liquidação e recarrega a página automaticamente com mensagem de sucesso.
+  * Botão corporativo discreto de simulação de pagamento ("Simular Pagamento no Ambiente de Teste") para validação local imediata.
+  * Tabela data-grid de extrato analítico com status indicators pontuais, tipo de movimentação, valor formatado e paginação.
+* [x] Registro e blindagem de rotas no `index.php`:
+  * `/portal/carteira` (GET, RBAC: responsavel)
+  * `/portal/recarga/gerar` (POST, CSRF, RBAC: responsavel)
+  * `/portal/recarga/status/{txid}` (GET, RBAC: responsavel)
+  * `/portal/recarga/simular/{txid}` (POST, CSRF, RBAC: responsavel)
+  * `/webhook/pix` (POST, rota pública para gateways bancários)
+* [x] Criação da suíte de testes automatizados `tests/fase9_test.php` com 62 asserções cobrindo QrCode, BR Code, CRC16, Transacoes, Trava de Saldo Negativo, Extrato, Idempotência, Webhook e WhatsApp com 100% de sucesso.
+* [x] Execução e homologação de 100% das suítes de regressão (Fases 2, 3, 4, 5, 6, 7, 8, testes web, máscaras e visibilidade).
 
 ---
 
@@ -344,6 +389,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 9 — Carteira Digital Familiar e Gateway Pix Dinâmico**, implementando o serviço `app/services/PixService.php`, o controlador de Webhooks bancários `app/controllers/WebhookController.php`, a interface da carteira familiar no Portal da Família com recargas via QR Code Pix e chave "Copia e Cola", extrato analítico da carteira e regras de saldo mínimo e conciliação bancária.
+Iniciar a **Fase 10 — Agendamento Semanal de Lanches e Regras Rígidas de Corte**, implementando o catálogo semanal de lanches com liberação às sextas-feiras às 18:00, controle rígido de corte matutino (08:00) e vespertino (13:30), modal de advertência para restrições alimentares conflitantes, fluxo de agendamento por dependente e cancelamento com compensação financeira automática na carteira familiar.
+
 
 
