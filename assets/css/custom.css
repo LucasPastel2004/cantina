@@ -175,6 +175,16 @@ select:focus-visible {
   box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14) !important;
 }
 
+/* Espaçamento defensivo para inputs numéricos com setas (spin buttons) */
+input[type="number"] {
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
+}
+
+input[type="number"].text-end {
+  padding-right: 28px !important;
+}
+
 /* Botões do Sistema e Microinterações Táteis */
 .btn,
 .btn-enterprise {

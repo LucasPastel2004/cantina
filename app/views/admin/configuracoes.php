@@ -96,7 +96,7 @@ $csrfField = $csrf_field ?? '';
                             <label for="recarga_minima_pix" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em;">
                                 Recarga Mínima Pix (R$) <span class="text-danger">*</span>
                             </label>
-                            <input type="number" step="0.50" min="1.00" class="form-control form-control-sm font-tabular text-end" id="recarga_minima_pix" name="recarga_minima_pix" 
+                            <input type="number" step="0.50" min="1.00" class="form-control form-control-sm font-tabular" id="recarga_minima_pix" name="recarga_minima_pix" 
                                    value="<?php echo number_format((float)($configuracoes['recarga_minima_pix'] ?? 10.00), 2, '.', ''); ?>" required>
                             <span class="text-muted" style="font-size: 11px;">Valor padrão: R$ 10,00</span>
                         </div>
@@ -104,7 +104,7 @@ $csrfField = $csrf_field ?? '';
                             <label for="alerta_saldo_baixo" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em;">
                                 Alerta de Saldo Baixo (R$) <span class="text-danger">*</span>
                             </label>
-                            <input type="number" step="0.50" min="0.00" class="form-control form-control-sm font-tabular text-end" id="alerta_saldo_baixo" name="alerta_saldo_baixo" 
+                            <input type="number" step="0.50" min="0.00" class="form-control form-control-sm font-tabular" id="alerta_saldo_baixo" name="alerta_saldo_baixo" 
                                    value="<?php echo number_format((float)($configuracoes['alerta_saldo_baixo'] ?? 15.00), 2, '.', ''); ?>" required>
                             <span class="text-muted" style="font-size: 11px;">Gatilho de aviso aos pais</span>
                         </div>
