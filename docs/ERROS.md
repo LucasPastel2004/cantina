@@ -215,5 +215,23 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Atualizado o teste automatizado `tests/portal_saldo_test.php` com asserções estritas validando a presença de `<!DOCTYPE html>`, `bootstrap.min.css`, `custom.css`, `portal-header` e a aba ativa da carteira no HTML entregue pelo servidor.
 - Como evitar no futuro: Padronizar e flexibilizar métodos de infraestrutura (como `render`) para aceitar variações comuns de sintaxe de desenvolvedores, além de criar testes automatizados de integração que verifiquem não apenas o status HTTP, mas também a presença da tag raiz e das folhas de estilo essenciais no HTML gerado.
 
+---
+
+## 2026-09-18 - Alerta "Não há nada para mostrar aqui" disparado indevidamente no topo do Portal da Família
+
+- Sintoma: Ao acessar o Portal da Família ou a Carteira Digital Familiar com extrato vazio, um banner de alerta azul com o texto `Portal da Família — Colégio Monteiro Lobato: Não há nada para mostrar aqui` era exibido indevidamente no topo da página.
+- Causa: Colisão e vazamento de escopo de variáveis:
+  1. Na view `portal/carteira.php`, quando a lista de transações estava vazia, era incluído o componente `partials/empty_state.php`.
+  2. Dentro de `empty_state.php`, a variável `$message` recebia o título do estado vazio (`"Não há nada para mostrar aqui"`). Como arquivos incluídos via `require` compartilham o escopo de variáveis da função `render()`, `$message` permaneceu viva na memória.
+  3. Ao compilar o layout master `portal.php`, o componente `partials/alert.php` era chamado. Ele verifica se `$message` não está vazio para renderizar alertas explícitos.
+  4. Como `$message` continha a string do `empty_state` e `$title` continha o título da página, o `alert.php` interpretou erroneamente como uma instrução para exibir um alerta no topo da página.
+- Solução aplicada:
+  1. Em `app/views/partials/empty_state.php`, renomeada a variável `$message` para `$emptyTitle` e adicionado bloco defensivo de limpeza (`unset`) para todas as variáveis locais do componente.
+  2. Em `app/core/Controller.php`, implementado isolamento léxico estrito: a renderização do arquivo de view foi encapsulada dentro de uma closure anônima (`$renderViewIsolated = function(...)`), garantindo que nenhuma variável criada internamente na view ou em seus partials vaze para o escopo do layout master.
+  3. Em `app/views/partials/alert.php`, adicionada limpeza ao final da renderização para eliminar referências temporárias.
+  4. Criado teste de regressão em `tests/portal_saldo_test.php` garantindo que mesmo com `empty_state` ativo no corpo da tabela, o alerta de topo permanece 100% limpo e ausente (22/22 asserções aprovadas).
+- Como evitar no futuro: Sempre isolar o escopo de renderização entre views e layouts master utilizando closures anônimas em frameworks MVC próprios, e evitar o uso de nomes de variáveis genéricos (como `$message`, `$data`, `$title`) em componentes parciais reutilizáveis.
+
+
 
 
