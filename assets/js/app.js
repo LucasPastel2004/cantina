@@ -29,6 +29,48 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  // Formatação dinâmica de CNPJ (00.000.000/0000-00)
+  const cnpjInputs = document.querySelectorAll('#cnpj, input[name="cnpj"], .input-cnpj, [data-mask="cnpj"]');
+  cnpjInputs.forEach(function (input) {
+    if (input.value) {
+      input.value = formatarCnpj(input.value);
+    }
+    input.addEventListener('input', function (e) {
+      e.target.value = formatarCnpj(e.target.value);
+    });
+    input.addEventListener('blur', function (e) {
+      e.target.value = formatarCnpj(e.target.value);
+    });
+  });
+
+  // Formatação dinâmica de Telefone e WhatsApp celular (00) 00000-0000 e fixo (00) 0000-0000
+  const phoneInputs = document.querySelectorAll('#telefone_contato, input[name="telefone_contato"], input[name*="telefone"], input[name*="whatsapp"], .input-phone, [data-mask="phone"], [data-mask="tel"]');
+  phoneInputs.forEach(function (input) {
+    if (input.value) {
+      input.value = formatarTelefone(input.value);
+    }
+    input.addEventListener('input', function (e) {
+      e.target.value = formatarTelefone(e.target.value);
+    });
+    input.addEventListener('blur', function (e) {
+      e.target.value = formatarTelefone(e.target.value);
+    });
+  });
+
+  // Formatação dinâmica de CPF (000.000.000-00)
+  const cpfInputs = document.querySelectorAll('#cpf, input[name="cpf"], .input-cpf, [data-mask="cpf"]');
+  cpfInputs.forEach(function (input) {
+    if (input.value) {
+      input.value = formatarCpf(input.value);
+    }
+    input.addEventListener('input', function (e) {
+      e.target.value = formatarCpf(e.target.value);
+    });
+    input.addEventListener('blur', function (e) {
+      e.target.value = formatarCpf(e.target.value);
+    });
+  });
+
   // Restaurar estado de colapso da sidebar no Desktop
   try {
     const savedSidebar = localStorage.getItem('cantina_sidebar_collapsed');
@@ -59,6 +101,65 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) {}
   });
 });
+
+/**
+ * Formata um valor numérico para padrão CNPJ (00.000.000/0000-00)
+ * @param {string} valor 
+ * @returns {string}
+ */
+function formatarCnpj(valor) {
+  let v = (valor || '').toString().replace(/\D/g, '');
+  if (v.length > 14) v = v.slice(0, 14);
+  if (v.length > 12) {
+    return v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})$/, '$1.$2.$3/$4-$5');
+  } else if (v.length > 8) {
+    return v.replace(/^(\d{2})(\d{3})(\d{3})(\d{1,4})$/, '$1.$2.$3/$4');
+  } else if (v.length > 5) {
+    return v.replace(/^(\d{2})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+  } else if (v.length > 2) {
+    return v.replace(/^(\d{2})(\d{1,3})$/, '$1.$2');
+  }
+  return v;
+}
+
+/**
+ * Formata um valor numérico para padrão Telefone/WhatsApp
+ * Suporta fixo: (00) 0000-0000 e celular: (00) 00000-0000
+ * @param {string} valor 
+ * @returns {string}
+ */
+function formatarTelefone(valor) {
+  let v = (valor || '').toString().replace(/\D/g, '');
+  if (v.length > 11) v = v.slice(0, 11);
+  if (v.length > 10) {
+    return v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+  } else if (v.length > 6) {
+    return v.replace(/^(\d{2})(\d{4})(\d{1,4})$/, '($1) $2-$3');
+  } else if (v.length > 2) {
+    return v.replace(/^(\d{2})(\d{1,4})$/, '($1) $2');
+  } else if (v.length > 0) {
+    return v.replace(/^(\d{1,2})$/, '($1');
+  }
+  return v;
+}
+
+/**
+ * Formata um valor numérico para padrão CPF (000.000.000-00)
+ * @param {string} valor 
+ * @returns {string}
+ */
+function formatarCpf(valor) {
+  let v = (valor || '').toString().replace(/\D/g, '');
+  if (v.length > 11) v = v.slice(0, 11);
+  if (v.length > 9) {
+    return v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})$/, '$1.$2.$3-$4');
+  } else if (v.length > 6) {
+    return v.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+  } else if (v.length > 3) {
+    return v.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+  }
+  return v;
+}
 
 /**
  * Formata um valor numérico para padrão Real Brasileiro (R$ 0,00)

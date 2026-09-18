@@ -54,15 +54,37 @@ $csrfField = $csrf_field ?? '';
                             <label for="cnpj" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em;">
                                 CNPJ <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control form-control-sm font-tabular" id="cnpj" name="cnpj" 
-                                   value="<?php echo htmlspecialchars($configuracoes['cnpj'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required maxlength="18">
+                            <?php
+                            $cnpjRaw = (string)($configuracoes['cnpj'] ?? '');
+                            $cnpjDigits = preg_replace('/\D/', '', $cnpjRaw);
+                            if (strlen($cnpjDigits) === 14) {
+                                $cnpjValor = preg_replace('/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/', '$1.$2.$3/$4-$5', $cnpjDigits);
+                            } else {
+                                $cnpjValor = $cnpjRaw;
+                            }
+                            ?>
+                            <input type="text" class="form-control form-control-sm font-tabular input-cnpj" id="cnpj" name="cnpj" 
+                                   value="<?php echo htmlspecialchars($cnpjValor, ENT_QUOTES, 'UTF-8'); ?>" 
+                                   placeholder="00.000.000/0000-00" required maxlength="18">
                         </div>
                         <div class="col-12 col-sm-6">
                             <label for="telefone_contato" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em;">
                                 WhatsApp de Suporte
                             </label>
-                            <input type="text" class="form-control form-control-sm font-tabular" id="telefone_contato" name="telefone_contato" 
-                                   value="<?php echo htmlspecialchars($configuracoes['telefone_contato'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" maxlength="20">
+                            <?php
+                            $telRaw = (string)($configuracoes['telefone_contato'] ?? '');
+                            $telDigits = preg_replace('/\D/', '', $telRaw);
+                            if (strlen($telDigits) === 11) {
+                                $telValor = preg_replace('/^(\d{2})(\d{5})(\d{4})$/', '($1) $2-$3', $telDigits);
+                            } elseif (strlen($telDigits) === 10) {
+                                $telValor = preg_replace('/^(\d{2})(\d{4})(\d{4})$/', '($1) $2-$3', $telDigits);
+                            } else {
+                                $telValor = $telRaw;
+                            }
+                            ?>
+                            <input type="text" class="form-control form-control-sm font-tabular input-phone" id="telefone_contato" name="telefone_contato" 
+                                   value="<?php echo htmlspecialchars($telValor, ENT_QUOTES, 'UTF-8'); ?>" 
+                                   placeholder="(00) 00000-0000" maxlength="20">
                         </div>
                     </div>
 
@@ -152,3 +174,47 @@ $csrfField = $csrf_field ?? '';
         </div>
     </div>
 </form>
+
+<script>
+(function() {
+    function aplicarMascaraCnpj(v) {
+        v = (v || '').toString().replace(/\D/g, '').slice(0, 14);
+        if (v.length > 12) return v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})$/, '$1.$2.$3/$4-$5');
+        if (v.length > 8) return v.replace(/^(\d{2})(\d{3})(\d{3})(\d{1,4})$/, '$1.$2.$3/$4');
+        if (v.length > 5) return v.replace(/^(\d{2})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+        if (v.length > 2) return v.replace(/^(\d{2})(\d{1,3})$/, '$1.$2');
+        return v;
+    }
+
+    function aplicarMascaraTelefone(v) {
+        v = (v || '').toString().replace(/\D/g, '').slice(0, 11);
+        if (v.length > 10) return v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+        if (v.length > 6) return v.replace(/^(\d{2})(\d{4})(\d{1,4})$/, '($1) $2-$3');
+        if (v.length > 2) return v.replace(/^(\d{2})(\d{1,4})$/, '($1) $2');
+        if (v.length > 0) return v.replace(/^(\d{1,2})$/, '($1');
+        return v;
+    }
+
+    function bindInputs() {
+        const cnpj = document.getElementById('cnpj');
+        if (cnpj) {
+            cnpj.value = aplicarMascaraCnpj(cnpj.value);
+            cnpj.addEventListener('input', function(e) { e.target.value = aplicarMascaraCnpj(e.target.value); });
+            cnpj.addEventListener('blur', function(e) { e.target.value = aplicarMascaraCnpj(e.target.value); });
+        }
+
+        const tel = document.getElementById('telefone_contato');
+        if (tel) {
+            tel.value = aplicarMascaraTelefone(tel.value);
+            tel.addEventListener('input', function(e) { e.target.value = aplicarMascaraTelefone(e.target.value); });
+            tel.addEventListener('blur', function(e) { e.target.value = aplicarMascaraTelefone(e.target.value); });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindInputs);
+    } else {
+        bindInputs();
+    }
+})();
+</script>

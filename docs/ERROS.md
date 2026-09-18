@@ -136,3 +136,18 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Atualizada a versão de cache do CSS nos layouts (`?v=5.0.6`).
 - Como evitar no futuro: Em campos de formulário que utilizem `type="number"`, preferir o alinhamento padrão à esquerda ou aplicar padding direito mínimo de `28px` para evitar sobreposição com os controles nativos de spin do navegador.
 
+---
+
+## 2026-09-18 - Ausência de formatação automática (máscara) em campos de CNPJ e Telefone
+
+- Sintoma: Os campos de CNPJ e WhatsApp de Suporte na tela de Configurações Globais aceitavam entrada livre de caracteres sem formatar a pontuação de CNPJ (`00.000.000/0000-00`) ou de telefone móvel/fixo (`(00) 00000-0000` / `(00) 0000-0000`).
+- Causa: O arquivo `assets/js/app.js` continha apenas a máscara de moeda (`.input-money`), não possuindo manipuladores de formatação para CNPJ, Telefone ou CPF. Além disso, a view `app/views/admin/configuracoes.php` exibia os valores brutos sem aplicar máscara na renderização inicial do PHP.
+- Solução aplicada:
+  1. Implementadas as funções globais `formatarCnpj()`, `formatarTelefone()` e `formatarCpf()` em `assets/js/app.js`, com escutas dinâmicas nos eventos `input` e `blur`.
+  2. Implementada pré-formatação no PHP em `app/views/admin/configuracoes.php` para renderizar os dados já pontuados no carregamento da tela.
+  3. Adicionado script defensivo inline em `configuracoes.php` com classes `.input-cnpj` e `.input-phone` e placeholders institucionais.
+  4. Atualizada a versão do script no layout (`app.js?v=5.0.6`) para forçar renovação imediata do cache do navegador.
+  5. Criado teste automatizado `tests/mask_test.php` com 14/14 asserções aprovadas com 100% de sucesso.
+- Como evitar no futuro: Sempre que novos campos com formatos canônicos padronizados (CNPJ, CPF, CEP, Telefones) forem introduzidos, incluir suas respectivas funções e manipuladores de máscara automática diretamente em `assets/js/app.js` e pré-formatar na camada de visualização em PHP.
+
+

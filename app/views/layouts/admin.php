@@ -95,6 +95,6 @@ $dataAtual = date('d/m/Y');
 <script src="<?php echo $baseUrl; ?>/assets/js/bootstrap.bundle.min.js"></script>
 
 <!-- Utilitários e Scripts Vanilla JS -->
-<script src="<?php echo $baseUrl; ?>/assets/js/app.js?v=5.0.5"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/app.js?v=5.0.6"></script>
 </body>
 </html>
