@@ -625,17 +625,27 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
     async function simularPagamentoDev() {
         if (!pixTxidAtual) return;
-        const btn = event.target;
-        btn.disabled = true;
-        btn.textContent = 'Simulando...';
+        const btn = document.querySelector('#bloco-simular-dev button') || event?.target;
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Simulando...';
+        }
 
         try {
             const formData = new FormData();
             formData.append('txid', pixTxidAtual);
+            formData.append('valor', document.getElementById('input-valor-pix')?.value || '50,00');
+            const csrfToken = document.getElementById('pix-csrf-token')?.value || '';
+            if (csrfToken) {
+                formData.append('csrf_token', csrfToken);
+            }
 
             const res = await fetch(`<?php echo $baseUrl; ?>/portal/recarga/simular/${pixTxidAtual}`, {
                 method: 'POST',
-                headers: { 'Accept': 'application/json' },
+                headers: { 
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: formData
             });
             const data = await res.json();
@@ -647,13 +657,17 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 });
             } else {
                 alert(data.erro || 'Falha ao simular pagamento.');
-                btn.disabled = false;
-                btn.textContent = '⚡ Simular Pagamento';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '⚡ Simular Pagamento';
+                }
             }
         } catch (e) {
             alert('Erro de conexão ao simular.');
-            btn.disabled = false;
-            btn.textContent = '⚡ Simular Pagamento';
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '⚡ Simular Pagamento';
+            }
         }
     }
 

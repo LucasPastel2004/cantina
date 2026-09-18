@@ -9,6 +9,7 @@
  */
 
 define('CANTINA_SISTEMA', true);
+define('CANTINA_TEST_MODE', true);
 
 // Registra Autoloader nativo PSR-4
 spl_autoload_register(function ($class) {
@@ -54,6 +55,7 @@ class Fase9Test
             $this->testarWebhookIdempotenciaELiquidacao();
             $this->testarNotificacaoWhatsAppRecarga();
             $this->testarFormatacaoMonetariaESeguranca();
+            $this->testarSimulacaoPagamentoAction();
         } finally {
             $this->executarLimpeza();
         }
@@ -435,6 +437,51 @@ class Fase9Test
         // Validação de consulta de status de txid desconhecido
         $statusDesconhecido = PixService::consultarStatus('PIX-DESCONHECIDO-XYZ');
         $this->assert($statusDesconhecido['status'] === 'nao_encontrado', "Status de txid não registrado retorna 'nao_encontrado'");
+        echo "\n";
+    }
+
+    /**
+     * 10. Testando a action de simulação de pagamento do CarteiraController
+     */
+    private function testarSimulacaoPagamentoAction(): void
+    {
+        echo "10. Testando Controller de Simulação de Pagamento Pix (CarteiraController):\n";
+
+        $resp = Responsavel::fetchOne("SELECT * FROM responsaveis WHERE saldo_atual >= 0 LIMIT 1");
+        \App\Core\Auth::loginResponsavel($resp);
+
+        // 1. Gera cobrança real
+        $cobranca = PixService::gerarCobrancaPix((int)$resp['id'], 50.00, 'Recarga Teste Simulação');
+        $this->assert(!empty($cobranca['txid']), "Cobrança gerada com sucesso para simulação");
+
+        // 2. Executa a action simularPagamento
+        $controller = new \App\Controllers\CarteiraController();
+        $_POST['txid'] = $cobranca['txid'];
+        $_POST['valor'] = '50,00';
+
+        ob_start();
+        $controller->simularPagamento(['txid' => $cobranca['txid']]);
+        $jsonOutput = ob_get_clean();
+
+        $respJson = json_decode($jsonOutput, true);
+        $this->assert(is_array($respJson), "Retorno de simularPagamento é um JSON válido");
+        $this->assert(($respJson['sucesso'] ?? false) === true, "Simulação executada com sucesso");
+        $this->assert(($respJson['status'] ?? '') === 'liquidado', "Status retornado é 'liquidado'");
+        $this->assert(isset($respJson['saldo_resultante']), "Saldo resultante informado no retorno");
+
+        // 3. Teste de resiliência: simulação com txid avulso sem arquivo no disco
+        $txidAvulso = 'PIX' . date('YmdHis') . 'TESTEAVULSO99';
+        $_POST['txid'] = $txidAvulso;
+        $_POST['valor'] = '25,00';
+
+        ob_start();
+        $controller->simularPagamento(['txid' => $txidAvulso]);
+        $jsonAvulso = ob_get_clean();
+
+        $respAvulso = json_decode($jsonAvulso, true);
+        $this->assert(($respAvulso['sucesso'] ?? false) === true, "Simulação com cobrança reconstituída em modo dev executada com sucesso");
+        $this->assert(($respAvulso['status'] ?? '') === 'liquidado', "Status retornado para cobrança avulsa é 'liquidado'");
+
         echo "\n";
     }
 

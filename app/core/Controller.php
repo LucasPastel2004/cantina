@@ -98,7 +98,9 @@ abstract class Controller
         }
 
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-        exit;
+        if (!defined('CANTINA_TEST_MODE') || !CANTINA_TEST_MODE) {
+            exit;
+        }
     }
 
     /**

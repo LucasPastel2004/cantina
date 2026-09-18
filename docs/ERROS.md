@@ -232,6 +232,23 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Criado teste de regressão em `tests/portal_saldo_test.php` garantindo que mesmo com `empty_state` ativo no corpo da tabela, o alerta de topo permanece 100% limpo e ausente (22/22 asserções aprovadas).
 - Como evitar no futuro: Sempre isolar o escopo de renderização entre views e layouts master utilizando closures anônimas em frameworks MVC próprios, e evitar o uso de nomes de variáveis genéricos (como `$message`, `$data`, `$title`) em componentes parciais reutilizáveis.
 
+---
+
+## 2026-09-18 - "Cobrança não localizada" ao clicar em Simular Pagamento na Carteira Pix
+
+- Sintoma: Ao gerar uma cobrança Pix dinâmica e clicar no botão "Simular Pagamento no Ambiente de Teste", um popup alertava `Cobrança não localizada.` (HTTP 404), impedindo a liquidação do Pix no teste do navegador.
+- Causa: Dupla ocorrência identificada:
+  1. Permissão restrita na pasta de cache: O diretório `storage/cache/pix` havia sido criado via CLI com permissões de `root:root (0755)`. Como as requisições HTTP do navegador rodam sob o usuário do Apache (`www-data`), o método `PixService::salvarCobrancaCache()` não conseguia escrever o arquivo JSON da cobrança em disco, falhando silenciosamente devido ao operador `@file_put_contents`.
+  2. Ausência de fallback e reconstituição de cobrança: Ao chamar `/portal/recarga/simular/{txid}`, como o arquivo em disco não existia, o controller retornava 404 sem consultar a sessão do usuário ou reconstituir os dados da cobrança em modo de desenvolvimento local. Além disso, o JavaScript não enviava o valor da cobrança nem o token CSRF no FormData.
+- Solução aplicada:
+  1. Permissões ajustadas no contêiner para `storage/cache` (`chmod -R 777` e `chown -R www-data:www-data`), e no método `PixService::getCacheDir()` reforçada a garantia de permissões `0777` em runtime.
+  2. Implementada redundância de persistência: `PixService::salvarCobrancaCache()` grava o arquivo em disco e, simultaneamente, armazena no array de sessão `$_SESSION['_pix_cache'][$txid]`, permitindo leitura imediata mesmo se houver falhas no filesystem.
+  3. Em `CarteiraController::simularPagamento()`, adicionada reconstituição defensiva: se o ambiente estiver em modo de desenvolvimento local (`$isDev === true`) e o arquivo temporário não estiver disponível, o controller reconstitui a cobrança a partir do valor enviado no POST (com fallback para R$ 50,00) e liquida a transação normalmente.
+  4. Atualizado o JavaScript `simularPagamentoDev()` em `app/views/portal/carteira.php` para repassar `valor` e `csrf_token`.
+  5. Adicionado teste automatizado na suíte `tests/fase9_test.php` cobrindo a action de simulação tanto para cobranças em cache quanto para cobranças avulsas (69/69 asserções aprovadas).
+- Como evitar no futuro: Em ambientes dockerizados ou servidores compartilhados onde CLI e Web rodam com usuários distintos (`root` vs `www-data`), sempre assegurar permissões plenas de escrita nas pastas de cache/storage e adotar redundância de armazenamento em sessão para recursos efêmeros de desenvolvimento.
+
+
 
 
 

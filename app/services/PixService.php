@@ -41,11 +41,15 @@ class PixService
     {
         $dir = __DIR__ . '/../../storage/cache/pix';
         if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
+            @mkdir($dir, 0777, true);
+            @chmod(dirname($dir), 0777);
+            @chmod($dir, 0777);
             $htaccess = $dir . '/.htaccess';
             if (!file_exists($htaccess)) {
                 @file_put_contents($htaccess, "Require all denied\n");
             }
+        } elseif (!is_writable($dir)) {
+            @chmod($dir, 0777);
         }
         return $dir;
     }
@@ -261,7 +265,7 @@ class PixService
     }
 
     /**
-     * Localiza os dados de uma cobrança no cache temporário
+     * Localiza os dados de uma cobrança no cache temporário (disco com fallback em sessão)
      */
     public static function obterCobrancaCache(string $txid): ?array
     {
@@ -269,19 +273,42 @@ class PixService
         if (file_exists($filename)) {
             $content = @file_get_contents($filename);
             if ($content) {
-                return json_decode($content, true);
+                $decoded = json_decode($content, true);
+                if (is_array($decoded)) {
+                    return $decoded;
+                }
             }
         }
+
+        // Fallback resiliente: recupera da sessão do usuário se disponível
+        if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['_pix_cache'][$txid])) {
+            return $_SESSION['_pix_cache'][$txid];
+        }
+
         return null;
     }
 
     /**
-     * Grava dados de cobrança no cache temporário
+     * Grava dados de cobrança no cache temporário (disco e sessão)
      */
     public static function salvarCobrancaCache(string $txid, array $data): bool
     {
-        $filename = self::getCacheDir() . '/pix_' . preg_replace('/[^A-Za-z0-9_-]/', '', $txid) . '.json';
-        return @file_put_contents($filename, json_encode($data, JSON_PRETTY_PRINT)) !== false;
+        $dir = self::getCacheDir();
+        $filename = $dir . '/pix_' . preg_replace('/[^A-Za-z0-9_-]/', '', $txid) . '.json';
+        $saved = @file_put_contents($filename, json_encode($data, JSON_PRETTY_PRINT)) !== false;
+        if ($saved) {
+            @chmod($filename, 0666);
+        }
+
+        // Salva simultaneamente na sessão para resiliência imediata
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            if (!isset($_SESSION['_pix_cache'])) {
+                $_SESSION['_pix_cache'] = [];
+            }
+            $_SESSION['_pix_cache'][$txid] = $data;
+        }
+
+        return $saved;
     }
 
     /**
