@@ -63,9 +63,18 @@ abstract class Controller
             }
 
             if (file_exists($layoutPath)) {
-                ob_start();
-                require $viewPath;
-                $content = ob_get_clean();
+                // Isola a renderização da view em uma closure para evitar vazamento de variáveis internas para o layout
+                $renderViewIsolated = function(string $__viewPath, array $__viewData): string {
+                    extract($__viewData, EXTR_SKIP);
+                    ob_start();
+                    require $__viewPath;
+                    return ob_get_clean();
+                };
+
+                $content = $renderViewIsolated($viewPath, $data);
+
+                // No escopo do layout, extrai estritamente os dados originais e o conteúdo compilado
+                extract($data, EXTR_SKIP);
                 require $layoutPath;
                 return;
             }

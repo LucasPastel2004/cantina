@@ -94,3 +94,6 @@ foreach ($alertsToRender as $alert):
         <?php endif; ?>
     </div>
 <?php endforeach; ?>
+<?php
+unset($alertsToRender, $alert, $explicitMessages, $flashCategories, $flashKey, $meta, $flashMsgs, $items, $msg, $alertType, $alertTitle, $alertMsg, $isDismissible);
+?>

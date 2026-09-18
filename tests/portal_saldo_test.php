@@ -102,6 +102,26 @@ assertCondition(str_contains($htmlCarteira, 'portal-nav'), "HTML de /portal/cart
 assertCondition(str_contains($htmlCarteira, 'Carteira Digital Familiar'), "HTML de /portal/carteira contém o título da Carteira", $pass, $fail);
 assertCondition(str_contains($htmlCarteira, 'portal-nav-link active') && str_contains($htmlCarteira, 'Carteira Familiar'), "Aba 'Carteira Familiar' está marcada como active", $pass, $fail);
 assertCondition(str_contains($htmlCarteira, "R$ {$saldoEsperado}"), "HTML de /portal/carteira exibe saldo correto (R$ {$saldoEsperado})", $pass, $fail);
+assertCondition(!preg_match('/<div[^>]*class="[^"]*alert-enterprise[^"]*"[^>]*>.*?Não há nada para mostrar aqui/s', $htmlCarteira), "Alerta de topo NÃO renderiza 'Não há nada para mostrar aqui' por vazamento de variáveis", $pass, $fail);
+assertCondition(str_contains($htmlCarteira, 'empty-state-enterprise') || str_contains($htmlCarteira, 'tabela-extrato-tbody'), "Extrato renderiza tabela de movimentações ou empty_state de acordo com o saldo/histórico", $pass, $fail);
+
+// 7. Simula responsável sem nenhuma transação para testar o empty_state na tabela e garantir ausência de vazamento
+$respSemTransacoes = \App\Models\Responsavel::fetchOne("
+    SELECT r.* FROM responsaveis r 
+    LEFT JOIN transacoes_carteira t ON t.responsavel_id = r.id 
+    WHERE t.id IS NULL 
+    LIMIT 1
+");
+
+if ($respSemTransacoes) {
+    \App\Core\Auth::loginResponsavel($respSemTransacoes);
+    ob_start();
+    $carteiraController->index();
+    $htmlVazio = ob_get_clean();
+
+    assertCondition(str_contains($htmlVazio, 'empty-state-enterprise'), "Responsável sem movimentações renderiza empty-state dentro da tabela de extrato", $pass, $fail);
+    assertCondition(!preg_match('/<div[^>]*class="[^"]*alert-enterprise[^"]*"[^>]*>.*?Não há nada para mostrar aqui/s', $htmlVazio), "Mesmo com empty-state na tabela, o alerta de topo permanece 100% limpo", $pass, $fail);
+}
 
 echo "\n----------------------------------------------------------------------\n";
 echo "RESULTADO: {$pass} passaram, {$fail} falharam.\n";

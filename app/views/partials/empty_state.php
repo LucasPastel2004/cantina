@@ -16,11 +16,11 @@
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
-$message = htmlspecialchars($emptyMessage ?? 'Não há nada para mostrar aqui', ENT_QUOTES, 'UTF-8');
-$description = !empty($emptyDescription) ? htmlspecialchars($emptyDescription, ENT_QUOTES, 'UTF-8') : null;
-$actionText = !empty($emptyActionText) ? htmlspecialchars($emptyActionText, ENT_QUOTES, 'UTF-8') : null;
-$actionUrl = !empty($emptyActionUrl) ? htmlspecialchars($emptyActionUrl, ENT_QUOTES, 'UTF-8') : null;
-$actionClass = !empty($emptyActionClass) ? htmlspecialchars($emptyActionClass, ENT_QUOTES, 'UTF-8') : 'btn-primary';
+$emptyTitle = htmlspecialchars($emptyMessage ?? 'Não há nada para mostrar aqui', ENT_QUOTES, 'UTF-8');
+$emptyDesc = !empty($emptyDescription) ? htmlspecialchars($emptyDescription, ENT_QUOTES, 'UTF-8') : null;
+$emptyActText = !empty($emptyActionText) ? htmlspecialchars($emptyActionText, ENT_QUOTES, 'UTF-8') : null;
+$emptyActUrl = !empty($emptyActionUrl) ? htmlspecialchars($emptyActionUrl, ENT_QUOTES, 'UTF-8') : null;
+$emptyActClass = !empty($emptyActionClass) ? htmlspecialchars($emptyActionClass, ENT_QUOTES, 'UTF-8') : 'btn-primary';
 ?>
 
 <div class="empty-state-enterprise">
@@ -31,15 +31,18 @@ $actionClass = !empty($emptyActionClass) ? htmlspecialchars($emptyActionClass, E
             <path d="M7 9h6"></path>
         </svg>
     </div>
-    <p class="empty-state-title"><?php echo $message; ?></p>
-    <?php if ($description): ?>
-        <p class="empty-state-subtitle"><?php echo $description; ?></p>
+    <p class="empty-state-title"><?php echo $emptyTitle; ?></p>
+    <?php if ($emptyDesc): ?>
+        <p class="empty-state-subtitle"><?php echo $emptyDesc; ?></p>
     <?php endif; ?>
-    <?php if ($actionText && $actionUrl): ?>
+    <?php if ($emptyActText && $emptyActUrl): ?>
         <div class="empty-state-action">
-            <a href="<?php echo $actionUrl; ?>" class="btn btn-enterprise <?php echo $actionClass; ?>">
-                <?php echo $actionText; ?>
+            <a href="<?php echo $emptyActUrl; ?>" class="btn btn-enterprise <?php echo $emptyActClass; ?>">
+                <?php echo $emptyActText; ?>
             </a>
         </div>
     <?php endif; ?>
 </div>
+<?php
+unset($emptyTitle, $emptyDesc, $emptyActText, $emptyActUrl, $emptyActClass, $emptyMessage, $emptyDescription, $emptyActionText, $emptyActionUrl, $emptyActionClass);
+?>
