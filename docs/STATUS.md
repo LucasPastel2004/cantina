@@ -216,6 +216,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * `turmas.php`: Tabela com série, turno e ordem de impressão contínua.
 * [x] Registro e proteção de rotas RBAC em `index.php` e sincronização dos links em `app/views/layouts/sidebar.php`.
 * [x] Correção e garantia de visibilidade permanente da opção "Configurações Globais" na seção Administração da sidebar, compatibilizando chaves `role` e `perfil` em `Auth.php`, injetando `$user` automaticamente no `Controller::render()` e adicionando atalhos diretos na página inicial (`app/views/home/index.php`).
+* [x] Refinamento visual em `app/views/admin/configuracoes.php` e `assets/css/custom.css` alinhando os campos numéricos à esquerda e eliminando a colisão de numerais com as setas de incremento (spin buttons) nativas do navegador.
 * [x] Bateria de testes automatizados `tests/fase7_test.php` executada com 68 asserções aprovadas com 100% de sucesso.
 * [x] Suíte de testes de rotas web HTTP `tests/admin_web_test.php` aprovada com 9/9 requisições validadas.
 * [x] Suíte de testes de visibilidade da sidebar `tests/sidebar_visibility_test.php` aprovada com 7/7 asserções com 100% de sucesso.
