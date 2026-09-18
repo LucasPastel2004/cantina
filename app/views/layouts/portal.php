@@ -13,9 +13,26 @@ $title = !empty($pageTitle)
     ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') . ' — Portal da Família' 
     : 'Portal da Família — Colégio Monteiro Lobato';
 $activeMenu = $activeMenu ?? 'inicio';
-$saldoAtual = $saldoAtual ?? 0.00;
+
+// Identifica usuário logado de forma resiliente
+$loggedUser = $usuario ?? $user ?? \App\Core\Auth::user() ?? [];
+
+// Garante o saldo correto: prioriza $saldoAtual passado explicitamente,
+// ou busca de $loggedUser['saldo'], ou em fallback busca direto da sessão
+if (!isset($saldoAtual) || $saldoAtual === null) {
+    $saldoAtual = (float)($loggedUser['saldo'] ?? \App\Core\Session::get('_auth_saldo', 0.00));
+} else {
+    $saldoAtual = (float)$saldoAtual;
+}
+
 $saldoReservado = $saldoReservado ?? 0.00;
-$responsavelNome = $responsavelNome ?? 'Responsável';
+
+if (empty($responsavelNome) || $responsavelNome === 'Responsável') {
+    $responsavelNome = !empty($loggedUser['nome']) 
+        ? $loggedUser['nome'] 
+        : (\App\Core\Session::get('_auth_nome') ?? 'Responsável');
+}
+
 $isSaldoBaixo = ($saldoAtual < 15.00);
 ?>
 <!DOCTYPE html>

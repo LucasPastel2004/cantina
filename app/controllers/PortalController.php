@@ -31,13 +31,17 @@ class PortalController extends Controller
         // Atualiza saldo mais recente direto do banco
         $respDb = $respModel->find((int)$usuario['id']);
         $saldoAtual = (float)($respDb['saldo_atual'] ?? $usuario['saldo'] ?? 0.00);
+        Session::set('_auth_saldo', $saldoAtual);
 
         $this->render('portal/index', [
-            'pageTitle'    => 'Portal da Família — Início',
-            'usuario'      => $usuario,
-            'saldoAtual'   => $saldoAtual,
-            'dependentes'  => $dependentes,
-            'bloqueadoMed' => (bool)($respDb['bloqueado_med'] ?? false)
+            'pageTitle'       => 'Portal da Família — Início',
+            'activeMenu'      => 'inicio',
+            'usuario'         => $usuario,
+            'user'            => $usuario,
+            'responsavelNome' => $respDb['nome'] ?? $usuario['nome'] ?? 'Responsável',
+            'saldoAtual'      => $saldoAtual,
+            'dependentes'     => $dependentes,
+            'bloqueadoMed'    => (bool)($respDb['bloqueado_med'] ?? false)
         ], 'portal');
     }
 
@@ -48,6 +52,11 @@ class PortalController extends Controller
     {
         $usuario = Auth::user();
         $respId  = (int)$usuario['id'];
+
+        $respModel = new Responsavel();
+        $respDb = $respModel->find($respId);
+        $saldoAtual = (float)($respDb['saldo_atual'] ?? $usuario['saldo'] ?? 0.00);
+        Session::set('_auth_saldo', $saldoAtual);
 
         $dependentes = Aluno::listarPorResponsavel($respId, false);
 
@@ -80,8 +89,11 @@ class PortalController extends Controller
         $this->render('portal/alergias', [
             'pageTitle'         => 'Restrições Alimentares — Portal da Família',
             'pageHeading'       => 'Gestão Ativa de Restrições Alimentares',
+            'activeMenu'        => 'alergias',
             'usuario'           => $usuario,
             'user'              => $usuario,
+            'responsavelNome'   => $respDb['nome'] ?? $usuario['nome'] ?? 'Responsável',
+            'saldoAtual'        => $saldoAtual,
             'dependentes'       => $dependentes,
             'alunoSelecionado'  => $alunoSelecionado,
             'catalogoAlergenos' => $catalogoAlergenos,
