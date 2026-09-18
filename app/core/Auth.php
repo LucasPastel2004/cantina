@@ -242,6 +242,7 @@ class Auth
             'email'         => Session::get('_auth_email'),
             'whatsapp'      => Session::get('_auth_whatsapp'),
             'role'          => Session::get('_auth_role'),
+            'perfil'        => Session::get('_auth_role'),
             'saldo'         => Session::get('_auth_saldo', 0.00),
             'bloqueado_med' => Session::get('_auth_bloqueado_med', false)
         ];

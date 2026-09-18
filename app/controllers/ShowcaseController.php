@@ -50,9 +50,10 @@ class ShowcaseController extends Controller
             'turnoAtivo' => 'Matutino',
             'statusCaixa' => 'Aberto',
             'user' => [
-                'nome' => 'Carlos Alberto (Operador)',
-                'usuario' => 'operador-carlos',
-                'perfil' => 'operador'
+                'nome' => 'Administrador Geral',
+                'usuario' => 'admin',
+                'perfil' => 'administrador',
+                'role' => 'administrador'
             ],
             'statItems' => [
                 ['label' => 'Total Encomendas', 'value' => '128', 'subtext' => 'Turno Matutino', 'status' => 'primary'],

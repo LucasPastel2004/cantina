@@ -10,12 +10,14 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
 $activeMenu = $activeMenu ?? '';
-$user = $user ?? [
+$user = $user ?? (\App\Core\Auth::check() ? \App\Core\Auth::user() : [
     'nome' => 'Operador Padrão',
     'usuario' => 'operador-balcao',
-    'perfil' => 'operador'
-];
-$isAdmin = ($user['perfil'] ?? '') === 'administrador';
+    'perfil' => 'operador',
+    'role' => 'operador'
+]);
+$userRole = $user['role'] ?? $user['perfil'] ?? '';
+$isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
 ?>
 
 <!-- Backdrop para Mobile (Offcanvas) -->
@@ -156,14 +158,12 @@ $isAdmin = ($user['perfil'] ?? '') === 'administrador';
                         <span class="nav-label">Relatórios Gerenciais</span>
                     </a>
                 </li>
-                <?php if ($isAdmin): ?>
-                    <li class="nav-item">
-                        <a href="<?php echo $baseUrl; ?>/admin/configuracoes" class="nav-link <?php echo ($activeMenu === 'configuracoes') ? 'active' : ''; ?>">
-                            <span class="nav-bullet">●</span>
-                            <span class="nav-label">Configurações Globais</span>
-                        </a>
-                    </li>
-                <?php endif; ?>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/admin/configuracoes" class="nav-link <?php echo ($activeMenu === 'configuracoes') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Configurações Globais</span>
+                    </a>
+                </li>
             </ul>
         </div>
     </nav>
@@ -172,7 +172,7 @@ $isAdmin = ($user['perfil'] ?? '') === 'administrador';
     <div class="sidebar-user">
         <div class="sidebar-user-info">
             <span class="sidebar-user-name text-truncate"><?php echo htmlspecialchars($user['nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?></span>
-            <span class="sidebar-user-role"><?php echo htmlspecialchars(ucfirst($user['perfil'] ?? 'Operador'), ENT_QUOTES, 'UTF-8'); ?></span>
+            <span class="sidebar-user-role"><?php echo htmlspecialchars(ucfirst($user['role'] ?? $user['perfil'] ?? 'Operador'), ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
         <form action="<?php echo $baseUrl; ?>/logout" method="POST" class="d-inline m-0">
             <?php if (!empty($csrf_field)) echo $csrf_field; ?>

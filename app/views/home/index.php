@@ -272,12 +272,60 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
             </div>
         </div>
 
+        <!-- Seção da Fase 6 & 7: Autenticação e Administração (Cadastros Mestres) -->
+        <div class="card-enterprise mb-4">
+            <div class="card-enterprise-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold" style="font-size: 13px; color: var(--text-main);">Fase 7 — Configurações Globais e Cadastros Mestres (Com Soft Delete)</span>
+                    <span class="status-indicator status-success"><span class="bullet" aria-hidden="true">●</span> Concluída</span>
+                </div>
+                <span class="text-microcopy font-tabular">Módulos 6, 7 e 9</span>
+            </div>
+            <div class="p-3">
+                <p class="text-secondary-label mb-3" style="font-size: 12px;">
+                    Acesse diretamente as telas de administração e parametrização construídas. <em>Dica:</em> se o acesso for restrito, faça login como <code>admin</code> (senha: <code>Admin@123</code>).
+                </p>
+                <div class="row g-2">
+                    <div class="col-sm-6 col-md-4 col-lg-2">
+                        <a href="<?php echo $baseUrl; ?>/admin/configuracoes" class="btn btn-enterprise btn-primary btn-sm w-100 text-truncate" title="Configurações Globais">
+                            ⚙️ Configurações
+                        </a>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-lg-2">
+                        <a href="<?php echo $baseUrl; ?>/admin/produtos" class="btn btn-enterprise btn-secondary btn-sm w-100 text-truncate" title="Cardápio & Preços">
+                            🍽️ Cardápio & Preços
+                        </a>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-lg-2">
+                        <a href="<?php echo $baseUrl; ?>/admin/categorias" class="btn btn-enterprise btn-secondary btn-sm w-100 text-truncate" title="Categorias de Alimentos">
+                            🏷️ Categorias
+                        </a>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-lg-2">
+                        <a href="<?php echo $baseUrl; ?>/admin/colaboradores" class="btn btn-enterprise btn-secondary btn-sm w-100 text-truncate" title="Colaboradores da Escola">
+                            👥 Colaboradores
+                        </a>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-lg-2">
+                        <a href="<?php echo $baseUrl; ?>/admin/turmas" class="btn btn-enterprise btn-secondary btn-sm w-100 text-truncate" title="Turmas Escolares">
+                            🏫 Turmas Escolares
+                        </a>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-lg-2">
+                        <a href="<?php echo $baseUrl; ?>/login" class="btn btn-enterprise btn-secondary btn-sm w-100 text-truncate" title="Tela de Login e Autenticação">
+                            🔐 Acesso / Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Próxima Fase do Projeto -->
         <div class="p-3 bg-white rounded border d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-3">
                 <span class="status-indicator status-neutral font-tabular" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Próxima Etapa</span>
                 <span class="text-secondary-label" style="font-size: 12px;">
-                    <strong>Fase 6:</strong> Autenticação, Sessão Segura e Controle de Acesso (RBAC).
+                    <strong>Fase 8:</strong> Importação Escolar em Lote e Gestão Ativa de Restrições Alimentares.
                 </span>
             </div>
             <a href="https://github.com/LucasPastel2004/cantina" target="_blank" class="btn-enterprise btn-secondary btn-sm">

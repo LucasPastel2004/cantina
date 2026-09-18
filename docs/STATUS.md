@@ -215,8 +215,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * `colaboradores.php`: Tabela com fotos circulares de identificação para o PDV e matrícula funcional.
   * `turmas.php`: Tabela com série, turno e ordem de impressão contínua.
 * [x] Registro e proteção de rotas RBAC em `index.php` e sincronização dos links em `app/views/layouts/sidebar.php`.
+* [x] Correção e garantia de visibilidade permanente da opção "Configurações Globais" na seção Administração da sidebar, compatibilizando chaves `role` e `perfil` em `Auth.php`, injetando `$user` automaticamente no `Controller::render()` e adicionando atalhos diretos na página inicial (`app/views/home/index.php`).
 * [x] Bateria de testes automatizados `tests/fase7_test.php` executada com 68 asserções aprovadas com 100% de sucesso.
 * [x] Suíte de testes de rotas web HTTP `tests/admin_web_test.php` aprovada com 9/9 requisições validadas.
+* [x] Suíte de testes de visibilidade da sidebar `tests/sidebar_visibility_test.php` aprovada com 7/7 asserções com 100% de sucesso.
 * [x] Suítes de regressão (Fases 2, 3, 4, 5, 6 e simulação web) reexecutadas e 100% aprovadas.
 
 ---
