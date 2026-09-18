@@ -200,4 +200,20 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Atualizada asserção em `tests/mask_test.php` para aceitar cache busting de script via regex (`app.js?v=5.0.[6-9]`), assegurando compatibilidade com futuras atualizações de assets.
 - Como evitar no futuro: Sempre inspecionar as linhas adjacentes com ferramentas de visualização antes e depois de substituições parciais em classes fundamentais do sistema (`Model`, `Router`, `Controller`), validando com `php -l` imediatamente após a alteração.
 
+---
+
+## 2026-09-18 - View da Carteira Familiar renderizada em HTML puro sem layout master e CSS
+
+- Sintoma: A página `/portal/carteira` renderizava texto corrido sem folha de estilo ("straight html"), fontes serifadas padrão do navegador (Times New Roman), links sem estilização e sem o cabeçalho, navbar ou rodapé da aplicação.
+- Causa: Dupla ocorrência identificada:
+  1. Em `app/controllers/CarteiraController.php`, o método `render()` foi invocado com o argumento de layout `'layouts/portal'` (`$this->render('portal/carteira', [...], 'layouts/portal')`).
+  2. No método `Controller::render()`, o path do layout era construído concatenando `__DIR__ . '/../views/layouts/' . $layout . '.php'`, resultando no caminho inexistente `app/views/layouts/layouts/portal.php`.
+  3. Como o arquivo não era localizado por `file_exists()`, o `Controller` efetuava o fallback silencioso para renderização direta do fragmento da view (`require $viewPath;`), sem a estrutura HTML mestre, sem a tag `<head>` e sem os arquivos de estilo (`bootstrap.min.css` e `custom.css`).
+- Solução aplicada:
+  1. Em `app/controllers/CarteiraController.php`, corrigido o argumento para `'portal'`.
+  2. Em `app/core/Controller.php`, aprimorada a resolução de layouts de forma defensiva: normalização automática removendo prefixos redundantes (`layouts/` ou `layouts\`) via expressão regular (`preg_replace('#^layouts[\\/]#', '', $layout)`) e fallback inteligente para caminhos alternativos relativos em `app/views/`, garantindo que qualquer invocação funcione perfeitamente.
+  3. Atualizado o teste automatizado `tests/portal_saldo_test.php` com asserções estritas validando a presença de `<!DOCTYPE html>`, `bootstrap.min.css`, `custom.css`, `portal-header` e a aba ativa da carteira no HTML entregue pelo servidor.
+- Como evitar no futuro: Padronizar e flexibilizar métodos de infraestrutura (como `render`) para aceitar variações comuns de sintaxe de desenvolvedores, além de criar testes automatizados de integração que verifiquem não apenas o status HTTP, mas também a presença da tag raiz e das folhas de estilo essenciais no HTML gerado.
+
+
 

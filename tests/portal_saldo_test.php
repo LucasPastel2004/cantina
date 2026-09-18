@@ -15,7 +15,10 @@ require_once __DIR__ . '/../app/core/Model.php';
 require_once __DIR__ . '/../app/models/Responsavel.php';
 require_once __DIR__ . '/../app/models/Aluno.php';
 require_once __DIR__ . '/../app/models/RestricaoAlimentar.php';
+require_once __DIR__ . '/../app/models/Configuracao.php';
+require_once __DIR__ . '/../app/models/TransacaoCarteira.php';
 require_once __DIR__ . '/../app/controllers/PortalController.php';
+require_once __DIR__ . '/../app/controllers/CarteiraController.php';
 
 function assertCondition(bool $cond, string $message, &$pass, &$fail): void {
     if ($cond) {
@@ -83,6 +86,22 @@ require __DIR__ . '/../app/views/layouts/portal.php';
 $htmlFallback = ob_get_clean();
 
 assertCondition(str_contains($htmlFallback, "R$ {$saldoEsperado}"), "Layout portal.php busca saldo automaticamente de Auth::user() em caso de omissão", $pass, $fail);
+
+// 6. Teste de renderização do CarteiraController::index com layout master completo
+$carteiraController = new \App\Controllers\CarteiraController();
+ob_start();
+$carteiraController->index();
+$htmlCarteira = ob_get_clean();
+
+assertCondition(!empty($htmlCarteira), "View /portal/carteira renderizada com sucesso", $pass, $fail);
+assertCondition(str_contains($htmlCarteira, '<!DOCTYPE html>'), "HTML de /portal/carteira inclui <!DOCTYPE html> do layout master", $pass, $fail);
+assertCondition(str_contains($htmlCarteira, 'bootstrap.min.css'), "HTML de /portal/carteira inclui bootstrap.min.css", $pass, $fail);
+assertCondition(str_contains($htmlCarteira, 'custom.css'), "HTML de /portal/carteira inclui custom.css", $pass, $fail);
+assertCondition(str_contains($htmlCarteira, 'portal-header'), "HTML de /portal/carteira renderiza o cabeçalho oficial do Portal", $pass, $fail);
+assertCondition(str_contains($htmlCarteira, 'portal-nav'), "HTML de /portal/carteira renderiza a barra de navegação", $pass, $fail);
+assertCondition(str_contains($htmlCarteira, 'Carteira Digital Familiar'), "HTML de /portal/carteira contém o título da Carteira", $pass, $fail);
+assertCondition(str_contains($htmlCarteira, 'portal-nav-link active') && str_contains($htmlCarteira, 'Carteira Familiar'), "Aba 'Carteira Familiar' está marcada como active", $pass, $fail);
+assertCondition(str_contains($htmlCarteira, "R$ {$saldoEsperado}"), "HTML de /portal/carteira exibe saldo correto (R$ {$saldoEsperado})", $pass, $fail);
 
 echo "\n----------------------------------------------------------------------\n";
 echo "RESULTADO: {$pass} passaram, {$fail} falharam.\n";

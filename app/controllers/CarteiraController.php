@@ -68,7 +68,7 @@ class CarteiraController extends Controller
             'extrato'         => $extrato,
             'filtros'         => $filtros,
             'pagina'          => $pagina,
-        ], 'layouts/portal');
+        ], 'portal');
     }
 
     /**

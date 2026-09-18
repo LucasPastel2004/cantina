@@ -50,7 +50,18 @@ abstract class Controller
 
         // Se houver um layout definido e o arquivo existir, renderiza a view dentro do layout
         if ($layout !== null) {
-            $layoutPath = __DIR__ . '/../views/layouts/' . $layout . '.php';
+            // Remove prefixo redundante 'layouts/' se fornecido
+            $layoutName = preg_replace('#^layouts[\\/]#', '', $layout);
+            $layoutPath = __DIR__ . '/../views/layouts/' . $layoutName . '.php';
+
+            if (!file_exists($layoutPath)) {
+                // Fallback caso o desenvolvedor aponte para outro caminho relativo em app/views/
+                $altPath = __DIR__ . '/../views/' . $layout . '.php';
+                if (file_exists($altPath)) {
+                    $layoutPath = $altPath;
+                }
+            }
+
             if (file_exists($layoutPath)) {
                 ob_start();
                 require $viewPath;
