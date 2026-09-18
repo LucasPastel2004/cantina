@@ -20,6 +20,9 @@ use App\Models\RestricaoAlimentar;
 use App\Models\Colaborador;
 use App\Models\Turma;
 use App\Models\Usuario;
+use App\Models\Aluno;
+use App\Models\Responsavel;
+use App\Services\SpreadsheetService;
 
 class AdminController extends Controller
 {
@@ -617,6 +620,320 @@ class AdminController extends Controller
         Turma::excluir($id, Auth::id());
         Session::setFlash('success', "Turma [{$turma['nome_turma']}] removida com sucesso (histórico preservado).");
         $this->redirect('/admin/turmas');
+    }
+
+    // =========================================================================
+    // IMPORTAÇÃO ESCOLAR EM LOTE (Fase 8 — FSD Área 7 & Módulo 9.1)
+    // =========================================================================
+
+    /**
+     * Tela inicial de importação escolar em lote
+     */
+    public function importacaoEscolar(): void
+    {
+        $usuario = Auth::user();
+        $previa  = Session::get('_import_previa', null);
+        $arquivoTemp = Session::get('_import_temp_file', null);
+
+        // Se não houver arquivo físico correspondente ao temp, limpa a prévia
+        if ($arquivoTemp && !file_exists($arquivoTemp)) {
+            Session::remove('_import_previa');
+            Session::remove('_import_temp_file');
+            $previa = null;
+        }
+
+        $this->render('admin/importacao_escolar', [
+            'pageTitle'   => 'Importação Escolar em Lote',
+            'pageHeading' => 'Carga e Atualização de Alunos e Turmas',
+            'activeMenu'  => 'importacao',
+            'usuario'     => $usuario,
+            'user'        => $usuario,
+            'previa'      => $previa
+        ], 'admin');
+    }
+
+    /**
+     * Processa upload e executa a conferência prévia (dry-run)
+     */
+    public function importacaoEscolarAnalisar(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/importacao-escolar');
+            return;
+        }
+
+        if (!isset($_FILES['planilha']) || !is_array($_FILES['planilha']) || $_FILES['planilha']['error'] !== UPLOAD_ERR_OK) {
+            Session::setFlash('danger', 'Selecione um arquivo CSV válido para realizar a importação.');
+            $this->redirect('/admin/importacao-escolar');
+            return;
+        }
+
+        $file = $_FILES['planilha'];
+
+        // Limite de 10 MB
+        if ($file['size'] > 10 * 1024 * 1024) {
+            Session::setFlash('danger', 'O arquivo excede o limite máximo permitido de 10 MB.');
+            $this->redirect('/admin/importacao-escolar');
+            return;
+        }
+
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['csv', 'txt'], true)) {
+            Session::setFlash('danger', 'Formato de arquivo inválido. A importação suporta planilhas em formato CSV.');
+            $this->redirect('/admin/importacao-escolar');
+            return;
+        }
+
+        // Salva temporariamente em storage/uploads/private/
+        $privDir = dirname(__DIR__, 2) . '/storage/uploads/private';
+        if (!is_dir($privDir)) {
+            mkdir($privDir, 0750, true);
+        }
+
+        $tempNome = 'temp_previa_' . uniqid() . '_' . bin2hex(random_bytes(4)) . '.csv';
+        $tempPath = $privDir . '/' . $tempNome;
+
+        if (!move_uploaded_file($file['tmp_name'], $tempPath)) {
+            Session::setFlash('danger', 'Falha ao processar arquivo temporário no servidor.');
+            $this->redirect('/admin/importacao-escolar');
+            return;
+        }
+
+        // Executa análise prévia
+        $previa = SpreadsheetService::analisarArquivo($tempPath);
+
+        if (!$previa['valido']) {
+            @unlink($tempPath);
+            Session::setFlash('danger', implode('<br>', $previa['erros_estruturais']));
+            $this->redirect('/admin/importacao-escolar');
+            return;
+        }
+
+        Session::set('_import_temp_file', $tempPath);
+        Session::set('_import_previa', $previa);
+
+        Session::setFlash('info', "Análise concluída: {$previa['linhas_validas']} linha(s) apta(s) para importação.");
+        $this->redirect('/admin/importacao-escolar');
+    }
+
+    /**
+     * Confirmação da conferência prévia e execução da importação atômica
+     */
+    public function importacaoEscolarProcessar(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/importacao-escolar');
+            return;
+        }
+
+        $tempPath = Session::get('_import_temp_file');
+        if (!$tempPath || !file_exists($tempPath)) {
+            Session::setFlash('danger', 'Nenhuma conferência prévia ativa para processar. Envie a planilha novamente.');
+            $this->redirect('/admin/importacao-escolar');
+            return;
+        }
+
+        try {
+            $resultado = SpreadsheetService::processarImportacao($tempPath, Auth::id());
+
+            // Remove o arquivo temporário da prévia
+            @unlink($tempPath);
+            Session::remove('_import_temp_file');
+            Session::remove('_import_previa');
+
+            $msg = "Importação concluída com sucesso! Processados: {$resultado['linhas_processadas']} registro(s). ";
+            $msg .= "({$resultado['novos_alunos']} novos alunos, {$resultado['alunos_atualizados']} alunos atualizados, ";
+            $msg .= "{$resultado['novos_responsaveis']} novos responsáveis, {$resultado['novas_turmas']} novas turmas).";
+
+            Session::setFlash('success', $msg);
+            $this->redirect('/admin/alunos');
+        } catch (\Throwable $e) {
+            Session::setFlash('danger', 'Erro ao processar importação: ' . $e->getMessage());
+            $this->redirect('/admin/importacao-escolar');
+        }
+    }
+
+    /**
+     * Cancela a conferência prévia atual e limpa a sessão
+     */
+    public function importacaoEscolarCancelar(): void
+    {
+        $tempPath = Session::get('_import_temp_file');
+        if ($tempPath && file_exists($tempPath)) {
+            @unlink($tempPath);
+        }
+        Session::remove('_import_temp_file');
+        Session::remove('_import_previa');
+
+        Session::setFlash('info', 'Conferência prévia cancelada.');
+        $this->redirect('/admin/importacao-escolar');
+    }
+
+    /**
+     * Download do modelo CSV oficial de importação de alunos
+     */
+    public function importacaoEscolarModelo(): void
+    {
+        $csv = SpreadsheetService::gerarModeloCsv();
+        $filename = 'modelo_importacao_alunos_monteiro_lobato.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($csv));
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        echo $csv;
+        exit;
+    }
+
+    // =========================================================================
+    // GESTÃO DE ALUNOS (Fase 8 — FSD Área 7 & Módulo 9.6)
+    // =========================================================================
+
+    /**
+     * Listagem e busca de alunos com filtros
+     */
+    public function alunos(): void
+    {
+        $busca    = (string)$this->input('busca', '');
+        $turmaId  = (int)$this->input('turma_id', 0);
+        $turno    = (string)$this->input('turno', '');
+        $status   = (string)$this->input('status', 'ativos');
+
+        $filtros = [
+            'busca'    => $busca,
+            'turma_id' => $turmaId,
+            'turno'    => $turno,
+            'status'   => in_array($status, ['ativos', 'inativos', 'todos']) ? $status : 'ativos'
+        ];
+
+        $alunos       = Aluno::listarTodos($filtros);
+        $turmas       = Turma::listarTodas();
+        $responsaveis = Responsavel::listarParaSelecao();
+        $alergenos    = RestricaoAlimentar::listarTodas();
+        $usuario      = Auth::user();
+
+        $this->render('admin/alunos', [
+            'pageTitle'    => 'Alunos e Matrículas',
+            'pageHeading'  => 'Gestão de Alunos e Matrículas',
+            'activeMenu'   => 'alunos',
+            'usuario'      => $usuario,
+            'user'         => $usuario,
+            'alunos'       => $alunos,
+            'turmas'       => $turmas,
+            'responsaveis' => $responsaveis,
+            'alergenos'    => $alergenos,
+            'filtros'      => $filtros
+        ], 'admin');
+    }
+
+    /**
+     * Salva ou atualiza os dados cadastrais de um aluno
+     */
+    public function alunosSalvar(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/alunos');
+            return;
+        }
+
+        $id            = (int)$this->input('id', 0);
+        $matricula     = trim((string)$this->input('matricula', ''));
+        $nome          = trim((string)$this->input('nome', ''));
+        $turmaId       = (int)$this->input('turma_id', 0);
+        $responsavelId = (int)$this->input('responsavel_id', 0);
+        $turno         = (string)$this->input('turno', 'matutino');
+        $alergenos     = (array)($this->input('alergenos', []) ?: []);
+
+        if (empty($matricula) || empty($nome) || $turmaId <= 0 || $responsavelId <= 0) {
+            Session::setFlash('danger', 'Matrícula, Nome do Aluno, Turma e Responsável são campos obrigatórios.');
+            $this->redirect('/admin/alunos');
+            return;
+        }
+
+        // Verifica unicidade de matrícula
+        $existente = Aluno::buscarPorMatricula($matricula, true);
+        if ($existente && (int)$existente['id'] !== $id) {
+            Session::setFlash('danger', "A matrícula [{$matricula}] já pertence a outro aluno cadastrado.");
+            $this->redirect('/admin/alunos');
+            return;
+        }
+
+        $dados = [
+            'matricula'      => $matricula,
+            'nome'           => $nome,
+            'turma_id'       => $turmaId,
+            'responsavel_id' => $responsavelId,
+            'turno'          => in_array($turno, ['matutino', 'vespertino']) ? $turno : 'matutino',
+            'alergenos'      => array_map('intval', $alergenos)
+        ];
+
+        $usuarioId = Auth::id();
+
+        if ($id > 0) {
+            Aluno::atualizar($id, $dados, $usuarioId);
+            Session::setFlash('success', "Aluno [{$nome}] atualizado com sucesso.");
+        } else {
+            Aluno::criar($dados, $usuarioId);
+            Session::setFlash('success', "Aluno [{$nome}] cadastrado com sucesso.");
+        }
+
+        $this->redirect('/admin/alunos');
+    }
+
+    /**
+     * Inativação lógica do aluno (bloqueia agendamentos mantendo históricos)
+     */
+    public function alunosInativar(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/alunos');
+            return;
+        }
+
+        $id = (int)$this->input('id', 0);
+        $aluno = Aluno::buscarPorId($id);
+
+        if (!$aluno) {
+            Session::setFlash('danger', 'Aluno não encontrado.');
+            $this->redirect('/admin/alunos');
+            return;
+        }
+
+        Aluno::inativar($id, Auth::id());
+        Session::setFlash('success', "Aluno [{$aluno['nome']}] foi inativado. Novos agendamentos foram bloqueados.");
+        $this->redirect('/admin/alunos');
+    }
+
+    /**
+     * Reativa um aluno inativo
+     */
+    public function alunosReativar(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/alunos');
+            return;
+        }
+
+        $id = (int)$this->input('id', 0);
+        $aluno = Aluno::buscarPorId($id);
+
+        if (!$aluno) {
+            Session::setFlash('danger', 'Aluno não encontrado.');
+            $this->redirect('/admin/alunos');
+            return;
+        }
+
+        Aluno::reativar($id, Auth::id());
+        Session::setFlash('success', "Aluno [{$aluno['nome']}] reativado com sucesso.");
+        $this->redirect('/admin/alunos');
     }
 
     // =========================================================================

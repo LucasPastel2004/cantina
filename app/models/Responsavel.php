@@ -114,4 +114,110 @@ class Responsavel extends Model
     {
         return empty($responsavel['senha_hash']) || empty($responsavel['termos_aceitos_em']);
     }
+
+    /**
+     * Localiza um responsável pelo CPF ou cria um novo cadastro seguro.
+     * Preserva integralmente senha, termos e saldo de contas já existentes.
+     * 
+     * @return array ['id' => int, 'novo' => bool, 'registro' => array]
+     */
+    public static function localizarOuCriarPorCpf(array $dados, ?int $usuarioId = null): array
+    {
+        $cleanCpf = self::cleanCpf($dados['cpf'] ?? '');
+        if (empty($cleanCpf)) {
+            throw new \InvalidArgumentException('CPF do responsável não informado.');
+        }
+
+        $existente = self::fetchOne("SELECT * FROM responsaveis WHERE cpf = :cpf LIMIT 1", ['cpf' => $cleanCpf]);
+
+        if ($existente) {
+            $updateFields = [];
+            $updateParams = ['id' => $existente['id'], 'updated_at' => date('Y-m-d H:i:s')];
+
+            // Atualiza nome se não estiver vazio
+            if (!empty($dados['nome']) && $dados['nome'] !== $existente['nome']) {
+                $updateFields[] = "nome = :nome";
+                $updateParams['nome'] = trim($dados['nome']);
+            }
+            // Atualiza whatsapp se fornecido
+            if (!empty($dados['whatsapp'])) {
+                $cleanWhats = preg_replace('/\D/', '', $dados['whatsapp']);
+                if (!empty($cleanWhats)) {
+                    $updateFields[] = "whatsapp = :whatsapp";
+                    $updateParams['whatsapp'] = trim($dados['whatsapp']);
+                }
+            }
+            // Atualiza email se fornecido
+            if (!empty($dados['email']) && filter_var($dados['email'], FILTER_VALIDATE_EMAIL)) {
+                $updateFields[] = "email = :email";
+                $updateParams['email'] = trim($dados['email']);
+            }
+
+            if (!empty($updateFields)) {
+                $updateFields[] = "updated_by = :updated_by";
+                $updateParams['updated_by'] = $usuarioId;
+                $sql = "UPDATE responsaveis SET " . implode(', ', $updateFields) . ", updated_at = :updated_at WHERE id = :id";
+                self::execute($sql, $updateParams);
+                $existente = self::fetchOne("SELECT * FROM responsaveis WHERE id = :id LIMIT 1", ['id' => $existente['id']]);
+            }
+
+            return [
+                'id'       => (int)$existente['id'],
+                'novo'     => false,
+                'registro' => $existente
+            ];
+        }
+
+        // Se não existe, cria novo registro com saldo 0.00 e sem senha (pendente de primeiro acesso)
+        $now = date('Y-m-d H:i:s');
+        $sql = "INSERT INTO responsaveis (
+                    cpf, nome, email, whatsapp, senha_hash,
+                    saldo_atual, termos_aceitos_em, bloqueado_med,
+                    created_by, updated_by, created_at, updated_at
+                ) VALUES (
+                    :cpf, :nome, :email, :whatsapp, '',
+                    0.00, NULL, 0,
+                    :created_by, :updated_by, :created_at, :updated_at
+                )";
+
+        self::execute($sql, [
+            'cpf'        => $cleanCpf,
+            'nome'       => trim($dados['nome'] ?? 'Responsável ' . substr($cleanCpf, 0, 3)),
+            'email'      => trim($dados['email'] ?? ''),
+            'whatsapp'   => trim($dados['whatsapp'] ?? ''),
+            'created_by' => $usuarioId,
+            'updated_by' => $usuarioId,
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        $newId = (int)self::lastInsertId();
+        $novo = self::fetchOne("SELECT * FROM responsaveis WHERE id = :id LIMIT 1", ['id' => $newId]);
+
+        return [
+            'id'       => $newId,
+            'novo'     => true,
+            'registro' => $novo
+        ];
+    }
+
+    /**
+     * Lista responsáveis para seleção em formulários
+     */
+    public static function listarParaSelecao(string $busca = ''): array
+    {
+        $sql = "SELECT id, cpf, nome, whatsapp, saldo_atual FROM responsaveis";
+        $params = [];
+
+        if (!empty($busca)) {
+            $termo = '%' . trim($busca) . '%';
+            $sql .= " WHERE nome LIKE :busca_nome OR cpf LIKE :busca_cpf";
+            $params['busca_nome'] = $termo;
+            $params['busca_cpf'] = $termo;
+        }
+
+        $sql .= " ORDER BY nome ASC LIMIT 50";
+
+        return self::fetchAll($sql, $params);
+    }
 }

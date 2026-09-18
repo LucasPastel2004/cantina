@@ -87,6 +87,12 @@ $router->get('/termos', [\App\Controllers\AuthController::class, 'termos']);
 $router->get('/portal', [\App\Controllers\PortalController::class, 'index'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
 ]);
+$router->get('/portal/alergias', [\App\Controllers\PortalController::class, 'alergias'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->post('/portal/alergias/salvar', [\App\Controllers\PortalController::class, 'alergiasSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
 
 // 2. Painel Operacional: Acesso permitido para 'operador' e 'administrador'
 $router->get('/admin', [\App\Controllers\AdminController::class, 'index'], [
@@ -96,7 +102,7 @@ $router->get('/operacional/corte', [\App\Controllers\AdminController::class, 'in
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 
-// 3. Área Administrativa e Cadastros Mestres (Fase 7 — FSD Módulos 6, 7 e 9)
+// 3. Área Administrativa e Cadastros Mestres (Fases 7 e 8 — FSD Módulos 6, 7 e 9)
 // 3.1. Configurações Globais (Acesso exclusivo para 'administrador')
 $router->get('/admin/configuracoes', [\App\Controllers\AdminController::class, 'configuracoes'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
@@ -148,13 +154,41 @@ $router->post('/admin/colaboradores/excluir', [\App\Controllers\AdminController:
 $router->get('/admin/turmas', [\App\Controllers\AdminController::class, 'turmas'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
-$router->get('/admin/alunos', [\App\Controllers\AdminController::class, 'turmas'], [
-    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
-]);
 $router->post('/admin/turmas/salvar', [\App\Controllers\AdminController::class, 'turmasSalvar'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 $router->post('/admin/turmas/excluir', [\App\Controllers\AdminController::class, 'turmasExcluir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
+// 3.6. Importação Escolar em Lote (Fase 8 — Acesso exclusivo para 'administrador')
+$router->get('/admin/importacao-escolar', [\App\Controllers\AdminController::class, 'importacaoEscolar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/importacao-escolar/analisar', [\App\Controllers\AdminController::class, 'importacaoEscolarAnalisar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/importacao-escolar/processar', [\App\Controllers\AdminController::class, 'importacaoEscolarProcessar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/importacao-escolar/cancelar', [\App\Controllers\AdminController::class, 'importacaoEscolarCancelar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/admin/importacao-escolar/modelo', [\App\Controllers\AdminController::class, 'importacaoEscolarModelo'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
+// 3.7. Gestão de Alunos e Matrículas (Fase 8 — Acesso exclusivo para 'administrador')
+$router->get('/admin/alunos', [\App\Controllers\AdminController::class, 'alunos'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/alunos/salvar', [\App\Controllers\AdminController::class, 'alunosSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/alunos/inativar', [\App\Controllers\AdminController::class, 'alunosInativar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/alunos/reativar', [\App\Controllers\AdminController::class, 'alunosReativar'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 

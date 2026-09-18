@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 7 — Configurações Globais e Cadastros Mestres com Soft Delete
-* **Status da Fase 7:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 8 — Importação Escolar em Lote e Gestão Ativa de Restrições Alimentares
-* **Última Atualização:** 2026-09-17 16:30:00 (Fase 7 finalizada e validada)
+* **Fase Atual:** Fase 8 — Importação Escolar em Lote e Gestão Ativa de Restrições Alimentares
+* **Status da Fase 8:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 9 — Carteira Digital Familiar e Gateway Pix Dinâmico
+* **Última Atualização:** 2026-09-18 09:00:00 (Fase 8 finalizada, testada e validada)
 
 ---
 
@@ -245,10 +245,41 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 8 — Importação Escolar em Lote e Gestão Ativa de Restrições Alimentares
-* [ ] Serviço `app/services/SpreadsheetService.php` (CSV/XLSX).
-* [ ] Interface de importação escolar em lote.
-* [ ] Vínculo de alérgenos aos dependentes e catálogo de produtos.
+### [x] Fase 8 — Importação Escolar em Lote e Gestão Ativa de Restrições Alimentares
+* [x] Implementação de `app/services/SpreadsheetService.php` com suporte a streaming CSV (`fgetcsv`), detecção automática de delimitadores (`;` ou `,`), sanitização de BOM UTF-8 e conversão transparente ISO-8859-1 para UTF-8.
+* [x] Mapeamento flexível e tolerante de cabeçalhos escolares para identificar colunas mesmo com variações de nomenclatura (`nome_responsavel`, `cpf`, `whatsapp`, `matricula`, `nome_aluno`, `turma`, `turno`, `alergias`).
+* [x] Mecanismo de auditoria e conferência prévia (*dry-run*) com validação linha a linha de CPFs (11 dígitos), matrículas duplicadas, colunas faltantes e cálculo prévio de novos cadastros e atualizações.
+* [x] Processamento atômico de importação com transação PDO (`beginTransaction`, `commit`, `rollBack`):
+  * Criação automática de turmas inexistentes com inferência de turno e ordem.
+  * Localização ou criação de responsáveis por CPF único com **preservação absoluta de saldo financeiro (`saldo_atual`), senha criptografada (`senha_hash`) e termos aceitos**.
+  * Associação de múltiplos alunos/irmãos ao mesmo responsável (carteira compartilhada).
+  * Criação ou atualização de alunos por matrícula única escolar.
+  * Sincronização automática de restrições alimentares declaradas na planilha vinculando aos IDs da tabela `restricoes_alimentares`.
+* [x] Armazenamento seguro e segregado da cópia física das planilhas importadas em `storage/uploads/private/` com nome ofuscado por timestamp e hash para proteção de dados (LGPD).
+* [x] Geração e download de planilha modelo em formato CSV com BOM UTF-8 (`gerarModeloCsv`) para preenchimento escolar padronizado.
+* [x] Implementação do modelo `app/models/Aluno.php` com CRUD completo, busca textual, filtros por turma, turno e status, soft delete (`inativar`, `reativar`, `deleted_at`) e métodos de vinculação de alérgenos.
+* [x] Extensão do modelo `app/models/Responsavel.php` com métodos `localizarOuCriarPorCpf()` (com salvaguardas de integridade) e `listarParaSelecao()`.
+* [x] Extensão do modelo `app/models/Turma.php` com método `localizarOuCriar()`.
+* [x] Extensão do modelo `app/models/RestricaoAlimentar.php` com `listarPorAluno()`, `sincronizarAluno()` e `alunoTemRestricao()`.
+* [x] Implementação dos métodos do `app/controllers/AdminController.php`:
+  * `importacaoEscolar()`: visualização da tela com formulário de upload e orientações.
+  * `importacaoEscolarAnalisar()`: processamento do upload, análise prévia e geração do painel de conferência com contadores.
+  * `importacaoEscolarProcessar()`: confirmação e processamento atômico definitivo da planilha analisada.
+  * `importacaoEscolarCancelar()`: cancelamento do dry-run e expurgo do arquivo temporário.
+  * `importacaoEscolarModelo()`: download do modelo CSV oficial.
+  * `alunos()`: data-grid completo com filtros de busca, paginação, badges de turno e alérgenos vinculados.
+  * `alunosSalvar()`, `alunosInativar()`, `alunosReativar()`: mutações seguras com token CSRF e auditoria.
+* [x] Implementação dos métodos do `app/controllers/PortalController.php`:
+  * `alergias()`: tela para responsáveis gerenciarem ativamente as restrições alimentares dos seus filhos.
+  * `alergiasSalvar()`: validação estrita de titularidade LGPD (impede que uma família altere dados de dependentes de terceiros) e sincronização atômica de alérgenos.
+* [x] Criação das views com Design System Enterprise Anti-Slop:
+  * `app/views/admin/importacao_escolar.php`: upload com drag-and-drop, orientações claras, botão de download do modelo e tabela de auditoria prévia (*dry-run*).
+  * `app/views/admin/alunos.php`: data-grid de alunos de alta densidade, filtros dinâmicos, modal corporativo de cadastro/edição e botões de ação neutros.
+  * `app/views/portal/alergias.php`: seletor de dependente, cards de alérgenos oficiais com checkboxes e salvamento ágil.
+* [x] Atualização da navegação lateral em `app/views/layouts/sidebar.php` com links "Importação Escolar" e "Alunos & Matrículas" na seção Administração.
+* [x] Registro e blindagem RBAC de todas as novas rotas no Front Controller `index.php`.
+* [x] Bateria de testes automatizados `tests/fase8_test.php` criada com 57 asserções cobrindo todos os fluxos com 100% de sucesso.
+* [x] Baterias de testes de regressão (Fases 2, 3, 4, 5, 6, 7 e rotas web) executadas com 100% de aprovação.
 
 ---
 
@@ -313,6 +344,6 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 8 — Importação Escolar em Lote e Gestão Ativa de Restrições Alimentares**, implementando o serviço `SpreadsheetService.php` (leitor em streaming CSV e suporte a `.xlsx`), os modelos `Aluno.php` e a interface de upload em lote de turmas, alunos e responsáveis com conferência prévia e gestão de alérgenos por estudante.
+Iniciar a **Fase 9 — Carteira Digital Familiar e Gateway Pix Dinâmico**, implementando o serviço `app/services/PixService.php`, o controlador de Webhooks bancários `app/controllers/WebhookController.php`, a interface da carteira familiar no Portal da Família com recargas via QR Code Pix e chave "Copia e Cola", extrato analítico da carteira e regras de saldo mínimo e conciliação bancária.
 
 

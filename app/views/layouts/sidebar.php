@@ -129,7 +129,19 @@ $isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
             </button>
             <ul class="nav-list">
                 <li class="nav-item">
-                    <a href="<?php echo $baseUrl; ?>/admin/turmas" class="nav-link <?php echo ($activeMenu === 'alunos') ? 'active' : ''; ?>">
+                    <a href="<?php echo $baseUrl; ?>/admin/importacao-escolar" class="nav-link <?php echo ($activeMenu === 'importacao') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Importação Escolar</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/admin/alunos" class="nav-link <?php echo ($activeMenu === 'alunos') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Alunos & Matrículas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/admin/turmas" class="nav-link <?php echo ($activeMenu === 'turmas') ? 'active' : ''; ?>">
                         <span class="nav-bullet">●</span>
                         <span class="nav-label">Turmas Escolares</span>
                     </a>

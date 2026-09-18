@@ -137,4 +137,70 @@ class Turma extends Model
         $stmt = self::query($sql, ['id' => $id]);
         return (int)$stmt->fetchColumn();
     }
+
+    /**
+     * Busca uma turma ativa pelo nome da turma e turno
+     */
+    public static function buscarPorNomeETurno(string $nomeTurma, string $turno): ?array
+    {
+        $sql = "SELECT * FROM turmas 
+                WHERE LOWER(TRIM(nome_turma)) = LOWER(TRIM(:nome_turma))
+                AND turno = :turno
+                AND deleted_at IS NULL
+                LIMIT 1";
+
+        return self::fetchOne($sql, [
+            'nome_turma' => $nomeTurma,
+            'turno'      => $turno
+        ]);
+    }
+
+    /**
+     * Localiza uma turma existente por nome e turno, ou cria automaticamente durante importação
+     * 
+     * @return array ['id' => int, 'novo' => bool, 'registro' => array]
+     */
+    public static function localizarOuCriar(string $serie, string $nomeTurma, string $turno, ?int $usuarioId = null): array
+    {
+        $nomeTurma = trim($nomeTurma);
+        $serie = trim($serie);
+        $turno = in_array(strtolower(trim($turno)), ['vespertino', 'tarde']) ? 'vespertino' : 'matutino';
+
+        $existente = self::buscarPorNomeETurno($nomeTurma, $turno);
+        if ($existente) {
+            // Se série mudou, atualiza
+            if (!empty($serie) && $serie !== $existente['serie']) {
+                self::atualizar((int)$existente['id'], [
+                    'serie'           => $serie,
+                    'nome_turma'      => $nomeTurma,
+                    'turno'           => $turno,
+                    'ordem_impressao' => (int)$existente['ordem_impressao']
+                ], $usuarioId);
+                $existente['serie'] = $serie;
+            }
+
+            return [
+                'id'       => (int)$existente['id'],
+                'novo'     => false,
+                'registro' => $existente
+            ];
+        }
+
+        // Se não existe, cria com ordem de impressão sequencial
+        $maxOrdem = (int)self::fetchOne("SELECT MAX(ordem_impressao) as max_ordem FROM turmas WHERE turno = :turno AND deleted_at IS NULL", ['turno' => $turno])['max_ordem'] ?? 0;
+        $novoId = self::criar([
+            'serie'           => !empty($serie) ? $serie : $nomeTurma,
+            'nome_turma'      => $nomeTurma,
+            'turno'           => $turno,
+            'ordem_impressao' => $maxOrdem + 1
+        ], $usuarioId);
+
+        $novo = self::buscarPorId($novoId);
+
+        return [
+            'id'       => $novoId,
+            'novo'     => true,
+            'registro' => $novo
+        ];
+    }
 }
