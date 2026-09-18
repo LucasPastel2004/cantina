@@ -32,8 +32,11 @@ class Colaborador extends Model
         }
 
         if (!empty($busca)) {
-            $sql .= " AND (nome LIKE :busca OR matricula_funcional LIKE :busca OR cargo LIKE :busca)";
-            $params['busca'] = '%' . trim($busca) . '%';
+            $termoBusca = '%' . trim($busca) . '%';
+            $sql .= " AND (nome LIKE :busca_nome OR matricula_funcional LIKE :busca_mat OR cargo LIKE :busca_cargo)";
+            $params['busca_nome'] = $termoBusca;
+            $params['busca_mat'] = $termoBusca;
+            $params['busca_cargo'] = $termoBusca;
         }
 
         $sql .= " ORDER BY nome ASC";

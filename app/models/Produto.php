@@ -60,8 +60,10 @@ class Produto extends Model
         }
 
         if (!empty($filtros['busca'])) {
-            $sql .= " AND (p.codigo_interno LIKE :busca OR p.descricao LIKE :busca)";
-            $params['busca'] = '%' . trim($filtros['busca']) . '%';
+            $termoBusca = '%' . trim($filtros['busca']) . '%';
+            $sql .= " AND (p.codigo_interno LIKE :busca_cod OR p.descricao LIKE :busca_desc)";
+            $params['busca_cod'] = $termoBusca;
+            $params['busca_desc'] = $termoBusca;
         }
 
         $sql .= " GROUP BY p.id ORDER BY c.ordem_exibicao ASC, p.descricao ASC";

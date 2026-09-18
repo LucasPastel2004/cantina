@@ -79,6 +79,11 @@ $resProd = makeRequest($baseUrl . '/admin/produtos', 'GET', [], $cookieAdmin);
 $okProd = ($resProd['code'] === 200 && str_contains($resProd['body'], 'Cardápio'));
 echo "5. Admin acessa /admin/produtos (200 OK): " . ($okProd ? "PASS" : "FAIL (code {$resProd['code']})") . "\n";
 
+// 5.1 Administrador filtrando /admin/produtos?busca=teste
+$resProdBusca = makeRequest($baseUrl . '/admin/produtos?busca=teste', 'GET', [], $cookieAdmin);
+$okProdBusca = ($resProdBusca['code'] === 200 && !str_contains($resProdBusca['body'], 'SQLSTATE'));
+echo "5.1 Admin busca /admin/produtos?busca=teste (200 OK sem SQLSTATE): " . ($okProdBusca ? "PASS" : "FAIL (code {$resProdBusca['code']})") . "\n";
+
 // 6. Administrador acessando /admin/colaboradores
 $resColab = makeRequest($baseUrl . '/admin/colaboradores', 'GET', [], $cookieAdmin);
 $okColab = ($resColab['code'] === 200 && str_contains($resColab['body'], 'Colaboradores'));

@@ -36,8 +36,10 @@ class Turma extends Model
         }
 
         if (!empty($busca)) {
-            $sql .= " AND (t.nome_turma LIKE :busca OR t.serie LIKE :busca)";
-            $params['busca'] = '%' . trim($busca) . '%';
+            $termoBusca = '%' . trim($busca) . '%';
+            $sql .= " AND (t.nome_turma LIKE :busca_nome OR t.serie LIKE :busca_serie)";
+            $params['busca_nome'] = $termoBusca;
+            $params['busca_serie'] = $termoBusca;
         }
 
         $sql .= " ORDER BY t.turno ASC, t.ordem_impressao ASC, t.nome_turma ASC";
