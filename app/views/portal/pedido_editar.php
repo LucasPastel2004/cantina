@@ -15,6 +15,21 @@ $totalAntigo = (float)$pedido['valor_total'];
 $corte = $pedido['status_corte'];
 ?>
 
+<style>
+/* Remove terminantemente qualquer seta ou spinner nativo do navegador */
+.input-qtd::-webkit-outer-spin-button,
+.input-qtd::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+    display: none !important;
+}
+.input-qtd {
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+    text-align: center !important;
+}
+</style>
+
 <div class="pedido-editar-container">
     <!-- Cabeçalho Executivo -->
     <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between pb-3 mb-4 border-bottom border-subtle gap-3">
@@ -130,14 +145,16 @@ $corte = $pedido['status_corte'];
                                                         data-id="<?php echo $prod['id']; ?>"
                                                         style="width: 28px; height: 28px; padding: 0;">-</button>
                                                 
-                                                <input type="number" 
+                                                <input type="text" 
+                                                       inputmode="numeric" 
+                                                       pattern="[0-9]*" 
                                                        name="itens[<?php echo $prod['id']; ?>]" 
                                                        id="qtd-<?php echo $prod['id']; ?>" 
                                                        value="<?php echo $qtdAtual; ?>" 
                                                        min="0" 
                                                        max="20" 
                                                        class="form-control form-control-sm text-center font-tabular input-qtd" 
-                                                       style="width: 44px; height: 28px; font-weight: 600;"
+                                                       style="width: 44px; height: 28px; font-weight: 600; padding: 0 4px; text-align: center; -moz-appearance: textfield; appearance: textfield;"
                                                        data-id="<?php echo $prod['id']; ?>"
                                                        data-nome="<?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>"
                                                        data-preco="<?php echo $prod['preco_venda']; ?>"

@@ -1690,4 +1690,23 @@ input[type="number"].text-end {
   padding: 0 10px;
 }
 
+/* ==========================================================================
+   Controles de Quantidade e Ocultação Definitiva de Spinners/Setas Nativas
+   ========================================================================== */
+.input-qtd::-webkit-outer-spin-button,
+.input-qtd::-webkit-inner-spin-button,
+input[type=number].no-spinners::-webkit-outer-spin-button,
+input[type=number].no-spinners::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
+}
+
+.input-qtd,
+input[type=number].no-spinners {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+  text-align: center !important;
+}
+
 
