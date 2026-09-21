@@ -256,7 +256,58 @@ class Router
             throw new \RuntimeException("Método [{$method}] não encontrado no controlador [{$class}].");
         }
 
-        $controller->$method($params);
+        try {
+            $refMethod = new \ReflectionMethod($controller, $method);
+            $numParams = $refMethod->getNumberOfParameters();
+
+            if ($numParams === 0) {
+                $controller->$method();
+                return;
+            }
+
+            $firstParam = $refMethod->getParameters()[0];
+            $type = $firstParam->getType();
+
+            // Se o primeiro parâmetro espera explicitamente array
+            if ($type instanceof \ReflectionNamedType && $type->getName() === 'array') {
+                $controller->$method($params);
+                return;
+            }
+
+            // Se o primeiro parâmetro for o único e aceitar mixed ou não possuir tipo
+            if ($numParams === 1 && (!$type || $type->getName() === 'mixed')) {
+                $controller->$method($params);
+                return;
+            }
+
+            // Mapeia parâmetros por nome dos argumentos da rota
+            $args = [];
+            foreach ($refMethod->getParameters() as $param) {
+                $paramName = $param->getName();
+                if (array_key_exists($paramName, $params)) {
+                    $val = $params[$paramName];
+                    $pType = $param->getType();
+                    if ($pType instanceof \ReflectionNamedType) {
+                        if ($pType->getName() === 'int') {
+                            $val = (int)$val;
+                        } elseif ($pType->getName() === 'float') {
+                            $val = (float)$val;
+                        } elseif ($pType->getName() === 'string') {
+                            $val = (string)$val;
+                        }
+                    }
+                    $args[] = $val;
+                } elseif ($param->isDefaultValueAvailable()) {
+                    $args[] = $param->getDefaultValue();
+                } else {
+                    $args[] = null;
+                }
+            }
+
+            $controller->$method(...$args);
+        } catch (\ReflectionException $e) {
+            $controller->$method($params);
+        }
     }
 
     /**

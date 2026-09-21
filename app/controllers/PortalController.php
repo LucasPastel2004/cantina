@@ -413,8 +413,9 @@ class PortalController extends Controller
     /**
      * Tela de Edição de Pedido antes do corte operacional
      */
-    public function pedidoEditar(int $id): void
+    public function pedidoEditar(mixed $params): void
     {
+        $id = is_array($params) ? (int)($params['id'] ?? 0) : (int)$params;
         $usuario = Auth::user();
         $respId  = (int)$usuario['id'];
 
@@ -490,8 +491,10 @@ class PortalController extends Controller
     /**
      * Processa a gravação da edição do pedido com compensação de saldo
      */
-    public function pedidoEditarSalvar(int $id): void
+    public function pedidoEditarSalvar(mixed $params): void
     {
+        $id = is_array($params) ? (int)($params['id'] ?? 0) : (int)$params;
+
         if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
             Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
             $this->redirect("/portal/pedidos/editar/{$id}");

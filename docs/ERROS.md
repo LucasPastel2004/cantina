@@ -260,7 +260,18 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Implementado `Pedido::buscarPorId(int $id): ?array` em `app/models/Pedido.php`.
   3. Adicionado o alias em português `Produto::sincronizarAlergenos(int $produtoId, array $alergenosIds): void` em `app/models/Produto.php`.
   4. Adicionado o método auxiliar `obterMomentoAberto(string $dataConsumo): \DateTimeImmutable` em `tests/fase10_test.php` para simular momentos canônicos válidos em que a semana está aberta e antes do horário de corte, tornando a suíte de testes determinística e independente da hora exata em que for executada.
-- Como evitar no futuro: Em regras de negócio com dependência rígida de calendário e relógio (`DateTime`), projetar sempre os modelos para receberem instâncias opcionais de `DateTimeInterface` e parametrizar as suítes de teste com momentos simulados explícitos. Padronizar todos os modelos com métodos canônicos de busca (`buscarPorId`, `buscarPorNome`).
+---
+
+## 2026-09-21 - TypeError ao invocar pedidoEditar() no Router por incompatibilidade de tipo (array vs int)
+
+- Sintoma: Erro HTTP 500 com tela de incidente operacional exibindo `TypeError: App\Controllers\PortalController::pedidoEditar(): Argument #1 ($id) must be of type int, array given, called in /var/www/html/app/core/Router.php on line 259` ao clicar no botão "Editar" de um pedido agendado.
+- Causa: O roteador HTTP (`Router.php`) extrai parâmetros dinâmicos da URL (como `{id}`) e repassava como um array associativo (`['id' => '...']`) para a action do controller. As actions `pedidoEditar(int $id)` e `pedidoEditarSalvar(int $id)` no `PortalController.php` declaravam tipagem estrita `int $id`, disparando erro fatal de tipo no PHP 8.2.
+- Solução aplicada:
+  1. Em `app/controllers/PortalController.php`, alteradas as assinaturas de `pedidoEditar` e `pedidoEditarSalvar` para `mixed $params`, resolvendo defensivamente o identificador com `$id = is_array($params) ? (int)($params['id'] ?? 0) : (int)$params`.
+  2. Em `app/core/Router.php`, aprimorado o método `invokeControllerMethod` via introspecção com `ReflectionMethod`, mapeando e convertendo automaticamente parâmetros tipados (int, float, string) a partir dos nomes dos argumentos da rota.
+  3. Em `app/models/Responsavel.php`, implementado o método estático `buscarPorId(int $id): ?array`.
+  4. Criada suíte de testes de integração em `tests/pedido_editar_web_test.php` validando o ciclo completo de GET (renderização da tela de edição) e POST (gravação da alteração com compensação financeira).
+- Como evitar no futuro: Em roteadores MVC próprios, suportar flexibilidade de injeção de parâmetros (tanto array de parâmetros quanto argumentos nomeados tipados via Reflection). Em controllers, garantir resolução defensiva de parâmetros que possam vir encapsulados em arrays.
 
 
 

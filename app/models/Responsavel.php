@@ -222,6 +222,14 @@ class Responsavel extends Model
     }
 
     /**
+     * Busca um responsável por ID
+     */
+    public static function buscarPorId(int $id): ?array
+    {
+        return self::fetchOne("SELECT * FROM responsaveis WHERE id = :id LIMIT 1", ['id' => $id]);
+    }
+
+    /**
      * Consulta o saldo atual em tempo real do responsável no banco
      */
     public static function consultarSaldo(int $id): float
