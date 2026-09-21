@@ -55,21 +55,21 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
 <!-- Barra de Filtros Operacionais (Data e Turno) -->
 <div class="card-enterprise mb-4">
     <div class="card-enterprise-body p-3">
-        <form method="GET" action="<?php echo $baseUrl; ?>/operacional/recebimento" class="row g-3 align-items-center">
-            <div class="col-12 col-sm-auto">
-                <label for="inputDataRec" class="form-label mb-0 me-2 text-microcopy font-weight-bold text-secondary">DATA:</label>
-                <input type="date" id="inputDataRec" name="data" class="form-control form-control-sm d-inline-block font-tabular" 
+        <form method="GET" action="<?php echo $baseUrl; ?>/operacional/recebimento" class="row g-2 align-items-end">
+            <div class="col-auto">
+                <label for="inputDataRec" class="form-label text-microcopy font-weight-bold text-secondary mb-1 d-block">DATA:</label>
+                <input type="date" id="inputDataRec" name="data" class="form-control form-control-sm font-tabular" 
                        style="width: 155px;" value="<?php echo htmlspecialchars($dataConsumo, ENT_QUOTES, 'UTF-8'); ?>">
             </div>
-            <div class="col-12 col-sm-auto">
-                <label for="selectTurnoRec" class="form-label mb-0 me-2 text-microcopy font-weight-bold text-secondary">TURNO:</label>
-                <select id="selectTurnoRec" name="turno" class="form-select form-select-sm d-inline-block" style="width: 145px;">
+            <div class="col-auto">
+                <label for="selectTurnoRec" class="form-label text-microcopy font-weight-bold text-secondary mb-1 d-block">TURNO:</label>
+                <select id="selectTurnoRec" name="turno" class="form-select form-select-sm" style="width: 155px;">
                     <option value="matutino" <?php echo ($turnoConsumo === 'matutino') ? 'selected' : ''; ?>>Matutino (Manhã)</option>
                     <option value="vespertino" <?php echo ($turnoConsumo === 'vespertino') ? 'selected' : ''; ?>>Vespertino (Tarde)</option>
                 </select>
             </div>
-            <div class="col-12 col-sm-auto">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm">
+            <div class="col-auto">
+                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm" style="height: 34px;">
                     Carregar Itens
                 </button>
             </div>

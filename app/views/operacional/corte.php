@@ -77,25 +77,25 @@ $corteAberto = $statusCorte['pode_alterar'] ?? false;
 <!-- Barra de Filtros Operacionais (Data e Turno) -->
 <div class="card-enterprise mb-4">
     <div class="card-enterprise-body p-3">
-        <form method="GET" action="<?php echo $baseUrl; ?>/operacional/corte" class="row g-3 align-items-center">
-            <div class="col-12 col-sm-auto">
-                <label for="inputData" class="form-label mb-0 me-2 text-microcopy font-weight-bold text-secondary">DATA:</label>
-                <input type="date" id="inputData" name="data" class="form-control form-control-sm d-inline-block font-tabular" 
+        <form method="GET" action="<?php echo $baseUrl; ?>/operacional/corte" class="row g-2 align-items-end">
+            <div class="col-auto">
+                <label for="inputData" class="form-label text-microcopy font-weight-bold text-secondary mb-1 d-block">DATA:</label>
+                <input type="date" id="inputData" name="data" class="form-control form-control-sm font-tabular" 
                        style="width: 155px;" value="<?php echo htmlspecialchars($dataConsumo, ENT_QUOTES, 'UTF-8'); ?>">
             </div>
-            <div class="col-12 col-sm-auto">
-                <label for="selectTurno" class="form-label mb-0 me-2 text-microcopy font-weight-bold text-secondary">TURNO:</label>
-                <select id="selectTurno" name="turno" class="form-select form-select-sm d-inline-block" style="width: 145px;">
+            <div class="col-auto">
+                <label for="selectTurno" class="form-label text-microcopy font-weight-bold text-secondary mb-1 d-block">TURNO:</label>
+                <select id="selectTurno" name="turno" class="form-select form-select-sm" style="width: 155px;">
                     <option value="matutino" <?php echo ($turnoConsumo === 'matutino') ? 'selected' : ''; ?>>Matutino (Manhã)</option>
                     <option value="vespertino" <?php echo ($turnoConsumo === 'vespertino') ? 'selected' : ''; ?>>Vespertino (Tarde)</option>
                 </select>
             </div>
-            <div class="col-12 col-sm-auto">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm">
+            <div class="col-auto">
+                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm" style="height: 34px;">
                     Atualizar Painel
                 </button>
             </div>
-            <div class="col-12 col-sm text-sm-end text-muted text-microcopy">
+            <div class="col text-end text-muted text-microcopy pb-2">
                 Corte operacional pontual: <strong><?php echo $horaCorte; ?></strong>
                 <?php if ($corteAberto && isset($statusCorte['minutos_restantes'])): ?>
                     <span class="text-amber ms-1">(restam aprox. <?php echo $statusCorte['minutos_restantes']; ?> min)</span>
