@@ -59,11 +59,13 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
             <div class="col-auto">
                 <label for="inputDataRec" class="form-label text-microcopy font-weight-bold text-secondary mb-1 d-block">DATA:</label>
                 <input type="date" id="inputDataRec" name="data" class="form-control form-control-sm font-tabular" 
-                       style="width: 155px;" value="<?php echo htmlspecialchars($dataConsumo, ENT_QUOTES, 'UTF-8'); ?>">
+                       style="width: 155px;" value="<?php echo htmlspecialchars($dataConsumo, ENT_QUOTES, 'UTF-8'); ?>"
+                       onchange="this.form.submit()">
             </div>
             <div class="col-auto">
                 <label for="selectTurnoRec" class="form-label text-microcopy font-weight-bold text-secondary mb-1 d-block">TURNO:</label>
-                <select id="selectTurnoRec" name="turno" class="form-select form-select-sm" style="width: 155px;">
+                <select id="selectTurnoRec" name="turno" class="form-select form-select-sm" style="width: 155px;"
+                        onchange="this.form.submit()">
                     <option value="matutino" <?php echo ($turnoConsumo === 'matutino') ? 'selected' : ''; ?>>Matutino (Manhã)</option>
                     <option value="vespertino" <?php echo ($turnoConsumo === 'vespertino') ? 'selected' : ''; ?>>Vespertino (Tarde)</option>
                 </select>
@@ -76,6 +78,28 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
         </form>
     </div>
 </div>
+
+<?php 
+// Cálculos de conferência prévia caso a remessa já tenha sido recebida
+$itensEntreguesMap = $statusRecebimento['itens_entregues'] ?? [];
+$totalEntregueAcum = 0;
+$totalExcedenteAcum = 0;
+$totalFaltaAcum = 0;
+if ($jaRecebido) {
+    foreach ($itens as $it) {
+        $qEsp = (int)($it['quantidade_total'] ?? 0);
+        $pId = (int)$it['produto_id'];
+        $qEnt = $itensEntreguesMap[$pId] ?? $qEsp;
+        $totalEntregueAcum += $qEnt;
+        $d = $qEnt - $qEsp;
+        if ($d > 0) {
+            $totalExcedenteAcum += $d;
+        } elseif ($d < 0) {
+            $totalFaltaAcum += abs($d);
+        }
+    }
+}
+?>
 
 <?php if ($jaRecebido): ?>
     <!-- Aviso Informativo de Recebimento já Realizado -->
@@ -142,6 +166,8 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
                             <?php 
                             $qtdEsp = (int)($item['quantidade_total'] ?? 0);
                             $prodId = (int)$item['produto_id'];
+                            $qtdEntregueEfetiva = $jaRecebido ? ($itensEntreguesMap[$prodId] ?? $qtdEsp) : $qtdEsp;
+                            $diffEfetiva = $qtdEntregueEfetiva - $qtdEsp;
                             ?>
                             <tr>
                                 <td class="cell-center">
@@ -161,7 +187,7 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
                                 <td class="cell-center">
                                     <?php if ($jaRecebido): ?>
                                         <span class="font-tabular font-weight-bold" style="font-size: 14px; color: #166534;">
-                                            <?php echo $qtdEsp; ?> un
+                                            <?php echo $qtdEntregueEfetiva; ?> un
                                         </span>
                                     <?php else: ?>
                                         <div class="d-inline-flex align-items-center gap-1">
@@ -178,7 +204,17 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
                                     <?php endif; ?>
                                 </td>
                                 <td class="cell-right font-tabular" id="diffCol_<?php echo $idx; ?>">
-                                    <span class="text-muted">Exato (0)</span>
+                                    <?php if ($jaRecebido): ?>
+                                        <?php if ($diffEfetiva === 0): ?>
+                                            <span class="text-muted">Exato (0)</span>
+                                        <?php elseif ($diffEfetiva > 0): ?>
+                                            <span class="font-weight-bold text-success">+<?php echo $diffEfetiva; ?> un (sobra)</span>
+                                        <?php else: ?>
+                                            <span class="font-weight-bold text-danger"><?php echo $diffEfetiva; ?> un (falta)</span>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="text-muted">Exato (0)</span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -194,10 +230,20 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
                                 <?php echo $totalPecas; ?> un
                             </td>
                             <td class="cell-center font-tabular font-weight-bold text-dark" id="totalEntregueCol" style="font-size: 15px; color: #0f172a !important;">
-                                <?php echo $totalPecas; ?> un
+                                <?php echo $jaRecebido ? $totalEntregueAcum : $totalPecas; ?> un
                             </td>
-                            <td class="cell-right font-tabular font-weight-bold" id="totalExcedenteCol" style="font-size: 13px; color: #166534;">
-                                0 sobra
+                            <td class="cell-right font-tabular font-weight-bold" id="totalExcedenteCol" style="font-size: 13px; color: <?php echo ($jaRecebido && $totalExcedenteAcum > 0) ? '#166534' : (($jaRecebido && $totalFaltaAcum > 0) ? '#b91c1c' : '#64748b'); ?>;">
+                                <?php if ($jaRecebido): ?>
+                                    <?php if ($totalExcedenteAcum > 0): ?>
+                                        +<?php echo $totalExcedenteAcum; ?> un (excedente balcão)
+                                    <?php elseif ($totalFaltaAcum > 0): ?>
+                                        -<?php echo $totalFaltaAcum; ?> un (falta)
+                                    <?php else: ?>
+                                        0 sobra
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    0 sobra
+                                <?php endif; ?>
                             </td>
                         </tr>
                     </tfoot>

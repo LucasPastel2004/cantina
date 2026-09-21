@@ -390,7 +390,9 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] Tela de conferência física de recebimento (`app/views/operacional/recebimento.php` e `PedidosController::recebimento` / `recebimentoConfirmar`):
   * Cálculo dinâmico de diferenças e sobras via Vanilla JS;
   * Botão de atalho para preenchimento rápido com os quantitativos encomendados;
-  * Bloqueio contra reenvio de remessas já conferidas.
+  * Bloqueio contra reenvio de remessas já conferidas;
+  * Exibição analítica de quantidades entregues reais, sobras e faltas por item quando a remessa já foi conferida (`statusRecebimento['itens_entregues']`);
+  * Atualização reativa instantânea dos painéis operacionais (`corte.php` e `recebimento.php`) via `onchange="this.form.submit()"` nos seletores de data e turno.
 * [x] Registro e blindagem de rotas operacionais no `index.php` com RBAC `ROLE_OPERADOR` e `ROLE_ADMINISTRADOR`:
   * `GET /operacional/corte`
   * `GET /operacional/corte/pdf`
@@ -398,7 +400,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * `GET /operacional/recebimento`
   * `POST /operacional/recebimento/confirmar`
 * [x] Criação da suíte automatizada `tests/fase11_test.php` com 72 asserções cobrindo todos os fluxos e regras da Fase 11 (100% de sucesso).
-* [x] Execução e homologação de 100% dos testes de regressão das fases anteriores (Fases 7, 8, 9 e 10).
+* [x] Execução e homologação de 100% dos testes de regressão das fases anteriores (Fases 7, 8, 9, 10 e 11).
 
 ---
 

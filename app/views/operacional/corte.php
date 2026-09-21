@@ -81,11 +81,13 @@ $corteAberto = $statusCorte['pode_alterar'] ?? false;
             <div class="col-auto">
                 <label for="inputData" class="form-label text-microcopy font-weight-bold text-secondary mb-1 d-block">DATA:</label>
                 <input type="date" id="inputData" name="data" class="form-control form-control-sm font-tabular" 
-                       style="width: 155px;" value="<?php echo htmlspecialchars($dataConsumo, ENT_QUOTES, 'UTF-8'); ?>">
+                       style="width: 155px;" value="<?php echo htmlspecialchars($dataConsumo, ENT_QUOTES, 'UTF-8'); ?>"
+                       onchange="this.form.submit()">
             </div>
             <div class="col-auto">
                 <label for="selectTurno" class="form-label text-microcopy font-weight-bold text-secondary mb-1 d-block">TURNO:</label>
-                <select id="selectTurno" name="turno" class="form-select form-select-sm" style="width: 155px;">
+                <select id="selectTurno" name="turno" class="form-select form-select-sm" style="width: 155px;"
+                        onchange="this.form.submit()">
                     <option value="matutino" <?php echo ($turnoConsumo === 'matutino') ? 'selected' : ''; ?>>Matutino (Manhã)</option>
                     <option value="vespertino" <?php echo ($turnoConsumo === 'vespertino') ? 'selected' : ''; ?>>Vespertino (Tarde)</option>
                 </select>

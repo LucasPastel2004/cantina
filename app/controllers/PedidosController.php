@@ -23,6 +23,24 @@ use App\Services\PdfService;
 class PedidosController extends Controller
 {
     /**
+     * Normaliza e valida a string de data (suporta YYYY-MM-DD e DD/MM/YYYY)
+     */
+    private function normalizarDataConsumo(?string $data, string $padrao): string
+    {
+        if (empty($data) || !is_string($data)) {
+            return $padrao;
+        }
+        $data = trim($data);
+        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $data, $m)) {
+            $data = "{$m[3]}-{$m[2]}-{$m[1]}";
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $data)) {
+            return $padrao;
+        }
+        return $data;
+    }
+
+    /**
      * Painel de Corte do Turno (/operacional/corte)
      * Exibe a consolidação quantitativa de salgados encomendados para o turno e data selecionados.
      */
@@ -32,10 +50,7 @@ class PedidosController extends Controller
         $horaAtual = date('H:i');
 
         // Determina data (padrão hoje)
-        $dataConsumo = (isset($_GET['data']) && is_string($_GET['data'])) ? trim($_GET['data']) : $hoje;
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataConsumo)) {
-            $dataConsumo = $hoje;
-        }
+        $dataConsumo = $this->normalizarDataConsumo($_GET['data'] ?? null, $hoje);
 
         // Determina turno (padrão matutino ou inferido pelo horário)
         $turnoPadrao = ($horaAtual >= '11:00') ? Pedido::TURNO_VESPERTINO : Pedido::TURNO_MATUTINO;
@@ -77,10 +92,7 @@ class PedidosController extends Controller
     public function cortePdf(): void
     {
         $hoje = date('Y-m-d');
-        $dataConsumo = (isset($_GET['data']) && is_string($_GET['data'])) ? trim($_GET['data']) : $hoje;
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataConsumo)) {
-            $dataConsumo = $hoje;
-        }
+        $dataConsumo = $this->normalizarDataConsumo($_GET['data'] ?? null, $hoje);
 
         $turnoConsumo = (isset($_GET['turno']) && is_string($_GET['turno'])) ? trim($_GET['turno']) : Pedido::TURNO_MATUTINO;
         if (!in_array($turnoConsumo, [Pedido::TURNO_MATUTINO, Pedido::TURNO_VESPERTINO], true)) {
@@ -110,10 +122,7 @@ class PedidosController extends Controller
     public function corteImprimir(): void
     {
         $hoje = date('Y-m-d');
-        $dataConsumo = (isset($_GET['data']) && is_string($_GET['data'])) ? trim($_GET['data']) : $hoje;
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataConsumo)) {
-            $dataConsumo = $hoje;
-        }
+        $dataConsumo = $this->normalizarDataConsumo($_GET['data'] ?? null, $hoje);
 
         $turnoConsumo = (isset($_GET['turno']) && is_string($_GET['turno'])) ? trim($_GET['turno']) : Pedido::TURNO_MATUTINO;
         if (!in_array($turnoConsumo, [Pedido::TURNO_MATUTINO, Pedido::TURNO_VESPERTINO], true)) {
@@ -139,10 +148,7 @@ class PedidosController extends Controller
         $hoje = date('Y-m-d');
         $horaAtual = date('H:i');
 
-        $dataConsumo = (isset($_GET['data']) && is_string($_GET['data'])) ? trim($_GET['data']) : $hoje;
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataConsumo)) {
-            $dataConsumo = $hoje;
-        }
+        $dataConsumo = $this->normalizarDataConsumo($_GET['data'] ?? null, $hoje);
 
         $turnoPadrao = ($horaAtual >= '11:00') ? Pedido::TURNO_VESPERTINO : Pedido::TURNO_MATUTINO;
         $turnoConsumo = (isset($_GET['turno']) && is_string($_GET['turno'])) ? trim($_GET['turno']) : $turnoPadrao;
@@ -183,11 +189,11 @@ class PedidosController extends Controller
             return;
         }
 
-        $dataConsumo = trim($_POST['data_consumo'] ?? '');
+        $dataConsumo = $this->normalizarDataConsumo($_POST['data_consumo'] ?? null, '');
         $turnoConsumo = trim($_POST['turno_consumo'] ?? '');
         $observacao = trim($_POST['observacao'] ?? '');
 
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataConsumo) || !in_array($turnoConsumo, ['matutino', 'vespertino'], true)) {
+        if (empty($dataConsumo) || !in_array($turnoConsumo, ['matutino', 'vespertino'], true)) {
             Session::setFlash('error', 'Data ou turno inválidos informados para o recebimento.');
             $this->redirect('/operacional/recebimento');
             return;

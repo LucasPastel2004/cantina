@@ -282,14 +282,27 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Solução aplicada: Refatorada a consulta em `app/models/Pedido.php` para selecionar apenas as colunas agrupadas e métricas agregadas (`COUNT(*)`, `SUM(em.quantidade)`), ordenando por `em.created_at DESC` com `LIMIT 1` para recuperar o registro mais recente da remessa.
 - Como evitar no futuro: Em ambientes MySQL 8.0+, nunca incluir colunas não agregadas no `SELECT` quando utilizar `GROUP BY`. Em queries de busca de status mais recente, preferir `ORDER BY ... DESC LIMIT 1`.
 
----
-
 ## 2026-09-21 - filter_input(INPUT_GET) retornando null em testes automatizados / CLI
 
 - Sintoma: Filtros de data e turno na tela de corte em `app/controllers/PedidosController.php` recaiam no valor padrão (data de hoje e turno matutino) durante a execução de testes automatizados e simulações web, mesmo com `$_GET['data']` devidamente preenchido.
 - Causa: Em PHP, a função nativa `filter_input(INPUT_GET, ...)` lê diretamente dos buffers internos do SAPI do servidor web (Apache/FPM) e não da superglobal `$_GET`. Quando testes executados via CLI populam manualmente `$_GET`, `filter_input()` não enxerga essas alterações e retorna `null`.
 - Solução aplicada: Substituído o uso de `filter_input(INPUT_GET, ...)` por verificação e sanitização direta sobre a superglobal: `(isset($_GET['campo']) && is_string($_GET['campo'])) ? trim(strip_tags($_GET['campo'])) : $padrao`.
 - Como evitar no futuro: Em controllers de aplicações que precisam ser testáveis via CLI/PHPUnit, evitar `filter_input()` e utilizar sanitização defensiva sobre as superglobais (`$_GET`, `$_POST`) ou encapsular a requisição em um objeto Request injetável.
+
+---
+
+## 2026-09-21 - Tabela de conferência de recebimento exibindo valores estáticos para remessas já conferidas e ausência de submissão automática ao mudar datas
+
+- Sintoma: Na tela `/operacional/recebimento`, ao trocar entre datas distintas (como 21/09 e 22/09) com remessas já recebidas, a tabela inferior parecia não atualizar, exibindo sempre a quantidade esperada no lugar da entregue, "Exato (0)" nas diferenças e "0 sobra" no rodapé consolidador, ignorando as quantidades físicas reais apuradas na entrega. Além disso, a troca de data no calendário nativo exigia clique manual no botão "Carregar Itens", causando a percepção de que a tabela não respondia à mudança de dia.
+- Causa: Dupla ocorrência:
+  1. No template `app/views/operacional/recebimento.php`, quando `$jaRecebido` era verdadeiro, o código renderizava a variável `$qtdEsp` na coluna de quantidade entregue, com texto estático "Exato (0)" na coluna de diferenças e "0 sobra" no rodapé consolidador, pois o método `verificarStatusRecebimento()` em `app/models/Pedido.php` trazia apenas totais agregados e não o detalhamento dos produtos entregues gravados em `estoque_movimentacoes`.
+  2. No formulário de filtro por data e turno em `corte.php` e `recebimento.php`, os campos `<input type="date">` e `<select>` não possuíam o gatilho `onchange="this.form.submit()"`, e formatos de data `DD/MM/YYYY` não eram convertidos para `YYYY-MM-DD` no controller, caindo no fallback da data atual.
+- Solução aplicada:
+  1. Em `app/models/Pedido.php`, aprimorado `verificarStatusRecebimento()` para buscar e mapear os quantitativos reais entregues por produto a partir de `estoque_movimentacoes` (`itens_entregues`), permitindo que a view apresente exatamente o que foi entregue, sobras, faltas e excedentes reais de cada item e no rodapé.
+  2. Em `app/views/operacional/recebimento.php`, implementado o cálculo analítico com base nos itens entregues da remessa para exibir a quantidade efetiva, status de diferença (`Exato (0)`, `+X un (sobra)` ou `-X un (falta)`) e o total consolidado real com excedente/falta destacados.
+  3. Adicionado `onchange="this.form.submit()"` nos campos de data e turno de `corte.php` e `recebimento.php` para atualização reativa instantânea ao selecionar o dia ou turno.
+  4. Em `app/controllers/PedidosController.php`, criado o método `normalizarDataConsumo()` para aceitar e converter de forma transparente tanto `YYYY-MM-DD` quanto `DD/MM/YYYY`.
+- Como evitar no futuro: Telas com estados pós-liquidação (como remessas conferidas) devem ler os dados históricos persistidos de cada linha em vez de reexibir variáveis projetadas da demanda. Controles de filtro em painéis operacionais devem fornecer atualização instantânea no evento `change`.
 
 
 

@@ -1133,6 +1133,8 @@ class Pedido extends Model
      */
     public static function verificarStatusRecebimento(string $dataConsumo, string $turnoConsumo): ?array
     {
+        $prefixo = "Recebimento Fornecedor - {$dataConsumo} - {$turnoConsumo}%";
+
         $sql = "SELECT em.created_at, em.operador_id, em.justificativa,
                        u.nome AS operador_nome,
                        COUNT(DISTINCT em.produto_id) AS total_produtos_recebidos,
@@ -1145,11 +1147,26 @@ class Pedido extends Model
                 ORDER BY em.created_at DESC
                 LIMIT 1";
 
-        $prefixo = "Recebimento Fornecedor - {$dataConsumo} - {$turnoConsumo}%";
         $reg = self::fetchOne($sql, ['prefixo' => $prefixo]);
 
         if (!$reg) {
             return null;
+        }
+
+        // Detalhamento quantitativo dos produtos entregues nesta remessa
+        $sqlItens = "SELECT em.produto_id, SUM(em.quantidade) AS quantidade_entregue
+                     FROM estoque_movimentacoes em
+                     WHERE em.tipo_movimentacao = 'entrada_fornecedor'
+                       AND em.justificativa LIKE :prefixo
+                     GROUP BY em.produto_id";
+        $itensMov = self::fetchAll($sqlItens, ['prefixo' => $prefixo]);
+        $itensEntregues = [];
+        $totalEntregueReal = 0;
+        foreach ($itensMov as $im) {
+            $pId = (int)$im['produto_id'];
+            $qtd = (int)$im['quantidade_entregue'];
+            $itensEntregues[$pId] = $qtd;
+            $totalEntregueReal += $qtd;
         }
 
         return [
@@ -1160,6 +1177,8 @@ class Pedido extends Model
             'data_recebimento_fmt' => date('d/m/Y H:i', strtotime($reg['created_at'])),
             'total_produtos'       => (int)$reg['total_produtos_recebidos'],
             'total_quantidade'     => (int)$reg['total_quantidade_recebida'],
+            'total_entregue_real'  => $totalEntregueReal,
+            'itens_entregues'      => $itensEntregues,
             'justificativa'        => $reg['justificativa'],
         ];
     }
