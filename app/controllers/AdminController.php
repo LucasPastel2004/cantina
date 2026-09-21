@@ -538,7 +538,7 @@ class AdminController extends Controller
         $this->render('admin/turmas', [
             'pageTitle'   => 'Turmas Escolares',
             'pageHeading' => 'Turmas e Agrupamentos Escolares',
-            'activeMenu'  => 'alunos',
+            'activeMenu'  => 'turmas',
             'turmas'      => $turmas,
             'turno'       => $turno,
             'busca'       => $busca,
