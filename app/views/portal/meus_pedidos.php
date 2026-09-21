@@ -229,7 +229,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                                             100% Estornado
                                         </span>
                                     <?php elseif ($p['status'] === 'entregue'): ?>
-                                        <span class="text-success font-tabular" style="font-size: 11px;">
+                                        <span class="text-secondary font-tabular" style="font-size: 11px;">
                                             Retirado no Recreio
                                         </span>
                                     <?php endif; ?>
@@ -271,7 +271,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     <div class="p-3 rounded bg-light border mb-2">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-secondary" style="font-size: 12px;">Valor total a ser estornado:</span>
-                            <strong class="font-tabular text-success" id="cancelar-total" style="font-size: 15px;"></strong>
+                            <strong class="font-tabular text-dark" id="cancelar-total" style="font-size: 15px; color: #0f172a;"></strong>
                         </div>
                         <div class="text-muted mt-1" style="font-size: 11px;">
                             &bull; 100% do crédito será devolvido à sua Carteira Familiar no mesmo instante.

@@ -49,7 +49,7 @@ $corte = $pedido['status_corte'];
         </div>
         <div class="d-flex align-items-center gap-2">
             <span class="text-secondary" style="font-size: 12px;">Saldo Disponível:</span>
-            <strong class="font-tabular text-success" style="font-size: 13px;">R$ <?php echo number_format($saldoDisponivel, 2, ',', '.'); ?></strong>
+            <strong class="font-tabular text-dark" style="font-size: 13px; color: #0f172a;">R$ <?php echo number_format($saldoDisponivel, 2, ',', '.'); ?></strong>
         </div>
     </div>
 
@@ -67,9 +67,9 @@ $corte = $pedido['status_corte'];
             </div>
         </div>
         <div class="text-md-end">
-            <span class="badge bg-primary" style="font-size: 11px;">
+            <code class="code-tag font-tabular" style="font-size: 11px;">
                 Corte às <?php echo $corte['hora_corte']; ?>
-            </span>
+            </code>
             <?php if ($corte['minutos_restantes'] !== null): ?>
                 <div class="text-secondary mt-1 font-tabular" style="font-size: 11px;">
                     Restam aprox. <strong><?php echo $corte['minutos_restantes']; ?> minutos</strong> para editar
@@ -103,7 +103,7 @@ $corte = $pedido['status_corte'];
                                 $qtdAtual = (int)($itensAtuais[(int)$prod['id']] ?? 0);
                                 ?>
                                 <div class="col-12 col-md-6">
-                                    <div class="p-3 border rounded-3 h-100 d-flex flex-column justify-content-between transition-all product-card <?php echo $qtdAtual > 0 ? 'border-primary bg-light' : 'bg-white'; ?>"
+                                    <div class="p-3 border rounded-3 h-100 d-flex flex-column justify-content-between transition-all product-card <?php echo $qtdAtual > 0 ? 'border-secondary bg-light' : 'bg-white'; ?>"
                                          id="product-box-<?php echo $prod['id']; ?>">
                                         
                                         <div>
@@ -198,7 +198,7 @@ $corte = $pedido['status_corte'];
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 15px; font-weight: 700; color: #0f172a;">
                             <span>Novo Total:</span>
-                            <span class="font-tabular text-primary" id="display-novo-total">R$ <?php echo number_format($totalAntigo, 2, ',', '.'); ?></span>
+                            <span class="font-tabular text-dark" style="color: #0f172a;" id="display-novo-total">R$ <?php echo number_format($totalAntigo, 2, ',', '.'); ?></span>
                         </div>
 
                         <!-- Caixa de Destaque da Diferença -->

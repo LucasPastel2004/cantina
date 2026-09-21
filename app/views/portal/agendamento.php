@@ -43,7 +43,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             </a>
             <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary btn-sm">
                 <span class="text-secondary" style="font-size: 11px;">Saldo Livre:</span>
-                <strong class="font-tabular ms-1 text-success" style="font-size: 12px;">R$ <?php echo number_format($saldoDisponivel, 2, ',', '.'); ?></strong>
+                <strong class="font-tabular ms-1 text-dark" style="font-size: 12px; color: #0f172a;">R$ <?php echo number_format($saldoDisponivel, 2, ',', '.'); ?></strong>
             </a>
         </div>
     </div>
@@ -61,11 +61,11 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     $turnoLabel = ($dep['turno'] === 'matutino') ? 'Manhã (Corte 08:00)' : 'Tarde (Corte 13:30)';
                     ?>
                     <a href="<?php echo $baseUrl; ?>/portal/agendamento?aluno=<?php echo $dep['id']; ?>&semana=<?php echo $semanaRef; ?>&data=<?php echo $diaSelecionado['data']; ?>" 
-                       class="btn btn-enterprise <?php echo $isSel ? 'btn-primary' : 'btn-secondary'; ?> btn-sm d-flex align-items-center gap-2"
-                       style="<?php echo $isSel ? 'background: #1d4ed8; color: #fff;' : ''; ?>">
-                        <span style="width: 8px; height: 8px; border-radius: 50%; background: <?php echo $isSel ? '#ffffff' : '#22c55e'; ?>;"></span>
-                        <strong><?php echo htmlspecialchars($dep['nome'], ENT_QUOTES, 'UTF-8'); ?></strong>
-                        <span class="opacity-75" style="font-size: 11px;">(<?php echo htmlspecialchars($dep['nome_turma'] ?? $dep['serie'] ?? '', ENT_QUOTES, 'UTF-8'); ?> &bull; <?php echo $turnoLabel; ?>)</span>
+                       class="btn btn-enterprise btn-secondary btn-sm d-flex align-items-center gap-2"
+                       style="<?php echo $isSel ? 'background: #f8fafc; border-color: #475569; color: #0f172a; font-weight: 600;' : 'background: #ffffff; border-color: #e2e8f0; color: #475569;'; ?>">
+                        <span class="bullet" style="color: <?php echo $isSel ? '#0f172a' : '#cbd5e1'; ?>; font-size: 10px;">●</span>
+                        <span><?php echo htmlspecialchars($dep['nome'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="text-secondary" style="font-size: 11px; font-weight: 400;">(<?php echo htmlspecialchars($dep['nome_turma'] ?? $dep['serie'] ?? '', ENT_QUOTES, 'UTF-8'); ?> &bull; <?php echo $turnoLabel; ?>)</span>
                     </a>
                 <?php endforeach; ?>
             </div>
@@ -76,7 +76,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     <div class="card-enterprise p-3 mb-4 bg-light border-subtle">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
             <div class="d-flex align-items-center gap-3">
-                <div class="avatar-circle" style="width: 40px; height: 40px; border-radius: 50%; background: #eff6ff; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; border: 1px solid #bfdbfe;">
+                <div class="avatar-circle" style="width: 40px; height: 40px; border-radius: 50%; background: #f8fafc; color: #334155; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; border: 1px solid #cbd5e1;">
                     <?php echo mb_substr($alunoSelecionado['nome'], 0, 1, 'UTF-8'); ?>
                 </div>
                 <div>
@@ -86,7 +86,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     <div class="text-secondary" style="font-size: 12px;">
                         Matrícula: <span class="font-tabular text-dark fw-medium"><?php echo htmlspecialchars($alunoSelecionado['matricula'], ENT_QUOTES, 'UTF-8'); ?></span>
                         &bull; Turma: <span class="text-dark fw-medium"><?php echo htmlspecialchars($alunoSelecionado['nome_turma'] ?? 'Turma Regular', ENT_QUOTES, 'UTF-8'); ?></span>
-                        &bull; Turno: <span class="badge bg-secondary text-uppercase" style="font-size: 10px;"><?php echo $alunoSelecionado['turno']; ?></span>
+                        &bull; Turno: <code class="code-tag text-uppercase font-tabular" style="font-size: 11px;"><?php echo htmlspecialchars($alunoSelecionado['turno'], ENT_QUOTES, 'UTF-8'); ?></code>
                     </div>
                 </div>
             </div>
@@ -96,14 +96,14 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 <span class="text-secondary" style="font-size: 12px;">Semana:</span>
                 <div class="btn-group btn-group-sm" role="group">
                     <a href="<?php echo $baseUrl; ?>/portal/agendamento?aluno=<?php echo $alunoSelecionado['id']; ?>&semana=atual" 
-                       class="btn btn-enterprise <?php echo ($semanaRef === 'atual') ? 'btn-primary' : 'btn-secondary'; ?>"
-                       style="<?php echo ($semanaRef === 'atual') ? 'background: #1d4ed8; color: #fff;' : ''; ?>">
+                       class="btn btn-enterprise btn-secondary"
+                       style="<?php echo ($semanaRef === 'atual') ? 'background: #f8fafc; border-color: #475569; color: #0f172a; font-weight: 600;' : 'background: #ffffff; border-color: #e2e8f0; color: #475569;'; ?>">
                         Semana Corrente
                     </a>
                     <?php if ($semanaSeguinteLiberada): ?>
                         <a href="<?php echo $baseUrl; ?>/portal/agendamento?aluno=<?php echo $alunoSelecionado['id']; ?>&semana=seguinte" 
-                           class="btn btn-enterprise <?php echo ($semanaRef === 'seguinte') ? 'btn-primary' : 'btn-secondary'; ?>"
-                           style="<?php echo ($semanaRef === 'seguinte') ? 'background: #1d4ed8; color: #fff;' : ''; ?>">
+                           class="btn btn-enterprise btn-secondary"
+                           style="<?php echo ($semanaRef === 'seguinte') ? 'background: #f8fafc; border-color: #475569; color: #0f172a; font-weight: 600;' : 'background: #ffffff; border-color: #e2e8f0; color: #475569;'; ?>">
                             Próxima Semana
                         </a>
                     <?php else: ?>
@@ -127,16 +127,16 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             <div class="col">
                 <a href="<?php echo $baseUrl; ?>/portal/agendamento?aluno=<?php echo $alunoSelecionado['id']; ?>&semana=<?php echo $semanaRef; ?>&data=<?php echo $dia['data']; ?>" 
                    class="card-enterprise h-100 p-2 text-decoration-none d-block transition-all"
-                   style="border-radius: 6px; <?php echo $isDiaSel ? 'border: 2px solid #1d4ed8; background: #eff6ff;' : 'border: 1px solid #e2e8f0; background: #fff;'; ?> <?php echo !$podePedir ? 'opacity: 0.75;' : ''; ?>">
+                   style="border-radius: 6px; <?php echo $isDiaSel ? 'border: 2px solid #475569; background: #f8fafc;' : 'border: 1px solid #e2e8f0; background: #fff;'; ?> <?php echo !$podePedir ? 'opacity: 0.75;' : ''; ?>">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="text-secondary" style="font-size: 11px; font-weight: 600; text-transform: uppercase;">
                             <?php echo $dia['dia_semana_abrev']; ?>
                         </span>
                         <?php if ($dia['is_hoje']): ?>
-                            <span class="badge bg-primary" style="font-size: 9px; padding: 2px 4px;">HOJE</span>
+                            <span class="code-tag font-tabular" style="font-size: 9px; padding: 1px 4px; font-weight: 600; color: #334155;">HOJE</span>
                         <?php endif; ?>
                     </div>
-                    <div class="font-tabular mb-1" style="font-size: 16px; font-weight: 700; color: <?php echo $isDiaSel ? '#1d4ed8' : '#0f172a'; ?>;">
+                    <div class="font-tabular mb-1" style="font-size: 16px; font-weight: 700; color: #0f172a;">
                         <?php echo $dia['dia_mes']; ?>
                     </div>
                     
@@ -146,9 +146,9 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                             <span class="text-secondary">&bull; <?php echo htmlspecialchars($dia['descricao'], ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php elseif ($corte['pode_alterar']): ?>
                             <?php if ($dia['is_hoje'] && $corte['minutos_restantes'] !== null && $corte['minutos_restantes'] <= 60): ?>
-                                <span class="text-warning fw-semibold">&bull; Restam <?php echo $corte['minutos_restantes']; ?>m</span>
+                                <span class="text-secondary fw-semibold">&bull; Restam <?php echo $corte['minutos_restantes']; ?>m</span>
                             <?php else: ?>
-                                <span class="text-success">&bull; Aberto</span>
+                                <span class="text-secondary">&bull; Aberto</span>
                             <?php endif; ?>
                         <?php else: ?>
                             <span class="text-muted">&bull; Fechado</span>
@@ -160,14 +160,14 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     </div>
 
     <!-- Seção de Alerta de Corte da Data Selecionada -->
-    <div class="card-enterprise p-3 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3" style="border-left: 4px solid <?php echo $statusCorte['pode_alterar'] ? '#1d4ed8' : '#64748b'; ?>;">
+    <div class="card-enterprise p-3 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3" style="border-left: 4px solid #64748b;">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
                 <h3 class="mb-0" style="font-size: 15px; font-weight: 600; color: #0f172a;">
                     Cardápio para <?php echo $diaSelecionado['dia_semana_nome']; ?>, <?php echo $diaSelecionado['data_formatada']; ?>
                 </h3>
-                <span class="badge <?php echo $statusCorte['pode_alterar'] ? 'bg-success' : 'bg-secondary'; ?>">
-                    <?php echo $statusCorte['rotulo']; ?>
+                <span class="status-indicator" style="font-size: 12px; color: #334155;">
+                    <span class="bullet" style="color: #64748b;">●</span> <?php echo htmlspecialchars($statusCorte['rotulo'], ENT_QUOTES, 'UTF-8'); ?>
                 </span>
             </div>
             <p class="text-secondary mb-0" style="font-size: 12px;">
@@ -229,7 +229,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
         <div class="card-enterprise p-4 mb-4 border-subtle bg-light">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div style="width: 42px; height: 42px; border-radius: 6px; background: #dcfce7; color: #15803d; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 42px; height: 42px; border-radius: 6px; background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
                             <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
                         </svg>
@@ -241,7 +241,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                         <div class="text-secondary" style="font-size: 13px;">
                             Pedido <code class="code-tag font-tabular"><?php echo $pedidoExistente['codigo_pedido']; ?></code> 
                             &bull; Total: <strong class="font-tabular text-dark">R$ <?php echo number_format($pedidoExistente['valor_total'], 2, ',', '.'); ?></strong>
-                            &bull; Status: <span class="badge bg-success text-uppercase" style="font-size: 10px;"><?php echo $pedidoExistente['status']; ?></span>
+                            &bull; Status: <code class="code-tag text-uppercase font-tabular" style="font-size: 11px;"><?php echo htmlspecialchars($pedidoExistente['status'], ENT_QUOTES, 'UTF-8'); ?></code>
                         </div>
                     </div>
                 </div>
@@ -343,7 +343,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                                                     </div>
 
                                                     <?php if ($esgotado): ?>
-                                                        <span class="badge bg-secondary text-uppercase" style="font-size: 10px;">Esgotado</span>
+                                                        <code class="code-tag text-uppercase font-tabular" style="font-size: 10px; color: #64748b;">Esgotado</code>
                                                     <?php else: ?>
                                                         <!-- Controles de Quantidade -->
                                                         <div class="d-flex align-items-center gap-1">
@@ -390,7 +390,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     <div class="card-enterprise p-3 p-md-4 sticky-top" style="top: 20px; z-index: 10;">
                         <h3 class="card-title pb-2 mb-3 border-bottom border-subtle d-flex align-items-center justify-content-between" style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #475569;">
                             <span>Comanda do Lanche</span>
-                            <span class="badge bg-primary text-white font-tabular" id="badge-itens-count" style="font-size: 11px;">0 itens</span>
+                            <span class="badge bg-light text-secondary border font-tabular" id="badge-itens-count" style="font-size: 11px;">0 itens</span>
                         </h3>
 
                         <div class="mb-3">
@@ -418,7 +418,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 16px; font-weight: 700; color: #0f172a;">
                                 <span>Total do Pedido:</span>
-                                <span class="font-tabular text-primary" id="comanda-total-display">R$ 0,00</span>
+                                <span class="font-tabular text-dark" style="color: #0f172a;" id="comanda-total-display">R$ 0,00</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center text-secondary" style="font-size: 11px;">
                                 <span>Saldo após o pedido:</span>
