@@ -238,8 +238,8 @@ require __DIR__ . '/../partials/stat_strip.php';
         </button>
     </div>
     <div class="card-enterprise-body p-3">
-        <textarea id="textareaWhatsApp" class="form-control font-monospace" rows="8" readonly 
-                  style="background-color: #f8fafc; font-size: 12px; resize: none;"><?php echo htmlspecialchars($textoWhatsApp, ENT_QUOTES, 'UTF-8'); ?></textarea>
+        <textarea id="textareaWhatsApp" class="form-control font-monospace" rows="14" readonly 
+                  style="background-color: #f8fafc; font-size: 13px; line-height: 1.6; height: 320px; min-height: 280px; padding: 12px 14px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); resize: vertical;"><?php echo htmlspecialchars($textoWhatsApp, ENT_QUOTES, 'UTF-8'); ?></textarea>
         <p class="text-microcopy text-muted mt-2 mb-0">
             Você pode copiar este texto estruturado e colá-lo diretamente na conversa com o fornecedor parceiro no WhatsApp Web ou aplicativo.
         </p>

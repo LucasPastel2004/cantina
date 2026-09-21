@@ -357,13 +357,23 @@ input[type="number"].text-end {
 }
 
 .form-control, .form-select {
-  height: 34px;
   font-size: 13px;
   color: var(--text-primary);
   background-color: #ffffff;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
   padding: 4px 10px;
+}
+
+input.form-control, .form-select {
+  height: 34px;
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 80px;
+  padding: 8px 10px;
+  line-height: 1.5;
 }
 
 .form-control:focus, .form-select:focus {
