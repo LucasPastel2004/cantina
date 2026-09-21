@@ -70,11 +70,6 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
                     <option value="vespertino" <?php echo ($turnoConsumo === 'vespertino') ? 'selected' : ''; ?>>Vespertino (Tarde)</option>
                 </select>
             </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm" style="height: 34px;">
-                    Carregar Itens
-                </button>
-            </div>
         </form>
     </div>
 </div>
