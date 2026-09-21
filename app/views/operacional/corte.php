@@ -36,8 +36,8 @@ $corteAberto = $statusCorte['pode_alterar'] ?? false;
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
             <h1 class="h5 font-weight-bold text-dark mb-0">Painel de Corte do Turno</h1>
-            <span class="badge <?php echo $corteAberto ? 'bg-warning text-dark' : 'bg-primary'; ?>" style="font-size: 11px; font-weight: 600;">
-                <?php echo $corteAberto ? '● Agendamento Aberto' : '● Corte Fechado'; ?>
+            <span class="badge bg-white text-dark border" style="font-size: 11px; font-weight: 600; border-color: #cbd5e1 !important;">
+                <span style="color: <?php echo $corteAberto ? '#d97706' : '#64748b'; ?>;">●</span> <?php echo $corteAberto ? 'Agendamento Aberto' : 'Corte Fechado'; ?>
             </span>
         </div>
         <p class="text-secondary text-microcopy mb-0">
@@ -45,13 +45,6 @@ $corteAberto = $statusCorte['pode_alterar'] ?? false;
         </p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <button type="button" class="btn btn-enterprise btn-primary" id="btnCopiarWhats" onclick="copiarPedidoWhatsApp()">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1" style="vertical-align: -2px;">
-                <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592z"/>
-            </svg>
-            <span id="labelCopiarWhats">Copiar para WhatsApp</span>
-        </button>
-
         <a href="<?php echo $baseUrl; ?>/operacional/corte/pdf?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
            class="btn btn-enterprise btn-secondary" 
            title="Download do Relatório Consolidado A4 Timbrado em PDF">
@@ -213,7 +206,7 @@ require __DIR__ . '/../partials/stat_strip.php';
                         <td colspan="4" class="text-end font-weight-bold text-dark" style="font-size: 13px;">
                             TOTAL DO CORTE:
                         </td>
-                        <td class="cell-right font-tabular font-weight-bold" style="font-size: 15px; color: #1d4ed8;">
+                        <td class="cell-right font-tabular font-weight-bold text-dark" style="font-size: 15px; color: #0f172a !important;">
                             <?php echo $totalPecas; ?> un
                         </td>
                         <td class="text-end font-weight-bold text-secondary text-microcopy">
@@ -233,8 +226,11 @@ require __DIR__ . '/../partials/stat_strip.php';
 <div class="card-enterprise mt-4">
     <div class="card-enterprise-header d-flex justify-content-between align-items-center">
         <span class="font-weight-bold text-dark">Mensagem Estruturada para Fornecedor (WhatsApp)</span>
-        <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="copiarPedidoWhatsApp()">
-            Copiar Texto
+        <button type="button" class="btn btn-enterprise btn-secondary btn-sm" id="btnCopiarWhatsCard" onclick="copiarPedidoWhatsApp()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" class="me-1" style="vertical-align: -1px;">
+                <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592z"/>
+            </svg>
+            <span id="labelCopiarWhatsCard">Copiar Texto</span>
         </button>
     </div>
     <div class="card-enterprise-body p-3">
@@ -250,8 +246,8 @@ require __DIR__ . '/../partials/stat_strip.php';
 <script>
 function copiarPedidoWhatsApp() {
     const textarea = document.getElementById('textareaWhatsApp');
-    const label = document.getElementById('labelCopiarWhats');
-    const btn = document.getElementById('btnCopiarWhats');
+    const label = document.getElementById('labelCopiarWhatsCard');
+    const btn = document.getElementById('btnCopiarWhatsCard');
 
     if (!textarea) return;
 
@@ -262,11 +258,11 @@ function copiarPedidoWhatsApp() {
     }
 
     function feedbackSucesso() {
-        if (label) label.textContent = '✓ Pedido Copiado!';
-        if (btn) btn.classList.replace('btn-primary', 'btn-success');
+        if (label) label.textContent = '✓ Texto Copiado!';
+        if (btn) btn.classList.add('border-success');
         setTimeout(() => {
-            if (label) label.textContent = 'Copiar para WhatsApp';
-            if (btn) btn.classList.replace('btn-success', 'btn-primary');
+            if (label) label.textContent = 'Copiar Texto';
+            if (btn) btn.classList.remove('border-success');
         }, 3000);
     }
 

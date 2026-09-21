@@ -545,7 +545,7 @@ class Fase11Test
         $htmlCorte = ob_get_clean();
 
         $this->assert(str_contains($htmlCorte, 'Painel de Corte do Turno'), 'View operacional/corte renderizada com sucesso');
-        $this->assert(str_contains($htmlCorte, 'Copiar para WhatsApp'), 'Botão de WhatsApp presente no HTML');
+        $this->assert(str_contains($htmlCorte, 'Mensagem Estruturada para Fornecedor (WhatsApp)'), 'Card de WhatsApp presente no HTML');
         $this->assert(str_contains($htmlCorte, 'Exportar PDF'), 'Link de exportação PDF presente');
         $this->assert(str_contains($htmlCorte, 'Conferir Recebimento'), 'Botão para conferência de recebimento presente');
         $this->assert(str_contains($htmlCorte, 'Demandas de Produção por Salgado'), 'Data-grid de demandas exibido');
