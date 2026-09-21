@@ -190,10 +190,10 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
                             <td colspan="3" class="text-end font-weight-bold text-dark">
                                 TOTAIS CONSOLIDADOS:
                             </td>
-                            <td class="cell-right font-tabular font-weight-bold" style="font-size: 14px;">
+                            <td class="cell-right font-tabular font-weight-bold text-dark" style="font-size: 14px; color: #0f172a;">
                                 <?php echo $totalPecas; ?> un
                             </td>
-                            <td class="cell-center font-tabular font-weight-bold" id="totalEntregueCol" style="font-size: 15px; color: #1d4ed8;">
+                            <td class="cell-center font-tabular font-weight-bold text-dark" id="totalEntregueCol" style="font-size: 15px; color: #0f172a !important;">
                                 <?php echo $totalPecas; ?> un
                             </td>
                             <td class="cell-right font-tabular font-weight-bold" id="totalExcedenteCol" style="font-size: 13px; color: #166534;">
