@@ -136,7 +136,21 @@ $router->post('/portal/recarga/simular/{txid}', [\App\Controllers\CarteiraContro
 $router->get('/admin', [\App\Controllers\AdminController::class, 'index'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
-$router->get('/operacional/corte', [\App\Controllers\AdminController::class, 'index'], [
+
+// 2.1. Corte do Turno e Gestão de Fornecedores (Fase 11)
+$router->get('/operacional/corte', [\App\Controllers\PedidosController::class, 'corte'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/corte/pdf', [\App\Controllers\PedidosController::class, 'cortePdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/corte/imprimir', [\App\Controllers\PedidosController::class, 'corteImprimir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/recebimento', [\App\Controllers\PedidosController::class, 'recebimento'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/recebimento/confirmar', [\App\Controllers\PedidosController::class, 'recebimentoConfirmar'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 

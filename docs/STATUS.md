@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 10 — Agendamento Semanal de Lanches e Regras Rígidas de Corte
-* **Status da Fase 10:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 11 — Operação de Encomendas e Gestão de Fornecedores
-* **Última Atualização:** 2026-09-18 12:05:00 (Fase 10 finalizada, testada e validada)
+* **Fase Atual:** Fase 11 — Operação de Encomendas e Gestão de Fornecedores
+* **Status da Fase 11:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 12 — Impressão e Gestão de Tickets Térmicos (Bobina 80mm)
+* **Última Atualização:** 2026-09-21 08:45:00 (Fase 11 finalizada, testada e validada)
 
 ---
 
@@ -377,10 +377,28 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 11 — Operação de Encomendas e Gestão de Fornecedores
-* [ ] Painel de corte do turno com consolidação matemática de salgados.
-* [ ] Ação "Copiar para WhatsApp" e relatório em PDF para fornecedores.
-* [ ] Tela de conferência física e confirmação de recebimento com liquidação simultânea.
+### [x] Fase 11 — Operação de Encomendas e Gestão de Fornecedores
+* [x] Painel de corte do turno com consolidação matemática de salgados (`app/views/operacional/corte.php` e `PedidosController::corte`).
+* [x] Formatação de mensagem estruturada e botão "Copiar para WhatsApp" com feedback tátil de área de transferência.
+* [x] Geração de relatório formal A4 timbrado em PDF 1.4 binário puro (`app/services/PdfService.php`) e espelho HTML para impressão `@media print` via navegador.
+* [x] Travas rígidas de horário de corte por turno (08:00 matutino e 13:30 vespertino) com status em tempo real e minutos restantes.
+* [x] Métodos de negócio especializados em `app/models/Pedido.php`:
+  * `consolidarCorte(string $dataConsumo, string $turnoConsumo, ...)`: agregação de pedidos, alunos beneficiados e demanda por produto.
+  * `obterTextoWhatsAppCorte(...)`: texto institucional formatado com itens e total de peças.
+  * `verificarStatusRecebimento(...)`: checagem de remessa conferida via movimentações de estoque.
+  * `confirmarRecebimentoFornecedor(...)`: conferência física atômica, prevenção contra recebimento duplicado, gravação de `entrada_fornecedor`, liquidação de demanda com `saida_encomenda`, atualização automática de excedentes/sobras no estoque para venda avulsa no PDV e trilha em `logs_auditoria`.
+* [x] Tela de conferência física de recebimento (`app/views/operacional/recebimento.php` e `PedidosController::recebimento` / `recebimentoConfirmar`):
+  * Cálculo dinâmico de diferenças e sobras via Vanilla JS;
+  * Botão de atalho para preenchimento rápido com os quantitativos encomendados;
+  * Bloqueio contra reenvio de remessas já conferidas.
+* [x] Registro e blindagem de rotas operacionais no `index.php` com RBAC `ROLE_OPERADOR` e `ROLE_ADMINISTRADOR`:
+  * `GET /operacional/corte`
+  * `GET /operacional/corte/pdf`
+  * `GET /operacional/corte/imprimir`
+  * `GET /operacional/recebimento`
+  * `POST /operacional/recebimento/confirmar`
+* [x] Criação da suíte automatizada `tests/fase11_test.php` com 72 asserções cobrindo todos os fluxos e regras da Fase 11 (100% de sucesso).
+* [x] Execução e homologação de 100% dos testes de regressão das fases anteriores (Fases 7, 8, 9 e 10).
 
 ---
 
@@ -425,7 +443,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 11 — Operação de Encomendas e Gestão de Fornecedores**, implementando o painel de corte do turno para consolidação automática e matemática da quantidade necessária de salgados diários, botão "Copiar para WhatsApp" formatado para pedidos de compras, relatório espelho de corte em PDF timbrado e fluxo de recebimento físico de mercadorias com confirmação de entrega e liquidação financeira.
+Iniciar a **Fase 12 — Impressão e Gestão de Tickets Térmicos (Bobina 80mm)**, implementando a emissão em lote de fichas diárias na bobina contínua de 80mm ordenada por Turno > Série > Turma > Aluno, com destaque mandatória para a tag de alérgenos (RN-16 e RN-17), QR Code de conferência e módulo de consulta e emissão de 2ª via com registro obrigatório de justificativa na auditoria institucional.
 
 
 

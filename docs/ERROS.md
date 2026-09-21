@@ -273,6 +273,24 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Criada suíte de testes de integração em `tests/pedido_editar_web_test.php` validando o ciclo completo de GET (renderização da tela de edição) e POST (gravação da alteração com compensação financeira).
 - Como evitar no futuro: Em roteadores MVC próprios, suportar flexibilidade de injeção de parâmetros (tanto array de parâmetros quanto argumentos nomeados tipados via Reflection). Em controllers, garantir resolução defensiva de parâmetros que possam vir encapsulados em arrays.
 
+---
+
+## 2026-09-21 - Incompatibilidade com sql_mode=only_full_group_by no MySQL 8.0 em verificarStatusRecebimento()
+
+- Sintoma: `SQLSTATE[42000]: Syntax error or access violation: 1055 Expression #1 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'cantina.em.id'` ao invocar `Pedido::verificarStatusRecebimento()`.
+- Causa: A consulta SQL de verificação de recebimento selecionava a coluna `em.id` sem função de agregação enquanto utilizava agrupamento por data, violando a diretiva padrão `sql_mode=only_full_group_by` do MySQL 8.0+.
+- Solução aplicada: Refatorada a consulta em `app/models/Pedido.php` para selecionar apenas as colunas agrupadas e métricas agregadas (`COUNT(*)`, `SUM(em.quantidade)`), ordenando por `em.created_at DESC` com `LIMIT 1` para recuperar o registro mais recente da remessa.
+- Como evitar no futuro: Em ambientes MySQL 8.0+, nunca incluir colunas não agregadas no `SELECT` quando utilizar `GROUP BY`. Em queries de busca de status mais recente, preferir `ORDER BY ... DESC LIMIT 1`.
+
+---
+
+## 2026-09-21 - filter_input(INPUT_GET) retornando null em testes automatizados / CLI
+
+- Sintoma: Filtros de data e turno na tela de corte em `app/controllers/PedidosController.php` recaiam no valor padrão (data de hoje e turno matutino) durante a execução de testes automatizados e simulações web, mesmo com `$_GET['data']` devidamente preenchido.
+- Causa: Em PHP, a função nativa `filter_input(INPUT_GET, ...)` lê diretamente dos buffers internos do SAPI do servidor web (Apache/FPM) e não da superglobal `$_GET`. Quando testes executados via CLI populam manualmente `$_GET`, `filter_input()` não enxerga essas alterações e retorna `null`.
+- Solução aplicada: Substituído o uso de `filter_input(INPUT_GET, ...)` por verificação e sanitização direta sobre a superglobal: `(isset($_GET['campo']) && is_string($_GET['campo'])) ? trim(strip_tags($_GET['campo'])) : $padrao`.
+- Como evitar no futuro: Em controllers de aplicações que precisam ser testáveis via CLI/PHPUnit, evitar `filter_input()` e utilizar sanitização defensiva sobre as superglobais (`$_GET`, `$_POST`) ou encapsular a requisição em um objeto Request injetável.
+
 
 
 

@@ -1010,4 +1010,346 @@ class Pedido extends Model
 
         return $pedido;
     }
+
+    /**
+     * Consolida a demanda de itens/salgados de um determinado turno e data
+     * Agrupa pedidos agendados ou editados para envio ao fornecedor
+     * 
+     * @param string $dataConsumo YYYY-MM-DD
+     * @param string $turnoConsumo 'matutino' ou 'vespertino'
+     * @param \DateTimeInterface|null $agora
+     * @return array
+     */
+    public static function consolidarCorte(
+        string $dataConsumo, 
+        string $turnoConsumo, 
+        ?\DateTimeInterface $agora = null
+    ): array {
+        $sql = "SELECT p.id AS produto_id, 
+                       p.codigo_interno, 
+                       p.descricao, 
+                       p.tipo AS tipo_produto, 
+                       p.preco_venda, 
+                       c.nome AS categoria_nome,
+                       SUM(ip.quantidade) AS quantidade_total,
+                       SUM(ip.subtotal) AS valor_total_estimado
+                FROM itens_pedido ip
+                INNER JOIN pedidos ped ON ped.id = ip.pedido_id
+                INNER JOIN produtos p ON p.id = ip.produto_id
+                LEFT JOIN categorias c ON c.id = p.categoria_id
+                WHERE ped.data_consumo = :data 
+                  AND ped.turno_consumo = :turno 
+                  AND ped.status IN ('agendado', 'editado')
+                  AND p.deleted_at IS NULL
+                GROUP BY p.id, p.codigo_interno, p.descricao, p.tipo, p.preco_venda, c.nome, c.ordem_exibicao
+                ORDER BY c.ordem_exibicao ASC, p.descricao ASC";
+
+        $itens = self::fetchAll($sql, [
+            'data'  => $dataConsumo,
+            'turno' => $turnoConsumo
+        ]);
+
+        $totalPecas = 0;
+        $totalSalgados = 0;
+        $totalValorEstimado = 0.0;
+
+        foreach ($itens as &$it) {
+            $qtd = (int)$it['quantidade_total'];
+            $totalPecas += $qtd;
+            $totalValorEstimado += (float)$it['valor_total_estimado'];
+            if ($it['tipo_produto'] === 'salgado_diario') {
+                $totalSalgados += $qtd;
+            }
+        }
+        unset($it);
+
+        // Contagem de pedidos e alunos envolvidos
+        $sqlTotais = "SELECT COUNT(DISTINCT ped.id) AS total_pedidos,
+                             COUNT(DISTINCT ped.aluno_id) AS total_alunos
+                      FROM pedidos ped
+                      WHERE ped.data_consumo = :data 
+                        AND ped.turno_consumo = :turno 
+                        AND ped.status IN ('agendado', 'editado')";
+        $totais = self::fetchOne($sqlTotais, [
+            'data'  => $dataConsumo,
+            'turno' => $turnoConsumo
+        ]) ?: ['total_pedidos' => 0, 'total_alunos' => 0];
+
+        $statusCorte = self::obterStatusCorte($dataConsumo, $turnoConsumo, $agora);
+        $statusRecebimento = self::verificarStatusRecebimento($dataConsumo, $turnoConsumo);
+
+        return [
+            'data_consumo'        => $dataConsumo,
+            'turno_consumo'       => $turnoConsumo,
+            'itens'               => $itens,
+            'total_pecas'         => $totalPecas,
+            'total_salgados'      => $totalSalgados,
+            'total_pedidos'       => (int)($totais['total_pedidos'] ?? 0),
+            'total_alunos'        => (int)($totais['total_alunos'] ?? 0),
+            'total_valor_estimado'=> round($totalValorEstimado, 2),
+            'status_corte'        => $statusCorte,
+            'status_recebimento'  => $statusRecebimento,
+        ];
+    }
+
+    /**
+     * Formata mensagem de texto estruturada para envio direto ao WhatsApp do fornecedor
+     */
+    public static function obterTextoWhatsAppCorte(
+        string $dataConsumo,
+        string $turnoConsumo,
+        array $itensConsolidados
+    ): string {
+        $dataFmt = date('d/m/Y', strtotime($dataConsumo));
+        $turno = ucfirst($turnoConsumo);
+        $totalPecas = 0;
+
+        $msg = "*COLÉGIO MONTEIRO LOBATO — CANTINA ESCOLAR*\n";
+        $msg .= "*PEDIDO DE SALGADOS — CORTE DO TURNO*\n\n";
+        $msg .= "📅 *Data de Consumo:* {$dataFmt}\n";
+        $msg .= "⏰ *Turno:* {$turno}\n\n";
+        $msg .= "*RELAÇÃO DE ITENS ENCOMENDADOS:*\n";
+
+        if (empty($itensConsolidados)) {
+            $msg .= "_(Nenhum pedido de salgado registrado para este corte)_\n";
+        } else {
+            foreach ($itensConsolidados as $item) {
+                $qtd = (int)($item['quantidade_total'] ?? 0);
+                $totalPecas += $qtd;
+                $codigo = !empty($item['codigo_interno']) ? " ({$item['codigo_interno']})" : '';
+                $msg .= "• *{$qtd}x* {$item['descricao']}{$codigo}\n";
+            }
+        }
+
+        $msg .= "\n*TOTAL GERAL: {$totalPecas} peças*\n\n";
+        $msg .= "Favor confirmar o recebimento deste pedido.\n";
+        $msg .= "_Gerado via Cantina Web em " . date('d/m/Y \à\s H:i:s') . "_";
+
+        return $msg;
+    }
+
+    /**
+     * Verifica se a entrega física do corte já foi confirmada e recebida
+     */
+    public static function verificarStatusRecebimento(string $dataConsumo, string $turnoConsumo): ?array
+    {
+        $sql = "SELECT em.created_at, em.operador_id, em.justificativa,
+                       u.nome AS operador_nome,
+                       COUNT(DISTINCT em.produto_id) AS total_produtos_recebidos,
+                       SUM(em.quantidade) AS total_quantidade_recebida
+                FROM estoque_movimentacoes em
+                LEFT JOIN usuarios u ON u.id = em.operador_id
+                WHERE em.tipo_movimentacao = 'entrada_fornecedor'
+                  AND em.justificativa LIKE :prefixo
+                GROUP BY em.created_at, em.operador_id, em.justificativa, u.nome
+                ORDER BY em.created_at DESC
+                LIMIT 1";
+
+        $prefixo = "Recebimento Fornecedor - {$dataConsumo} - {$turnoConsumo}%";
+        $reg = self::fetchOne($sql, ['prefixo' => $prefixo]);
+
+        if (!$reg) {
+            return null;
+        }
+
+        return [
+            'recebido'             => true,
+            'operador_nome'        => $reg['operador_nome'] ?? 'Operador',
+            'operador_id'          => (int)$reg['operador_id'],
+            'data_recebimento'     => $reg['created_at'],
+            'data_recebimento_fmt' => date('d/m/Y H:i', strtotime($reg['created_at'])),
+            'total_produtos'       => (int)$reg['total_produtos_recebidos'],
+            'total_quantidade'     => (int)$reg['total_quantidade_recebida'],
+            'justificativa'        => $reg['justificativa'],
+        ];
+    }
+
+    /**
+     * Registra atomicamente a conferência física e confirmação de recebimento da entrega do fornecedor
+     * 
+     * Efetua:
+     * 1. Entrada física em estoque_movimentacoes ('entrada_fornecedor')
+     * 2. Liquidação da demanda de tickets ('saida_encomenda')
+     * 3. Atualização de estoque_atual em produtos com eventuais sobras/excedentes
+     * 4. Registro na trilha de auditoria em logs_auditoria
+     * 
+     * @param string $dataConsumo YYYY-MM-DD
+     * @param string $turnoConsumo 'matutino' ou 'vespertino'
+     * @param int $operadorId ID do operador logado na tabela usuarios
+     * @param array $itensRecebidos [['produto_id' => int, 'qtd_esperada' => int, 'qtd_entregue' => int], ...]
+     * @param string|null $observacao
+     * @param string $ipOrigem
+     * @return array
+     * @throws \DomainException|\InvalidArgumentException|\PDOException
+     */
+    public static function confirmarRecebimentoFornecedor(
+        string $dataConsumo,
+        string $turnoConsumo,
+        int $operadorId,
+        array $itensRecebidos,
+        ?string $observacao = null,
+        string $ipOrigem = '127.0.0.1'
+    ): array {
+        if (empty($itensRecebidos)) {
+            throw new \InvalidArgumentException('Nenhum item informado para conferência de recebimento.');
+        }
+
+        // Verifica se já foi recebido anteriormente para evitar duplicidade
+        $jaRecebido = self::verificarStatusRecebimento($dataConsumo, $turnoConsumo);
+        if ($jaRecebido) {
+            throw new \DomainException(
+                "O recebimento da remessa do turno {$turnoConsumo} de " . 
+                date('d/m/Y', strtotime($dataConsumo)) . 
+                " já foi confirmado anteriormente por [{$jaRecebido['operador_nome']}]."
+            );
+        }
+
+        $pdo = self::getPdo();
+        $iniciouTransacao = false;
+        if (!$pdo->inTransaction()) {
+            $pdo->beginTransaction();
+            $iniciouTransacao = true;
+        }
+
+        try {
+            $totalEsperado = 0;
+            $totalEntregue = 0;
+            $totalExcedente = 0;
+            $itensProcessados = [];
+
+            $justificativaBaseEntrada = "Recebimento Fornecedor - {$dataConsumo} - {$turnoConsumo}";
+            $justificativaBaseSaida = "Liquidação Demanda Encomenda - {$dataConsumo} - {$turnoConsumo}";
+
+            if (!empty($observacao)) {
+                $justificativaBaseEntrada .= " - Obs: " . mb_substr($observacao, 0, 100, 'UTF-8');
+            }
+
+            foreach ($itensRecebidos as $item) {
+                $produtoId = (int)($item['produto_id'] ?? 0);
+                $qtdEsperada = max(0, (int)($item['qtd_esperada'] ?? 0));
+                $qtdEntregue = max(0, (int)($item['qtd_entregue'] ?? 0));
+
+                if ($produtoId <= 0) {
+                    continue;
+                }
+
+                // Bloqueio pessimista do produto
+                $stmtP = $pdo->prepare("SELECT id, codigo_interno, descricao, estoque_atual, tipo FROM produtos WHERE id = :id FOR UPDATE");
+                $stmtP->execute(['id' => $produtoId]);
+                $prod = $stmtP->fetch(\PDO::FETCH_ASSOC);
+
+                if (!$prod) {
+                    continue;
+                }
+
+                $totalEsperado += $qtdEsperada;
+                $totalEntregue += $qtdEntregue;
+                $excedente = $qtdEntregue - $qtdEsperada;
+                if ($excedente > 0) {
+                    $totalExcedente += $excedente;
+                }
+
+                // 1. Registra entrada da remessa física do fornecedor
+                if ($qtdEntregue > 0) {
+                    $stmtEntrada = $pdo->prepare("
+                        INSERT INTO estoque_movimentacoes (
+                            produto_id, tipo_movimentacao, quantidade, operador_id, justificativa, created_at
+                        ) VALUES (
+                            :prod_id, 'entrada_fornecedor', :qtd, :op_id, :just, NOW()
+                        )
+                    ");
+                    $stmtEntrada->execute([
+                        'prod_id' => $produtoId,
+                        'qtd'     => $qtdEntregue,
+                        'op_id'   => $operadorId,
+                        'just'    => $justificativaBaseEntrada
+                    ]);
+                }
+
+                // 2. Registra baixa/liquidação da demanda das encomendas do corte
+                if ($qtdEsperada > 0) {
+                    $stmtSaida = $pdo->prepare("
+                        INSERT INTO estoque_movimentacoes (
+                            produto_id, tipo_movimentacao, quantidade, operador_id, justificativa, created_at
+                        ) VALUES (
+                            :prod_id, 'saida_encomenda', :qtd, :op_id, :just, NOW()
+                        )
+                    ");
+                    $stmtSaida->execute([
+                        'prod_id' => $produtoId,
+                        'qtd'     => $qtdEsperada,
+                        'op_id'   => $operadorId,
+                        'just'    => $justificativaBaseSaida
+                    ]);
+                }
+
+                // 3. Atualiza o estoque físico para venda avulsa:
+                // Se o fornecedor entregou sobras/excedentes além da demanda,
+                // essas unidades extras ficam disponíveis imediatamente no estoque_atual do balcão!
+                if ($excedente != 0) {
+                    $stmtUpEstoque = $pdo->prepare("
+                        UPDATE produtos 
+                        SET estoque_atual = GREATEST(0, estoque_atual + :diff), updated_at = NOW() 
+                        WHERE id = :id
+                    ");
+                    $stmtUpEstoque->execute([
+                        'diff' => $excedente,
+                        'id'   => $produtoId
+                    ]);
+                }
+
+                $itensProcessados[] = [
+                    'produto_id'     => $produtoId,
+                    'codigo_interno' => $prod['codigo_interno'],
+                    'descricao'      => $prod['descricao'],
+                    'qtd_esperada'   => $qtdEsperada,
+                    'qtd_entregue'   => $qtdEntregue,
+                    'excedente'      => $excedente,
+                ];
+            }
+
+            // 4. Registra na trilha de auditoria (logs_auditoria)
+            $stmtAudit = $pdo->prepare("
+                INSERT INTO logs_auditoria (
+                    operador_id, acao, tabela_afetada, registro_id, justificativa, ip_origem, created_at
+                ) VALUES (
+                    :op_id, 'recebimento_fornecedor', 'estoque_movimentacoes', 0, :just, :ip, NOW()
+                )
+            ");
+            $justAudit = sprintf(
+                "Recebimento da remessa %s (%s). Esperado: %d un, Entregue: %d un, Excedente: %d un.%s",
+                $dataConsumo,
+                $turnoConsumo,
+                $totalEsperado,
+                $totalEntregue,
+                $totalExcedente,
+                $observacao ? " Obs: {$observacao}" : ""
+            );
+            $stmtAudit->execute([
+                'op_id' => $operadorId,
+                'just'  => mb_substr($justAudit, 0, 255, 'UTF-8'),
+                'ip'    => $ipOrigem
+            ]);
+
+            if ($iniciouTransacao) {
+                $pdo->commit();
+            }
+
+            return [
+                'sucesso'          => true,
+                'data_consumo'     => $dataConsumo,
+                'turno_consumo'    => $turnoConsumo,
+                'total_esperado'   => $totalEsperado,
+                'total_entregue'   => $totalEntregue,
+                'total_excedente'  => $totalExcedente,
+                'itens'            => $itensProcessados,
+                'mensagem'         => "Recebimento confirmado com sucesso! Foram registradas {$totalEntregue} unidades entregues."
+            ];
+        } catch (\Throwable $e) {
+            if ($iniciouTransacao && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
 }
