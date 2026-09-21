@@ -627,7 +627,8 @@ textarea.form-control {
   justify-content: center;
   gap: 4px;
   height: 28px;
-  padding: 0 9px;
+  min-width: 28px;
+  padding: 0 6px;
   font-size: 11px;
   font-weight: 500;
   color: #475569;
@@ -642,6 +643,13 @@ textarea.form-control {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
 }
 
+.btn-action.btn-action-icon,
+.btn-action:has(> svg:only-child) {
+  width: 28px;
+  min-width: 28px;
+  padding: 0;
+}
+
 .btn-action:hover {
   background-color: #f1f5f9;
   border-color: #cbd5e1;
@@ -652,11 +660,13 @@ textarea.form-control {
   transform: translateY(1px) scale(0.98);
 }
 
-.btn-action-danger {
+.btn-action-danger,
+.btn-action-delete {
   color: #64748b;
 }
 
-.btn-action-danger:hover {
+.btn-action-danger:hover,
+.btn-action-delete:hover {
   background-color: #fef2f2;
   border-color: #fca5a5;
   color: #dc2626;
