@@ -234,6 +234,14 @@ class Session
     }
 
     /**
+     * Alias para setFlash (retrocompatibilidade e conveniência)
+     */
+    public static function flash(string $type, string $message): void
+    {
+        self::setFlash($type, $message);
+    }
+
+    /**
      * Recupera mensagens flash de um determinado tipo e as limpa
      */
     public static function getFlash(string $type): array

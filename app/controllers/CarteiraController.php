@@ -289,7 +289,7 @@ class CarteiraController extends Controller
         if ($this->isJsonRequest()) {
             $this->json(['sucesso' => false, 'erro' => $mensagem], $statusCode);
         } else {
-            Session::flash('error', $mensagem);
+            Session::setFlash('danger', $mensagem);
             $this->redirect('/portal/carteira');
         }
     }

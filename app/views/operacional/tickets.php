@@ -403,7 +403,7 @@ $turnoNome = ($turnoConsumo === 'matutino') ? 'Matutino' : 'Vespertino';
 
                 <div class="modal-body p-3">
                     <div class="alert alert-warning py-2 px-3 mb-3" style="font-size: 11px; line-height: 1.4;">
-                        <strong>Aviso de Auditoria:</strong> A emissão de 2ª via substitui o cupom anterior, marca a etiqueta como <code>[2ª VIA]</code> e grava um registro compulsório e indelével na trilha de auditoria (<code>logs_auditoria</code>) com o identificador do operador e IP de origem.
+                        <strong>Aviso de Auditoria:</strong> A emissão de 2ª via substitui o cupom anterior, carimba a nova etiqueta impressa com o destaque <code>[2ª VIA]</code> e grava um <strong>registro permanente e obrigatório (indelével — que não pode ser apagado)</strong> no histórico de auditoria do sistema, identificando seu usuário e endereço IP. Use apenas em caso de perda ou dano físico comprovado.
                     </div>
 
                     <div class="p-2 mb-3 bg-light border rounded" style="font-size: 12px;">

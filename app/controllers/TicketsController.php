@@ -105,7 +105,7 @@ class TicketsController extends Controller
         $tickets = Ticket::listarPorTurnoEData($dataConsumo, $turnoConsumo);
 
         if (empty($tickets)) {
-            Session::flash('warning', 'Nenhum ticket encontrado para impressão no turno selecionado.');
+            Session::setFlash('warning', 'Nenhum ticket encontrado para impressão no turno selecionado.');
             $this->redirect('/operacional/tickets?data=' . urlencode($dataConsumo) . '&turno=' . urlencode($turnoConsumo));
             return;
         }
@@ -141,7 +141,7 @@ class TicketsController extends Controller
         $tickets = Ticket::listarPorTurnoEData($dataConsumo, $turnoConsumo);
 
         if (empty($tickets)) {
-            Session::flash('warning', 'Nenhum ticket encontrado para geração de PDF no turno selecionado.');
+            Session::setFlash('warning', 'Nenhum ticket encontrado para geração de PDF no turno selecionado.');
             $this->redirect('/operacional/tickets?data=' . urlencode($dataConsumo) . '&turno=' . urlencode($turnoConsumo));
             return;
         }
@@ -178,7 +178,7 @@ class TicketsController extends Controller
         $tickets = Ticket::listarPorTurnoEData($dataConsumo, $turnoConsumo, $turmaId > 0 ? $turmaId : null);
 
         if (empty($tickets)) {
-            Session::flash('warning', 'Nenhum ticket encontrado para a turma selecionada.');
+            Session::setFlash('warning', 'Nenhum ticket encontrado para a turma selecionada.');
             $this->redirect('/operacional/tickets?data=' . urlencode($dataConsumo) . '&turno=' . urlencode($turnoConsumo));
             return;
         }
@@ -216,7 +216,7 @@ class TicketsController extends Controller
         $tickets = Ticket::listarPorTurnoEData($dataConsumo, $turnoConsumo, $turmaId > 0 ? $turmaId : null);
 
         if (empty($tickets)) {
-            Session::flash('warning', 'Nenhum ticket encontrado para a turma selecionada.');
+            Session::setFlash('warning', 'Nenhum ticket encontrado para a turma selecionada.');
             $this->redirect('/operacional/tickets?data=' . urlencode($dataConsumo) . '&turno=' . urlencode($turnoConsumo));
             return;
         }
@@ -247,7 +247,7 @@ class TicketsController extends Controller
     {
         $csrf = $_POST['_token'] ?? $_POST['csrf_token'] ?? '';
         if (!Session::validateCsrfToken($csrf)) {
-            Session::flash('danger', 'Token de segurança CSRF inválido ou expirado. Tente novamente.');
+            Session::setFlash('danger', 'Token de segurança CSRF inválido ou expirado. Tente novamente.');
             $this->redirect('/operacional/tickets');
             return;
         }
@@ -256,13 +256,13 @@ class TicketsController extends Controller
         $justificativa = trim($_POST['justificativa'] ?? '');
 
         if ($ticketId <= 0) {
-            Session::flash('danger', 'Ticket não informado para emissão de 2ª via.');
+            Session::setFlash('danger', 'Ticket não informado para emissão de 2ª via.');
             $this->redirect('/operacional/tickets');
             return;
         }
 
         if (mb_strlen($justificativa) < 5) {
-            Session::flash('danger', 'A justificativa para reemissão de 2ª via é obrigatória e deve conter ao menos 5 caracteres.');
+            Session::setFlash('danger', 'A justificativa para reemissão de 2ª via é obrigatória e deve conter ao menos 5 caracteres.');
             $this->redirect('/operacional/tickets');
             return;
         }
@@ -273,10 +273,10 @@ class TicketsController extends Controller
 
         try {
             $ticketAtualizado = Ticket::reimprimirSegundaVia($ticketId, $operadorId, $justificativa, $ip);
-            Session::flash('success', sprintf('2ª Via emitida com sucesso (Via %d) para o aluno %s!', $ticketAtualizado['numero_via'], $ticketAtualizado['aluno_nome']));
+            Session::setFlash('success', sprintf('2ª Via emitida com sucesso (Via %d) para o aluno %s!', $ticketAtualizado['numero_via'], $ticketAtualizado['aluno_nome']));
             $this->redirect('/operacional/tickets/imprimir/' . $ticketId);
         } catch (\Throwable $e) {
-            Session::flash('danger', 'Falha ao emitir 2ª via: ' . $e->getMessage());
+            Session::setFlash('danger', 'Falha ao emitir 2ª via: ' . $e->getMessage());
             $this->redirect('/operacional/tickets');
         }
     }
@@ -290,7 +290,7 @@ class TicketsController extends Controller
         $ticket = Ticket::buscarPorId($ticketId);
 
         if (!$ticket) {
-            Session::flash('danger', 'Ticket não localizado.');
+            Session::setFlash('danger', 'Ticket não localizado.');
             $this->redirect('/operacional/tickets');
             return;
         }
@@ -317,7 +317,7 @@ class TicketsController extends Controller
         $ticket = Ticket::buscarPorId($ticketId);
 
         if (!$ticket) {
-            Session::flash('danger', 'Ticket não localizado.');
+            Session::setFlash('danger', 'Ticket não localizado.');
             $this->redirect('/operacional/tickets');
             return;
         }

@@ -312,10 +312,21 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Nos modelos `Ticket.php` e `Auditoria.php`, a propriedade `$table` havia sido tipada incorretamente como `protected static string $table`, conflitando com a assinatura não-estática `protected string $table` declarada na classe base abstrata `App\Core\Model`.
 - Solução aplicada:
   1. Registradas e protegidas por RBAC todas as 8 rotas operacionais do módulo de tickets em `index.php` (`/operacional/tickets`, `/operacional/tickets/lote`, `/operacional/tickets/lote/pdf`, `/operacional/tickets/turma/{id}`, `/operacional/tickets/turma/{id}/pdf`, `/operacional/tickets/segunda-via`, `/operacional/tickets/imprimir/{id}`, `/operacional/tickets/imprimir/{id}/pdf`), vinculadas ao `TicketsController`.
-  2. Corrigida a assinatura da propriedade `$table` em `Ticket.php` e `Auditoria.php` para `protected string $table`, em total conformidade com a herança de `App\Core\Model`.
-  3. Implementados o `TicketsController`, os métodos de geração de PDF e HTML de 80mm em `PdfService.php` e as views operacionais `tickets.php`, `tickets_lote.php` e `ticket_individual.php`.
-  4. Homologação com 100% de aprovação na suíte de testes automatizados `tests/fase12_test.php` (62/62 asserções) e simulações web em `tests/tickets_web_test.php`.
-- Como evitar no futuro: Sempre assegurar que todos os controllers, rotas e views de uma nova fase sejam registrados e validados de ponta a ponta antes de disponibilizar o link de navegação na interface. Respeitar rigorosamente a visibilidade e natureza (estática vs de instância) das propriedades herdadas da classe abstrata `Model`.
+---
+
+## 2026-09-22 - Erro fatal 500 (Incidente Operacional) ao emitir 2ª via de ticket térmico por método inexistente Session::flash()
+
+- Sintoma: Ao submeter o formulário de reemissão de 2ª via no modal da tela `/operacional/tickets` (POST `/operacional/tickets/segunda-via`), o sistema retornava a tela corporativa de erro `500 — Incidente Operacional` com identificador de incidente (ex.: `148e201e-1cd8-0656`), e o log registrava: `[CRITICAL] Call to undefined method App\Core\Session::flash() no arquivo app/Controllers/TicketsController.php linha 279`.
+- Causa: Dupla ocorrência:
+  1. A classe `App\Core\Session` implementava o método com o nome `setFlash(string $type, string $message)` e não possuía o alias `flash()`. Em `TicketsController.php` (e em uma linha residual de `CarteiraController.php`), o código chamava `Session::flash()`.
+  2. A persistência no banco de dados da 2ª via (incremento do campo `numero_via` para 2 e gravação do registro em `logs_auditoria`) havia ocorrido com sucesso absoluto. Porém, imediatamente após o commit, ao tentar registrar a mensagem de sucesso para a próxima tela com `Session::flash()`, o PHP disparava um `Error: Call to undefined method`. O bloco `catch (\Throwable $e)` capturava esse erro e tentava registrar a mensagem de erro novamente com `Session::flash()`, disparando um segundo erro fatal não capturado que acionava a tela 500 do `ErrorHandler`.
+- Solução aplicada:
+  1. Em `app/Core/Session.php`, criado o método estático `public static function flash(string $type, string $message): void` como um alias transparente para `self::setFlash($type, $message)`, garantindo compatibilidade total e prevenção contra chamadas com essa nomenclatura.
+  2. Em `app/controllers/TicketsController.php` e `app/controllers/CarteiraController.php`, padronizadas todas as chamadas para `Session::setFlash()`.
+  3. No modal de reemissão de 2ª via em `app/views/operacional/tickets.php`, o texto de aviso de auditoria foi aprimorado para explicar em linguagem amigável que o registro é permanente e não pode ser apagado (esclarecendo o significado do termo "indelével").
+  4. Criado teste de integração em `tests/teste_segunda_via_post.php` validando o fluxo ponta a ponta (POST, transação, auditoria, sessão flash e redirecionamento para impressão).
+- Como evitar no futuro: Em classes utilitárias de infraestrutura como `Session`, manter métodos de conveniência/aliases documentados para padrões comuns (ex.: `flash()` e `setFlash()`). Ao refatorar ou adicionar novos controllers, verificar rigorosamente a nomenclatura dos métodos da camada Core.
+
 
 
 

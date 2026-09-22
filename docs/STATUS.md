@@ -413,8 +413,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] Emissão de 2ª via com trava de justificativa obrigatória (mínimo 5 caracteres), incremento do `numero_via`, marcação indelével `[2ª VIA]` e registro compulsório em `logs_auditoria`.
 * [x] Criação do `app/controllers/TicketsController.php` e registro das 8 rotas operacionais protegidas por RBAC (`/operacional/tickets*`) em `index.php`.
 * [x] Telas operacionais construídas seguindo o Design System corporativo Anti-Slop (`app/views/operacional/tickets.php`, `tickets_lote.php` e `ticket_individual.php`).
-* [x] Criação e execução com 100% de aprovação da suíte de testes `tests/fase12_test.php` (62/62 asserções aprovadas).
-* [x] Execução e homologação de 100% dos testes de regressão das fases anteriores (Fases 7, 8, 9, 10 e 11).
+* [x] Correção de chamada de método flash na sessão: adicionado alias `Session::flash()` em `app/core/Session.php` e padronizado `Session::setFlash()` no `TicketsController` e `CarteiraController`.
+* [x] Aprimoramento da redação do modal de 2ª via tornando o termo "indelével" compreensível e autoexplicativo ("registro permanente e obrigatório, que não pode ser apagado").
+* [x] Criação e execução com 100% de aprovação da suíte de testes `tests/fase12_test.php` expandida para 65 asserções (65/65 aprovadas).
+* [x] Execução e homologação de 100% dos testes de regressão das fases anteriores (Fases 7, 8, 9, 10, 11 e 12).
 
 ---
 

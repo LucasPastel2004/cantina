@@ -47,6 +47,7 @@ require_once __DIR__ . '/../app/controllers/TicketsController.php';
 use App\Core\Model;
 use App\Core\RBAC;
 use App\Core\Auth;
+use App\Core\Session;
 use App\Models\Categoria;
 use App\Models\Produto;
 use App\Models\Responsavel;
@@ -130,6 +131,12 @@ class Fase12Test
     private function setupFixtures(): void
     {
         echo "--> Preparando fixtures isoladas para a Fase 12...\n";
+
+        // Limpeza defensiva prévia caso execução anterior tenha sido interrompida
+        $this->pdo->exec("DELETE FROM logs_auditoria WHERE operador_id IN (SELECT id FROM usuarios WHERE usuario = 'operador-f12')");
+        $this->pdo->exec("DELETE FROM usuarios WHERE usuario = 'operador-f12'");
+        $this->pdo->exec("DELETE FROM responsaveis WHERE cpf = '12345678999'");
+        $this->pdo->exec("DELETE FROM turmas WHERE nome_turma LIKE '%Teste F12%'");
 
         // 1. Cria 2 turmas com ordem de impressão definida
         // Turma B tem ordem_impressao = 1 (deve sair primeiro)
@@ -314,7 +321,13 @@ class Fase12Test
 
         if (!empty($this->ticketsCriados)) {
             $ids = implode(',', $this->ticketsCriados);
+            $this->pdo->exec("DELETE FROM logs_auditoria WHERE tabela_afetada = 'tickets' AND registro_id IN ({$ids})");
             $this->pdo->exec("DELETE FROM tickets WHERE id IN ({$ids})");
+        }
+
+        if (!empty($this->usuariosCriados)) {
+            $ids = implode(',', $this->usuariosCriados);
+            $this->pdo->exec("DELETE FROM logs_auditoria WHERE operador_id IN ({$ids})");
         }
 
         if (!empty($this->pedidosCriados)) {
@@ -587,6 +600,39 @@ class Fase12Test
             'bloqueado_med' => 0
         ]);
         $this->assert(RBAC::can('impressao_lote_tickets') === false, "Perfil 'responsavel' é terminantemente bloqueado");
+        Auth::logout();
+
+        // Testa método de conveniência Session::flash e Session::setFlash
+        Session::flash('info', 'Mensagem teste via alias flash()');
+        $flashRec = Session::getFlash('info');
+        $this->assert(in_array('Mensagem teste via alias flash()', $flashRec, true), "Session::flash() funciona como alias transparente de setFlash()");
+
+        // Simula POST em segundaVia() no controller sem disparar crash 500
+        $controllerMock = new class extends TicketsController {
+            public string $redirectDest = '';
+            public function redirect(string $path, int $statusCode = 302): void {
+                $this->redirectDest = $path;
+            }
+        };
+
+        Auth::loginUsuario([
+            'id'      => $this->usuariosCriados[0],
+            'usuario' => 'operador-teste',
+            'nome'    => 'Operador Teste',
+            'email'   => 'operador@teste.com',
+            'perfil'  => RBAC::ROLE_OPERADOR
+        ]);
+
+        $_POST['_token'] = Session::generateCsrfToken();
+        $_POST['ticket_id'] = $this->ticketsCriados[0];
+        $_POST['justificativa'] = 'Justificativa de teste no controller';
+
+        $controllerMock->segundaVia();
+        $this->assert(str_starts_with($controllerMock->redirectDest, '/operacional/tickets/imprimir/'), "Action segundaVia redireciona para tela de impressão do ticket");
+        $sucesso = Session::getFlash('success');
+        $this->assert(!empty($sucesso), "Action segundaVia registra flash message de sucesso sem erros fatais");
+
+        unset($_POST['_token'], $_POST['ticket_id'], $_POST['justificativa']);
         Auth::logout();
     }
 }
