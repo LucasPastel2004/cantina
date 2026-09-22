@@ -33,18 +33,28 @@ class CaixaController extends Controller
         $totais = $sessaoAberta ? SessaoCaixa::obterTotaisEsperados($sessaoAberta) : null;
         $historico = SessaoCaixa::listarHistorico(15);
 
+        $outroTurno = ($turno === SessaoCaixa::TURNO_MATUTINO) ? SessaoCaixa::TURNO_VESPERTINO : SessaoCaixa::TURNO_MATUTINO;
+        $sessaoOutroTurno = SessaoCaixa::obterSessaoAberta($outroTurno);
+        $horarioLimiteTurno = ($turno === SessaoCaixa::TURNO_MATUTINO) ? '11:00' : '16:00';
+        $horarioAtual = date('H:i');
+        $avisoAtrasoFechamento = ($sessaoAberta && $horarioAtual > $horarioLimiteTurno);
+
         $this->render('operacional/caixa', [
-            'title'        => 'Gestão de Caixa e Prestação de Contas — Cantina Web',
-            'pageTitle'    => 'Gestão de Caixa e Prestação de Contas',
-            'pageHeading'  => 'Gestão de Caixa e Prestação de Contas',
-            'activeMenu'   => 'caixa',
-            'turnoAtual'   => $turno,
-            'turnoAtivo'   => ucfirst($turno),
-            'statusCaixa'  => $sessaoAberta ? 'Aberto' : 'Fechado',
-            'sessaoAberta' => $sessaoAberta,
-            'ultimaSessao' => $ultimaSessao,
-            'totais'       => $totais,
-            'historico'    => $historico
+            'title'                 => 'Gestão de Caixa e Prestação de Contas — Cantina Web',
+            'pageTitle'             => 'Gestão de Caixa e Prestação de Contas',
+            'pageHeading'           => 'Gestão de Caixa e Prestação de Contas',
+            'activeMenu'            => 'caixa',
+            'turnoAtual'            => $turno,
+            'turnoAtivo'            => ucfirst($turno),
+            'statusCaixa'           => $sessaoAberta ? 'Aberto' : 'Fechado',
+            'sessaoAberta'          => $sessaoAberta,
+            'ultimaSessao'          => $ultimaSessao,
+            'totais'                => $totais,
+            'historico'             => $historico,
+            'sessaoOutroTurno'      => $sessaoOutroTurno,
+            'outroTurnoNome'        => ucfirst($outroTurno),
+            'avisoAtrasoFechamento' => $avisoAtrasoFechamento,
+            'horarioLimiteTurno'    => $horarioLimiteTurno
         ], 'admin');
     }
 

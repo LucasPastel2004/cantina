@@ -23,19 +23,30 @@ $recargas = (float)($totais['total_dinheiro_recargas'] ?? 0.0);
 $pix = (float)($totais['total_pix_balcao'] ?? 0.0);
 $esperadoGaveta = (float)($totais['total_esperado_gaveta'] ?? 0.0);
 $totalFaturado = (float)($totais['total_geral_faturado'] ?? 0.0);
+
+$sessaoOutroTurno = $sessaoOutroTurno ?? null;
+$outroTurnoNome = $outroTurnoNome ?? '';
+$avisoAtrasoFechamento = $avisoAtrasoFechamento ?? false;
+$horarioLimiteTurno = $horarioLimiteTurno ?? '11:00';
+
+$statusTurnoTexto = 'Aguardando Abertura';
+$statusTurnoCor = '#64748b';
+if ($caixaAberto) {
+    $statusTurnoTexto = 'Aberto (#' . $sessaoAberta['id'] . ')';
+    $statusTurnoCor = '#16a34a';
+} elseif ($ultimaSessao !== null && ($ultimaSessao['status'] ?? '') === 'fechado') {
+    $statusTurnoTexto = 'Encerrado / Fechado (#' . $ultimaSessao['id'] . ')';
+    $statusTurnoCor = '#0284c7';
+}
 ?>
 
 <!-- Cabeçalho da Página e Alternador de Turno -->
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
             <h1 class="h5 font-weight-bold text-dark mb-0">Gestão de Caixa e Prestação de Contas</h1>
             <span class="badge bg-white text-dark border" style="font-size: 11px; font-weight: 600; border-color: #cbd5e1 !important;">
-                <?php if ($caixaAberto): ?>
-                    <span style="color: #16a34a;">●</span> Caixa Aberto (Turno <?php echo ucfirst($turnoAtual); ?>)
-                <?php else: ?>
-                    <span style="color: #64748b;">●</span> Caixa Fechado (Turno <?php echo ucfirst($turnoAtual); ?>)
-                <?php endif; ?>
+                <span style="color: <?php echo $statusTurnoCor; ?>;">●</span> <?php echo $statusTurnoTexto; ?> — Turno <?php echo ucfirst($turnoAtual); ?>
             </span>
         </div>
         <p class="text-secondary text-microcopy mb-0">
@@ -61,6 +72,35 @@ $totalFaturado = (float)($totais['total_geral_faturado'] ?? 0.0);
     </div>
 </div>
 
+<!-- Alerta de Horário Limite de Encerramento Ultrapassado -->
+<?php if ($avisoAtrasoFechamento): ?>
+    <div class="alert alert-warning d-flex align-items-center gap-2 mb-3 py-2 px-3" style="font-size: 12px; background: #fef9c3; border: 1px solid #fde047; color: #854d0e; border-radius: 6px;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg>
+        <span>
+            <strong>Horário Previsto Ultrapassado:</strong> O expediente do turno <?php echo ucfirst($turnoAtual); ?> tem previsão de encerramento às <?php echo $horarioLimiteTurno; ?>. Por favor, realize a contagem física da gaveta e conclua a prestação de contas.
+        </span>
+    </div>
+<?php endif; ?>
+
+<!-- Alerta de Caixa Ativo no Outro Turno -->
+<?php if ($sessaoOutroTurno): ?>
+    <div class="alert alert-info d-flex justify-content-between align-items-center mb-3 py-2 px-3" style="font-size: 12px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 6px;">
+        <div class="d-flex align-items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+            </svg>
+            <span>
+                Existe uma sessão aberta no turno <strong><?php echo $outroTurnoNome; ?> (Sessão #<?php echo $sessaoOutroTurno['id']; ?>)</strong>.
+            </span>
+        </div>
+        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-secondary btn-sm" style="font-size: 11px;">
+            Ver Turno <?php echo $outroTurnoNome; ?> →
+        </a>
+    </div>
+<?php endif; ?>
+
 <!-- Stat-Strip Executiva da Sessão -->
 <div class="stat-strip mb-4">
     <div class="stat-strip-item">
@@ -68,8 +108,10 @@ $totalFaturado = (float)($totais['total_geral_faturado'] ?? 0.0);
         <span class="stat-strip-value">
             <?php if ($caixaAberto): ?>
                 <span class="status-indicator status-active"><span class="bullet">●</span> Aberto (#<?php echo $sessaoAberta['id']; ?>)</span>
+            <?php elseif ($ultimaSessao !== null && ($ultimaSessao['status'] ?? '') === 'fechado'): ?>
+                <span class="status-indicator" style="color: #0284c7;"><span class="bullet" style="color: #0284c7;">●</span> Encerrado</span>
             <?php else: ?>
-                <span class="status-indicator status-inactive"><span class="bullet">●</span> Fechado</span>
+                <span class="status-indicator status-inactive"><span class="bullet">●</span> Não Aberto</span>
             <?php endif; ?>
         </span>
     </div>
