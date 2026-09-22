@@ -348,4 +348,60 @@ class Produto extends Model
 
         return $produtos;
     }
+
+    /**
+     * Lista todos os produtos ativos para comercialização no PDV de balcão,
+     * incluindo estoque físico atual, status de pausa e alérgenos para cruzamento
+     * 
+     * @param int|null $categoriaId
+     * @param string|null $busca
+     * @return array
+     */
+    public static function listarParaPdv(?int $categoriaId = null, ?string $busca = ''): array
+    {
+        $sql = "SELECT p.*, 
+                       c.nome AS categoria_nome, 
+                       c.ordem_exibicao
+                FROM produtos p
+                INNER JOIN categorias c ON c.id = p.categoria_id AND c.ativo = 1 AND c.deleted_at IS NULL
+                WHERE p.deleted_at IS NULL";
+
+        $params = [];
+
+        if ($categoriaId !== null && $categoriaId > 0) {
+            $sql .= " AND p.categoria_id = :categoria_id";
+            $params['categoria_id'] = $categoriaId;
+        }
+
+        if (!empty($busca)) {
+            $termo = '%' . trim($busca) . '%';
+            $sql .= " AND (p.codigo_interno LIKE :busca_cod OR p.descricao LIKE :busca_desc)";
+            $params['busca_cod'] = $termo;
+            $params['busca_desc'] = $termo;
+        }
+
+        $sql .= " ORDER BY c.ordem_exibicao ASC, c.nome ASC, p.descricao ASC";
+
+        $produtos = self::fetchAll($sql, $params);
+
+        foreach ($produtos as &$prod) {
+            $prodId = (int)$prod['id'];
+            $estoqueAtual = (int)$prod['estoque_atual'];
+            $prod['esgotado'] = ($estoqueAtual <= 0) || ($prod['status_pausa'] === 'pausado');
+
+            // Alérgenos vinculados
+            $sqlAlerg = "SELECT ra.id, ra.nome 
+                         FROM produto_alergenos pa
+                         INNER JOIN restricoes_alimentares ra ON ra.id = pa.restricao_id
+                         WHERE pa.produto_id = :prod_id
+                         ORDER BY ra.nome ASC";
+            $prod['alergenos'] = self::fetchAll($sqlAlerg, ['prod_id' => $prodId]);
+            $prod['alergenos_ids'] = array_map(fn($a) => (int)$a['id'], $prod['alergenos']);
+            $prod['alergenos_nomes'] = implode(', ', array_map(fn($a) => $a['nome'], $prod['alergenos']));
+        }
+        unset($prod);
+
+        return $produtos;
+    }
 }
+

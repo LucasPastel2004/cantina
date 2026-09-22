@@ -533,4 +533,292 @@ class Ticket extends Model
             'total_turmas'        => (int)($dados['total_turmas'] ?? 0),
         ];
     }
+
+    /**
+     * Executa o estorno de balcão de um ticket físico com devolução imediata do valor à carteira familiar
+     * 
+     * @param int $ticketId
+     * @param int $operadorId
+     * @param string $motivo
+     * @param string $justificativa
+     * @param string $ipOrigem
+     * @return array Dados atualizados do ticket e da transação de estorno
+     * @throws \DomainException|\InvalidArgumentException|\PDOException
+     */
+    public static function estornarNoBalcao(
+        int $ticketId,
+        int $operadorId,
+        string $motivo,
+        string $justificativa,
+        string $ipOrigem = '127.0.0.1'
+    ): array {
+        $motivoLimpo = trim($motivo);
+        $justificativaLimpa = trim($justificativa);
+
+        if (empty($motivoLimpo)) {
+            throw new \InvalidArgumentException('O motivo do estorno no balcão deve ser informado.');
+        }
+
+        if (mb_strlen($justificativaLimpa) < 5) {
+            throw new \InvalidArgumentException('A justificativa do estorno deve conter no mínimo 5 caracteres.');
+        }
+
+        $ticket = self::buscarPorId($ticketId);
+        if (!$ticket) {
+            throw new \DomainException('Ticket não localizado no sistema.');
+        }
+
+        if ($ticket['ticket_status'] === self::STATUS_CANCELADO) {
+            throw new \DomainException('Este ticket já pertence a um pedido cancelado.');
+        }
+
+        if ($ticket['ticket_status'] === self::STATUS_ESTORNADO) {
+            throw new \DomainException('Este ticket já foi estornado anteriormente no balcão.');
+        }
+
+        $valorEstorno = round((float)$ticket['item_quantidade'] * (float)$ticket['item_preco_unitario'], 2);
+        if ($valorEstorno <= 0) {
+            $valorEstorno = (float)$ticket['produto_preco_venda'];
+        }
+
+        $pdo = self::getPdo();
+        $iniciouTransacao = false;
+        if (!$pdo->inTransaction()) {
+            $pdo->beginTransaction();
+            $iniciouTransacao = true;
+        }
+
+        try {
+            // 1. Atualiza status do ticket para estornado
+            $stmt = $pdo->prepare("
+                UPDATE tickets
+                SET status = 'estornado',
+                    estornado_em = NOW(),
+                    motivo_estorno = :motivo
+                WHERE id = :id
+            ");
+            $stmt->execute([
+                'motivo' => mb_substr($motivoLimpo . ': ' . $justificativaLimpa, 0, 255),
+                'id'     => $ticketId
+            ]);
+
+            // 2. Devolve crédito de 100% integral na carteira familiar
+            $descricaoTransacao = sprintf(
+                "Estorno de balcão - Ticket: %s - Produto: %s (Motivo: %s)",
+                $ticket['codigo_ticket'],
+                $ticket['produto_descricao'],
+                $motivoLimpo
+            );
+
+            $transacao = TransacaoCarteira::creditar(
+                (int)$ticket['responsavel_id'],
+                $valorEstorno,
+                TransacaoCarteira::TIPO_ESTORNO_BALCAO,
+                $descricaoTransacao,
+                $ticket['codigo_ticket'],
+                (int)$ticket['aluno_id'],
+                $operadorId
+            );
+
+            // 3. Registra na trilha compulsória de auditoria
+            Auditoria::registrar(
+                $operadorId,
+                Auditoria::ACAO_ESTORNO_BALCAO,
+                'tickets',
+                $ticketId,
+                sprintf(
+                    "Estorno no balcão do ticket %s (Aluno: %s, Valor: R$ %s). Motivo: %s. Justificativa: %s",
+                    $ticket['codigo_ticket'],
+                    $ticket['aluno_nome'],
+                    number_format($valorEstorno, 2, ',', '.'),
+                    $motivoLimpo,
+                    $justificativaLimpa
+                ),
+                $ipOrigem
+            );
+
+            if ($iniciouTransacao) {
+                $pdo->commit();
+            }
+
+            $ticketAtualizado = self::buscarPorId($ticketId);
+            $ticketAtualizado['transacao_estorno'] = $transacao;
+            return $ticketAtualizado;
+        } catch (\Throwable $e) {
+            if ($iniciouTransacao && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Lista tickets agendados para a data e turno que ainda não foram estornados nem cancelados,
+     * elegíveis para aproveitamento de sobras ao término do recreio
+     * 
+     * @param string $dataConsumo
+     * @param string $turno
+     * @return array
+     */
+    public static function listarNaoRetiradosTurno(string $dataConsumo, string $turno): array
+    {
+        return self::fetchAll("
+            SELECT 
+                t.id AS ticket_id,
+                t.codigo_ticket,
+                t.status AS ticket_status,
+                t.tag_alergenos,
+                p.id AS pedido_id,
+                p.codigo_pedido,
+                a.id AS aluno_id,
+                a.nome AS aluno_nome,
+                a.matricula AS aluno_matricula,
+                tur.nome_turma,
+                tur.serie,
+                prod.id AS produto_id,
+                prod.codigo_interno,
+                prod.descricao AS produto_descricao,
+                prod.tipo AS produto_tipo,
+                prod.preco_venda AS produto_preco_venda,
+                ip.quantidade AS item_quantidade,
+                cat.nome AS categoria_nome
+            FROM tickets t
+            INNER JOIN pedidos p ON p.id = t.pedido_id
+            INNER JOIN itens_pedido ip ON ip.id = t.item_pedido_id
+            INNER JOIN produtos prod ON prod.id = ip.produto_id
+            LEFT JOIN categorias cat ON cat.id = prod.categoria_id
+            INNER JOIN alunos a ON a.id = p.aluno_id
+            LEFT JOIN turmas tur ON tur.id = a.turma_id
+            WHERE p.data_consumo = :data
+              AND p.turno_consumo = :turno
+              AND p.status != 'cancelado'
+              AND t.status IN ('ativo', 'impresso')
+              AND NOT EXISTS (
+                  SELECT 1 FROM estoque_movimentacoes em
+                  WHERE em.tipo_movimentacao = 'aproveitamento_sobra'
+                    AND em.justificativa LIKE CONCAT('%', t.codigo_ticket, '%')
+              )
+            ORDER BY tur.ordem_impressao ASC, tur.nome_turma ASC, a.nome ASC
+        ", [
+            'data'  => $dataConsumo,
+            'turno' => $turno
+        ]);
+    }
+
+    /**
+     * Transfere as sobras de lanches de alunos ausentes para a venda avulsa no PDV
+     * 
+     * @param array $ticketIds
+     * @param int $operadorId
+     * @param string $ipOrigem
+     * @return array Resumo da transferência (total_itens, total_produtos, produtos_atualizados)
+     * @throws \DomainException|\InvalidArgumentException|\PDOException
+     */
+    public static function transferirSobrasNaoRetiradasParaBalcao(
+        array $ticketIds,
+        int $operadorId,
+        string $ipOrigem = '127.0.0.1'
+    ): array {
+        if (empty($ticketIds)) {
+            throw new \InvalidArgumentException('Selecione ao menos um ticket de sobra para transferir.');
+        }
+
+        $pdo = self::getPdo();
+        $iniciouTransacao = false;
+        if (!$pdo->inTransaction()) {
+            $pdo->beginTransaction();
+            $iniciouTransacao = true;
+        }
+
+        try {
+            $totalTransferido = 0;
+            $produtosAfetados = [];
+
+            $stmtBaixa = $pdo->prepare("
+                UPDATE produtos
+                SET estoque_atual = estoque_atual + :quantidade
+                WHERE id = :produto_id
+            ");
+
+            $stmtMov = $pdo->prepare("
+                INSERT INTO estoque_movimentacoes (
+                    produto_id, tipo_movimentacao, quantidade, motivo_perda,
+                    nota_fiscal_id, operador_id, justificativa, created_at
+                ) VALUES (
+                    :produto_id, 'aproveitamento_sobra', :quantidade, NULL,
+                    NULL, :operador_id, :justificativa, NOW()
+                )
+            ");
+
+            foreach ($ticketIds as $tId) {
+                $ticketId = (int)$tId;
+                if ($ticketId <= 0) continue;
+
+                $ticket = self::buscarPorId($ticketId);
+                if (!$ticket) continue;
+
+                if ($ticket['ticket_status'] === self::STATUS_CANCELADO || $ticket['ticket_status'] === self::STATUS_ESTORNADO) {
+                    continue;
+                }
+
+                // Verifica se já foi transferido para sobra
+                $stmtCheck = $pdo->prepare("
+                    SELECT 1 FROM estoque_movimentacoes
+                    WHERE tipo_movimentacao = 'aproveitamento_sobra'
+                      AND justificativa LIKE :busca
+                    LIMIT 1
+                ");
+                $stmtCheck->execute(['busca' => '%' . $ticket['codigo_ticket'] . '%']);
+                if ($stmtCheck->fetch()) {
+                    continue; // Já transferido
+                }
+
+                $qtd = (int)$ticket['item_quantidade'];
+                $prodId = (int)$ticket['produto_id'];
+
+                // Incrementa estoque físico
+                $stmtBaixa->execute([
+                    'quantidade' => $qtd,
+                    'produto_id' => $prodId
+                ]);
+
+                // Registra movimentação de estoque
+                $justificativa = "Aproveitamento de sobra do ticket {$ticket['codigo_ticket']} para venda avulsa no PDV";
+                $stmtMov->execute([
+                    'produto_id'    => $prodId,
+                    'quantidade'    => $qtd,
+                    'operador_id'   => $operadorId,
+                    'justificativa' => $justificativa
+                ]);
+
+                // Registra auditoria
+                Auditoria::registrar(
+                    $operadorId,
+                    Auditoria::ACAO_BAIXA_PERDA,
+                    'tickets',
+                    $ticketId,
+                    $justificativa,
+                    $ipOrigem
+                );
+
+                $totalTransferido += $qtd;
+                $produtosAfetados[$prodId] = ($produtosAfetados[$prodId] ?? 0) + $qtd;
+            }
+
+            if ($iniciouTransacao) {
+                $pdo->commit();
+            }
+
+            return [
+                'total_pecas_transferidas' => $totalTransferido,
+                'total_produtos_distintos' => count($produtosAfetados),
+                'detalhes'                 => $produtosAfetados
+            ];
+        } catch (\Throwable $e) {
+            if ($iniciouTransacao && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
 }

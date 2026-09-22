@@ -1161,4 +1161,237 @@ class PdfService
     {
         return self::gerarEspelhoTicketsLoteHtml([$ticket], $parametros);
     }
+
+    /**
+     * Gera o comprovante térmico de venda avulsa do PDV em formato binário PDF 1.4 (80mm)
+     * 
+     * @param array $venda Dados da venda retornados por VendaBalcao::buscarPorId
+     * @param array $parametros Parâmetros adicionais
+     * @return string
+     */
+    public static function gerarComprovanteVendaBalcaoPdf(array $venda, array $parametros = []): string
+    {
+        $vendaId = (int)($venda['id'] ?? 0);
+        $dataHora = date('d/m/Y H:i:s', strtotime($venda['created_at'] ?? 'now'));
+        $operador = $venda['operador_nome'] ?? 'Operador';
+        $tipoVenda = $venda['tipo_venda'] ?? 'avulso_aluno';
+        $formaPagamento = $venda['forma_pagamento'] ?? 'dinheiro';
+        $valorTotal = (float)($venda['valor_total'] ?? 0.0);
+        $valorRecebido = (float)($venda['valor_dinheiro_recebido'] ?? 0.0);
+        $troco = (float)($venda['troco_devolvido'] ?? 0.0);
+        $itens = $venda['itens'] ?? [];
+
+        $pageWidth = self::PAGE_WIDTH_THERMAL;
+        $left = 8.0;
+        $right = $pageWidth - 8.0;
+        $width = $right - $left;
+
+        $alturaItens = count($itens) * 16.0;
+        $pageHeight = max(240.0, 180.0 + $alturaItens);
+        $stream = "";
+        $y = $pageHeight - 20.0;
+
+        // Cabeçalho
+        $stream .= "BT\n/F2 10 Tf\n0.11 0.31 0.85 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("COLÉGIO MONTEIRO LOBATO"));
+        $y -= 14.0;
+        $stream .= "BT\n/F1 8 Tf\n0.30 0.35 0.45 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("Cantina Escolar • Comprovante de Venda"));
+        $y -= 12.0;
+        $stream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("Venda #{$vendaId} • {$dataHora} • Op: {$operador}"));
+        $y -= 10.0;
+
+        // Cliente
+        if (!empty($venda['colaborador_nome'])) {
+            $stream .= "BT\n/F2 8 Tf\n0.10 0.15 0.25 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Colaborador: %s) Tj\nET\n", self::escapeText($venda['colaborador_nome']));
+            $y -= 10.0;
+        } elseif (!empty($venda['aluno_nome'])) {
+            $stream .= "BT\n/F2 8 Tf\n0.10 0.15 0.25 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Aluno: %s) Tj\nET\n", self::escapeText($venda['aluno_nome']));
+            $y -= 10.0;
+        }
+
+        // Divisor
+        $stream .= sprintf("0.80 0.85 0.90 RG\n1 w\n%.2f %.2f m\n%.2f %.2f l\nS\n", $left, $y, $right, $y);
+        $y -= 12.0;
+
+        // Tabela de itens
+        foreach ($itens as $it) {
+            $qtd = (int)($it['quantidade'] ?? 1);
+            $desc = mb_substr($it['produto_descricao'] ?? '', 0, 20);
+            $sub = number_format((float)($it['subtotal'] ?? 0.0), 2, ',', '.');
+            $stream .= "BT\n/F1 8 Tf\n0.10 0.15 0.25 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%dx %s) Tj\nET\n", $qtd, self::escapeText($desc));
+            $stream .= "BT\n/F2 8 Tf\n0.10 0.15 0.25 rg\n" . sprintf("%.2f %.2f Td\n", $right - 50.0, $y) . sprintf("(R$ %s) Tj\nET\n", self::escapeText($sub));
+            $y -= 14.0;
+        }
+
+        // Divisor
+        $stream .= sprintf("0.80 0.85 0.90 RG\n1 w\n%.2f %.2f m\n%.2f %.2f l\nS\n", $left, $y, $right, $y);
+        $y -= 14.0;
+
+        // Total
+        $rotuloPagamento = match($formaPagamento) {
+            'dinheiro' => 'Dinheiro',
+            'pix_balcao' => 'Pix Balcão',
+            'desconto_folha' => 'Desconto em Folha',
+            default => ucfirst($formaPagamento)
+        };
+        $stream .= "BT\n/F2 10 Tf\n0.11 0.31 0.85 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(TOTAL: R$ %s) Tj\nET\n", self::escapeText(number_format($valorTotal, 2, ',', '.')));
+        $y -= 12.0;
+        $stream .= "BT\n/F1 8 Tf\n0.30 0.35 0.45 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Pagamento: %s) Tj\nET\n", self::escapeText($rotuloPagamento));
+        $y -= 10.0;
+
+        if ($formaPagamento === 'dinheiro' && $valorRecebido > 0) {
+            $stream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Recebido: R$ %s  |  Troco: R$ %s) Tj\nET\n", 
+                self::escapeText(number_format($valorRecebido, 2, ',', '.')),
+                self::escapeText(number_format($troco, 2, ',', '.'))
+            );
+            $y -= 12.0;
+        }
+
+        // Rodapé institucional
+        $stream .= "BT\n/F1 7 Tf\n0.55 0.60 0.70 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Valores para o Futuro! Obrigado pela compra.) Tj\nET\n");
+
+        return self::montarPdfEstruturado($stream, $pageWidth, $pageHeight);
+    }
+
+    /**
+     * Renderiza o espelho de impressão HTML para o comprovante térmico de venda no PDV (80mm)
+     * 
+     * @param array $venda
+     * @param array $parametros
+     * @return string
+     */
+    public static function gerarEspelhoComprovanteVendaBalcaoHtml(array $venda, array $parametros = []): string
+    {
+        ob_start();
+        $vendaId = (int)($venda['id'] ?? 0);
+        $dataHora = date('d/m/Y H:i:s', strtotime($venda['created_at'] ?? 'now'));
+        $operador = $venda['operador_nome'] ?? 'Operador';
+        $formaPagamento = $venda['forma_pagamento'] ?? 'dinheiro';
+        $valorTotal = (float)($venda['valor_total'] ?? 0.0);
+        $valorRecebido = (float)($venda['valor_dinheiro_recebido'] ?? 0.0);
+        $troco = (float)($venda['troco_devolvido'] ?? 0.0);
+        $itens = $venda['itens'] ?? [];
+
+        $rotuloPagamento = match($formaPagamento) {
+            'dinheiro' => 'Dinheiro Físico',
+            'pix_balcao' => 'Pix Balcão',
+            'desconto_folha' => 'Desconto em Folha',
+            default => ucfirst($formaPagamento)
+        };
+        ?>
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Comprovante de Venda #<?php echo $vendaId; ?> — Cantina Web</title>
+            <style>
+                @page { size: 80mm auto; margin: 0; }
+                body {
+                    margin: 0;
+                    padding: 6mm 4mm;
+                    font-family: 'Courier New', Courier, monospace, sans-serif;
+                    font-size: 11px;
+                    color: #000;
+                    background: #fff;
+                    line-height: 1.35;
+                }
+                .thermal-wrapper { width: 72mm; margin: 0 auto; }
+                .center { text-align: center; }
+                .bold { font-weight: bold; }
+                .title { font-size: 13px; font-weight: bold; margin-bottom: 2px; }
+                .sub { font-size: 10px; color: #333; margin-bottom: 6px; }
+                .divider { border-top: 1px dashed #444; margin: 6px 0; }
+                .info-line { font-size: 10px; margin: 2px 0; }
+                .items-table { width: 100%; font-size: 10px; border-collapse: collapse; margin: 6px 0; }
+                .items-table th { border-bottom: 1px solid #000; text-align: left; padding: 2px 0; font-size: 9px; text-transform: uppercase; }
+                .items-table td { padding: 3px 0; vertical-align: top; }
+                .text-right { text-align: right; }
+                .total-box { font-size: 13px; font-weight: bold; margin: 8px 0 4px 0; }
+                .footer { margin-top: 10px; font-size: 9px; text-align: center; color: #555; }
+                @media screen {
+                    body { background: #f1f5f9; padding: 20px; }
+                    .thermal-wrapper {
+                        background: #fff;
+                        padding: 16px;
+                        border: 1px dashed #cbd5e1;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                    }
+                    .no-print { display: flex; justify-content: center; margin-bottom: 16px; gap: 8px; }
+                    .btn-print {
+                        background: #1d4ed8; color: #fff; border: none; padding: 8px 16px;
+                        border-radius: 4px; font-weight: 600; cursor: pointer; font-family: sans-serif;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="no-print">
+                <button onclick="window.print()" class="btn-print">Imprimir Comprovante (80mm)</button>
+            </div>
+            <div class="thermal-wrapper">
+                <div class="center">
+                    <div class="title">COLÉGIO MONTEIRO LOBATO</div>
+                    <div class="sub">Cantina Escolar • Valores para o Futuro!</div>
+                </div>
+                <div class="divider"></div>
+                <div class="info-line"><strong>Comprovante de Venda #<?php echo $vendaId; ?></strong></div>
+                <div class="info-line">Data/Hora: <?php echo htmlspecialchars($dataHora, ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="info-line">Atendente: <?php echo htmlspecialchars($operador, ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="info-line">Sessão Caixa: #<?php echo (int)($venda['sessao_caixa_id'] ?? 0); ?> (<?php echo htmlspecialchars(ucfirst($venda['sessao_turno'] ?? 'turno'), ENT_QUOTES, 'UTF-8'); ?>)</div>
+
+                <?php if (!empty($venda['colaborador_nome'])): ?>
+                    <div class="divider"></div>
+                    <div class="info-line"><strong>CLIENTE: COLABORADOR</strong></div>
+                    <div class="info-line">Nome: <?php echo htmlspecialchars($venda['colaborador_nome'], ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="info-line">Matrícula: <?php echo htmlspecialchars($venda['colaborador_matricula'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="info-line">Cargo: <?php echo htmlspecialchars($venda['colaborador_cargo'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+                <?php elseif (!empty($venda['aluno_nome'])): ?>
+                    <div class="divider"></div>
+                    <div class="info-line"><strong>CLIENTE: ALUNO</strong></div>
+                    <div class="info-line">Nome: <?php echo htmlspecialchars($venda['aluno_nome'], ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="info-line">Turma: <?php echo htmlspecialchars($venda['aluno_turma'] ?? 'Geral', ENT_QUOTES, 'UTF-8'); ?></div>
+                <?php else: ?>
+                    <div class="divider"></div>
+                    <div class="info-line">Cliente: Consumidor Final (Venda Balcão)</div>
+                <?php endif; ?>
+
+                <div class="divider"></div>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Qtd</th>
+                            <th style="width: 50%;">Item</th>
+                            <th style="width: 35%;" class="text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($itens as $it): ?>
+                            <tr>
+                                <td><?php echo (int)($it['quantidade'] ?? 1); ?>x</td>
+                                <td><?php echo htmlspecialchars($it['produto_descricao'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td class="text-right">R$ <?php echo number_format((float)($it['subtotal'] ?? 0.0), 2, ',', '.'); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <div class="divider"></div>
+                <div class="total-box text-right">
+                    TOTAL: R$ <?php echo number_format($valorTotal, 2, ',', '.'); ?>
+                </div>
+                <div class="info-line text-right">Forma: <?php echo htmlspecialchars($rotuloPagamento, ENT_QUOTES, 'UTF-8'); ?></div>
+                <?php if ($formaPagamento === 'dinheiro' && $valorRecebido > 0): ?>
+                    <div class="info-line text-right">Recebido: R$ <?php echo number_format($valorRecebido, 2, ',', '.'); ?></div>
+                    <div class="info-line text-right"><strong>Troco: R$ <?php echo number_format($troco, 2, ',', '.'); ?></strong></div>
+                <?php endif; ?>
+                <div class="divider"></div>
+                <div class="footer">
+                    Agradecemos a sua preferência!<br>
+                    Colégio Monteiro Lobato
+                </div>
+            </div>
+        </body>
+        </html>
+        <?php
+        return (string)ob_get_clean();
+    }
 }
+

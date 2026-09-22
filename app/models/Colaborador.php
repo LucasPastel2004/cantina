@@ -178,4 +178,35 @@ class Colaborador extends Model
             'updated_at' => $now
         ]) > 0;
     }
+
+    /**
+     * Busca colaboradores ativos para o PDV por matrícula funcional ou nome
+     * 
+     * @param string $termo
+     * @param int $limite
+     * @return array
+     */
+    public static function buscarParaPdv(string $termo, int $limite = 10): array
+    {
+        $termoLimpo = trim($termo);
+        if (empty($termoLimpo)) {
+            return [];
+        }
+
+        $param = '%' . $termoLimpo . '%';
+        $sql = "SELECT id, matricula_funcional, nome, cargo, foto_url, ativo
+                FROM colaboradores
+                WHERE deleted_at IS NULL
+                  AND ativo = 1
+                  AND (matricula_funcional LIKE :busca_mat OR nome LIKE :busca_nome OR cargo LIKE :busca_cargo)
+                ORDER BY nome ASC
+                LIMIT {$limite}";
+
+        return self::fetchAll($sql, [
+            'busca_mat'   => $param,
+            'busca_nome'  => $param,
+            'busca_cargo' => $param
+        ]);
+    }
 }
+

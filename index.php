@@ -180,6 +180,44 @@ $router->get('/operacional/tickets/imprimir/{id}/pdf', [\App\Controllers\Tickets
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 
+// 2.4. Ponto de Venda (PDV) e Operação de Balcão (Fase 13 — FSD Área 4 e Módulo 5)
+$router->get('/operacional/pdv', [\App\Controllers\PdvController::class, 'index'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/pdv/caixa/abrir', [\App\Controllers\PdvController::class, 'abrirCaixaRapido'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/pdv/finalizar', [\App\Controllers\PdvController::class, 'finalizarVenda'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/pdv/pix/gerar', [\App\Controllers\PdvController::class, 'pixGerar'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/pdv/pix/status/{txid}', [\App\Controllers\PdvController::class, 'pixStatus'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/pdv/colaborador/buscar', [\App\Controllers\PdvController::class, 'buscarColaborador'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/pdv/aluno/buscar', [\App\Controllers\PdvController::class, 'buscarAluno'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/pdv/estorno', [\App\Controllers\PdvController::class, 'estornoBalcao'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/pdv/sobras', [\App\Controllers\PdvController::class, 'sobras'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/pdv/sobras/transferir', [\App\Controllers\PdvController::class, 'transferirSobras'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/pdv/comprovante/{id}', [\App\Controllers\PdvController::class, 'comprovanteHtml'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/pdv/comprovante/{id}/pdf', [\App\Controllers\PdvController::class, 'comprovantePdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+
 // 3. Área Administrativa e Cadastros Mestres (Fases 7 e 8 — FSD Módulos 6, 7 e 9)
 // 3.1. Configurações Globais (Acesso exclusivo para 'administrador')
 $router->get('/admin/configuracoes', [\App\Controllers\AdminController::class, 'configuracoes'], [

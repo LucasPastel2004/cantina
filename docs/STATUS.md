@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 12 — Impressão e Gestão de Tickets Térmicos (Bobina 80mm)
-* **Status da Fase 12:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 13 — Ponto de Venda (PDV) e Operação de Balcão
-* **Última Atualização:** 2026-09-22 08:50:00 (Fase 12 finalizada, testada e validada)
+* **Fase Atual:** Fase 13 — Ponto de Venda (PDV) e Operação de Balcão
+* **Status da Fase 13:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 14 — Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas
+* **Última Atualização:** 2026-09-22 09:45:00 (Fase 13 finalizada, testada e validada)
 
 ---
 
@@ -420,10 +420,21 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 13 — Ponto de Venda (PDV) e Operação de Balcão
-* [ ] PDV de vendas avulsas em dinheiro (com troco) e Pix balcão.
-* [ ] Consumo de colaboradores (Desconto em Folha) com confirmação visual de foto e cargo.
-* [ ] Estorno de balcão e aproveitamento de sobras de alunos ausentes.
+### [x] Fase 13 — Ponto de Venda (PDV) e Operação de Balcão
+* [x] Implementação de `app/models/SessaoCaixa.php` gerenciando o ciclo de vida do caixa escolar por turno (abertura com Fundo de Troco, validação de caixa aberto, cálculo de turno e incremento atômico de totais).
+* [x] Implementação de `app/models/ItemVendaBalcao.php` e `app/models/VendaBalcao.php` com transações financeiras atômicas, gravação de itens, cálculo de troco sugerido e baixa física imediata em `estoque_movimentacoes` (`saida_venda_avulsa`).
+* [x] Trava operacional de caixa fechado: vendas e movimentações em espécie/Pix são bloqueadas se não houver sessão de caixa aberta para o turno correspondente.
+* [x] Suporte à identificação de alunos no balcão com alerta visual imediato e bloqueio de venda para produtos com alérgenos cadastrados do aluno.
+* [x] Suporte a Consumo de Colaboradores (Desconto em Folha) com busca dinâmica por matrícula ou nome, confirmação visual de foto institucional e cargo funcional, e totalizador segregado.
+* [x] Integração com Pix Dinâmico no balcão (QR Code em modal interativo, cópia de Pix Copia e Cola e verificação de status).
+* [x] Estorno de Balcão (RN-18) em `app/models/Ticket.php` e `PdvController::estornoBalcao()`: cancelamento de ticket por avaria, falta de produto ou recusa, com devolução imediata de 100% do saldo na carteira digital da família (`transacoes_carteira` do tipo `estorno_balcao`) e trilha compulsória em `logs_auditoria`.
+* [x] Aproveitamento de Sobras do Recreio em `Ticket::transferirSobrasNaoRetiradasParaBalcao()`: listagem de tickets não retirados do turno e transferência física das unidades não consumidas para o estoque do PDV (`aproveitamento_sobra`), mantendo a cobrança do aluno ausente.
+* [x] Emissão de Comprovante de Venda do Balcão contínuo de 80mm em HTML e PDF nativo 1.4 (`PdfService::gerarComprovanteVendaBalcaoPdf()` e `PdfService::gerarEspelhoComprovanteVendaBalcaoHtml()`).
+* [x] Interface operacional utilitária de alta densidade criada em `app/views/operacional/pdv.php` com catálogo visual por categorias, pesquisa em tempo real, teclado de atalhos rápidos (`F2`, `F4`, `F8`, `F9`, `Esc`), cupom de venda lateral com tipografia tabular e modais integrados.
+* [x] Registro e blindagem RBAC de 12 rotas operacionais sob `/operacional/pdv*` no Front Controller `index.php`.
+* [x] Suíte de testes da Fase 13 em `tests/fase13_test.php` aprovada com 100% de sucesso (52/52 asserções).
+* [x] Suíte de testes de rotas web, controllers e RBAC em `tests/pdv_web_test.php` aprovada com 100% de sucesso (30/30 asserções).
+* [x] Homologação das suítes de regressão (Fases 11 e 12) com 100% de aprovação.
 
 ---
 
@@ -455,7 +466,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 13 — Ponto de Venda (PDV) e Operação de Balcão**, implementando o terminal de vendas avulsas da cantina escolar com suporte a pagamentos em dinheiro vivo (com cálculo de troco sugerido), Pix dinâmico no balcão, identificação e consumo de colaboradores com desconto em folha e foto institucional, além do módulo de estorno de balcão e aproveitamento de sobras de lanches não retirados.
+Iniciar a **Fase 14 — Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas**, desenvolvendo o importador de XML fiscal de notas de entrada (com associação de itens e fator multiplicador para conversão de caixas/fardos em unidades individuais para venda) e a rotina compulsória de registro de perdas operacionais por avaria, vencimento ou ajuste de inventário com auditoria.
 
 
 
