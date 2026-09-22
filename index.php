@@ -218,6 +218,23 @@ $router->get('/operacional/pdv/comprovante/{id}/pdf', [\App\Controllers\PdvContr
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 
+// 2.5. Controle Financeiro e Fechamento de Caixas por Turno (FSD Módulo 7)
+$router->get('/operacional/caixa', [\App\Controllers\CaixaController::class, 'index'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/caixa/abrir', [\App\Controllers\CaixaController::class, 'abrir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/caixa/fechar', [\App\Controllers\CaixaController::class, 'fechar'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/caixa/espelho/{id}', [\App\Controllers\CaixaController::class, 'espelhoHtml'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/caixa/espelho/{id}/pdf', [\App\Controllers\CaixaController::class, 'espelhoPdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+
 // 3. Área Administrativa e Cadastros Mestres (Fases 7 e 8 — FSD Módulos 6, 7 e 9)
 // 3.1. Configurações Globais (Acesso exclusivo para 'administrador')
 $router->get('/admin/configuracoes', [\App\Controllers\AdminController::class, 'configuracoes'], [

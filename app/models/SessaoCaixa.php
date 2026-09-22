@@ -195,4 +195,160 @@ class SessaoCaixa extends Model
         // Até às 12:00 considera matutino, a partir das 12:00 vespertino
         return ($hora < 12) ? self::TURNO_MATUTINO : self::TURNO_VESPERTINO;
     }
+
+    /**
+     * Calcula os totais esperados para a sessão de caixa
+     * 
+     * @param array $sessao
+     * @return array
+     */
+    public static function obterTotaisEsperados(array $sessao): array
+    {
+        $fundo = (float)($sessao['fundo_troco_inicial'] ?? 0.0);
+        $avulso = (float)($sessao['total_dinheiro_avulso'] ?? 0.0);
+        $recargas = (float)($sessao['total_dinheiro_recargas'] ?? 0.0);
+        $pix = (float)($sessao['total_pix_balcao'] ?? 0.0);
+        $esperadoGaveta = round($fundo + $avulso + $recargas, 2);
+        $totalFaturado = round($avulso + $pix, 2);
+
+        return [
+            'fundo_troco_inicial'     => $fundo,
+            'total_dinheiro_avulso'   => $avulso,
+            'total_dinheiro_recargas' => $recargas,
+            'total_pix_balcao'        => $pix,
+            'total_esperado_gaveta'   => $esperadoGaveta,
+            'total_geral_faturado'    => $totalFaturado
+        ];
+    }
+
+    /**
+     * Encerra a sessão de caixa com conferência física do dinheiro contado na gaveta
+     * 
+     * @param int $sessaoId ID da sessão de caixa aberta
+     * @param float $totalInformadoGaveta Valor físico em espécie contado pelo operador
+     * @param string|null $observacoes Justificativa ou notas do fechamento
+     * @param int|null $operadorId ID do operador autenticado que executa o fechamento
+     * @param string $ipOrigem
+     * @return array Dados atualizados da sessão fechada com quebra/sobra apurada
+     * @throws \DomainException|\InvalidArgumentException
+     */
+    public static function fechar(
+        int $sessaoId,
+        float $totalInformadoGaveta,
+        ?string $observacoes = null,
+        ?int $operadorId = null,
+        string $ipOrigem = '127.0.0.1'
+    ): array {
+        $sessao = self::buscarPorId($sessaoId);
+        if (!$sessao) {
+            throw new \DomainException("A sessão de caixa #{$sessaoId} não foi encontrada.");
+        }
+
+        if ($sessao['status'] !== self::STATUS_ABERTO) {
+            throw new \DomainException("A sessão de caixa #{$sessaoId} já se encontra fechada desde " . date('d/m/Y H:i', strtotime($sessao['fechado_em'])));
+        }
+
+        if ($totalInformadoGaveta < 0) {
+            throw new \InvalidArgumentException("O valor em dinheiro informado na gaveta não pode ser negativo.");
+        }
+
+        $totalInformado = round($totalInformadoGaveta, 2);
+        $totais = self::obterTotaisEsperados($sessao);
+        $totalEsperado = $totais['total_esperado_gaveta'];
+        $diferenca = round($totalInformado - $totalEsperado, 2);
+
+        $obsFechamento = trim((string)$observacoes);
+        $novaObs = null;
+        if (!empty($sessao['observacoes']) && !empty($obsFechamento)) {
+            $novaObs = $sessao['observacoes'] . ' | Fechamento: ' . $obsFechamento;
+        } elseif (!empty($obsFechamento)) {
+            $novaObs = $obsFechamento;
+        } else {
+            $novaObs = $sessao['observacoes'] ?? null;
+        }
+
+        $pdo = self::getPdo();
+
+        $stmt = $pdo->prepare("
+            UPDATE sessoes_caixa
+            SET total_informado_gaveta = :informado,
+                diferenca_quebra_sobra = :diferenca,
+                status = 'fechado',
+                fechado_em = NOW(),
+                observacoes = :obs
+            WHERE id = :id AND status = 'aberto'
+        ");
+
+        $stmt->execute([
+            'informado' => $totalInformado,
+            'diferenca' => $diferenca,
+            'obs'       => $novaObs,
+            'id'        => $sessaoId
+        ]);
+
+        // Trilha de auditoria compulsória
+        if ($operadorId !== null) {
+            $difTexto = ($diferenca == 0.0) 
+                ? 'Conferência exata' 
+                : (($diferenca > 0) ? "Sobra de R$ {$diferenca}" : "Falta/Quebra de R$ " . abs($diferenca));
+            
+            $justificativa = "Fechamento de caixa #{$sessaoId} ({$sessao['turno']}): Esperado R$ {$totalEsperado}, Contado R$ {$totalInformado}. {$difTexto}.";
+            if (!empty($obsFechamento)) {
+                $justificativa .= " Obs: {$obsFechamento}";
+            }
+
+            Auditoria::registrar(
+                $operadorId,
+                Auditoria::ACAO_FECHAMENTO_CAIXA,
+                'sessoes_caixa',
+                $sessaoId,
+                $justificativa,
+                $ipOrigem
+            );
+        }
+
+        return self::buscarPorId($sessaoId);
+    }
+
+    /**
+     * Lista o histórico recente de sessões de caixa
+     * 
+     * @param int $limite
+     * @return array
+     */
+    public static function listarHistorico(int $limite = 15): array
+    {
+        return self::fetchAll("
+            SELECT sc.*, u.nome AS operador_nome, u.usuario AS operador_login
+            FROM sessoes_caixa sc
+            INNER JOIN usuarios u ON u.id = sc.operador_id
+            ORDER BY sc.id DESC
+            LIMIT :limite
+        ", ['limite' => $limite]);
+    }
+
+    /**
+     * Busca a última sessão de caixa de um determinado turno/data
+     * 
+     * @param string $turno
+     * @param string|null $data YYYY-MM-DD (padrão hoje)
+     * @return array|null
+     */
+    public static function obterUltimaSessao(string $turno, ?string $data = null): ?array
+    {
+        $data = $data ?? date('Y-m-d');
+
+        return self::fetchOne("
+            SELECT sc.*, u.nome AS operador_nome, u.usuario AS operador_login
+            FROM sessoes_caixa sc
+            INNER JOIN usuarios u ON u.id = sc.operador_id
+            WHERE sc.turno = :turno
+              AND DATE(sc.aberto_em) = :data
+            ORDER BY sc.id DESC
+            LIMIT 1
+        ", [
+            'turno' => $turno,
+            'data'  => $data
+        ]);
+    }
 }

@@ -325,7 +325,21 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Em `app/controllers/TicketsController.php` e `app/controllers/CarteiraController.php`, padronizadas todas as chamadas para `Session::setFlash()`.
   3. No modal de reemissão de 2ª via em `app/views/operacional/tickets.php`, o texto de aviso de auditoria foi aprimorado para explicar em linguagem amigável que o registro é permanente e não pode ser apagado (esclarecendo o significado do termo "indelével").
   4. Criado teste de integração em `tests/teste_segunda_via_post.php` validando o fluxo ponta a ponta (POST, transação, auditoria, sessão flash e redirecionamento para impressão).
-- Como evitar no futuro: Em classes utilitárias de infraestrutura como `Session`, manter métodos de conveniência/aliases documentados para padrões comuns (ex.: `flash()` e `setFlash()`). Ao refatorar ou adicionar novos controllers, verificar rigorosamente a nomenclatura dos métodos da camada Core.
+---
+
+## 2026-09-22 - Erro HTTP 404 ao acessar tela de Caixa de Turno (/operacional/caixa) via menu lateral ou dashboard
+
+- Sintoma: Ao clicar no item "Caixa do Turno" no menu lateral (`app/views/layouts/sidebar.php`) ou no botão "Gerenciar Caixa" no painel administrativo (`app/views/admin/index.php`), a aplicação retornava a tela de erro `404 — Página Não Encontrada` para a rota solicitada `/operacional/caixa`.
+- Causa: Os links de navegação para `/operacional/caixa` já estavam presentes no sidebar e no painel administrativo desde as fases de layout base e cadastros mestres. No entanto, o `CaixaController` e o registro das rotas de gestão de caixa haviam sido previstos para a Fase 15. Com a implementação do modelo `SessaoCaixa` e a exigência de caixa aberto introduzida na Fase 13 (PDV), os operadores tentavam acessar a rota de caixa pelo menu e encontravam 404.
+- Solução aplicada:
+  1. Criado `app/controllers/CaixaController.php` com as actions `index` (painel analítico do caixa, alternador de turno e histórico), `abrir` (abertura com fundo de troco), `fechar` (conferência física da gaveta, apuração de quebra/sobra e auditoria), `espelhoHtml` (espelho A4 de prestação de contas com visualização e acionamento de impressão) e `espelhoPdf` (geração de PDF 1.4 A4 timbrado para assinatura do operador e da gerência).
+  2. Implementados no modelo `app/models/SessaoCaixa.php` os métodos `fechar()`, `obterTotaisEsperados()`, `listarHistorico()` e `obterUltimaSessao()`, com registro automático em `logs_auditoria`.
+  3. Adicionados em `app/services/PdfService.php` os métodos `gerarEspelhoFechamentoCaixaHtml()` e `gerarEspelhoFechamentoCaixaPdf()`.
+  4. Criada a view institucional `app/views/operacional/caixa.php` alinhada ao `docs/DESIGN.md` com calculadora dinâmica de quebra/sobra de caixa em JavaScript Vanilla.
+  5. Registradas as 5 rotas sob `/operacional/caixa*` no Front Controller `index.php`, protegidas pela permissão RBAC dos perfis `operador` e `administrador`.
+  6. Criada a suíte de testes automatizados `tests/caixa_test.php` com 38/38 asserções aprovadas com 100% de sucesso.
+- Como evitar no futuro: Ao incluir itens de menu ou atalhos de navegação para módulos de fases posteriores nos templates mestre (`sidebar.php`, `header.php`), registrar rotas placeholder funcionais ou garantir que todos os links expostos na interface tenham seus controladores e views operacionais correspondentes prontos para uso.
+
 
 
 

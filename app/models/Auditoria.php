@@ -28,6 +28,8 @@ class Auditoria extends Model
     public const ACAO_AJUSTE_SALDO          = 'ajuste_saldo';
     public const ACAO_RECEBIMENTO_FORNECEDOR = 'recebimento_fornecedor';
     public const ACAO_CANCELAMENTO_LETIVO   = 'cancelamento_letivo_lote';
+    public const ACAO_ABERTURA_CAIXA        = 'abertura_caixa';
+    public const ACAO_FECHAMENTO_CAIXA      = 'fechamento_caixa';
 
     /**
      * Registra uma ação na trilha de auditoria

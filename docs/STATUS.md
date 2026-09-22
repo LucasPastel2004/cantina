@@ -434,6 +434,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] Registro e blindagem RBAC de 12 rotas operacionais sob `/operacional/pdv*` no Front Controller `index.php`.
 * [x] Suíte de testes da Fase 13 em `tests/fase13_test.php` aprovada com 100% de sucesso (52/52 asserções).
 * [x] Suíte de testes de rotas web, controllers e RBAC em `tests/pdv_web_test.php` aprovada com 100% de sucesso (30/30 asserções).
+* [x] Implementação de `app/controllers/CaixaController.php`, view `app/views/operacional/caixa.php` e rotas `/operacional/caixa*`, resolvendo o erro 404 ao clicar em "Caixa do Turno" no menu lateral, com suporte completo a abertura com fundo de troco, apuração financeira da sessão, fechamento com contagem física de gaveta, cálculo dinâmico de quebra/sobra, histórico e emissão de espelho A4 (HTML/PDF). Suíte `tests/caixa_test.php` com 38/38 asserções aprovadas (100%).
 * [x] Homologação das suítes de regressão (Fases 11 e 12) com 100% de aprovação.
 
 ---

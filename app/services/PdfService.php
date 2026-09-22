@@ -1393,5 +1393,415 @@ class PdfService
         <?php
         return (string)ob_get_clean();
     }
+
+    /**
+     * Gera o espelho HTML formatado para impressão A4 do Fechamento e Prestação de Contas de Caixa
+     * 
+     * @param array $sessao
+     * @return string
+     */
+    public static function gerarEspelhoFechamentoCaixaHtml(array $sessao): string
+    {
+        $id = (int)($sessao['id'] ?? 0);
+        $turno = ucfirst($sessao['turno'] ?? 'matutino');
+        $operador = htmlspecialchars($sessao['operador_nome'] ?? 'Operador de Caixa', ENT_QUOTES, 'UTF-8');
+        $abertoEm = !empty($sessao['aberto_em']) ? date('d/m/Y H:i', strtotime($sessao['aberto_em'])) : '-';
+        $fechadoEm = !empty($sessao['fechado_em']) ? date('d/m/Y H:i', strtotime($sessao['fechado_em'])) : 'Em aberto';
+        $emissao = date('d/m/Y H:i:s');
+
+        $fundo = (float)($sessao['fundo_troco_inicial'] ?? 0.0);
+        $avulso = (float)($sessao['total_dinheiro_avulso'] ?? 0.0);
+        $recargas = (float)($sessao['total_dinheiro_recargas'] ?? 0.0);
+        $pix = (float)($sessao['total_pix_balcao'] ?? 0.0);
+        $esperado = round($fundo + $avulso + $recargas, 2);
+        $informado = ($sessao['total_informado_gaveta'] !== null) ? (float)$sessao['total_informado_gaveta'] : $esperado;
+        $diferenca = ($sessao['diferenca_quebra_sobra'] !== null) ? (float)$sessao['diferenca_quebra_sobra'] : round($informado - $esperado, 2);
+        $obs = htmlspecialchars($sessao['observacoes'] ?? '', ENT_QUOTES, 'UTF-8');
+
+        ob_start();
+        ?>
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Fechamento de Caixa #<?php echo $id; ?> — Colégio Monteiro Lobato</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 15mm;
+                }
+                * { box-sizing: border-box; }
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                    font-size: 11pt;
+                    color: #0f172a;
+                    background: #ffffff;
+                    margin: 0;
+                    padding: 0;
+                }
+                .sheet {
+                    max-width: 210mm;
+                    margin: 0 auto;
+                    padding: 10px;
+                }
+                .header-table {
+                    width: 100%;
+                    border-bottom: 2px solid #1d4ed8;
+                    padding-bottom: 12px;
+                    margin-bottom: 20px;
+                }
+                .school-title {
+                    font-size: 14pt;
+                    font-weight: 700;
+                    color: #0f172a;
+                    margin: 0;
+                }
+                .doc-title {
+                    font-size: 11pt;
+                    font-weight: 700;
+                    color: #1d4ed8;
+                    margin: 4px 0 0 0;
+                    text-transform: uppercase;
+                }
+                .meta-grid {
+                    width: 100%;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+                .meta-grid td {
+                    padding: 8px 12px;
+                    border: 1px solid #e2e8f0;
+                    font-size: 9.5pt;
+                }
+                .meta-label {
+                    color: #64748b;
+                    font-size: 8pt;
+                    text-transform: uppercase;
+                    display: block;
+                    margin-bottom: 2px;
+                }
+                .data-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+                .data-table th {
+                    background: #f8fafc;
+                    border-bottom: 2px solid #cbd5e1;
+                    padding: 8px 12px;
+                    font-size: 9pt;
+                    text-transform: uppercase;
+                    color: #475569;
+                    text-align: left;
+                }
+                .data-table td {
+                    padding: 9px 12px;
+                    border-bottom: 1px solid #e2e8f0;
+                    font-size: 10pt;
+                }
+                .data-table tr.total-row td {
+                    background: #f1f5f9;
+                    font-weight: 700;
+                    border-top: 2px solid #cbd5e1;
+                    border-bottom: 2px solid #cbd5e1;
+                }
+                .font-tabular {
+                    font-variant-numeric: tabular-nums;
+                    font-feature-settings: "tnum" 1, "zero" 1;
+                }
+                .text-right { text-align: right; }
+                .text-success { color: #16a34a; }
+                .text-danger { color: #dc2626; }
+                .obs-box {
+                    border: 1px solid #e2e8f0;
+                    border-radius: 6px;
+                    background: #f8fafc;
+                    padding: 10px 14px;
+                    margin-bottom: 40px;
+                    font-size: 9.5pt;
+                }
+                .signatures {
+                    width: 100%;
+                    margin-top: 50px;
+                }
+                .sig-box {
+                    width: 45%;
+                    border-top: 1px solid #0f172a;
+                    padding-top: 6px;
+                    text-align: center;
+                    font-size: 9pt;
+                }
+                .no-print {
+                    background: #f8fafc;
+                    border: 1px solid #cbd5e1;
+                    padding: 12px 16px;
+                    border-radius: 8px;
+                    margin-bottom: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+                @media print {
+                    .no-print { display: none !important; }
+                    body { font-size: 10pt; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="sheet">
+                <div class="no-print">
+                    <div>
+                        <strong>Espelho de Fechamento de Caixa #<?php echo $id; ?></strong>
+                        <span style="color: #64748b; font-size: 12px; margin-left: 8px;">Pronto para impressão / arquivamento</span>
+                    </div>
+                    <button type="button" onclick="window.print()" style="padding: 6px 14px; font-weight: 600; cursor: pointer; background: #1d4ed8; color: #fff; border: none; border-radius: 4px;">
+                        Imprimir Documento
+                    </button>
+                </div>
+
+                <table class="header-table">
+                    <tr>
+                        <td>
+                            <h1 class="school-title">Colégio Monteiro Lobato</h1>
+                            <div class="doc-title">Prestação de Contas e Fechamento de Caixa — Turno <?php echo $turno; ?></div>
+                        </td>
+                        <td class="text-right" style="vertical-align: bottom; font-size: 9pt; color: #64748b;">
+                            Emissão: <?php echo $emissao; ?>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="meta-grid">
+                    <tr>
+                        <td style="width: 20%;">
+                            <span class="meta-label">Sessão</span>
+                            <strong>#<?php echo $id; ?></strong>
+                        </td>
+                        <td style="width: 20%;">
+                            <span class="meta-label">Turno</span>
+                            <strong><?php echo $turno; ?></strong>
+                        </td>
+                        <td style="width: 30%;">
+                            <span class="meta-label">Operador Responsável</span>
+                            <?php echo $operador; ?>
+                        </td>
+                        <td style="width: 30%;">
+                            <span class="meta-label">Status</span>
+                            <strong><?php echo ($sessao['status'] === 'fechado') ? 'Encerrado / Fechado' : 'Em Aberto'; ?></strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <span class="meta-label">Data/Hora Abertura</span>
+                            <?php echo $abertoEm; ?>
+                        </td>
+                        <td colspan="2">
+                            <span class="meta-label">Data/Hora Fechamento</span>
+                            <?php echo $fechadoEm; ?>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Discriminação dos Recursos Financeiros</th>
+                            <th style="width: 30%;" class="text-right">Valor Apurado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Fundo de Troco Inicial (Gaveta)</td>
+                            <td class="text-right font-tabular">R$ <?php echo number_format($fundo, 2, ',', '.'); ?></td>
+                        </tr>
+                        <tr>
+                            <td>(+) Vendas Avulsas no Balcão (Dinheiro Físico)</td>
+                            <td class="text-right font-tabular">R$ <?php echo number_format($avulso, 2, ',', '.'); ?></td>
+                        </tr>
+                        <tr>
+                            <td>(+) Recargas de Carteira no Balcão (Dinheiro Físico)</td>
+                            <td class="text-right font-tabular">R$ <?php echo number_format($recargas, 2, ',', '.'); ?></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>(=) Total de Dinheiro em Espécie Esperado na Gaveta</td>
+                            <td class="text-right font-tabular" style="font-size: 11pt;">R$ <?php echo number_format($esperado, 2, ',', '.'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total em Dinheiro Efetivamente Contado na Gaveta</strong></td>
+                            <td class="text-right font-tabular" style="font-weight: 700; font-size: 11pt;">R$ <?php echo number_format($informado, 2, ',', '.'); ?></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Divergência de Caixa (Quebra / Sobra)</strong>
+                                <div style="font-size: 8.5pt; color: #64748b;">Diferença entre o montante contado e o valor esperado pelo sistema</div>
+                            </td>
+                            <td class="text-right font-tabular" style="font-weight: 700;">
+                                <?php if ($diferenca == 0.0): ?>
+                                    <span class="text-success">R$ 0,00 (Exato)</span>
+                                <?php elseif ($diferenca > 0): ?>
+                                    <span class="text-success">+ R$ <?php echo number_format($diferenca, 2, ',', '.'); ?> (Sobra)</span>
+                                <?php else: ?>
+                                    <span class="text-danger">- R$ <?php echo number_format(abs($diferenca), 2, ',', '.'); ?> (Quebra/Falta)</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Entradas Digitais — Pix no Balcão (Creditado em Conta Bancária)</td>
+                            <td class="text-right font-tabular">R$ <?php echo number_format($pix, 2, ',', '.'); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <?php if (!empty($obs)): ?>
+                    <div class="obs-box">
+                        <span class="meta-label">Observações e Justificativas Registradas:</span>
+                        <?php echo $obs; ?>
+                    </div>
+                <?php endif; ?>
+
+                <table class="signatures">
+                    <tr>
+                        <td class="sig-box">
+                            <?php echo $operador; ?><br>
+                            <span style="color: #64748b; font-size: 8pt;">Operador de Caixa</span>
+                        </td>
+                        <td style="width: 10%;"></td>
+                        <td class="sig-box">
+                            Gerência / Coordenação Administrativa<br>
+                            <span style="color: #64748b; font-size: 8pt;">Visto de Conferência</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </body>
+        </html>
+        <?php
+        return (string)ob_get_clean();
+    }
+
+    /**
+     * Gera o arquivo binário PDF 1.4 de Fechamento de Caixa no formato A4 timbrado
+     * 
+     * @param array $sessao
+     * @return string
+     */
+    public static function gerarEspelhoFechamentoCaixaPdf(array $sessao): string
+    {
+        $id = (int)($sessao['id'] ?? 0);
+        $turno = ucfirst($sessao['turno'] ?? 'matutino');
+        $operador = $sessao['operador_nome'] ?? 'Operador';
+        $abertoEm = !empty($sessao['aberto_em']) ? date('d/m/Y H:i', strtotime($sessao['aberto_em'])) : '-';
+        $fechadoEm = !empty($sessao['fechado_em']) ? date('d/m/Y H:i', strtotime($sessao['fechado_em'])) : 'Em aberto';
+        $emissao = date('d/m/Y H:i:s');
+
+        $fundo = (float)($sessao['fundo_troco_inicial'] ?? 0.0);
+        $avulso = (float)($sessao['total_dinheiro_avulso'] ?? 0.0);
+        $recargas = (float)($sessao['total_dinheiro_recargas'] ?? 0.0);
+        $pix = (float)($sessao['total_pix_balcao'] ?? 0.0);
+        $esperado = round($fundo + $avulso + $recargas, 2);
+        $informado = ($sessao['total_informado_gaveta'] !== null) ? (float)$sessao['total_informado_gaveta'] : $esperado;
+        $diferenca = ($sessao['diferenca_quebra_sobra'] !== null) ? (float)$sessao['diferenca_quebra_sobra'] : round($informado - $esperado, 2);
+
+        $left = 40.0;
+        $right = self::PAGE_WIDTH - 40.0;
+        $width = $right - $left;
+        $y = 800.0;
+
+        $stream = "";
+
+        // Top banner
+        $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.94, 0.96, 0.98);
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 45, $width, 55);
+        $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85);
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 45, 4, 55);
+
+        // Header text
+        $stream .= "BT\n/F2 13 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 14, $y - 12);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("COLÉGIO MONTEIRO LOBATO — CANTINA WEB"));
+
+        $stream .= "BT\n/F2 10 Tf\n0.11 0.31 0.85 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 14, $y - 28);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("FECHAMENTO DE CAIXA #{$id} — TURNO {$turno}"));
+
+        $stream .= "BT\n/F1 8 Tf\n0.40 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 14, $y - 40);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Emissão: {$emissao} • Operador: {$operador}"));
+
+        // Box de Parâmetros
+        $y -= 65.0;
+        $stream .= "0.88 0.91 0.94 RG\n0.75 w\n";
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - 30, $width, 36);
+
+        $stream .= "BT\n/F2 8 Tf\n0.35 0.40 0.48 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 10, $y - 12);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("ABERTO EM: " . $abertoEm . "  |  FECHADO EM: " . $fechadoEm));
+
+        $stream .= "BT\n/F2 8 Tf\n0.35 0.40 0.48 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 10, $y - 24);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("STATUS: " . strtoupper($sessao['status'] ?? 'ABERTO')));
+
+        // Tabela Financeira
+        $y -= 50.0;
+        $linhas = [
+            ['Fundo de Troco Inicial (Gaveta)', 'R$ ' . number_format($fundo, 2, ',', '.')],
+            ['(+) Vendas Avulsas no Balcao (Dinheiro)', 'R$ ' . number_format($avulso, 2, ',', '.')],
+            ['(+) Recargas no Balcao (Dinheiro)', 'R$ ' . number_format($recargas, 2, ',', '.')],
+            ['(=) Total Esperado na Gaveta', 'R$ ' . number_format($esperado, 2, ',', '.')],
+            ['Total Informado / Contado na Gaveta', 'R$ ' . number_format($informado, 2, ',', '.')],
+            ['Diferenca / Quebra de Caixa', ($diferenca >= 0 ? '+ ' : '- ') . 'R$ ' . number_format(abs($diferenca), 2, ',', '.')],
+            ['Entradas em Pix Balcao (Conta Bancaria)', 'R$ ' . number_format($pix, 2, ',', '.')]
+        ];
+
+        foreach ($linhas as $idx => $lin) {
+            $isDest = ($idx === 3 || $idx === 4 || $idx === 5);
+            if ($isDest) {
+                $stream .= "0.94 0.96 0.98 rg\n";
+                $stream .= sprintf("%.2f %.2f %.2f 20 re f\n", $left, $y - 14, $width);
+            }
+
+            $stream .= "BT\n";
+            $stream .= ($isDest ? "/F2 9 Tf\n0.06 0.09 0.16 rg\n" : "/F1 9 Tf\n0.20 0.25 0.33 rg\n");
+            $stream .= sprintf("%.2f %.2f Td\n", $left + 10, $y - 10);
+            $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($lin[0]));
+
+            $stream .= "BT\n";
+            $stream .= ($isDest ? "/F2 9 Tf\n0.06 0.09 0.16 rg\n" : "/F1 9 Tf\n0.20 0.25 0.33 rg\n");
+            $stream .= sprintf("%.2f %.2f Td\n", $right - 100, $y - 10);
+            $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($lin[1]));
+
+            $stream .= "0.88 0.91 0.94 RG\n0.5 w\n";
+            $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - 14, $right, $y - 14);
+
+            $y -= 22.0;
+        }
+
+        // Assinaturas
+        $y -= 60.0;
+        $signW = ($width - 40) / 2;
+
+        $stream .= "0.0 0.0 0.0 RG\n0.75 w\n";
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + 10, $y, $left + 10 + $signW, $y);
+        $stream .= "BT\n/F1 8 Tf\n0.30 0.35 0.45 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 20, $y - 12);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($operador . " (Operador de Caixa)"));
+
+        $x2 = $left + 30 + $signW;
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $x2, $y, $x2 + $signW, $y);
+        $stream .= "BT\n/F1 8 Tf\n0.30 0.35 0.45 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $x2 + 15, $y - 12);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Gerencia / Visto de Conferencia"));
+
+        // Rodapé
+        $stream .= "0.88 0.91 0.94 RG\n0.5 w\n";
+        $stream .= sprintf("%.2f 45 m %.2f 45 l S\n", $left, $right);
+        $stream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n";
+        $stream .= sprintf("%.2f 32 Td\n", $left);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Cantina Web — Colégio Monteiro Lobato • Documento gerado eletronicamente."));
+
+        return self::montarPdfEstruturado($stream);
+    }
 }
 
