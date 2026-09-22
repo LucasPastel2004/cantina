@@ -154,6 +154,32 @@ $router->post('/operacional/recebimento/confirmar', [\App\Controllers\PedidosCon
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 
+// 2.3. Gestão e Impressão de Tickets Térmicos em Bobina de 80mm (Fase 12 — FSD Área 3 e Fluxos 6 e 7)
+$router->get('/operacional/tickets', [\App\Controllers\TicketsController::class, 'index'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/tickets/lote', [\App\Controllers\TicketsController::class, 'lote'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/tickets/lote/pdf', [\App\Controllers\TicketsController::class, 'lotePdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/tickets/turma/{id}', [\App\Controllers\TicketsController::class, 'turma'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/tickets/turma/{id}/pdf', [\App\Controllers\TicketsController::class, 'turmaPdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/tickets/segunda-via', [\App\Controllers\TicketsController::class, 'segundaVia'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/tickets/imprimir/{id}', [\App\Controllers\TicketsController::class, 'imprimirTicket'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/tickets/imprimir/{id}/pdf', [\App\Controllers\TicketsController::class, 'imprimirTicketPdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+
 // 3. Área Administrativa e Cadastros Mestres (Fases 7 e 8 — FSD Módulos 6, 7 e 9)
 // 3.1. Configurações Globais (Acesso exclusivo para 'administrador')
 $router->get('/admin/configuracoes', [\App\Controllers\AdminController::class, 'configuracoes'], [

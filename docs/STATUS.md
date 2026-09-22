@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 11 — Operação de Encomendas e Gestão de Fornecedores
-* **Status da Fase 11:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 12 — Impressão e Gestão de Tickets Térmicos (Bobina 80mm)
-* **Última Atualização:** 2026-09-21 08:45:00 (Fase 11 finalizada, testada e validada)
+* **Fase Atual:** Fase 12 — Impressão e Gestão de Tickets Térmicos (Bobina 80mm)
+* **Status da Fase 12:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 13 — Ponto de Venda (PDV) e Operação de Balcão
+* **Última Atualização:** 2026-09-22 08:50:00 (Fase 12 finalizada, testada e validada)
 
 ---
 
@@ -404,9 +404,17 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 12 — Impressão e Gestão de Tickets Térmicos (Bobina 80mm)
-* [ ] Emissão em lote ordenada por Série/Turma em bobina 80mm com tag de alérgenos.
-* [ ] Tela de consulta e 2ª via com marcação indelével e registro obrigatório em auditoria.
+### [x] Fase 12 — Impressão e Gestão de Tickets Térmicos (Bobina 80mm)
+* [x] Implementação do modelo `app/models/Ticket.php` para consultas detalhadas, busca rápida por matrícula/aluno/código, agrupamento de turmas e marcação de impressão.
+* [x] Implementação do modelo oficial `app/models/Auditoria.php` para persistência compulsória de eventos operacionais e reemissões na tabela `logs_auditoria`.
+* [x] Suporte técnico de impressão térmica contínua de 80mm (226.77 pt) implementado em `app/services/PdfService.php` (`gerarTicketsLotePdf`, `gerarTicketIndividualPdf`, `gerarEspelhoTicketsLoteHtml`, `gerarEspelhoTicketIndividualHtml`).
+* [x] Ordenação sequencial estrita por `Turno > turmas.ordem_impressao ASC > turmas.nome_turma ASC > alunos.nome ASC > tickets.id ASC` para entrega organizada aos professores antes do recreio.
+* [x] Destaque visual indelével e moldura obrigatória de alérgenos (`[ATENÇÃO: CONTÉM ...]`) nos tickets com restrições alimentares conflitantes (RN-16 e RN-17).
+* [x] Emissão de 2ª via com trava de justificativa obrigatória (mínimo 5 caracteres), incremento do `numero_via`, marcação indelével `[2ª VIA]` e registro compulsório em `logs_auditoria`.
+* [x] Criação do `app/controllers/TicketsController.php` e registro das 8 rotas operacionais protegidas por RBAC (`/operacional/tickets*`) em `index.php`.
+* [x] Telas operacionais construídas seguindo o Design System corporativo Anti-Slop (`app/views/operacional/tickets.php`, `tickets_lote.php` e `ticket_individual.php`).
+* [x] Criação e execução com 100% de aprovação da suíte de testes `tests/fase12_test.php` (62/62 asserções aprovadas).
+* [x] Execução e homologação de 100% dos testes de regressão das fases anteriores (Fases 7, 8, 9, 10 e 11).
 
 ---
 
@@ -445,7 +453,8 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 12 — Impressão e Gestão de Tickets Térmicos (Bobina 80mm)**, implementando a emissão em lote de fichas diárias na bobina contínua de 80mm ordenada por Turno > Série > Turma > Aluno, com destaque mandatória para a tag de alérgenos (RN-16 e RN-17), QR Code de conferência e módulo de consulta e emissão de 2ª via com registro obrigatório de justificativa na auditoria institucional.
+Iniciar a **Fase 13 — Ponto de Venda (PDV) e Operação de Balcão**, implementando o terminal de vendas avulsas da cantina escolar com suporte a pagamentos em dinheiro vivo (com cálculo de troco sugerido), Pix dinâmico no balcão, identificação e consumo de colaboradores com desconto em folha e foto institucional, além do módulo de estorno de balcão e aproveitamento de sobras de lanches não retirados.
+
 
 
 

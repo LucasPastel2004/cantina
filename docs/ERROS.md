@@ -302,7 +302,21 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Em `app/views/operacional/recebimento.php`, implementado o cálculo analítico com base nos itens entregues da remessa para exibir a quantidade efetiva, status de diferença (`Exato (0)`, `+X un (sobra)` ou `-X un (falta)`) e o total consolidado real com excedente/falta destacados.
   3. Adicionado `onchange="this.form.submit()"` nos campos de data e turno de `corte.php` e `recebimento.php` para atualização reativa instantânea ao selecionar o dia ou turno.
   4. Em `app/controllers/PedidosController.php`, criado o método `normalizarDataConsumo()` para aceitar e converter de forma transparente tanto `YYYY-MM-DD` quanto `DD/MM/YYYY`.
-- Como evitar no futuro: Telas com estados pós-liquidação (como remessas conferidas) devem ler os dados históricos persistidos de cada linha em vez de reexibir variáveis projetadas da demanda. Controles de filtro em painéis operacionais devem fornecer atualização instantânea no evento `change`.
+---
+
+## 2026-09-22 - Erro HTTP 404 em /operacional/tickets por ausência de registro prévio de rotas e erro de declaração estática em Model::$table
+
+- Sintoma: Ao navegar para `http://localhost:8080/operacional/tickets` clicando no menu lateral ou digitando a URL, a aplicação retornava a página corporativa de erro `404 — Página Não Encontrada`. Em seguida, na instanciação de models, ocorria o erro fatal `Fatal error: Cannot redeclare non static App\Core\Model::$table as static App\Models\Ticket::$table`.
+- Causa: Dupla ocorrência:
+  1. A rota `/operacional/tickets` (e seus sub-recursos `/lote`, `/turma`, `/segunda-via`, `/imprimir`) não estava registrada no Front Controller `index.php`, pois a Fase 12 ainda não havia sido concluída quando a rota foi acessada.
+  2. Nos modelos `Ticket.php` e `Auditoria.php`, a propriedade `$table` havia sido tipada incorretamente como `protected static string $table`, conflitando com a assinatura não-estática `protected string $table` declarada na classe base abstrata `App\Core\Model`.
+- Solução aplicada:
+  1. Registradas e protegidas por RBAC todas as 8 rotas operacionais do módulo de tickets em `index.php` (`/operacional/tickets`, `/operacional/tickets/lote`, `/operacional/tickets/lote/pdf`, `/operacional/tickets/turma/{id}`, `/operacional/tickets/turma/{id}/pdf`, `/operacional/tickets/segunda-via`, `/operacional/tickets/imprimir/{id}`, `/operacional/tickets/imprimir/{id}/pdf`), vinculadas ao `TicketsController`.
+  2. Corrigida a assinatura da propriedade `$table` em `Ticket.php` e `Auditoria.php` para `protected string $table`, em total conformidade com a herança de `App\Core\Model`.
+  3. Implementados o `TicketsController`, os métodos de geração de PDF e HTML de 80mm em `PdfService.php` e as views operacionais `tickets.php`, `tickets_lote.php` e `ticket_individual.php`.
+  4. Homologação com 100% de aprovação na suíte de testes automatizados `tests/fase12_test.php` (62/62 asserções) e simulações web em `tests/tickets_web_test.php`.
+- Como evitar no futuro: Sempre assegurar que todos os controllers, rotas e views de uma nova fase sejam registrados e validados de ponta a ponta antes de disponibilizar o link de navegação na interface. Respeitar rigorosamente a visibilidade e natureza (estática vs de instância) das propriedades herdadas da classe abstrata `Model`.
+
 
 
 
