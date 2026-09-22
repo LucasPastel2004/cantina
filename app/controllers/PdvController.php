@@ -47,13 +47,17 @@ class PdvController extends Controller
 
         $this->render('operacional/pdv', [
             'activeMenu'     => 'pdv',
+            'pageTitle'      => 'PDV Balcão - Frente de Caixa',
+            'pageHeading'    => 'PDV Balcão - Frente de Caixa',
+            'turnoAtivo'     => ucfirst($turnoAtual),
+            'statusCaixa'    => $sessaoAberta ? 'Aberto' : 'Fechado',
             'sessaoAberta'   => $sessaoAberta,
             'turnoAtual'     => $turnoAtual,
             'categorias'     => $categorias,
             'produtos'       => $produtos,
             'vendasRecentes' => $vendasRecentes,
             'metricas'       => $metricas,
-            'title'          => 'Ponto de Venda (PDV) — Cantina Web'
+            'title'          => 'PDV Balcão - Frente de Caixa — Cantina Web'
         ], 'admin');
     }
 

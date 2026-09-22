@@ -435,6 +435,11 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] Suíte de testes da Fase 13 em `tests/fase13_test.php` aprovada com 100% de sucesso (52/52 asserções).
 * [x] Suíte de testes de rotas web, controllers e RBAC em `tests/pdv_web_test.php` aprovada com 100% de sucesso (30/30 asserções).
 * [x] Implementação de `app/controllers/CaixaController.php`, view `app/views/operacional/caixa.php` e rotas `/operacional/caixa*`, resolvendo o erro 404 ao clicar em "Caixa do Turno" no menu lateral, com suporte completo a abertura com fundo de troco, apuração financeira da sessão, fechamento com contagem física de gaveta, cálculo dinâmico de quebra/sobra, histórico e emissão de espelho A4 (HTML/PDF). Suíte `tests/caixa_test.php` com 38/38 asserções aprovadas (100%).
+* [x] **Refatoração e Blindagem Visual do PDV (`app/views/operacional/pdv.php` e `assets/css/custom.css`):**
+  * Injeção de folha de estilo autônoma e resiliente em `app/views/operacional/pdv.php`, imune a bloqueios de cache prévio do cliente.
+  * Atualização e aperfeiçoamento dos estilos em `assets/css/custom.css`: layout de 2 colunas mantido a partir de 960px (ideal para laptops de 1366x768 e terminais POS), cards com miniatura e elevação sutil no hover, botões de categoria com reset de aparência, cupom de venda fixo e estilização completa de todos os modais customizados (`.modal-backdrop-custom`, `.modal-card-custom`).
+  * Atualização da versão de cache dos assets para `?v=5.2.0` nos layouts mestre (`admin.php` e `header.php`).
+  * Adição de atalhos rápidos `F3` (foco na busca de produtos) e `F10` (conclusão de venda).
 * [x] Homologação das suítes de regressão (Fases 11 e 12) com 100% de aprovação.
 
 ---

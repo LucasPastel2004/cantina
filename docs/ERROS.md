@@ -340,6 +340,24 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   6. Criada a suíte de testes automatizados `tests/caixa_test.php` com 38/38 asserções aprovadas com 100% de sucesso.
 - Como evitar no futuro: Ao incluir itens de menu ou atalhos de navegação para módulos de fases posteriores nos templates mestre (`sidebar.php`, `header.php`), registrar rotas placeholder funcionais ou garantir que todos os links expostos na interface tenham seus controladores e views operacionais correspondentes prontos para uso.
 
+---
+
+## 2026-09-22 - Tela do PDV do Balcão sem estilos (HTML puro) por cache de versão do CSS e ausência de regras autônomas nos componentes
+
+- Sintoma: Ao navegar para `http://localhost:8080/operacional/pdv`, o cabeçalho e sidebar carregavam normalmente, mas a área de conteúdo do PDV (botões de categoria, campo de busca, catálogo de produtos, cupom de venda e modais) exibia botões cinzas padrão do navegador e blocos esticados verticalmente sem grid ("html puro pai").
+- Causa:
+  1. No layout mestre `app/views/layouts/admin.php` e `header.php`, a folha de estilo mantinha a tag `<link rel="stylesheet" href=".../custom.css?v=5.1.1">`. Como a versão `v=5.1.1` já havia sido baixada e armazenada no cache do navegador nas fases anteriores, o navegador do usuário continuou utilizando a versão antiga em cache que não continha as regras `.pdv-*` adicionadas na Fase 13.
+  2. As classes dos modais customizados (`.modal-backdrop-custom`, `.modal-card-custom`, etc.) não haviam sido declaradas no CSS global.
+  3. A media query do grid `.pdv-grid` utilizava quebra em 1100px (`@media (max-width: 1100px)`), o que causava o colapso indevido do terminal de duas colunas para uma coluna em notebooks com resolução padrão de 1366x768 ou escala de 125%/150%, empurrando o cupom de venda para baixo dos produtos.
+- Solução aplicada:
+  1. Embutida folha de estilo dedicada e autônoma `<style>` diretamente no topo da view `app/views/operacional/pdv.php`, garantindo que o PDV seja 100% imune a falhas de cache de proxy ou navegador.
+  2. Refatorado o bloco `.pdv-*` em `assets/css/custom.css` com estilos de botões com reset de aparência, cards com miniaturas e hover tátil suave, cupom de venda responsivo, atalhos visuais e todos os modais operacionais.
+  3. Ajustada a responsividade do `.pdv-grid` para manter o layout corporativo de 2 colunas (catálogo à esquerda + cupom/caixa à direita) em qualquer tela a partir de 960px, ideal para laptops de 1366x768 e terminais POS.
+  4. Atualizada a query de versão dos assets para `?v=5.2.0` em `app/views/layouts/admin.php` e `app/views/layouts/header.php` para forçar invalidação imediata de cache no cliente.
+  5. Adicionado atalho de teclado `F3` (foco na busca de produtos) e `F10` (conclusão de venda).
+- Como evitar no futuro: Sempre que novos módulos ou estilos críticos forem adicionados a `custom.css`, incrementar o versionamento de cache (`?v=...`) nos layouts correspondentes e incluir regras de contingência em telas operacionais de alta densidade como o PDV.
+
+
 
 
 
