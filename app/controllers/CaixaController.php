@@ -34,14 +34,18 @@ class CaixaController extends Controller
         $historico = SessaoCaixa::listarHistorico(15);
 
         $this->render('operacional/caixa', [
+            'title'        => 'Gestão de Caixa e Prestação de Contas — Cantina Web',
+            'pageTitle'    => 'Gestão de Caixa e Prestação de Contas',
+            'pageHeading'  => 'Gestão de Caixa e Prestação de Contas',
             'activeMenu'   => 'caixa',
             'turnoAtual'   => $turno,
+            'turnoAtivo'   => ucfirst($turno),
+            'statusCaixa'  => $sessaoAberta ? 'Aberto' : 'Fechado',
             'sessaoAberta' => $sessaoAberta,
             'ultimaSessao' => $ultimaSessao,
             'totais'       => $totais,
-            'historico'    => $historico,
-            'pageTitle'    => 'Gestão de Caixa e Prestação de Contas'
-        ], 'layouts/main');
+            'historico'    => $historico
+        ], 'admin');
     }
 
     /**

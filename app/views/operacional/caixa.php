@@ -25,9 +25,6 @@ $esperadoGaveta = (float)($totais['total_esperado_gaveta'] ?? 0.0);
 $totalFaturado = (float)($totais['total_geral_faturado'] ?? 0.0);
 ?>
 
-<!-- Alertas do Sistema -->
-<?php require __DIR__ . '/../partials/alert.php'; ?>
-
 <!-- Cabeçalho da Página e Alternador de Turno -->
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
