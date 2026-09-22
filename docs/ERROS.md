@@ -357,6 +357,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. Adicionado atalho de teclado `F3` (foco na busca de produtos) e `F10` (conclusão de venda).
 - Como evitar no futuro: Sempre que novos módulos ou estilos críticos forem adicionados a `custom.css`, incrementar o versionamento de cache (`?v=...`) nos layouts correspondentes e incluir regras de contingência em telas operacionais de alta densidade como o PDV.
 
+---
+
+## 2026-09-22 - Divergência visual e de conteúdo entre o Espelho HTML e o arquivo PDF de Fechamento de Caixa
+
+- Sintoma: Ao confrontar o espelho web de fechamento (`/operacional/caixa/espelho/{id}`) com o documento PDF baixado (`/operacional/caixa/espelho/{id}/pdf`), constatou-se que o PDF apresentava layout divergente (barra azul vertical em vez da linha horizontal institucional), ausência de cabeçalho na tabela financeira, strings sem acentuação (*"Balcao"*, *"Diferenca"*), sem cor semântica na quebra de caixa e omissão completa do bloco de observações/justificativas registradas.
+- Causa: O método `gerarEspelhoFechamentoCaixaHtml` utilizava template HTML/CSS contemporâneo com tabela meta-grid em 4 colunas, acentuação UTF-8 e bloco condicional para o campo `observacoes`. Por sua vez, o gerador binário nativo `gerarEspelhoFechamentoCaixaPdf` utilizava primitivas vetoriais manuais (`BT ... ET`) com strings estáticas resumidas, sem a grade de metadados, sem o cabeçalho da tabela de dados e sem a leitura da variável `$sessao['observacoes']`.
+- Solução aplicada:
+  1. Refatorado o método `PdfService::gerarEspelhoFechamentoCaixaPdf()` para espelhar com exatidão a apresentação e os dados do HTML.
+  2. Implementado no PDF o cabeçalho institucional com linha azul cobalto (#1d4ed8) de 2pt, grade de metadados de 4 colunas x 2 linhas com bordas e rótulos técnicos, cabeçalho da tabela (`DISCRIMINAÇÃO DOS RECURSOS FINANCEIROS` | `VALOR APURADO`), termos acentuados oficiais em português via Windows-1252, cálculo de quebra/sobra com destaque colorido em vermelho/verde e renderização dedicada para o quadro de observações/justificativas registradas no fechamento.
+  3. Alinhado o bloco de assinaturas do Operador de Caixa e da Coordenação Administrativa.
+- Como evitar no futuro: Ao implementar geradores duais de documentos (HTML para tela/impressão rápida e PDF binário para download), assegurar paridade estrita de dicionário de dados, rótulos, campos condicionais (como observações) e identidade visual corporativa.
+
+
 
 
 

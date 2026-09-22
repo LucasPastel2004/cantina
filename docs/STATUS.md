@@ -440,6 +440,9 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Atualização e aperfeiçoamento dos estilos em `assets/css/custom.css`: layout de 2 colunas mantido a partir de 960px (ideal para laptops de 1366x768 e terminais POS), cards com miniatura e elevação sutil no hover, botões de categoria com reset de aparência, cupom de venda fixo e estilização completa de todos os modais customizados (`.modal-backdrop-custom`, `.modal-card-custom`).
   * Atualização da versão de cache dos assets para `?v=5.2.0` nos layouts mestre (`admin.php` e `header.php`).
   * Adição de atalhos rápidos `F3` (foco na busca de produtos) e `F10` (conclusão de venda).
+* [x] **Harmonização e Paridade Estrita do Espelho de Fechamento de Caixa (`PdfService.php`):**
+  * Equalização completa entre a renderização HTML do navegador (`/operacional/caixa/espelho/{id}`) e o arquivo PDF binário baixado (`/operacional/caixa/espelho/{id}/pdf`).
+  * Inclusão no PDF de: cabeçalho com linha institucional azul, grade técnica de metadados em 4 colunas x 2 linhas, cabeçalho da tabela financeira, textos oficiais acentuados, destaque semântico colorido para quebra/sobra, renderização do bloco de observações/justificativas e bloco de assinaturas físicas.
 * [x] Homologação das suítes de regressão (Fases 11 e 12) com 100% de aprovação.
 
 ---

@@ -1683,6 +1683,7 @@ class PdfService
 
     /**
      * Gera o arquivo binário PDF 1.4 de Fechamento de Caixa no formato A4 timbrado
+     * com total fidelidade visual e estrutural ao espelho HTML de prestação de contas.
      * 
      * @param array $sessao
      * @return string
@@ -1691,10 +1692,12 @@ class PdfService
     {
         $id = (int)($sessao['id'] ?? 0);
         $turno = ucfirst($sessao['turno'] ?? 'matutino');
-        $operador = $sessao['operador_nome'] ?? 'Operador';
+        $operador = $sessao['operador_nome'] ?? 'Operador de Caixa';
         $abertoEm = !empty($sessao['aberto_em']) ? date('d/m/Y H:i', strtotime($sessao['aberto_em'])) : '-';
         $fechadoEm = !empty($sessao['fechado_em']) ? date('d/m/Y H:i', strtotime($sessao['fechado_em'])) : 'Em aberto';
+        $statusStr = ($sessao['status'] === 'fechado') ? 'Encerrado / Fechado' : 'Em Aberto';
         $emissao = date('d/m/Y H:i:s');
+        $obs = trim($sessao['observacoes'] ?? '');
 
         $fundo = (float)($sessao['fundo_troco_inicial'] ?? 0.0);
         $avulso = (float)($sessao['total_dinheiro_avulso'] ?? 0.0);
@@ -1711,95 +1714,315 @@ class PdfService
 
         $stream = "";
 
-        // Top banner
-        $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.94, 0.96, 0.98);
-        $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 45, $width, 55);
-        $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85);
-        $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 45, 4, 55);
+        // ==========================================
+        // 1. Cabeçalho Institucional Oficial
+        // ==========================================
+        $stream .= "BT\n";
+        $stream .= "/F2 14 Tf\n";
+        $stream .= "0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left, $y - 14);
+        $stream .= sprintf("(%s) Tj\n", self::escapeText("Colégio Monteiro Lobato"));
+        $stream .= "ET\n";
 
-        // Header text
-        $stream .= "BT\n/F2 13 Tf\n0.06 0.09 0.16 rg\n";
-        $stream .= sprintf("%.2f %.2f Td\n", $left + 14, $y - 12);
-        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("COLÉGIO MONTEIRO LOBATO — CANTINA WEB"));
+        $stream .= "BT\n";
+        $stream .= "/F2 10.5 Tf\n";
+        $stream .= "0.11 0.31 0.85 rg\n"; // #1d4ed8
+        $stream .= sprintf("%.2f %.2f Td\n", $left, $y - 28);
+        $stream .= sprintf("(%s) Tj\n", self::escapeText("PRESTAÇÃO DE CONTAS E FECHAMENTO DE CAIXA — TURNO " . strtoupper($turno)));
+        $stream .= "ET\n";
 
-        $stream .= "BT\n/F2 10 Tf\n0.11 0.31 0.85 rg\n";
-        $stream .= sprintf("%.2f %.2f Td\n", $left + 14, $y - 28);
-        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("FECHAMENTO DE CAIXA #{$id} — TURNO {$turno}"));
+        $stream .= "BT\n";
+        $stream .= "/F1 8.5 Tf\n";
+        $stream .= "0.39 0.45 0.55 rg\n"; // #64748b
+        $stream .= sprintf("%.2f %.2f Td\n", $right - 130, $y - 28);
+        $stream .= sprintf("(%s) Tj\n", self::escapeText("Emissão: " . $emissao));
+        $stream .= "ET\n";
 
-        $stream .= "BT\n/F1 8 Tf\n0.40 0.45 0.55 rg\n";
-        $stream .= sprintf("%.2f %.2f Td\n", $left + 14, $y - 40);
-        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Emissão: {$emissao} • Operador: {$operador}"));
+        // Linha divisória azul institucional (#1d4ed8)
+        $y -= 36.0;
+        $stream .= "0.11 0.31 0.85 RG\n";
+        $stream .= "2 w\n";
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y, $right, $y);
 
-        // Box de Parâmetros
-        $y -= 65.0;
-        $stream .= "0.88 0.91 0.94 RG\n0.75 w\n";
-        $stream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - 30, $width, 36);
+        // ==========================================
+        // 2. Grade de Metadados (4 Colunas x 2 Linhas)
+        // ==========================================
+        $y -= 14.0;
+        $metaHeight = 48.0;
 
-        $stream .= "BT\n/F2 8 Tf\n0.35 0.40 0.48 rg\n";
-        $stream .= sprintf("%.2f %.2f Td\n", $left + 10, $y - 12);
-        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("ABERTO EM: " . $abertoEm . "  |  FECHADO EM: " . $fechadoEm));
+        // Borda externa da grade
+        $stream .= "0.80 0.84 0.88 RG\n";
+        $stream .= "0.75 w\n";
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $metaHeight, $width, $metaHeight);
 
-        $stream .= "BT\n/F2 8 Tf\n0.35 0.40 0.48 rg\n";
-        $stream .= sprintf("%.2f %.2f Td\n", $left + 10, $y - 24);
-        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("STATUS: " . strtoupper($sessao['status'] ?? 'ABERTO')));
+        // Linha horizontal central
+        $stream .= "0.88 0.91 0.94 RG\n";
+        $stream .= "0.5 w\n";
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - 24, $right, $y - 24);
 
-        // Tabela Financeira
-        $y -= 50.0;
+        // Divisores verticais da Linha 1 (20%, 40%, 70%)
+        $x1 = $left + ($width * 0.18);
+        $x2 = $left + ($width * 0.38);
+        $x3 = $left + ($width * 0.68);
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $x1, $y, $x1, $y - 24);
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $x2, $y, $x2, $y - 24);
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $x3, $y, $x3, $y - 24);
+
+        // Divisor vertical da Linha 2 (50%)
+        $xm = $left + ($width * 0.50);
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $xm, $y - 24, $xm, $y - 48);
+
+        // Textos da Linha 1:
+        // Célula 1: SESSÃO
+        $stream .= "BT\n/F2 7 Tf\n0.39 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 6, $y - 9);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("SESSÃO"));
+        $stream .= "BT\n/F2 9 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 6, $y - 20);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("#" . $id));
+
+        // Célula 2: TURNO
+        $stream .= "BT\n/F2 7 Tf\n0.39 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $x1 + 6, $y - 9);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("TURNO"));
+        $stream .= "BT\n/F2 9 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $x1 + 6, $y - 20);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($turno));
+
+        // Célula 3: OPERADOR RESPONSÁVEL
+        $stream .= "BT\n/F2 7 Tf\n0.39 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $x2 + 6, $y - 9);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("OPERADOR RESPONSÁVEL"));
+        $stream .= "BT\n/F1 9 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $x2 + 6, $y - 20);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($operador));
+
+        // Célula 4: STATUS
+        $stream .= "BT\n/F2 7 Tf\n0.39 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $x3 + 6, $y - 9);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("STATUS"));
+        $stream .= "BT\n/F2 9 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $x3 + 6, $y - 20);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($statusStr));
+
+        // Textos da Linha 2:
+        // Célula 5: DATA/HORA ABERTURA
+        $stream .= "BT\n/F2 7 Tf\n0.39 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 6, $y - 33);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("DATA/HORA ABERTURA"));
+        $stream .= "BT\n/F1 9 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 6, $y - 44);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($abertoEm));
+
+        // Célula 6: DATA/HORA FECHAMENTO
+        $stream .= "BT\n/F2 7 Tf\n0.39 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $xm + 6, $y - 33);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("DATA/HORA FECHAMENTO"));
+        $stream .= "BT\n/F1 9 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $xm + 6, $y - 44);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($fechadoEm));
+
+        // ==========================================
+        // 3. Tabela Financeira Analítica
+        // ==========================================
+        $y -= ($metaHeight + 14.0);
+
+        // Cabeçalho da Tabela
+        $stream .= "0.97 0.98 0.99 rg\n"; // #f8fafc
+        $stream .= sprintf("%.2f %.2f %.2f 22 re f\n", $left, $y - 22, $width);
+        $stream .= "0.80 0.84 0.88 RG\n1.5 w\n";
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - 22, $right, $y - 22);
+
+        $stream .= "BT\n/F2 8 Tf\n0.28 0.33 0.41 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 8, $y - 15);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("DISCRIMINAÇÃO DOS RECURSOS FINANCEIROS"));
+
+        $stream .= "BT\n/F2 8 Tf\n0.28 0.33 0.41 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $right - 90, $y - 15);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("VALOR APURADO"));
+
+        $y -= 22.0;
+
+        // Linhas de dados financeiros
         $linhas = [
-            ['Fundo de Troco Inicial (Gaveta)', 'R$ ' . number_format($fundo, 2, ',', '.')],
-            ['(+) Vendas Avulsas no Balcao (Dinheiro)', 'R$ ' . number_format($avulso, 2, ',', '.')],
-            ['(+) Recargas no Balcao (Dinheiro)', 'R$ ' . number_format($recargas, 2, ',', '.')],
-            ['(=) Total Esperado na Gaveta', 'R$ ' . number_format($esperado, 2, ',', '.')],
-            ['Total Informado / Contado na Gaveta', 'R$ ' . number_format($informado, 2, ',', '.')],
-            ['Diferenca / Quebra de Caixa', ($diferenca >= 0 ? '+ ' : '- ') . 'R$ ' . number_format(abs($diferenca), 2, ',', '.')],
-            ['Entradas em Pix Balcao (Conta Bancaria)', 'R$ ' . number_format($pix, 2, ',', '.')]
+            [
+                'label'    => 'Fundo de Troco Inicial (Gaveta)',
+                'sub'      => '',
+                'valor'    => 'R$ ' . number_format($fundo, 2, ',', '.'),
+                'isTotal'  => false,
+                'isBold'   => false,
+                'colorVal' => [0.06, 0.09, 0.16],
+                'height'   => 22.0
+            ],
+            [
+                'label'    => '(+) Vendas Avulsas no Balcão (Dinheiro Físico)',
+                'sub'      => '',
+                'valor'    => 'R$ ' . number_format($avulso, 2, ',', '.'),
+                'isTotal'  => false,
+                'isBold'   => false,
+                'colorVal' => [0.06, 0.09, 0.16],
+                'height'   => 22.0
+            ],
+            [
+                'label'    => '(+) Recargas de Carteira no Balcão (Dinheiro Físico)',
+                'sub'      => '',
+                'valor'    => 'R$ ' . number_format($recargas, 2, ',', '.'),
+                'isTotal'  => false,
+                'isBold'   => false,
+                'colorVal' => [0.06, 0.09, 0.16],
+                'height'   => 22.0
+            ],
+            [
+                'label'    => '(=) Total de Dinheiro em Espécie Esperado na Gaveta',
+                'sub'      => '',
+                'valor'    => 'R$ ' . number_format($esperado, 2, ',', '.'),
+                'isTotal'  => true,
+                'isBold'   => true,
+                'colorVal' => [0.06, 0.09, 0.16],
+                'height'   => 24.0
+            ],
+            [
+                'label'    => 'Total em Dinheiro Efetivamente Contado na Gaveta',
+                'sub'      => '',
+                'valor'    => 'R$ ' . number_format($informado, 2, ',', '.'),
+                'isTotal'  => false,
+                'isBold'   => true,
+                'colorVal' => [0.06, 0.09, 0.16],
+                'height'   => 22.0
+            ],
+            [
+                'label'    => 'Divergência de Caixa (Quebra / Sobra)',
+                'sub'      => 'Diferença entre o montante contado e o valor esperado pelo sistema',
+                'valor'    => ($diferenca == 0.0) 
+                    ? 'R$ 0,00 (Exato)' 
+                    : (($diferenca > 0) ? '+ R$ ' . number_format($diferenca, 2, ',', '.') . ' (Sobra)' : '- R$ ' . number_format(abs($diferenca), 2, ',', '.') . ' (Quebra/Falta)'),
+                'isTotal'  => false,
+                'isBold'   => true,
+                'colorVal' => ($diferenca == 0.0) ? [0.08, 0.50, 0.24] : (($diferenca > 0) ? [0.08, 0.50, 0.24] : [0.86, 0.15, 0.15]),
+                'height'   => 28.0
+            ],
+            [
+                'label'    => 'Entradas Digitais — Pix no Balcão (Creditado em Conta Bancária)',
+                'sub'      => '',
+                'valor'    => 'R$ ' . number_format($pix, 2, ',', '.'),
+                'isTotal'  => false,
+                'isBold'   => false,
+                'colorVal' => [0.06, 0.09, 0.16],
+                'height'   => 22.0
+            ]
         ];
 
-        foreach ($linhas as $idx => $lin) {
-            $isDest = ($idx === 3 || $idx === 4 || $idx === 5);
-            if ($isDest) {
-                $stream .= "0.94 0.96 0.98 rg\n";
-                $stream .= sprintf("%.2f %.2f %.2f 20 re f\n", $left, $y - 14, $width);
+        foreach ($linhas as $lin) {
+            $h = $lin['height'];
+
+            // Destaque de fundo para a linha de Total Esperado
+            if ($lin['isTotal']) {
+                $stream .= "0.94 0.96 0.98 rg\n"; // #f1f5f9
+                $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $h, $width, $h);
+                $stream .= "0.80 0.84 0.88 RG\n1 w\n";
+                $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y, $right, $y);
+                $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $h, $right, $y - $h);
+            } else {
+                // Linha divisória suave
+                $stream .= "0.88 0.91 0.94 RG\n0.5 w\n";
+                $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $h, $right, $y - $h);
             }
 
-            $stream .= "BT\n";
-            $stream .= ($isDest ? "/F2 9 Tf\n0.06 0.09 0.16 rg\n" : "/F1 9 Tf\n0.20 0.25 0.33 rg\n");
-            $stream .= sprintf("%.2f %.2f Td\n", $left + 10, $y - 10);
-            $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($lin[0]));
+            // Rótulo principal
+            $fontTag = $lin['isBold'] ? "/F2" : "/F1";
+            $fontSize = $lin['isTotal'] ? "9.5" : "9";
+            $textY = !empty($lin['sub']) ? ($y - 12) : ($y - ($h / 2) - 3);
 
             $stream .= "BT\n";
-            $stream .= ($isDest ? "/F2 9 Tf\n0.06 0.09 0.16 rg\n" : "/F1 9 Tf\n0.20 0.25 0.33 rg\n");
-            $stream .= sprintf("%.2f %.2f Td\n", $right - 100, $y - 10);
-            $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($lin[1]));
+            $stream .= sprintf("%s %s Tf\n", $fontTag, $fontSize);
+            $stream .= "0.06 0.09 0.16 rg\n";
+            $stream .= sprintf("%.2f %.2f Td\n", $left + 8, $textY);
+            $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($lin['label']));
 
-            $stream .= "0.88 0.91 0.94 RG\n0.5 w\n";
-            $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - 14, $right, $y - 14);
+            // Subtítulo / legenda explicativa
+            if (!empty($lin['sub'])) {
+                $stream .= "BT\n/F1 7.5 Tf\n0.39 0.45 0.55 rg\n";
+                $stream .= sprintf("%.2f %.2f Td\n", $left + 8, $y - 22);
+                $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($lin['sub']));
+            }
 
-            $y -= 22.0;
+            // Valor à direita com formatação tabular
+            $c = $lin['colorVal'];
+            $stream .= "BT\n";
+            $stream .= sprintf("%s %s Tf\n", $fontTag, $fontSize);
+            $stream .= sprintf("%.2f %.2f %.2f rg\n", $c[0], $c[1], $c[2]);
+            $stream .= sprintf("%.2f %.2f Td\n", $right - 140, !empty($lin['sub']) ? ($y - 16) : ($y - ($h / 2) - 3));
+            $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($lin['valor']));
+
+            $y -= $h;
         }
 
-        // Assinaturas
-        $y -= 60.0;
-        $signW = ($width - 40) / 2;
+        // ==========================================
+        // 4. Observações e Justificativas Registradas
+        // ==========================================
+        if (!empty($obs)) {
+            $y -= 14.0;
+            $obsBoxHeight = 38.0;
 
-        $stream .= "0.0 0.0 0.0 RG\n0.75 w\n";
+            $stream .= "0.97 0.98 0.99 rg\n"; // #f8fafc
+            $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $obsBoxHeight, $width, $obsBoxHeight);
+            $stream .= "0.88 0.91 0.94 RG\n0.75 w\n";
+            $stream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $obsBoxHeight, $width, $obsBoxHeight);
+
+            $stream .= "BT\n/F2 7.5 Tf\n0.39 0.45 0.55 rg\n";
+            $stream .= sprintf("%.2f %.2f Td\n", $left + 10, $y - 12);
+            $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("OBSERVAÇÕES E JUSTIFICATIVAS REGISTRADAS:"));
+
+            $stream .= "BT\n/F1 8.5 Tf\n0.06 0.09 0.16 rg\n";
+            $stream .= sprintf("%.2f %.2f Td\n", $left + 10, $y - 25);
+            $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($obs));
+
+            $y -= $obsBoxHeight;
+        }
+
+        // ==========================================
+        // 5. Bloco de Assinaturas Físicas
+        // ==========================================
+        $y = min($y - 45.0, 260.0);
+        $signW = ($width - 50.0) / 2;
+
+        // Assinatura 1: Operador de Caixa
+        $stream .= "0.06 0.09 0.16 RG\n0.75 w\n";
         $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + 10, $y, $left + 10 + $signW, $y);
-        $stream .= "BT\n/F1 8 Tf\n0.30 0.35 0.45 rg\n";
-        $stream .= sprintf("%.2f %.2f Td\n", $left + 20, $y - 12);
-        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($operador . " (Operador de Caixa)"));
 
-        $x2 = $left + 30 + $signW;
+        $stream .= "BT\n/F2 9 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 15, $y - 14);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($operador));
+
+        $stream .= "BT\n/F1 7.5 Tf\n0.39 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 15, $y - 24);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Operador de Caixa"));
+
+        // Assinatura 2: Gerência / Coordenação
+        $x2 = $right - 10 - $signW;
         $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $x2, $y, $x2 + $signW, $y);
-        $stream .= "BT\n/F1 8 Tf\n0.30 0.35 0.45 rg\n";
-        $stream .= sprintf("%.2f %.2f Td\n", $x2 + 15, $y - 12);
-        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Gerencia / Visto de Conferencia"));
 
-        // Rodapé
+        $stream .= "BT\n/F2 9 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $x2 + 5, $y - 14);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Gerência / Coordenação Administrativa"));
+
+        $stream .= "BT\n/F1 7.5 Tf\n0.39 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $x2 + 5, $y - 24);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Visto de Conferência"));
+
+        // ==========================================
+        // 6. Rodapé Institucional
+        // ==========================================
         $stream .= "0.88 0.91 0.94 RG\n0.5 w\n";
-        $stream .= sprintf("%.2f 45 m %.2f 45 l S\n", $left, $right);
+        $stream .= sprintf("%.2f 42 m %.2f 42 l S\n", $left, $right);
+
         $stream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n";
-        $stream .= sprintf("%.2f 32 Td\n", $left);
-        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Cantina Web — Colégio Monteiro Lobato • Documento gerado eletronicamente."));
+        $stream .= sprintf("%.2f 30 Td\n", $left);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Cantina Web — Colégio Monteiro Lobato • Documento oficial de prestação de contas emitido eletronicamente."));
+
+        $stream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n";
+        $stream .= sprintf("%.2f 30 Td\n", $right - 55);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Página 1 de 1"));
 
         return self::montarPdfEstruturado($stream);
     }
