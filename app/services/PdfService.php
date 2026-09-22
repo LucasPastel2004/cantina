@@ -1674,7 +1674,7 @@ class PdfService
                             <h1 class="school-title">Colégio Monteiro Lobato</h1>
                             <div class="doc-title">Prestação de Contas e Fechamento de Caixa — Turno <?php echo $turno; ?></div>
                         </td>
-                        <td class="text-right" style="vertical-align: bottom; font-size: 9pt; color: #64748b;">
+                        <td class="text-right" style="vertical-align: top; font-size: 9pt; color: #64748b; white-space: nowrap;">
                             Emissão: <?php echo $emissao; ?>
                         </td>
                     </tr>
@@ -1841,18 +1841,20 @@ class PdfService
         $stream .= sprintf("(%s) Tj\n", self::escapeText("Colégio Monteiro Lobato"));
         $stream .= "ET\n";
 
-        $stream .= "BT\n";
-        $stream .= "/F2 10.5 Tf\n";
-        $stream .= "0.11 0.31 0.85 rg\n"; // #1d4ed8
-        $stream .= sprintf("%.2f %.2f Td\n", $textX, $y - 30);
-        $stream .= sprintf("(%s) Tj\n", self::escapeText("PRESTAÇÃO DE CONTAS E FECHAMENTO DE CAIXA — TURNO " . strtoupper($turno)));
-        $stream .= "ET\n";
-
+        // Emissão alinhada à direita no topo (linha 1) para não sobrepor o subtítulo
         $stream .= "BT\n";
         $stream .= "/F1 8.5 Tf\n";
         $stream .= "0.39 0.45 0.55 rg\n"; // #64748b
-        $stream .= sprintf("%.2f %.2f Td\n", $right - 130, $y - 30);
+        $stream .= sprintf("%.2f %.2f Td\n", $right - 130, $y - 14);
         $stream .= sprintf("(%s) Tj\n", self::escapeText("Emissão: " . $emissao));
+        $stream .= "ET\n";
+
+        // Subtítulo operacional com largura total livre (linha 2)
+        $stream .= "BT\n";
+        $stream .= "/F2 10 Tf\n";
+        $stream .= "0.11 0.31 0.85 rg\n"; // #1d4ed8
+        $stream .= sprintf("%.2f %.2f Td\n", $textX, $y - 31);
+        $stream .= sprintf("(%s) Tj\n", self::escapeText("PRESTAÇÃO DE CONTAS E FECHAMENTO DE CAIXA — TURNO " . strtoupper($turno)));
         $stream .= "ET\n";
 
         // Linha divisória azul institucional (#1d4ed8)

@@ -76,6 +76,8 @@ assertTeste(str_starts_with($caixaPdf, '%PDF-1.4'), "Fechamento de Caixa PDF ini
 assertTeste(str_contains($caixaPdf, '/Im1 7 0 R'), "Fechamento de Caixa PDF referencia /Im1 como recurso XObject");
 assertTeste(str_contains($caixaPdf, '/DCTDecode'), "Fechamento de Caixa PDF contém stream JPEG /DCTDecode");
 assertTeste(str_contains($caixaPdf, '/Im1 Do'), "Fechamento de Caixa PDF executa desenho do logo (/Im1 Do)");
+assertTeste(str_contains($caixaPdf, "425.28 786.00 Td"), "Fechamento de Caixa PDF posiciona emissão na linha superior (X=425.28, Y=786.00)");
+assertTeste(str_contains($caixaPdf, "94.00 769.00 Td"), "Fechamento de Caixa PDF posiciona subtítulo na linha inferior sem colisão (X=94.00, Y=769.00)");
 assertTeste(str_ends_with(trim($caixaPdf), '%%EOF'), "Fechamento de Caixa PDF finaliza com %%EOF");
 
 // 2.3 Comprovante de Venda Balcão PDF (80mm)
