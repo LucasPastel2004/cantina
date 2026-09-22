@@ -31,6 +31,44 @@ class PdfService
     public const PAGE_WIDTH_THERMAL = 226.77;
 
     /**
+     * Retorna o caminho absoluto do arquivo do logotipo oficial da instituição
+     */
+    public static function getLogoPath(): string
+    {
+        $caminho = dirname(__DIR__, 2) . '/assets/img/logo-colegio.jpg';
+        if (file_exists($caminho)) {
+            return $caminho;
+        }
+
+        $candidatos = [
+            'assets/img/logo-colegio.jpg',
+            __DIR__ . '/../../assets/img/logo-colegio.jpg',
+            '/var/www/html/assets/img/logo-colegio.jpg'
+        ];
+        foreach ($candidatos as $c) {
+            if (file_exists($c)) {
+                return realpath($c) ?: $c;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Retorna a representação em base64 Data-URI do logotipo oficial para inclusão em HTML
+     */
+    public static function getLogoDataUri(): string
+    {
+        $path = self::getLogoPath();
+        if (!empty($path) && file_exists($path)) {
+            $data = file_get_contents($path);
+            if ($data !== false) {
+                return 'data:image/jpeg;base64,' . base64_encode($data);
+            }
+        }
+        return '';
+    }
+
+    /**
      * Gera o relatório consolidado de compras para o fornecedor em formato binário PDF 1.4
      * 
      * @param array $dadosCorte Estrutura retornada por Pedido::consolidarCorte
@@ -68,19 +106,30 @@ class PdfService
         $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85); // #1d4ed8
         $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 45, 4, 55);
 
+        // Logotipo institucional oficial (42x42 pt)
+        $logoSize = 42.0;
+        $logoX = $left + 12.0;
+        $logoY = $y - 40.0;
+        $stream .= "q\n";
+        $stream .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", $logoSize, $logoSize, $logoX, $logoY);
+        $stream .= "/Im1 Do\n";
+        $stream .= "Q\n";
+
+        $textX = $logoX + $logoSize + 12.0;
+
         // Título Principal
         $stream .= "BT\n";
-        $stream .= "/F2 14 Tf\n"; // Helvetica-Bold 14
+        $stream .= "/F2 13.5 Tf\n"; // Helvetica-Bold 13.5
         $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.06, 0.09, 0.16); // #0f172a
-        $stream .= sprintf("%.2f %.2f Td\n", $left + 14, $y - 12);
+        $stream .= sprintf("%.2f %.2f Td\n", $textX, $y - 12);
         $stream .= sprintf("(%s) Tj\n", self::escapeText("COLÉGIO MONTEIRO LOBATO — CANTINA ESCOLAR"));
         $stream .= "ET\n";
 
         // Subtítulo
         $stream .= "BT\n";
-        $stream .= "/F2 10 Tf\n"; // Helvetica-Bold 10
+        $stream .= "/F2 9.5 Tf\n"; // Helvetica-Bold 9.5
         $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85); // #1d4ed8
-        $stream .= sprintf("%.2f %.2f Td\n", $left + 14, $y - 28);
+        $stream .= sprintf("%.2f %.2f Td\n", $textX, $y - 27);
         $stream .= sprintf("(%s) Tj\n", self::escapeText("PEDIDO DE SALGADOS — CONSOLIDAÇÃO DO CORTE OPERACIONAL"));
         $stream .= "ET\n";
 
@@ -88,7 +137,7 @@ class PdfService
         $stream .= "BT\n";
         $stream .= "/F1 8 Tf\n";
         $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.40, 0.45, 0.55); // #64748b
-        $stream .= sprintf("%.2f %.2f Td\n", $left + 14, $y - 40);
+        $stream .= sprintf("%.2f %.2f Td\n", $textX, $y - 39);
         $stream .= sprintf("(%s) Tj\n", self::escapeText("Valores para o Futuro! • Emissão: " . $emissao));
         $stream .= "ET\n";
 
@@ -333,10 +382,18 @@ class PdfService
     }
 
     /**
-     * Monta a estrutura binária oficial do documento PDF 1.4 com tabela xref e trailer
+     * Monta a estrutura binária oficial do documento PDF 1.4 com tabela xref e trailer.
+     * Incorpora o logotipo institucional como XObject /Im1 caso o arquivo esteja presente.
      */
-    public static function montarPdfEstruturado(string $contentStream, float $pageWidth = self::PAGE_WIDTH, float $pageHeight = self::PAGE_HEIGHT): string
+    public static function montarPdfEstruturado(string $contentStream, float $pageWidth = self::PAGE_WIDTH, float $pageHeight = self::PAGE_HEIGHT, ?string $imagePath = null): string
     {
+        $imgPath = $imagePath ?? self::getLogoPath();
+        $hasImage = (!empty($imgPath) && file_exists($imgPath));
+        $imgData = $hasImage ? file_get_contents($imgPath) : '';
+        $imgInfo = $hasImage ? @getimagesize($imgPath) : null;
+        $imgWidth = $imgInfo[0] ?? 447;
+        $imgHeight = $imgInfo[1] ?? 447;
+
         $objects = [];
         $offsets = [];
 
@@ -355,10 +412,12 @@ class PdfService
 
         // Objeto 3: Page (A4 ou Bobina Térmica customizada)
         $offsets[3] = strlen($pdf);
+        $resXObject = $hasImage ? " /XObject << /Im1 7 0 R >>" : "";
         $obj3 = sprintf(
-            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2f %.2f] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>\nendobj\n",
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2f %.2f] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >>%s >> >>\nendobj\n",
             $pageWidth,
-            $pageHeight
+            $pageHeight,
+            $resXObject
         );
         $pdf .= $obj3;
 
@@ -378,18 +437,28 @@ class PdfService
         $obj6 = "6 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>\nendobj\n";
         $pdf .= $obj6;
 
+        // Objeto 7: Imagem XObject /Im1 (Logotipo oficial em JPEG)
+        if ($hasImage) {
+            $offsets[7] = strlen($pdf);
+            $imgLen = strlen($imgData);
+            $obj7 = "7 0 obj\n<< /Type /XObject /Subtype /Image /Width {$imgWidth} /Height {$imgHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length {$imgLen} >>\nstream\n" . $imgData . "\nendstream\nendobj\n";
+            $pdf .= $obj7;
+        }
+
+        $numObjs = $hasImage ? 7 : 6;
+
         // Tabela XREF
         $startXref = strlen($pdf);
         $pdf .= "xref\n";
-        $pdf .= "0 7\n";
+        $pdf .= "0 " . ($numObjs + 1) . "\n";
         $pdf .= "0000000000 65535 f \n";
-        for ($i = 1; $i <= 6; $i++) {
+        for ($i = 1; $i <= $numObjs; $i++) {
             $pdf .= sprintf("%010d 00000 n \n", $offsets[$i]);
         }
 
         // Trailer
         $pdf .= "trailer\n";
-        $pdf .= "<< /Size 7 /Root 1 0 R >>\n";
+        $pdf .= "<< /Size " . ($numObjs + 1) . " /Root 1 0 R >>\n";
         $pdf .= "startxref\n";
         $pdf .= $startXref . "\n";
         $pdf .= "%%EOF\n";
@@ -534,10 +603,15 @@ class PdfService
                 <button onclick="window.print()" class="btn-print">Imprimir Relatório</button>
             </div>
             <div class="print-header">
-                <div>
-                    <h1 class="school-title">Colégio Monteiro Lobato — Cantina Escolar</h1>
-                    <h2 class="report-title">Pedido de Salgados — Consolidação do Corte Operacional</h2>
-                    <p class="report-sub">Valores para o Futuro! • Documento Oficial de Encomenda</p>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <?php $logoUri = self::getLogoDataUri(); if (!empty($logoUri)): ?>
+                        <img src="<?php echo $logoUri; ?>" alt="Logo Colégio Monteiro Lobato" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0; flex-shrink: 0;">
+                    <?php endif; ?>
+                    <div>
+                        <h1 class="school-title">Colégio Monteiro Lobato — Cantina Escolar</h1>
+                        <h2 class="report-title">Pedido de Salgados — Consolidação do Corte Operacional</h2>
+                        <p class="report-sub">Valores para o Futuro! • Documento Oficial de Encomenda</p>
+                    </div>
                 </div>
                 <div style="text-align: right;">
                     <div style="font-size: 10px; color: #64748b;">Emissão: <?php echo htmlspecialchars($emissao, ENT_QUOTES, 'UTF-8'); ?></div>
@@ -640,9 +714,15 @@ class PdfService
             $stream = "";
             $y = 120.0;
 
-            $stream .= "BT\n/F2 10 Tf\n0.11 0.31 0.85 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("COLÉGIO MONTEIRO LOBATO"));
-            $y -= 16;
-            $stream .= "BT\n/F1 8 Tf\n0.40 0.45 0.55 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("Cantina Escolar • Fichas do Turno " . $turno));
+            // Logotipo institucional
+            $stream .= "q\n";
+            $stream .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", 22.0, 22.0, $left, $y - 14);
+            $stream .= "/Im1 Do\n";
+            $stream .= "Q\n";
+
+            $stream .= "BT\n/F2 10 Tf\n0.11 0.31 0.85 rg\n" . sprintf("%.2f %.2f Td\n", $left + 28, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("COLÉGIO MONTEIRO LOBATO"));
+            $y -= 14;
+            $stream .= "BT\n/F1 8 Tf\n0.40 0.45 0.55 rg\n" . sprintf("%.2f %.2f Td\n", $left + 28, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("Cantina Escolar • Fichas do Turno " . $turno));
             $y -= 25;
             $stream .= "BT\n/F1 9 Tf\n0.20 0.25 0.35 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("Nenhum ticket pendente para " . $dataFmt . "."));
 
@@ -710,18 +790,23 @@ class PdfService
             $stream .= "0.75 w\n";
             $stream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $ticketH, $width, $ticketH);
 
-            // Cabeçalho institucional do ticket
+            // Cabeçalho institucional do ticket com logotipo oficial
+            $stream .= "q\n";
+            $stream .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", 18.0, 18.0, $left + 6, $y - 22);
+            $stream .= "/Im1 Do\n";
+            $stream .= "Q\n";
+
             $stream .= "BT\n";
             $stream .= "/F2 8.5 Tf\n";
             $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85);
-            $stream .= sprintf("%.2f %.2f Td\n", $left + 6, $y - 12);
+            $stream .= sprintf("%.2f %.2f Td\n", $left + 28, $y - 12);
             $stream .= sprintf("(%s) Tj\n", self::escapeText("COLÉGIO MONTEIRO LOBATO"));
             $stream .= "ET\n";
 
             $stream .= "BT\n";
             $stream .= "/F1 7 Tf\n";
             $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.40, 0.45, 0.55);
-            $stream .= sprintf("%.2f %.2f Td\n", $left + 6, $y - 21);
+            $stream .= sprintf("%.2f %.2f Td\n", $left + 28, $y - 21);
             $stream .= sprintf("(%s) Tj\n", self::escapeText("CANTINA ESCOLAR • FICHA DE RECREIO"));
             $stream .= "ET\n";
 
@@ -1094,9 +1179,14 @@ class PdfService
                     <?php endif; ?>
 
                         <div class="ticket-card">
-                            <div class="ticket-header">
-                                <div class="ticket-title">COLÉGIO MONTEIRO LOBATO</div>
-                                <div class="ticket-subtitle">CANTINA ESCOLAR • FICHA DE RECREIO</div>
+                            <div class="ticket-header" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <?php $logoUri = self::getLogoDataUri(); if (!empty($logoUri)): ?>
+                                    <img src="<?php echo $logoUri; ?>" alt="Logo" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">
+                                <?php endif; ?>
+                                <div style="text-align: left;">
+                                    <div class="ticket-title">COLÉGIO MONTEIRO LOBATO</div>
+                                    <div class="ticket-subtitle">CANTINA ESCOLAR • FICHA DE RECREIO</div>
+                                </div>
                             </div>
 
                             <div class="ticket-meta">
@@ -1187,9 +1277,18 @@ class PdfService
         $width = $right - $left;
 
         $alturaItens = count($itens) * 16.0;
-        $pageHeight = max(240.0, 180.0 + $alturaItens);
+        $pageHeight = max(280.0, 225.0 + $alturaItens);
         $stream = "";
-        $y = $pageHeight - 20.0;
+        $y = $pageHeight - 16.0;
+
+        // Logotipo oficial centralizado no topo da bobina (34x34 pt)
+        $logoSize = 34.0;
+        $logoX = ($pageWidth - $logoSize) / 2.0;
+        $stream .= "q\n";
+        $stream .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", $logoSize, $logoSize, $logoX, $y - $logoSize);
+        $stream .= "/Im1 Do\n";
+        $stream .= "Q\n";
+        $y -= ($logoSize + 8.0);
 
         // Cabeçalho
         $stream .= "BT\n/F2 10 Tf\n0.11 0.31 0.85 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("COLÉGIO MONTEIRO LOBATO"));
@@ -1329,6 +1428,9 @@ class PdfService
             </div>
             <div class="thermal-wrapper">
                 <div class="center">
+                    <?php $logoUri = self::getLogoDataUri(); if (!empty($logoUri)): ?>
+                        <img src="<?php echo $logoUri; ?>" alt="Logo" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; margin: 0 auto 6px auto; display: block; border: 1px solid #e2e8f0;">
+                    <?php endif; ?>
                     <div class="title">COLÉGIO MONTEIRO LOBATO</div>
                     <div class="sub">Cantina Escolar • Valores para o Futuro!</div>
                 </div>
@@ -1563,7 +1665,12 @@ class PdfService
 
                 <table class="header-table">
                     <tr>
-                        <td>
+                        <?php $logoUri = self::getLogoDataUri(); if (!empty($logoUri)): ?>
+                            <td style="width: 58px; vertical-align: middle; padding-right: 12px;">
+                                <img src="<?php echo $logoUri; ?>" alt="Logo Colégio Monteiro Lobato" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0; display: block;">
+                            </td>
+                        <?php endif; ?>
+                        <td style="vertical-align: middle;">
                             <h1 class="school-title">Colégio Monteiro Lobato</h1>
                             <div class="doc-title">Prestação de Contas e Fechamento de Caixa — Turno <?php echo $turno; ?></div>
                         </td>
@@ -1717,29 +1824,39 @@ class PdfService
         // ==========================================
         // 1. Cabeçalho Institucional Oficial
         // ==========================================
+        $logoSize = 42.0;
+        $logoX = $left;
+        $logoY = $y - 42.0;
+        $stream .= "q\n";
+        $stream .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", $logoSize, $logoSize, $logoX, $logoY);
+        $stream .= "/Im1 Do\n";
+        $stream .= "Q\n";
+
+        $textX = $left + $logoSize + 12.0;
+
         $stream .= "BT\n";
         $stream .= "/F2 14 Tf\n";
         $stream .= "0.06 0.09 0.16 rg\n";
-        $stream .= sprintf("%.2f %.2f Td\n", $left, $y - 14);
+        $stream .= sprintf("%.2f %.2f Td\n", $textX, $y - 14);
         $stream .= sprintf("(%s) Tj\n", self::escapeText("Colégio Monteiro Lobato"));
         $stream .= "ET\n";
 
         $stream .= "BT\n";
         $stream .= "/F2 10.5 Tf\n";
         $stream .= "0.11 0.31 0.85 rg\n"; // #1d4ed8
-        $stream .= sprintf("%.2f %.2f Td\n", $left, $y - 28);
+        $stream .= sprintf("%.2f %.2f Td\n", $textX, $y - 30);
         $stream .= sprintf("(%s) Tj\n", self::escapeText("PRESTAÇÃO DE CONTAS E FECHAMENTO DE CAIXA — TURNO " . strtoupper($turno)));
         $stream .= "ET\n";
 
         $stream .= "BT\n";
         $stream .= "/F1 8.5 Tf\n";
         $stream .= "0.39 0.45 0.55 rg\n"; // #64748b
-        $stream .= sprintf("%.2f %.2f Td\n", $right - 130, $y - 28);
+        $stream .= sprintf("%.2f %.2f Td\n", $right - 130, $y - 30);
         $stream .= sprintf("(%s) Tj\n", self::escapeText("Emissão: " . $emissao));
         $stream .= "ET\n";
 
         // Linha divisória azul institucional (#1d4ed8)
-        $y -= 36.0;
+        $y -= 48.0;
         $stream .= "0.11 0.31 0.85 RG\n";
         $stream .= "2 w\n";
         $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y, $right, $y);

@@ -442,7 +442,17 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Adição de atalhos rápidos `F3` (foco na busca de produtos) e `F10` (conclusão de venda).
 * [x] **Harmonização e Paridade Estrita do Espelho de Fechamento de Caixa (`PdfService.php`):**
   * Equalização completa entre a renderização HTML do navegador (`/operacional/caixa/espelho/{id}`) e o arquivo PDF binário baixado (`/operacional/caixa/espelho/{id}/pdf`).
-  * Inclusão no PDF de: cabeçalho com linha institucional azul, grade técnica de metadados em 4 colunas x 2 linhas, cabeçalho da tabela financeira, textos oficiais acentuados, destaque semântico colorido para quebra/sobra, renderização do bloco de observações/justificativas e bloco de assinaturas físicas.
+* [x] **Inclusão do Logotipo Oficial em Todos os PDFs e Documentos de Impressão (`PdfService.php`):**
+  * Implementação de suporte nativo a imagens XObject JPEG com compressão `/DCTDecode` no gerador autônomo de PDF 1.4 (`montarPdfEstruturado()`), com recálculo automático da tabela `xref` e `trailer`.
+  * Criação dos métodos `PdfService::getLogoPath()` e `PdfService::getLogoDataUri()` (codificação base64 Data-URI para suporte total offline e em qualquer impressora/navegador).
+  * Inclusão do logotipo oficial circular (`assets/img/logo-colegio.jpg`) em todos os PDFs binários:
+    - Relatório Consolidado de Corte Operacional A4 (`gerarRelatorioCortePdf`) com brasão de 42x42 pt no cabeçalho institucional;
+    - Prestação de Contas e Fechamento de Caixa A4 (`gerarEspelhoFechamentoCaixaPdf`) com brasão de 42x42 pt ao lado do título e turno;
+    - Comprovante de Venda do Balcão PDV 80mm (`gerarComprovanteVendaBalcaoPdf`) com logotipo de 34x34 pt centralizado no topo;
+    - Tickets de Recreio em Lote e Individual 80mm (`gerarTicketsLotePdf` e `gerarTicketIndividualPdf`) com brasão de 18x18 pt no cabeçalho de cada ticket individual.
+  * Inclusão do logotipo oficial em todos os espelhos HTML de impressão: Relatório de Corte A4, Fechamento de Caixa A4, Comprovante de Balcão 80mm e Bobina de Tickets 80mm.
+  * Suíte de testes dedicada `tests/logo_pdf_test.php` criada e aprovada com 100% de sucesso (29/29 asserções).
+  * Suítes de regressão `tests/caixa_test.php` (38/38), `tests/fase13_test.php` (52/52) e `tests/pdv_web_test.php` (30/30) executadas e aprovadas com 100% de sucesso (total de 149 asserções válidas).
 * [x] Homologação das suítes de regressão (Fases 11 e 12) com 100% de aprovação.
 
 ---
