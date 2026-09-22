@@ -369,6 +369,33 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Alinhado o bloco de assinaturas do Operador de Caixa e da Coordenação Administrativa.
 - Como evitar no futuro: Ao implementar geradores duais de documentos (HTML para tela/impressão rápida e PDF binário para download), assegurar paridade estrita de dicionário de dados, rótulos, campos condicionais (como observações) e identidade visual corporativa.
 
+---
+
+## 2026-09-22 - Conflito de Turno no PDV e Sessão Matutina Residual Aberta à Tarde
+
+- Sintoma: No terminal de PDV (`/operacional/pdv`) no período da tarde (16:16), o cabeçalho superior informava `Turno: Vespertino | Caixa: Aberto`, enquanto o corpo do PDV exibia `● Caixa Aberto (Turno Matutino)`. Ao mesmo tempo, na tela de Caixa (`/operacional/caixa`), o turno matutino aparecia com sessão aberta (#40) e o vespertino como encerrado (#46).
+- Causa:
+  1. No `PdvController.php` (linhas 36-40), havia um fallback indevido:
+     ```php
+     $turnoAtual = SessaoCaixa::inferirTurnoAtual();
+     $sessaoAberta = SessaoCaixa::obterSessaoAberta($turnoAtual);
+     if (!$sessaoAberta) {
+         $sessaoAberta = SessaoCaixa::obterSessaoAberta('matutino') ?? SessaoCaixa::obterSessaoAberta('vespertino');
+     }
+     ```
+     Quando o operador acessava o PDV à tarde e o caixa vespertino ainda não havia sido aberto, o código "sequestrava" a sessão matutina que ainda constava aberta, associando as vendas vespertinas à sessão errada da manhã.
+  2. A suíte de testes automatizados `tests/fase13_test.php` abria a sessão matutina #40 para simular vendas de balcão e não a encerrava ao término da execução, deixando-a como resíduo aberto no banco de desenvolvimento local. Enquanto isso, `tests/caixa_test.php` abria e encerrava o turno vespertino para validar apuração de quebra e sobra, deixando o turno da tarde como fechado.
+  3. Descompasso de timezone no contêiner Docker: a conexão PDO utilizava o timezone UTC padrão do MySQL (`+00:00`), enquanto o horário de Brasília opera em UTC-3 (`America/Sao_Paulo`), gerando discrepâncias entre `NOW()` do MySQL e `date()` do PHP.
+- Solução aplicada:
+  1. Configurado o fuso horário padrão oficial do Brasil (`America/Sao_Paulo`) e sincronizado o MySQL via `\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset} COLLATE {$collation}, time_zone = '-03:00'"` em `config/database.php`.
+  2. Removido o fallback permissivo de `PdvController.php`. O PDV agora respeita estritamente o turno inferido pelo horário do relógio (`< 12:00` matutino, `>= 12:00` vespertino) ou o turno explicitamente solicitado via `?turno=...`.
+  3. No template `app/views/operacional/pdv.php`, se o caixa do turno atual estiver fechado, exibe claramente `● Caixa Fechado (Turno Vespertino)` e o botão "Abrir Caixa do Turno Vespertino".
+  4. Adicionado alerta operacional no PDV caso o caixa do outro turno (ex: matutino) tenha sido esquecido aberto, com link direto para encerramento e prestação de contas na tela de Caixa.
+  5. Adicionado seletor rápido de turno (Manhã / Tarde) no stat-strip do PDV e atalho de teclado `F7` para ir à tela de Caixa.
+  6. Refatorada a suíte `tests/fase13_test.php` para encerrar atomicamente qualquer sessão aberta de teste ao finalizar, garantindo que o banco de dados não mantenha sessões fantasmas.
+- Como evitar no futuro: Em sistemas financeiros com segregação por turno, nunca permitir que a interface ou os modelos reutilizem sessões de turnos distintos automaticamente via fallback. Cada turno deve ter seu próprio ciclo de vida explícito de abertura, suprimento, vendas e fechamento cego com prestação de contas.
+
+
 
 
 

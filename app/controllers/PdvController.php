@@ -30,13 +30,17 @@ class PdvController extends Controller
      */
     public function index(): void
     {
-        $turnoAtual = SessaoCaixa::inferirTurnoAtual();
+        $turnoAtual = $_GET['turno'] ?? SessaoCaixa::inferirTurnoAtual();
+        if (!in_array($turnoAtual, [SessaoCaixa::TURNO_MATUTINO, SessaoCaixa::TURNO_VESPERTINO], true)) {
+            $turnoAtual = SessaoCaixa::inferirTurnoAtual();
+        }
+
+        // Obtém ESTRITAMENTE a sessão do turno operacional ativo
         $sessaoAberta = SessaoCaixa::obterSessaoAberta($turnoAtual);
 
-        // Se não houver sessão aberta para o turno atual, tenta qualquer sessão aberta hoje
-        if (!$sessaoAberta) {
-            $sessaoAberta = SessaoCaixa::obterSessaoAberta('matutino') ?? SessaoCaixa::obterSessaoAberta('vespertino');
-        }
+        // Verifica se o outro turno foi deixado aberto sem fechamento
+        $outroTurno = ($turnoAtual === SessaoCaixa::TURNO_MATUTINO) ? SessaoCaixa::TURNO_VESPERTINO : SessaoCaixa::TURNO_MATUTINO;
+        $sessaoOutroTurno = SessaoCaixa::obterSessaoAberta($outroTurno);
 
         $categorias = Categoria::listarTodas(true);
         $produtos = Produto::listarParaPdv();
@@ -46,18 +50,20 @@ class PdvController extends Controller
         $metricas = VendaBalcao::obterMetricasHoje($sessaoId);
 
         $this->render('operacional/pdv', [
-            'activeMenu'     => 'pdv',
-            'pageTitle'      => 'PDV Balcão - Frente de Caixa',
-            'pageHeading'    => 'PDV Balcão - Frente de Caixa',
-            'turnoAtivo'     => ucfirst($turnoAtual),
-            'statusCaixa'    => $sessaoAberta ? 'Aberto' : 'Fechado',
-            'sessaoAberta'   => $sessaoAberta,
-            'turnoAtual'     => $turnoAtual,
-            'categorias'     => $categorias,
-            'produtos'       => $produtos,
-            'vendasRecentes' => $vendasRecentes,
-            'metricas'       => $metricas,
-            'title'          => 'PDV Balcão - Frente de Caixa — Cantina Web'
+            'activeMenu'        => 'pdv',
+            'pageTitle'         => 'PDV Balcão - Frente de Caixa',
+            'pageHeading'       => 'PDV Balcão - Frente de Caixa',
+            'turnoAtivo'        => ucfirst($turnoAtual),
+            'statusCaixa'       => $sessaoAberta ? 'Aberto' : 'Fechado',
+            'sessaoAberta'      => $sessaoAberta,
+            'turnoAtual'        => $turnoAtual,
+            'sessaoOutroTurno'  => $sessaoOutroTurno,
+            'outroTurnoNome'    => ucfirst($outroTurno),
+            'categorias'        => $categorias,
+            'produtos'          => $produtos,
+            'vendasRecentes'    => $vendasRecentes,
+            'metricas'          => $metricas,
+            'title'             => 'PDV Balcão - Frente de Caixa — Cantina Web'
         ], 'admin');
     }
 
@@ -84,7 +90,7 @@ class PdvController extends Controller
             Session::setFlash('danger', 'Erro ao abrir caixa: ' . $e->getMessage());
         }
 
-        $this->redirect('/operacional/pdv');
+        $this->redirect('/operacional/pdv?turno=' . urlencode($turno));
     }
 
     /**

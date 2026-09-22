@@ -11,6 +11,8 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 $baseUrl = $baseUrl ?? '';
 $sessaoAberta = $sessaoAberta ?? null;
 $turnoAtual = $turnoAtual ?? 'matutino';
+$sessaoOutroTurno = $sessaoOutroTurno ?? null;
+$outroTurnoNome = $outroTurnoNome ?? '';
 $categorias = $categorias ?? [];
 $produtos = $produtos ?? [];
 $vendasRecentes = $vendasRecentes ?? [];
@@ -519,9 +521,9 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             <span class="stat-strip-label">Status da Sessão</span>
             <span class="stat-strip-value">
                 <?php if ($caixaAberto): ?>
-                    <span class="status-indicator status-active"><span class="bullet">●</span> Caixa Aberto (Turno <?php echo ucfirst($sessaoAberta['turno']); ?>)</span>
+                    <span class="status-indicator status-active"><span class="bullet">●</span> Caixa Aberto (Turno <?php echo ucfirst($sessaoAberta['turno']); ?> #<?php echo (int)$sessaoAberta['id']; ?>)</span>
                 <?php else: ?>
-                    <span class="status-indicator status-inactive"><span class="bullet">●</span> Caixa Fechado</span>
+                    <span class="status-indicator status-inactive"><span class="bullet">●</span> Caixa Fechado (Turno <?php echo ucfirst($turnoAtual); ?>)</span>
                 <?php endif; ?>
             </span>
         </div>
@@ -556,11 +558,19 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             </span>
         </div>
         <div class="stat-strip-item d-flex align-items-center gap-2">
+            <!-- Alternador de Turno -->
+            <div class="btn-group btn-group-sm me-1" role="group" aria-label="Seletor de Turno PDV">
+                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=matutino" class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-secondary'; ?>" style="font-size: 11px; padding: 4px 8px;">Manhã</a>
+                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=vespertino" class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-secondary'; ?>" style="font-size: 11px; padding: 4px 8px;">Tarde</a>
+            </div>
             <?php if (!$caixaAberto): ?>
                 <button type="button" class="btn btn-enterprise btn-primary btn-sm" onclick="abrirModal('modalAbrirCaixa')">
-                    Abrir Caixa
+                    Abrir Caixa <?php echo ucfirst($turnoAtual); ?>
                 </button>
             <?php endif; ?>
+            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-secondary btn-sm" title="Gestão e Fechamento de Caixa [F7]">
+                Caixa <span class="pdv-shortcut-tag">F7</span>
+            </a>
             <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="abrirModal('modalEstornoBalcao')" title="Estorno de Ticket [F8]">
                 Estorno <span class="pdv-shortcut-tag">F8</span>
             </button>
@@ -570,14 +580,28 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
         </div>
     </div>
 
+    <!-- Alerta Operacional: Sessão do Outro Turno ainda Aberta -->
+    <?php if ($sessaoOutroTurno): ?>
+        <div class="alert alert-info d-flex align-items-center justify-content-between mb-3 py-2 px-3" style="font-size: 12px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 6px;">
+            <div class="d-flex align-items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
+                <span><strong>Alerta Operacional:</strong> A sessão de caixa do turno <strong><?php echo $outroTurnoNome; ?> (Sessão #<?php echo (int)$sessaoOutroTurno['id']; ?>)</strong> ainda está aberta. Recomendamos realizar a prestação de contas na tela de Caixa.</span>
+            </div>
+            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-secondary btn-sm" style="font-size: 11px;">
+                Conferir Caixa <?php echo $outroTurnoNome; ?> →
+            </a>
+        </div>
+    <?php endif; ?>
+
+    <!-- Alerta de Caixa Fechado para o Turno Atual -->
     <?php if (!$caixaAberto): ?>
         <div class="alert alert-enterprise alert-warning d-flex align-items-center justify-content-between mb-3">
             <div class="d-flex align-items-center gap-2">
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.17.17 0 0 1-.066.017H1.146a.17.17 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
-                <span><strong>Atenção:</strong> A sessão de caixa do turno atual está fechada. Vendas em dinheiro físico exigem a abertura prévia da sessão de caixa.</span>
+                <span><strong>Atenção:</strong> A sessão de caixa do turno <strong><?php echo ucfirst($turnoAtual); ?></strong> está fechada. Vendas em dinheiro físico exigem a abertura prévia da sessão de caixa.</span>
             </div>
             <button type="button" class="btn btn-enterprise btn-primary btn-sm" onclick="abrirModal('modalAbrirCaixa')">
-                Abrir Sessão de Caixa Agora
+                Abrir Caixa do Turno <?php echo ucfirst($turnoAtual); ?>
             </button>
         </div>
     <?php endif; ?>
@@ -998,6 +1022,9 @@ document.addEventListener('keydown', function(e) {
     } else if (e.key === 'F4' || e.key === 'F10') {
         e.preventDefault();
         processarFinalizacaoVenda();
+    } else if (e.key === 'F7') {
+        e.preventDefault();
+        window.location.href = `${baseUrl}/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>`;
     } else if (e.key === 'F8') {
         e.preventDefault();
         abrirModal('modalEstornoBalcao');

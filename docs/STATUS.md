@@ -452,7 +452,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     - Tickets de Recreio em Lote e Individual 80mm (`gerarTicketsLotePdf` e `gerarTicketIndividualPdf`) com brasão de 18x18 pt no cabeçalho de cada ticket individual.
   * Inclusão do logotipo oficial em todos os espelhos HTML de impressão: Relatório de Corte A4, Fechamento de Caixa A4, Comprovante de Balcão 80mm e Bobina de Tickets 80mm.
   * Suíte de testes dedicada `tests/logo_pdf_test.php` criada e aprovada com 100% de sucesso (29/29 asserções).
-  * Suítes de regressão `tests/caixa_test.php` (38/38), `tests/fase13_test.php` (52/52) e `tests/pdv_web_test.php` (30/30) executadas e aprovadas com 100% de sucesso (total de 149 asserções válidas).
+* [x] **Correção de Resolução de Turnos no PDV e Sincronização de Fuso Horário:**
+  * Sincronização de timezone oficial (`America/Sao_Paulo`, UTC-3) entre PHP e MySQL via `\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES ..., time_zone = '-03:00'"`.
+  * Eliminação de fallback permissivo no `PdvController.php`: o PDV respeita estritamente o turno inferido pelo relógio (`< 12:00` matutino, `>= 12:00` vespertino) ou selecionado pelo usuário via `?turno=...`.
+  * Stat-strip e topbar do PDV devidamente alinhados, exibindo `● Caixa Fechado (Turno Vespertino)` e botão de abertura quando o caixa da tarde ainda não foi aberto.
+  * Alerta visual caso o caixa do outro turno (ex: matutino) tenha ficado aberto sem fechamento, com atalho direto para prestação de contas.
+  * Seletor rápido de turno (Manhã / Tarde) e atalho `F7` para ir ao Caixa.
+  * Limpeza compulsória de sessões de teste na suíte automatizada `tests/fase13_test.php`.
 * [x] Homologação das suítes de regressão (Fases 11 e 12) com 100% de aprovação.
 
 ---

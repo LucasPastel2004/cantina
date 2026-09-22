@@ -69,6 +69,9 @@ class Fase13Test
         $this->testarAproveitamentoSobrasRecreio();
         $this->testarComprovanteTermicoPdfEHtml();
 
+        // Encerra sessões de caixa abertas durante os testes para manter ambiente limpo
+        $this->pdo->exec("UPDATE sessoes_caixa SET status = 'fechado', fechado_em = NOW(), total_informado_gaveta = (fundo_troco_inicial + total_dinheiro_avulso + total_dinheiro_recargas), diferenca_quebra_sobra = 0.00 WHERE observacoes = 'Abertura para testes' AND status = 'aberto'");
+
         echo "\n----------------------------------------------------------------------\n";
         echo sprintf(" RESULTADO FINAL: %d/%d asserções aprovadas (%.1f%%)\n",
             $this->assercoesAprovadas,
@@ -443,15 +446,15 @@ class Fase13Test
         $respId = (int)$this->pdo->lastInsertId();
 
         $turmaId = $this->obterTurmaId();
-        $mat = 'ALU-SBR-' . rand(1000, 9999);
+        $mat = 'ALU-SBR-' . bin2hex(random_bytes(4));
         $this->pdo->exec("INSERT INTO alunos (matricula, nome, responsavel_id, turma_id, turno, ativo, created_at) VALUES ('{$mat}', 'Aluno Ausente Recreio', {$respId}, {$turmaId}, 'matutino', 1, NOW())");
         $alunoId = (int)$this->pdo->lastInsertId();
 
-        $codProd = 'SOB-' . rand(100, 999);
+        $codProd = 'SOB-' . bin2hex(random_bytes(4));
         $this->pdo->exec("INSERT INTO produtos (codigo_interno, descricao, categoria_id, tipo, preco_venda, estoque_atual, estoque_minimo, status_pausa, created_at) VALUES ('{$codProd}', 'Esfiha de Carne', {$catId}, 'salgado_diario', 6.00, 0, 2, 'ativo', NOW())");
         $prodId = (int)$this->pdo->lastInsertId();
 
-        $codPed = 'PED-SBR-' . rand(100, 999);
+        $codPed = 'PED-SBR-' . bin2hex(random_bytes(4));
         $hoje = date('Y-m-d');
         $this->pdo->exec("INSERT INTO pedidos (codigo_pedido, responsavel_id, aluno_id, data_consumo, turno_consumo, valor_total, status, created_at) VALUES ('{$codPed}', {$respId}, {$alunoId}, '{$hoje}', 'matutino', 6.00, 'agendado', NOW())");
         $pedId = (int)$this->pdo->lastInsertId();
@@ -459,7 +462,7 @@ class Fase13Test
         $this->pdo->exec("INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario, subtotal) VALUES ({$pedId}, {$prodId}, 3, 6.00, 18.00)");
         $itemId = (int)$this->pdo->lastInsertId();
 
-        $codTicket = 'TCK-SBR-' . rand(100, 999);
+        $codTicket = 'TCK-SBR-' . bin2hex(random_bytes(4));
         $this->pdo->exec("INSERT INTO tickets (pedido_id, item_pedido_id, codigo_ticket, numero_via, status, created_at) VALUES ({$pedId}, {$itemId}, '{$codTicket}', 1, 'impresso', NOW())");
         $ticketId = (int)$this->pdo->lastInsertId();
 
