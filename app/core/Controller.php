@@ -122,7 +122,63 @@ abstract class Controller
         } else {
             echo "<script>window.location.href=" . json_encode($target) . ";</script>";
         }
-        exit;
+        if (!defined('CANTINA_TEST_MODE') || !CANTINA_TEST_MODE) {
+            exit;
+        }
+    }
+
+    /**
+     * Valida o token de proteção contra CSRF.
+     * Caso o token seja inválido ou ausente, encerra a requisição retornando JSON 403 (se Ajax)
+     * ou redireciona com mensagem flash de segurança (se requisição web regular).
+     *
+     * @param string|null $token Token a validar (se null, busca em $_POST['csrf_token'] ou header X-CSRF-TOKEN)
+     * @param string|null $redirectPath Rota alternativa para redirecionamento em falha
+     * @return bool Retorna true se o token for válido
+     */
+    protected function validateCsrf(?string $token = null, ?string $redirectPath = null): bool
+    {
+        $token = $token ?? (string)($this->input('csrf_token') ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''));
+
+        if (!Session::validateCsrfToken($token)) {
+            $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+                      (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
+
+            if ($isAjax) {
+                $this->json([
+                    'sucesso'  => false,
+                    'mensagem' => 'Sessão expirada ou token de segurança inválido. Recarregue a página.'
+                ], 403);
+                if (!defined('CANTINA_TEST_MODE') || !CANTINA_TEST_MODE) {
+                    exit;
+                }
+                return false;
+            }
+
+            Session::setFlash('danger', 'Sessão expirada ou token de segurança CSRF inválido. Por favor, tente novamente.');
+
+            if ($redirectPath !== null) {
+                $this->redirect($redirectPath);
+            } else {
+                $referer = $_SERVER['HTTP_REFERER'] ?? '';
+                if (!empty($referer)) {
+                    if (!headers_sent()) {
+                        header('Location: ' . $referer);
+                    }
+                    if (!defined('CANTINA_TEST_MODE') || !CANTINA_TEST_MODE) {
+                        exit;
+                    }
+                    return false;
+                }
+                $this->redirect('/');
+            }
+            if (!defined('CANTINA_TEST_MODE') || !CANTINA_TEST_MODE) {
+                exit;
+            }
+            return false;
+        }
+
+        return true;
     }
 
     /**

@@ -115,7 +115,9 @@ class EstoqueController extends Controller
      */
     public function perdasSalvar(): void
     {
-        $this->validateCsrf();
+        if (!$this->validateCsrf(null, '/estoque/perdas')) {
+            return;
+        }
 
         $produtoId     = (int)($_POST['produto_id'] ?? 0);
         $quantidade    = (int)($_POST['quantidade'] ?? 0);
@@ -172,7 +174,9 @@ class EstoqueController extends Controller
      */
     public function atualizarEstoqueMinimo(): void
     {
-        $this->validateCsrf();
+        if (!$this->validateCsrf(null, '/estoque')) {
+            return;
+        }
 
         $produtoId   = (int)($_POST['produto_id'] ?? 0);
         $novoMinimo  = (int)($_POST['estoque_minimo'] ?? 0);
@@ -225,7 +229,9 @@ class EstoqueController extends Controller
      */
     public function importarXmlAnalisar(): void
     {
-        $this->validateCsrf();
+        if (!$this->validateCsrf(null, '/estoque/importar-xml')) {
+            return;
+        }
 
         if (empty($_FILES['arquivo_xml']) || $_FILES['arquivo_xml']['error'] !== UPLOAD_ERR_OK) {
             Session::setFlash('danger', 'Selecione um arquivo XML válido da nota fiscal para envio.');
@@ -297,7 +303,9 @@ class EstoqueController extends Controller
      */
     public function importarXmlProcessar(): void
     {
-        $this->validateCsrf();
+        if (!$this->validateCsrf(null, '/estoque/importar-xml')) {
+            return;
+        }
 
         $draft = $_SESSION['_nfe_draft'] ?? null;
         if (!$draft || empty($draft['dados_nfe']) || empty($draft['conteudo_xml'])) {

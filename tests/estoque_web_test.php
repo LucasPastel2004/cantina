@@ -9,6 +9,7 @@
 namespace Tests;
 
 define('CANTINA_SISTEMA', true);
+define('CANTINA_TEST_MODE', true);
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
@@ -27,6 +28,7 @@ spl_autoload_register(function ($class) {
 use App\Core\RBAC;
 use App\Core\Auth;
 use App\Core\Session;
+use App\Models\Produto;
 use App\Controllers\EstoqueController;
 
 class EstoqueWebTest
@@ -50,6 +52,7 @@ class EstoqueWebTest
         $this->testarPermissoesRbac();
         $this->testarAcessoVisitanteHttpReal();
         $this->testarIntegridadeViewsEstoque();
+        $this->testarFluxoRegistroPerdaWeb();
 
         echo "\n----------------------------------------------------------------------\n";
         echo " RESULTADO: {$this->aprovados}/{$this->total} testes aprovados.\n";
@@ -188,6 +191,88 @@ class EstoqueWebTest
                 );
             }
         }
+    }
+
+    private function testarFluxoRegistroPerdaWeb(): void
+    {
+        echo "\n--- [5] Fluxo Web Completo de Registro de Perda com Validação CSRF ---\n";
+
+        Session::start();
+
+        // Autentica como Administrador
+        Auth::loginUsuario([
+            'id'      => 1,
+            'usuario' => 'admin-cantina',
+            'nome'    => 'Administrador Geral',
+            'email'   => 'admin@escola.com',
+            'perfil'  => RBAC::ROLE_ADMINISTRADOR
+        ]);
+
+        // Cria produto de teste isolado
+        $codUnico = 'TEST-PERDA-' . uniqid();
+        $this->pdo->prepare("INSERT INTO produtos (categoria_id, codigo_interno, descricao, preco_venda, estoque_atual, estoque_reservado, estoque_minimo, tipo, status_pausa) 
+                             VALUES (2, :cod, 'Produto Teste Perda Web', 4.00, 20, 0, 2, 'industrializado_continuo', 'ativo')")
+                  ->execute([':cod' => $codUnico]);
+        $prodId = (int)$this->pdo->lastInsertId();
+        $saldoInicial = 20;
+
+        $controller = new EstoqueController();
+
+        // 1. Teste de rejeição por CSRF inválido
+        $_POST = [
+            'csrf_token'    => 'token_invalido_123',
+            'produto_id'    => $prodId,
+            'quantidade'    => 1,
+            'motivo_perda'  => 'avaria',
+            'justificativa' => 'Tentativa de invasão ou token expirado'
+        ];
+
+        // Limpa flashes anteriores
+        Session::getFlash('danger');
+        Session::getFlash('success');
+
+        $controller->perdasSalvar();
+
+        $flashesDanger = Session::getFlash('danger');
+        $this->assert(
+            !empty($flashesDanger) && str_contains($flashesDanger[0], 'CSRF'),
+            "Action perdasSalvar bloqueia com segurança token CSRF inválido"
+        );
+
+        // 2. Teste de sucesso com CSRF válido
+        $tokenValido = Session::getCsrfToken();
+        $_POST = [
+            'csrf_token'    => $tokenValido,
+            'produto_id'    => $prodId,
+            'quantidade'    => 2,
+            'motivo_perda'  => 'avaria',
+            'justificativa' => 'Produto caiu da prateleira e quebrou embalagem'
+        ];
+
+        $controller->perdasSalvar();
+
+        $flashesSuccess = Session::getFlash('success');
+        $this->assert(
+            !empty($flashesSuccess) && str_contains($flashesSuccess[0], 'sucesso'),
+            "Action perdasSalvar processa com sucesso a perda quando CSRF e dados são válidos"
+        );
+
+        // Verifica débito do estoque no MySQL
+        $stmtSaldo = $this->pdo->prepare("SELECT estoque_atual FROM produtos WHERE id = :id");
+        $stmtSaldo->execute([':id' => $prodId]);
+        $saldoFinal = (int)$stmtSaldo->fetchColumn();
+
+        $this->assert(
+            $saldoFinal === ($saldoInicial - 2),
+            "Saldo físico do produto foi debitado com exatidão no banco de dados (de {$saldoInicial} para {$saldoFinal})"
+        );
+
+        // Teardown
+        $this->pdo->prepare("DELETE FROM estoque_movimentacoes WHERE produto_id = :id")->execute([':id' => $prodId]);
+        $this->pdo->prepare("DELETE FROM logs_auditoria WHERE tabela_afetada = 'produtos' AND registro_id = :id")->execute([':id' => $prodId]);
+        $this->pdo->prepare("DELETE FROM produtos WHERE id = :id")->execute([':id' => $prodId]);
+
+        Auth::logout();
     }
 }
 

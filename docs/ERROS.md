@@ -407,3 +407,15 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   1. No modelo `app/models/Estoque.php`, ajustada a chamada para passar o ID do produto ou da movimentação como inteiro estrito, a justificativa concatenada com o motivo oficial e `$_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'` como IP de origem.
   2. No teste `tests/fase14_test.php`, atualizada a asserção para verificar o conteúdo em `$audit['justificativa']`.
 - Como evitar no futuro: Sempre consultar a declaração exata da assinatura de métodos utilitários estáticos (como `Auditoria::registrar` e `Auth::logSecurityEvent`) antes de utilizá-los em novos modelos e controladores, respeitando os tipos escalares estritos do PHP 8.2.
+
+---
+
+## 2026-09-23 - Erro fatal Call to undefined method EstoqueController::validateCsrf() ao salvar perda no estoque
+
+- Sintoma: `Error: Call to undefined method App\Controllers\EstoqueController::validateCsrf()` em `/var/www/html/app/Controllers/EstoqueController.php:118` ao submeter o formulário de registro de perda em `/estoque/perdas/salvar` (incidente operacional registrado no ErrorHandler).
+- Causa: O método `validateCsrf()` não havia sido declarado na classe base abstrata `App\Core\Controller`, embora tenha sido invocado em `EstoqueController.php` para validar o token CSRF nas ações de mutação (`perdasSalvar`, `atualizarEstoqueMinimo`, `importarXmlAnalisar`, `importarXmlProcessar`).
+- Solução aplicada:
+  1. Declarado e implementado o método `protected function validateCsrf(?string $token = null, ?string $redirectPath = null): bool` na classe base `app/core/Controller.php`, integrando validação com `Session::validateCsrfToken()`, suporte a requisições Ajax com resposta JSON 403 e requisições HTTP regulares com mensagem flash e redirecionamento, respeitando o modo de teste `CANTINA_TEST_MODE`.
+  2. Adicionada a guarda de retorno defensiva `if (!$this->validateCsrf(...)) { return; }` em todas as actions correspondentes de `app/controllers/EstoqueController.php`.
+  3. Expandida a suíte de testes `tests/estoque_web_test.php` com o método `testarFluxoRegistroPerdaWeb()`, validando a rejeição segura de token CSRF inválido e o processamento com sucesso de perda com token CSRF válido e baixa de estoque no MySQL (56/56 asserções aprovadas).
+- Como evitar no futuro: Qualquer método auxiliar de controle invocado através de `$this->...` deve obrigatoriamente estar declarado na classe base `Controller` ou como método privado/protegido do próprio controller. Sempre incluir nas suítes web testes que executem a action de gravação de ponta a ponta simulando `$_POST` com token CSRF.
