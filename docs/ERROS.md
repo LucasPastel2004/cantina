@@ -395,12 +395,15 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   6. Refatorada a suíte `tests/fase13_test.php` para encerrar atomicamente qualquer sessão aberta de teste ao finalizar, garantindo que o banco de dados não mantenha sessões fantasmas.
 - Como evitar no futuro: Em sistemas financeiros com segregação por turno, nunca permitir que a interface ou os modelos reutilizem sessões de turnos distintos automaticamente via fallback. Cada turno deve ter seu próprio ciclo de vida explícito de abertura, suprimento, vendas e fechamento cego com prestação de contas.
 
+---
 
+## 2026-09-23 - Discrepância na assinatura do método Auditoria::registrar e nome de coluna em logs_auditoria
 
-
-
-
-
-
-
-
+- Sintoma: `TypeError: App\Models\Auditoria::registrar(): Argument #4 ($registroId) must be of type int, null given` ou verificação nula em testes ao registrar perda de mercadoria.
+- Causa:
+  1. A assinatura oficial de `Auditoria::registrar` em `app/models/Auditoria.php` é estritamente tipada: `public static function registrar(int $operadorId, string $acao, string $tabelaAfetada, int $registroId, string $justificativa, string $ipOrigem = '127.0.0.1'): int`. No modelo `Estoque.php`, o método estava sendo chamado com `$registroId` nulo e um array adicional de metadados como 6º parâmetro, disparando erro fatal de tipagem no PHP 8.2.
+  2. Na tabela `logs_auditoria`, a coluna textual que armazena a descrição da ocorrência é `justificativa` (conforme schema da migração 024), enquanto a suíte de testes tentava verificar `$audit['detalhes']`.
+- Solução aplicada:
+  1. No modelo `app/models/Estoque.php`, ajustada a chamada para passar o ID do produto ou da movimentação como inteiro estrito, a justificativa concatenada com o motivo oficial e `$_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'` como IP de origem.
+  2. No teste `tests/fase14_test.php`, atualizada a asserção para verificar o conteúdo em `$audit['justificativa']`.
+- Como evitar no futuro: Sempre consultar a declaração exata da assinatura de métodos utilitários estáticos (como `Auditoria::registrar` e `Auth::logSecurityEvent`) antes de utilizá-los em novos modelos e controladores, respeitando os tipos escalares estritos do PHP 8.2.

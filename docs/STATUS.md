@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 13 — Ponto de Venda (PDV) e Operação de Balcão
-* **Status da Fase 13:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 14 — Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas
-* **Última Atualização:** 2026-09-22 09:45:00 (Fase 13 finalizada, testada e validada)
+* **Fase Atual:** Fase 14 — Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas
+* **Status da Fase 14:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
+* **Última Atualização:** 2026-09-23 09:35:00 (Fase 14 finalizada, testada e validada)
 
 ---
 
@@ -463,9 +463,50 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 14 — Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas
-* [ ] Leitor de XML de NF-e com conferência e fator multiplicador de conversão.
-* [ ] Registro obrigatório de perdas com motivo padronizado e auditoria.
+### [x] Fase 14 — Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas
+* [x] Serviço de parsing e leitura segura de NF-e em `app/services/XmlParserService.php` com proteção contra ataques XXE (`LIBXML_NONET`, bloqueio de DTD e entidades externas), extração de chave de acesso de 44 dígitos, número, série, dados completos do emitente/fornecedor, valor total e itens faturados (`cProd`, `xProd`, `uCom`, `qCom`, `vUnCom`, `vProd`).
+* [x] Normalização inteligente e sugestão de correspondência automática entre produtos da nota fiscal e produtos cadastrados no sistema por código interno ou similaridade semântica de descrição.
+* [x] Modelos de dados fiscais: `app/models/NotaFiscal.php` (persistência em `notas_fiscais_xml`, verificação contra duplicidade de chave de 44 dígitos, filtros analíticos e métricas fiscais) e `app/models/ItemNotaFiscal.php` (persistência em `itens_nota_fiscal_xml`, memória do histórico de fator multiplicador por fornecedor via `buscarUltimoFatorConversao`).
+* [x] Modelo de dados e operações atômicas de estoque em `app/models/Estoque.php`:
+  * `darEntradaXml`: entrada transacional por lote com conversão matemática de embalagens/fardos em unidades físicas individuais (`quantidade_convertida = quantidade_comercial * fator_multiplicador`), registro em `estoque_movimentacoes` do tipo `entrada_xml` com vínculo ao ID da NF-e, armazenamento físico blindado do arquivo em `storage/uploads/private/` e memória de conversão para próximas compras.
+  * `registrarPerda`: baixa imediata do estoque com movimentação `saida_perda`, validação compulsória de saldo físico disponível, validação estrita dos 4 motivos oficiais padronizados pelo FSD (`avaria`, `vencimento`, `sobra_producao`, `ajuste_contagem`) e registro compulsório de trilha de negócio em `logs_auditoria` com operador, justificativa e IP de origem (RN-15).
+  * `listarSaldos`: painel analítico com estoque físico, estoque reservado para pedidos online, estoque disponível para venda imediata, status operacional, flag de alerta de reposição (`estoque_atual <= estoque_minimo`) e métricas consolidadas de inventário e valor monetário em venda.
+  * `listarMovimentacoes`: extrato cronológico com suporte a múltiplos filtros (produto, tipo de movimentação, motivo de perda, período de datas e busca textual).
+  * `listarPerdas`: listagem analítica e histórico recente de descartes e avarias.
+  * `atualizarEstoqueMinimo`: ajuste individual de ponto de reposição por produto.
+* [x] Controlador completo em `app/controllers/EstoqueController.php` com 12 actions operacionais e fiscais:
+  * `index`: painel de saldos com stat-strip, filtros, alertas e alternador rápido de pausa do produto ("Ativo/Pausado");
+  * `movimentacoes`: extrato cronológico auditável de entradas, saídas e perdas;
+  * `perdas`: tela de lançamento de baixa de mercadoria com validação em tempo real de saldo físico;
+  * `perdasSalvar`: processamento do registro de perda com token CSRF, transação e auditoria;
+  * `atualizarEstoqueMinimo`: ajuste via AJAX/POST do ponto de reposição;
+  * `importarXml`: formulário para upload de arquivo `.xml` de NF-e;
+  * `importarXmlAnalisar`: processamento inicial, extração segura via `XmlParserService`, validação de duplicidade e armazenamento temporário em sessão;
+  * `importarXmlProcessar`: conferência final de fatores de conversão, vínculo de produtos, gravação atômica da nota e movimentação de estoque;
+  * `importarXmlCancelar`: descarte de importação em andamento e limpeza de arquivos temporários;
+  * `notasFiscais`: histórico fiscal completo com stat-strip acumulado e filtros por fornecedor, número e período;
+  * `notaFiscalDetalhes`: detalhamento visual dos itens faturados, unidades abastecidas e fatores multiplicadores aplicados;
+  * `downloadXml`: download seguro do arquivo XML original a partir de `storage/uploads/private/` com headers de anexo (`Content-Disposition: attachment`).
+* [x] Criação de 7 visões corporativas de alta densidade no padrão Anti-Slop (`docs/DESIGN.md`):
+  * `app/views/estoque/index.php`: Painel Geral de Saldos Físicos & Inventário;
+  * `app/views/estoque/movimentacoes.php`: Extrato Cronológico de Movimentações;
+  * `app/views/estoque/perdas.php`: Registro Operacional de Perdas & Descarte;
+  * `app/views/estoque/importar_xml.php`: Upload da Nota Fiscal Eletrônica (NF-e);
+  * `app/views/estoque/conferir_xml.php`: Conferência de Itens e Fatores de Conversão com recálculo reativo em JS;
+  * `app/views/estoque/notas_fiscais.php`: Histórico de Documentos Fiscais Armazenados;
+  * `app/views/estoque/nota_fiscal_detalhes.php`: Detalhamento e Auditoria dos Itens da NF-e.
+* [x] Roteamento e blindagem RBAC de 12 rotas sob `/estoque*` no Front Controller `index.php`:
+  * Perfis `operador` e `administrador` autorizados para consulta de saldos, extrato de movimentações e registro de perdas;
+  * Apenas o perfil `administrador` autorizado para importação de XML de NF-e, configuração de estoque mínimo e gestão de notas fiscais;
+  * Perfil `responsavel` terminantemente bloqueado com registro em `logs_seguranca`.
+* [x] Suíte de testes da Fase 14 em `tests/fase14_test.php` aprovada com 100% de sucesso (45/45 asserções).
+* [x] Suíte de testes de rotas web, controllers e RBAC em `tests/estoque_web_test.php` aprovada com 100% de sucesso (53/53 asserções).
+* [x] Validação e aprovação de todas as suítes de regressão anteriores:
+  * `tests/fase13_test.php` (PDV e Operação de Balcão) — 52/52 asserções (100%);
+  * `tests/fase12_test.php` (Tickets Térmicos 80mm) — 65/65 asserções (100%);
+  * `tests/fase11_test.php` (Corte Operacional e Encomendas) — 72/72 asserções (100%);
+  * `tests/caixa_test.php` (Gestão de Caixa de Turno) — 38/38 asserções (100%);
+  * `tests/fase10_test.php` (Agendamento Semanal e Travas de Corte) — 71/71 asserções (100%).
 
 ---
 
@@ -491,7 +532,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 14 — Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas**, desenvolvendo o importador de XML fiscal de notas de entrada (com associação de itens e fator multiplicador para conversão de caixas/fardos em unidades individuais para venda) e a rotina compulsória de registro de perdas operacionais por avaria, vencimento ou ajuste de inventário com auditoria.
+Iniciar a **Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno**, consolidando e aprofundando o módulo financeiro e a prestação de contas dos turnos matutino (11:00) e vespertino (16:00), integrando a conciliação completa entre contagem física de gaveta e valores apurados no sistema (dinheiro, Pix balcão, saldo de carteira digital e desconto em folha), tratamento de quebras e sobras com justificativa obrigatória, auditoria e emissão do espelho A4 timbrado para assinatura física do operador e da coordenação.
 
 
 

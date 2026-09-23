@@ -235,6 +235,44 @@ $router->get('/operacional/caixa/espelho/{id}/pdf', [\App\Controllers\CaixaContr
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 
+// 2.6. Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas (Fase 14 — FSD Área 5 e Módulo 6)
+$router->get('/estoque', [\App\Controllers\EstoqueController::class, 'index'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/estoque/movimentacoes', [\App\Controllers\EstoqueController::class, 'movimentacoes'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/estoque/perdas', [\App\Controllers\EstoqueController::class, 'perdas'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/estoque/perdas/salvar', [\App\Controllers\EstoqueController::class, 'perdasSalvar'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/estoque/minimo', [\App\Controllers\EstoqueController::class, 'atualizarEstoqueMinimo'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/estoque/importar-xml', [\App\Controllers\EstoqueController::class, 'importarXml'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/estoque/importar-xml/analisar', [\App\Controllers\EstoqueController::class, 'importarXmlAnalisar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/estoque/importar-xml/processar', [\App\Controllers\EstoqueController::class, 'importarXmlProcessar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/estoque/importar-xml/cancelar', [\App\Controllers\EstoqueController::class, 'importarXmlCancelar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/estoque/notas-fiscais', [\App\Controllers\EstoqueController::class, 'notasFiscais'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/estoque/notas-fiscais/{id}', [\App\Controllers\EstoqueController::class, 'notaFiscalDetalhes'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/estoque/notas-fiscais/{id}/download', [\App\Controllers\EstoqueController::class, 'downloadXml'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
 // 3. Área Administrativa e Cadastros Mestres (Fases 7 e 8 — FSD Módulos 6, 7 e 9)
 // 3.1. Configurações Globais (Acesso exclusivo para 'administrador')
 $router->get('/admin/configuracoes', [\App\Controllers\AdminController::class, 'configuracoes'], [
