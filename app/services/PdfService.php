@@ -2027,17 +2027,18 @@ class PdfService
         </head>
         <body>
             <div class="sheet">
-                <div class="no-print">
-                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>" class="btn-action btn-secondary" id="btnVoltarCaixa" title="Retornar à tela de Caixa">
-                            ← Voltar ao Caixa
-                        </a>
+                <div class="no-print" style="display: flex; flex-direction: column; align-items: stretch; gap: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                         <div>
-                            <strong style="color: #0f172a; font-size: 13px;">Espelho de Fechamento de Caixa #<?php echo $id; ?></strong>
+                            <strong style="color: #0f172a; font-size: 14px;">Espelho de Fechamento de Caixa #<?php echo $id; ?></strong>
                             <span style="color: #64748b; font-size: 12px; margin-left: 6px;">Pronto para impressão / arquivamento</span>
                         </div>
+                        <span style="font-size: 11px; color: #94a3b8;">Atalho: Pressione <kbd style="background: #e2e8f0; color: #334155; padding: 1px 5px; border-radius: 3px; font-size: 11px;">Esc</kbd> para voltar</span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>" class="btn-action btn-secondary" id="btnVoltarCaixa" title="Retornar à tela de Gestão de Caixa">
+                            ← Voltar ao Caixa
+                        </a>
                         <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $id; ?>/pdf" target="_blank" download="fechamento_caixa_<?php echo $id; ?>.pdf" class="btn-action btn-secondary" id="btnBaixarEspelhoPdf">
                             📄 Baixar PDF
                         </a>
@@ -2165,6 +2166,20 @@ class PdfService
                         </td>
                     </tr>
                 </table>
+
+                <div class="no-print" style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                    <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>" class="btn-action btn-secondary" id="btnVoltarCaixaRodape" title="Retornar à tela de Gestão de Caixa">
+                        ← Voltar ao Caixa
+                    </a>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $id; ?>/pdf" target="_blank" download="fechamento_caixa_<?php echo $id; ?>.pdf" class="btn-action btn-secondary">
+                            📄 Baixar PDF
+                        </a>
+                        <button type="button" onclick="window.print()" class="btn-action btn-primary">
+                            🖨️ Imprimir Documento
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <script>
