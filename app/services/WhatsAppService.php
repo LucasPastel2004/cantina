@@ -73,6 +73,34 @@ class WhatsAppService
     }
 
     /**
+     * Envia notificação emergencial de contestação bancária (MED) e suspensão de conta
+     */
+    public function sendNotificacaoMed(string $whatsapp, float $valorEstornado, float $saldoNegativo, string $nome = ''): bool
+    {
+        $primeiroNome = !empty($nome) ? explode(' ', trim($nome))[0] : 'Responsável';
+        $estornoFmt = number_format($valorEstornado, 2, ',', '.');
+        $saldoFmt = number_format(abs($saldoNegativo), 2, ',', '.');
+
+        $mensagem = "Olá, {$primeiroNome}! Identificamos uma contestação bancária (Mecanismo Especial de Devolução - MED) no valor de *R$ {$estornoFmt}* referente a uma recarga Pix da sua conta. Em razão disso, a carteira familiar encontra-se com saldo devedor de *-R$ {$saldoFmt}* e temporariamente suspensa para novos agendamentos escolares de todos os seus dependentes. Por favor, compareça à administração da cantina para regularização.";
+
+        return $this->sendMessage($whatsapp, $mensagem, 'notificacao_med');
+    }
+
+    /**
+     * Envia notificação de regularização de débito e desbloqueio da conta familiar
+     */
+    public function sendNotificacaoDesbloqueioMed(string $whatsapp, float $novoSaldo, string $nome = ''): bool
+    {
+        $primeiroNome = !empty($nome) ? explode(' ', trim($nome))[0] : 'Responsável';
+        $saldoFmt = number_format($novoSaldo, 2, ',', '.');
+
+        $mensagem = "Olá, {$primeiroNome}! Confirmamos a regularização da sua conta familiar na Cantina Web do Colégio Monteiro Lobato. A suspensão preventiva foi removida com sucesso. Seu saldo atual é de *R$ {$saldoFmt}* e os agendamentos de lanches já estão liberados para todos os seus dependentes.";
+
+        return $this->sendMessage($whatsapp, $mensagem, 'desbloqueio_med');
+    }
+
+
+    /**
      * Dispara a mensagem via REST ou armazena no provedor mock para testes
      */
     public function sendMessage(string $whatsapp, string $mensagem, string $tipo = 'geral', ?string $code = null): bool

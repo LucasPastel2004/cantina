@@ -257,4 +257,214 @@ class Responsavel extends Model
             ['bloqueado' => $bloquear ? 1 : 0, 'id' => $id]
         ) > 0;
     }
+
+    /**
+     * Bloqueia preventivamente o responsável por contestação MED com auditoria
+     */
+    public static function bloquearMed(int $id, string $motivo = 'Bloqueio preventivo MED por saldo devedor', ?int $operadorId = null): bool
+    {
+        $resp = self::buscarPorId($id);
+        if (!$resp) {
+            return false;
+        }
+
+        self::definirBloqueioMed($id, true);
+
+        // Trilha em logs_seguranca
+        try {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            self::execute(
+                "INSERT INTO logs_seguranca (evento, cpf_ou_usuario, detalhes_json, ip_origem, created_at)
+                 VALUES (:evento, :cpf, :detalhes, :ip, NOW())",
+                [
+                    'evento'   => 'conta_bloqueada_med',
+                    'cpf'      => $resp['cpf'],
+                    'detalhes' => json_encode(['responsavel_id' => $id, 'motivo' => $motivo, 'operador_id' => $operadorId], JSON_UNESCAPED_UNICODE),
+                    'ip'       => $ip
+                ]
+            );
+        } catch (\Throwable $e) {}
+
+        // Trilha em logs_auditoria se houver operador
+        if ($operadorId) {
+            try {
+                $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+                self::execute(
+                    "INSERT INTO logs_auditoria (operador_id, acao, tabela_afetada, registro_id, justificativa, ip_origem, created_at)
+                     VALUES (:operador_id, :acao, :tabela, :registro_id, :justificativa, :ip, NOW())",
+                    [
+                        'operador_id'   => $operadorId,
+                        'acao'          => 'bloqueio_med',
+                        'tabela_afetada'=> 'responsaveis',
+                        'registro_id'   => $id,
+                        'justificativa' => $motivo,
+                        'ip'            => $ip
+                    ]
+                );
+            } catch (\Throwable $e) {}
+        }
+
+        return true;
+    }
+
+    /**
+     * Remove o bloqueio MED de um responsável com justificativa e auditoria obrigatória
+     */
+    public static function desbloquearMed(int $id, ?int $operadorId = null, string $justificativa = 'Desbloqueio administrativo'): bool
+    {
+        $resp = self::buscarPorId($id);
+        if (!$resp) {
+            return false;
+        }
+
+        self::definirBloqueioMed($id, false);
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+
+        // 1. Grava em logs_auditoria
+        if ($operadorId) {
+            try {
+                self::execute(
+                    "INSERT INTO logs_auditoria (operador_id, acao, tabela_afetada, registro_id, justificativa, ip_origem, created_at)
+                     VALUES (:operador_id, :acao, :tabela, :registro_id, :justificativa, :ip, NOW())",
+                    [
+                        'operador_id'   => $operadorId,
+                        'acao'          => 'desbloqueio_med',
+                        'tabela_afetada'=> 'responsaveis',
+                        'registro_id'   => $id,
+                        'justificativa' => $justificativa,
+                        'ip'            => $ip
+                    ]
+                );
+            } catch (\Throwable $e) {}
+        }
+
+        // 2. Grava em logs_seguranca
+        try {
+            self::execute(
+                "INSERT INTO logs_seguranca (evento, cpf_ou_usuario, detalhes_json, ip_origem, created_at)
+                 VALUES (:evento, :cpf, :detalhes, :ip, NOW())",
+                [
+                    'evento'   => 'conta_desbloqueada_med',
+                    'cpf'      => $resp['cpf'],
+                    'detalhes' => json_encode([
+                        'responsavel_id' => $id,
+                        'operador_id'    => $operadorId,
+                        'justificativa'  => $justificativa,
+                        'saldo_atual'    => $resp['saldo_atual']
+                    ], JSON_UNESCAPED_UNICODE),
+                    'ip'       => $ip
+                ]
+            );
+        } catch (\Throwable $e) {}
+
+        return true;
+    }
+
+    /**
+     * Retorna a quantidade de famílias com saldo devedor ou bloqueadas por MED
+     */
+    public static function contarNegativadosMed(): int
+    {
+        $sql = "SELECT COUNT(*) AS total FROM responsaveis WHERE bloqueado_med = 1 OR saldo_atual < 0";
+        $row = self::fetchOne($sql);
+        return (int)($row['total'] ?? 0);
+    }
+
+    /**
+     * Retorna o somatório de saldo devedor em aberto (valor monetário absoluto)
+     */
+    public static function somarSaldoDevedorMed(): float
+    {
+        $sql = "SELECT COALESCE(SUM(ABS(saldo_atual)), 0) AS total FROM responsaveis WHERE saldo_atual < 0";
+        $row = self::fetchOne($sql);
+        return (float)($row['total'] ?? 0.0);
+    }
+
+    /**
+     * Retorna a listagem paginada de famílias com saldo devedor ou bloqueadas por MED (FSD Tela 8.4)
+     */
+    public static function listarNegativadosMed(array|string $filtros = [], int|string $pagina = 1, int $porPagina = 25): array
+    {
+        if (is_string($filtros)) {
+            $status = is_string($pagina) ? $pagina : 'todos';
+            $filtros = ['busca' => $filtros, 'status' => $status];
+            $pagina = 1;
+        }
+
+        $where = ["(r.bloqueado_med = 1 OR r.saldo_atual < 0)"];
+        $params = [];
+
+        // Filtro por busca de texto (Nome ou CPF do responsável, ou nome do dependente)
+        if (!empty($filtros['busca'])) {
+            $termo = '%' . trim($filtros['busca']) . '%';
+            $where[] = "(r.nome LIKE :b_nome OR r.cpf LIKE :b_cpf OR EXISTS (
+                SELECT 1 FROM alunos a_sub WHERE a_sub.responsavel_id = r.id AND a_sub.nome LIKE :b_aluno
+            ))";
+            $params['b_nome'] = $termo;
+            $params['b_cpf'] = $termo;
+            $params['b_aluno'] = $termo;
+        }
+
+        // Filtro por status
+        if (!empty($filtros['status'])) {
+            if ($filtros['status'] === 'bloqueado') {
+                $where[] = "r.bloqueado_med = 1";
+            } elseif ($filtros['status'] === 'negativo') {
+                $where[] = "r.saldo_atual < 0";
+            } elseif ($filtros['status'] === 'regularizado') {
+                $where[] = "r.bloqueado_med = 0 AND r.saldo_atual >= 0";
+            }
+        }
+
+        $whereSql = implode(' AND ', $where);
+
+        // 1. Contagem total de registros
+        $countSql = "SELECT COUNT(*) AS total FROM responsaveis r WHERE {$whereSql}";
+        $totalRow = self::fetchOne($countSql, $params);
+        $total = (int)($totalRow['total'] ?? 0);
+
+        // 2. Paginação
+        $pagina = max(1, $pagina);
+        $porPagina = max(5, min(100, $porPagina));
+        $totalPaginas = (int)ceil($total / $porPagina);
+        $offset = ($pagina - 1) * $porPagina;
+
+        // 3. Consulta das famílias com dependentes e última data de estorno MED
+        $sql = "SELECT r.*,
+                       (SELECT MAX(created_at) FROM transacoes_carteira WHERE responsavel_id = r.id AND tipo_transacao = 'debito_contestacao_med') AS data_ultimo_estorno_med,
+                       (SELECT COUNT(*) FROM alunos WHERE responsavel_id = r.id AND deleted_at IS NULL) AS total_alunos
+                FROM responsaveis r
+                WHERE {$whereSql}
+                ORDER BY r.saldo_atual ASC, r.bloqueado_med DESC, r.nome ASC
+                LIMIT {$porPagina} OFFSET {$offset}";
+
+        $familias = self::fetchAll($sql, $params);
+
+        // Anexa os dependentes matriculados a cada família
+        $respModel = new self();
+        foreach ($familias as &$fam) {
+            $deps = $respModel->getDependentes((int)$fam['id']);
+            $fam['dependentes'] = $deps;
+            $nomesDeps = array_map(function($d) {
+                return $d['nome'] . (!empty($d['nome_turma']) ? ' (' . $d['nome_turma'] . ')' : '');
+            }, $deps);
+            $fam['dependentes_str'] = !empty($nomesDeps) ? implode(', ', $nomesDeps) : 'Nenhum vinculado';
+            $fam['saldo_atual_num'] = (float)$fam['saldo_atual'];
+            $fam['saldo_atual_fmt'] = 'R$ ' . number_format($fam['saldo_atual'], 2, ',', '.');
+            $fam['cpf_formatado'] = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', str_pad($fam['cpf'], 11, '0', STR_PAD_LEFT));
+            $fam['data_estorno_fmt'] = !empty($fam['data_ultimo_estorno_med']) ? date('d/m/Y H:i', strtotime($fam['data_ultimo_estorno_med'])) : '-';
+        }
+        unset($fam);
+
+        return [
+            'itens'         => $familias,
+            'registros'     => $familias,
+            'total'         => $total,
+            'pagina'        => $pagina,
+            'por_pagina'    => $porPagina,
+            'total_paginas' => max(1, $totalPaginas)
+        ];
+    }
 }
+

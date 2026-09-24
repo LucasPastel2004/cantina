@@ -3068,5 +3068,222 @@ class PdfService
 
         return self::montarPdfEstruturado($stream, $pageWidth, $pageHeight);
     }
+
+    /**
+     * Gera o Relatório de Famílias com Saldo Devedor (Negativados MED) em formato binário PDF A4
+     * Conforme FSD Tela 8.4 e DESIGN.md
+     * 
+     * @param array $dados Estrutura com lista de famílias, totais e parâmetros de emissão
+     * @return string Conteúdo binário puro do PDF A4
+     */
+    public static function gerarRelatorioNegativadosMedPdf(array $dados): string
+    {
+        $familias = $dados['familias'] ?? [];
+        $totalDevedor = (float)($dados['total_devedor'] ?? 0.0);
+        $totalFamilias = (int)($dados['total_familias'] ?? count($familias));
+        $emissao = date('d/m/Y H:i:s');
+        $operador = $dados['operador'] ?? 'Administração Geral';
+
+        $stream = "";
+        $left = 36.0;
+        $right = self::PAGE_WIDTH - 36.0;
+        $width = $right - $left;
+
+        // Topo da página A4
+        $y = 800.0;
+
+        // Faixa de cabeçalho institucional (fundo slate 100 suave)
+        $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.95, 0.96, 0.98);
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 48.0, $width, 58.0);
+
+        // Borda de acento azul cobalto institucional (#1d4ed8)
+        $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85);
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 48.0, 4.0, 58.0);
+
+        // Brasão circular vetorial oficial
+        $logoSize = 42.0;
+        $stream .= self::desenharLogoCircular($left + 12.0, $y - 42.0, $logoSize);
+
+        // Textos institucionais do cabeçalho
+        $textLeft = $left + 62.0;
+        $stream .= "BT\n/F2 13 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 2.0);
+        $stream .= sprintf("(COLEGIO MONTEIRO LOBATO) Tj\nET\n");
+
+        $stream .= "BT\n/F2 10.5 Tf\n0.73 0.15 0.11 rg\n"; // Vermelho institucional de alerta
+        $stream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 17.0);
+        $stream .= sprintf("(RELATORIO DE FAMILIAS COM SALDO DEVEDOR - NEGATIVADOS MED) Tj\nET\n");
+
+        $stream .= "BT\n/F1 7.5 Tf\n0.28 0.33 0.41 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 31.0);
+        $stream .= sprintf("(Emitido em: %s | Operador: %s | Unidade Escolar Unica) Tj\nET\n", $emissao, self::escapeText(substr($operador, 0, 30)));
+
+        $y -= 65.0;
+
+        // Bloco de Resumo Executivo / Métricas Rápidas
+        $boxHeight = 36.0;
+        $stream .= "0.98 0.98 0.99 rg\n";
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $boxHeight, $width, $boxHeight);
+        $stream .= "0.85 0.88 0.92 RG\n0.8 w\n";
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $boxHeight, $width, $boxHeight);
+
+        // Métrica 1: Famílias Inadimplentes
+        $stream .= "BT\n/F1 7.5 Tf\n0.40 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 14.0, $y - 13.0);
+        $stream .= sprintf("(TOTAL DE FAMILIAS INADIMPLENTES) Tj\nET\n");
+
+        $stream .= "BT\n/F2 12 Tf\n0.10 0.10 0.15 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 14.0, $y - 28.0);
+        $stream .= sprintf("(%d familia%s) Tj\nET\n", $totalFamilias, $totalFamilias > 1 ? 's' : '');
+
+        // Métrica 2: Saldo Total Devedor
+        $col2 = $left + 240.0;
+        $stream .= "BT\n/F1 7.5 Tf\n0.40 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $col2, $y - 13.0);
+        $stream .= sprintf("(MONTANTE TOTAL DEVEDOR EM ABERTO) Tj\nET\n");
+
+        $totalFmt = "R$ " . number_format($totalDevedor, 2, ',', '.');
+        $stream .= "BT\n/F2 12 Tf\n0.73 0.15 0.11 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $col2, $y - 28.0);
+        $stream .= sprintf("(%s) Tj\nET\n", $totalFmt);
+
+        // Métrica 3: Base Regulamentar
+        $col3 = $left + 420.0;
+        $stream .= "BT\n/F1 7.5 Tf\n0.40 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $col3, $y - 13.0);
+        $stream .= sprintf("(DIRETRIZ DE SEGURANCA) Tj\nET\n");
+
+        $stream .= "BT\n/F2 8.5 Tf\n0.11 0.31 0.85 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $col3, $y - 26.0);
+        $stream .= sprintf("(Res. BCB no 103 - MED Pix) Tj\nET\n");
+
+        $y -= ($boxHeight + 18.0);
+
+        // Cabeçalho da Tabela Data-Grid
+        $thHeight = 18.0;
+        $stream .= "0.92 0.94 0.97 rg\n"; // Cinza claro corporativo
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $thHeight, $width, $thHeight);
+        $stream .= "0.80 0.83 0.88 RG\n1 w\n";
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $thHeight, $width, $thHeight);
+
+        // Larguras das colunas (Total: 523.28 pt)
+        $c1 = $left + 6.0;   // CPF: 80 pt
+        $c2 = $left + 90.0;  // Titular: 135 pt
+        $c3 = $left + 228.0; // WhatsApp: 75 pt
+        $c4 = $left + 305.0; // Dependentes: 105 pt
+        $c5 = $left + 415.0; // Data Estorno: 50 pt
+        $c6 = $right - 8.0;  // Saldo Devedor: 55 pt (alinhado à direita)
+
+        $stream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $c1, $y - 12.0);
+        $stream .= sprintf("(CPF) Tj\nET\n");
+
+        $stream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $c2, $y - 12.0);
+        $stream .= sprintf("(TITULAR FAMILIAR) Tj\nET\n");
+
+        $stream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $c3, $y - 12.0);
+        $stream .= sprintf("(WHATSAPP) Tj\nET\n");
+
+        $stream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $c4, $y - 12.0);
+        $stream .= sprintf("(DEPENDENTES) Tj\nET\n");
+
+        $stream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $c5, $y - 12.0);
+        $stream .= sprintf("(ESTORNO) Tj\nET\n");
+
+        $stream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $thSaldoStr = "SALDO DEVEDOR";
+        $stream .= sprintf("%.2f %.2f Td\n", $c6 - (strlen($thSaldoStr) * 4.8), $y - 12.0);
+        $stream .= sprintf("(%s) Tj\nET\n", $thSaldoStr);
+
+        $y -= $thHeight;
+
+        // Linhas de famílias
+        $rowHeight = 22.0;
+        $i = 0;
+
+        if (empty($familias)) {
+            $stream .= "BT\n/F1 8.5 Tf\n0.45 0.50 0.60 rg\n";
+            $stream .= sprintf("%.2f %.2f Td\n", ($left + $right) / 2.0 - 100.0, $y - 20.0);
+            $stream .= sprintf("(Nenhuma familia com saldo devedor ou bloqueio MED no momento.) Tj\nET\n");
+            $y -= 35.0;
+        } else {
+            foreach ($familias as $fam) {
+                if ($y < 70.0) {
+                    break; // Mantém em folha única segura
+                }
+
+                $i++;
+                $zebra = ($i % 2 === 0);
+                if ($zebra) {
+                    $stream .= "0.98 0.98 0.99 rg\n";
+                    $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $rowHeight, $width, $rowHeight);
+                }
+
+                // Linha divisória inferior sutil
+                $stream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+                $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowHeight, $right, $y - $rowHeight);
+
+                $cpfStr = $fam['cpf_formatado'] ?? preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', str_pad($fam['cpf'] ?? '', 11, '0', STR_PAD_LEFT));
+                $nomeTitular = substr(self::removerAcentos($fam['nome'] ?? ''), 0, 24);
+                $whatsStr = $fam['whatsapp'] ?? '-';
+                $depsStr = substr(self::removerAcentos($fam['dependentes_str'] ?? '-'), 0, 20);
+                $dataEstorno = !empty($fam['data_ultimo_estorno_med']) ? date('d/m/y', strtotime($fam['data_ultimo_estorno_med'])) : '-';
+                $saldoNum = (float)($fam['saldo_atual'] ?? 0.0);
+                $saldoStr = "- R$ " . number_format(abs($saldoNum), 2, ',', '.');
+
+                // Coluna 1: CPF
+                $stream .= "BT\n/F1 7.5 Tf\n0.15 0.18 0.25 rg\n";
+                $stream .= sprintf("%.2f %.2f Td\n", $c1, $y - 14.0);
+                $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($cpfStr));
+
+                // Coluna 2: Nome Titular
+                $stream .= "BT\n/F2 7.5 Tf\n0.08 0.10 0.15 rg\n";
+                $stream .= sprintf("%.2f %.2f Td\n", $c2, $y - 14.0);
+                $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($nomeTitular));
+
+                // Coluna 3: WhatsApp
+                $stream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $stream .= sprintf("%.2f %.2f Td\n", $c3, $y - 14.0);
+                $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($whatsStr));
+
+                // Coluna 4: Dependentes
+                $stream .= "BT\n/F1 7.5 Tf\n0.20 0.25 0.35 rg\n";
+                $stream .= sprintf("%.2f %.2f Td\n", $c4, $y - 14.0);
+                $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($depsStr));
+
+                // Coluna 5: Data Estorno
+                $stream .= "BT\n/F1 7.5 Tf\n0.40 0.45 0.55 rg\n";
+                $stream .= sprintf("%.2f %.2f Td\n", $c5, $y - 14.0);
+                $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($dataEstorno));
+
+                // Coluna 6: Saldo Devedor (Vermelho Alinhado à Direita)
+                $stream .= "BT\n/F2 8 Tf\n0.73 0.15 0.11 rg\n";
+                $stream .= sprintf("%.2f %.2f Td\n", $c6 - (strlen($saldoStr) * 5.0), $y - 14.0);
+                $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($saldoStr));
+
+                $y -= $rowHeight;
+            }
+        }
+
+        // Rodapé Oficial da Instituição
+        $yRodape = 35.0;
+        $stream .= "0.85 0.88 0.92 RG\n0.8 w\n";
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $yRodape + 12.0, $right, $yRodape + 12.0);
+
+        $stream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left, $yRodape);
+        $stream .= sprintf("(COLEGIO MONTEIRO LOBATO - Valores para o Futuro! | Sistema de Gestao de Cantina Escolar) Tj\nET\n");
+
+        $stream .= "BT\n/F2 7 Tf\n0.11 0.31 0.85 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $right - 105.0, $yRodape);
+        $stream .= sprintf("(Documento Oficial A4) Tj\nET\n");
+
+        return self::montarPdfEstruturado($stream, self::PAGE_WIDTH, self::PAGE_HEIGHT);
+    }
 }
+
 

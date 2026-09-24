@@ -265,6 +265,126 @@ class PixService
     }
 
     /**
+     * Verifica se o corpo da notificação de webhook corresponde a uma devolução ou estorno MED
+     * 
+     * @param string $rawBody Corpo JSON da notificação
+     * @return bool True se for devolução/MED
+     */
+    public static function isPayloadDevolucao(string $rawBody): bool
+    {
+        $data = json_decode($rawBody, true);
+        if (!is_array($data)) {
+            return false;
+        }
+
+        // 1. Array de devoluções dentro do padrão BACEN pix[0]['devolucoes']
+        if (isset($data['pix'][0]['devolucoes']) && !empty($data['pix'][0]['devolucoes'])) {
+            return true;
+        }
+
+        // 2. Chave explícita devolucao ou devolucoes no primeiro nível
+        if (!empty($data['devolucao']) || !empty($data['devolucoes'])) {
+            return true;
+        }
+
+        // 3. Evento ou natureza tipificada como devolução ou MED
+        $evento = strtolower((string)($data['evento'] ?? $data['tipo_evento'] ?? $data['natureza'] ?? ''));
+        if (str_contains($evento, 'devolucao') || str_contains($evento, 'med') || str_contains($evento, 'estorno')) {
+            return true;
+        }
+
+        // 4. Identificador de devolução rtrId no payload
+        if (!empty($data['rtrId']) || !empty($data['rtr_id'])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Extrai e normaliza os dados de devolução/estorno MED do payload de Webhook
+     * 
+     * @param string $rawBody Corpo JSON da notificação
+     * @return array|null Array com txid, rtr_id, valor, motivo, end_to_end_id ou null
+     */
+    public static function parseWebhookDevolucaoPayload(string $rawBody): ?array
+    {
+        $data = json_decode($rawBody, true);
+        if (!is_array($data)) {
+            return null;
+        }
+
+        // Formato 1: Padrão BACEN / Efí (pix[0]['devolucoes'][0])
+        if (isset($data['pix'][0])) {
+            $pixItem = $data['pix'][0];
+            $txid = $pixItem['txid'] ?? '';
+            $e2e = $pixItem['endToEndId'] ?? '';
+
+            if (isset($pixItem['devolucoes'][0])) {
+                $dev = $pixItem['devolucoes'][0];
+                $rtrId = (string)($dev['rtrId'] ?? $dev['id'] ?? ('RTR' . date('YmdHis')));
+                $horarioRaw = $dev['horario'] ?? $pixItem['horario'] ?? date('Y-m-d H:i:s');
+                $horarioStr = is_array($horarioRaw) ? ($horarioRaw['liquidacao'] ?? $horarioRaw['solicitacao'] ?? date('Y-m-d H:i:s')) : (string)$horarioRaw;
+
+                return [
+                    'txid'          => $txid,
+                    'end_to_end_id' => $e2e,
+                    'rtr_id'        => $rtrId,
+                    'rtrId'         => $rtrId,
+                    'valor'         => (float)($dev['valor'] ?? $pixItem['valor'] ?? 0.0),
+                    'motivo'        => (string)($dev['motivo'] ?? 'Mecanismo Especial de Devolução (MED) - Banco Central'),
+                    'status'        => strtoupper((string)($dev['status'] ?? 'DEVOLVIDO')),
+                    'horario'       => $horarioStr
+                ];
+            }
+        }
+
+        // Formato 2: Chave 'devolucao' aninhada
+        if (isset($data['devolucao']) && is_array($data['devolucao'])) {
+            $dev = $data['devolucao'];
+            $rtrId = (string)($dev['rtrId'] ?? $dev['rtr_id'] ?? $dev['id'] ?? $data['rtrId'] ?? ('RTR' . date('YmdHis')));
+            $horarioRaw = $dev['horario'] ?? date('Y-m-d H:i:s');
+            $horarioStr = is_array($horarioRaw) ? ($horarioRaw['liquidacao'] ?? $horarioRaw['solicitacao'] ?? date('Y-m-d H:i:s')) : (string)$horarioRaw;
+
+            return [
+                'txid'          => (string)($data['txid'] ?? $dev['txid'] ?? ''),
+                'end_to_end_id' => (string)($data['endToEndId'] ?? $data['end_to_end_id'] ?? $dev['endToEndId'] ?? ''),
+                'rtr_id'        => $rtrId,
+                'rtrId'         => $rtrId,
+                'valor'         => (float)($dev['valor'] ?? $data['valor'] ?? 0.0),
+                'motivo'        => (string)($dev['motivo'] ?? $data['motivo'] ?? 'Contestação Bancária MED'),
+                'status'        => strtoupper((string)($dev['status'] ?? 'DEVOLVIDO')),
+                'horario'       => $horarioStr,
+                'cpf'           => $data['cpf'] ?? null,
+                'responsavel_id'=> $data['responsavel_id'] ?? null
+            ];
+        }
+
+        // Formato 3: Payload plano de devolução/MED
+        if (isset($data['rtrId']) || isset($data['rtr_id']) || (isset($data['evento']) && str_contains(strtolower($data['evento']), 'med'))) {
+            $rtrId = (string)($data['rtrId'] ?? $data['rtr_id'] ?? ('RTR' . date('YmdHis')));
+            $horarioRaw = $data['horario'] ?? date('Y-m-d H:i:s');
+            $horarioStr = is_array($horarioRaw) ? ($horarioRaw['liquidacao'] ?? $horarioRaw['solicitacao'] ?? date('Y-m-d H:i:s')) : (string)$horarioRaw;
+
+            return [
+                'txid'          => (string)($data['txid'] ?? $data['original_txid'] ?? ''),
+                'end_to_end_id' => (string)($data['endToEndId'] ?? $data['end_to_end_id'] ?? ''),
+                'rtr_id'        => $rtrId,
+                'rtrId'         => $rtrId,
+                'valor'         => (float)($data['valor'] ?? 0.0),
+                'motivo'        => (string)($data['motivo'] ?? 'Contestação Bancária / Fraude MED'),
+                'status'        => strtoupper((string)($data['status'] ?? 'DEVOLVIDO')),
+                'horario'       => $horarioStr,
+                'cpf'           => $data['cpf'] ?? null,
+                'responsavel_id'=> $data['responsavel_id'] ?? null
+            ];
+        }
+
+        return null;
+    }
+
+
+    /**
      * Localiza os dados de uma cobrança no cache temporário (disco com fallback em sessão)
      */
     public static function obterCobrancaCache(string $txid): ?array

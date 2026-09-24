@@ -442,4 +442,277 @@ class TransacaoCarteira extends Model
             default                           => ucfirst(str_replace('_', ' ', $tipo)),
         };
     }
+
+    /**
+     * Processa atomicamente um estorno bancário MED (Mecanismo Especial de Devolução)
+     * 
+     * @param int $responsavelId ID do titular da conta familiar
+     * @param float $valor Valor contestado e estornado
+     * @param string $identificadorMed Protocolo / rtrId / txid da devolução
+     * @param string $motivo Justificativa ou motivo da contestação
+     * @param int|null $operadorId ID do operador/administrador caso manual
+     * @param bool $dispararNotificacao Se deve enviar mensagem no WhatsApp
+     * @return array Dados da transação gerada
+     */
+    public static function processarEstornoMed(
+        int $responsavelId,
+        float $valor,
+        string $identificadorMed,
+        string $motivo = 'Mecanismo Especial de Devolução (MED) - Contestação Bancária',
+        ?int $operadorId = null,
+        bool $dispararNotificacao = true
+    ): array {
+        // 1. Garantia de Idempotência: verifica se esta devolução já foi processada
+        $transacaoExistente = self::fetchOne(
+            "SELECT * FROM transacoes_carteira 
+             WHERE responsavel_id = :resp_id 
+             AND tipo_transacao = :tipo 
+             AND referencia_id = :ref 
+             LIMIT 1",
+            [
+                'resp_id' => $responsavelId,
+                'tipo'    => self::TIPO_DEBITO_CONTESTACAO_MED,
+                'ref'     => trim($identificadorMed)
+            ]
+        );
+
+        if ($transacaoExistente) {
+            $resp = Responsavel::buscarPorId($responsavelId);
+            return [
+                'sucesso'          => true,
+                'ja_processado'    => true,
+                'idempotente'      => true,
+                'transacao_id'     => (int)$transacaoExistente['id'],
+                'responsavel_id'   => $responsavelId,
+                'valor'            => (float)$transacaoExistente['valor'],
+                'saldo_resultante' => (float)$transacaoExistente['saldo_resultante'],
+                'bloqueado_med'    => (bool)($resp['bloqueado_med'] ?? false),
+                'mensagem'         => 'Esta devolução MED já foi debitada e processada anteriormente.'
+            ];
+        }
+
+        // 2. Executa o débito permitindo saldo negativo
+        $descricao = sprintf('Contestação Pix (MED) - Ref: %s - %s', $identificadorMed, $motivo);
+        $transacao = self::debitar(
+            $responsavelId,
+            $valor,
+            self::TIPO_DEBITO_CONTESTACAO_MED,
+            $descricao,
+            $identificadorMed,
+            null,
+            $operadorId,
+            true // Permite saldo negativo excepcional
+        );
+
+        $saldoResultante = (float)$transacao['saldo_resultante'];
+        $foiBloqueado = false;
+
+        // 3. Se o saldo resultante ficou negativo (< 0), ativa bloqueio automático e notifica (FSD Área 6 e Fluxo 11)
+        if ($saldoResultante < 0) {
+            Responsavel::bloquearMed($responsavelId, $motivo, $operadorId);
+            $foiBloqueado = true;
+
+            // Envia WhatsApp urgente
+            if ($dispararNotificacao) {
+                $resp = Responsavel::buscarPorId($responsavelId);
+                if ($resp && !empty($resp['whatsapp'])) {
+                    try {
+                        $whats = new \App\Services\WhatsAppService();
+                        $whats->sendNotificacaoMed(
+                            $resp['whatsapp'],
+                            $valor,
+                            $saldoResultante,
+                            $resp['nome'] ?? ''
+                        );
+                    } catch (\Throwable $e) {
+                        error_log('[WHATSAPP_MED_ERROR] ' . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        // 4. Registro compulsório em logs_auditoria
+        try {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            self::execute(
+                "INSERT INTO logs_auditoria (operador_id, acao, tabela_afetada, registro_id, justificativa, ip_origem, created_at)
+                 VALUES (:operador_id, :acao, :tabela, :registro_id, :justificativa, :ip, NOW())",
+                [
+                    'operador_id'   => $operadorId,
+                    'acao'          => 'estorno_med',
+                    'tabela_afetada'=> 'transacoes_carteira',
+                    'registro_id'   => $transacao['id'],
+                    'justificativa' => $motivo,
+                    'ip'            => $ip
+                ]
+            );
+        } catch (\Throwable $e) {}
+
+        // 5. Trilha em logs_seguranca
+        try {
+            $resp = Responsavel::buscarPorId($responsavelId);
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            self::execute(
+                "INSERT INTO logs_seguranca (evento, cpf_ou_usuario, detalhes_json, ip_origem, created_at)
+                 VALUES (:evento, :cpf, :detalhes, :ip, NOW())",
+                [
+                    'evento'   => 'webhook_med_recebido',
+                    'cpf'      => $resp['cpf'] ?? 'DESCONHECIDO',
+                    'detalhes' => json_encode([
+                        'responsavel_id'   => $responsavelId,
+                        'identificador_med'=> $identificadorMed,
+                        'valor'            => $valor,
+                        'saldo_anterior'   => $transacao['saldo_anterior'],
+                        'saldo_resultante' => $saldoResultante,
+                        'bloqueado_med'    => $foiBloqueado,
+                        'motivo'           => $motivo
+                    ], JSON_UNESCAPED_UNICODE),
+                    'ip'       => $ip
+                ]
+            );
+        } catch (\Throwable $e) {}
+
+        return array_merge($transacao, [
+            'sucesso'       => true,
+            'ja_processado' => false,
+            'idempotente'   => false,
+            'bloqueado_med' => $foiBloqueado
+        ]);
+    }
+
+    /**
+     * Processa a quitação de débito e regularização de uma família negativada (FSD Tela 7.3)
+     */
+    public static function processarQuitacaoMed(
+        int $responsavelId,
+        float $valor,
+        string $formaPagamento = 'presencial',
+        string $justificativa = 'Quitação presencial de débito MED',
+        ?int $operadorId = null,
+        bool $desbloquearSePositivo = true
+    ): array {
+        if ($valor <= 0) {
+            throw new \InvalidArgumentException('O valor da quitação deve ser maior que zero.');
+        }
+
+        $protocolo = 'QUIT-' . date('YmdHis') . '-' . $responsavelId;
+        $descricao = sprintf(
+            'Quitação de Débito MED / Regularização Presencial (%s) - Prot: %s. %s',
+            strtoupper($formaPagamento),
+            $protocolo,
+            trim($justificativa)
+        );
+
+        $transacao = self::creditar(
+            $responsavelId,
+            $valor,
+            self::TIPO_AJUSTE_MANUAL,
+            $descricao,
+            $protocolo,
+            null,
+            $operadorId
+        );
+
+        $saldoResultante = (float)$transacao['saldo_resultante'];
+        $desbloqueado = false;
+
+        // Se o saldo agora é não-negativo (>= 0), remove a suspensão MED
+        if ($desbloquearSePositivo && $saldoResultante >= 0) {
+            Responsavel::desbloquearMed(
+                $responsavelId,
+                $operadorId,
+                "Quitação de débito via {$formaPagamento}. Protocolo {$protocolo}. " . $justificativa
+            );
+            $desbloqueado = true;
+
+            // Dispara WhatsApp de confirmação de desbloqueio
+            $resp = Responsavel::buscarPorId($responsavelId);
+            if ($resp && !empty($resp['whatsapp'])) {
+                try {
+                    $whats = new \App\Services\WhatsAppService();
+                    $whats->sendNotificacaoDesbloqueioMed(
+                        $resp['whatsapp'],
+                        $saldoResultante,
+                        $resp['nome'] ?? ''
+                    );
+                } catch (\Throwable $e) {
+                    error_log('[WHATSAPP_DESBLOQUEIO_ERROR] ' . $e->getMessage());
+                }
+            }
+        }
+
+        // Registro em auditoria
+        try {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            self::execute(
+                "INSERT INTO logs_auditoria (operador_id, acao, tabela_afetada, registro_id, justificativa, ip_origem, created_at)
+                 VALUES (:operador_id, :acao, :tabela, :registro_id, :justificativa, :ip, NOW())",
+                [
+                    'operador_id'   => $operadorId,
+                    'acao'          => 'ajuste_saldo',
+                    'tabela_afetada'=> 'transacoes_carteira',
+                    'registro_id'   => $transacao['id'],
+                    'justificativa' => "Quitação de débito de R$ " . number_format($valor, 2, ',', '.') . " via {$formaPagamento}. " . $justificativa,
+                    'ip'            => $ip
+                ]
+            );
+        } catch (\Throwable $e) {}
+
+        return array_merge($transacao, [
+            'sucesso'      => true,
+            'desbloqueado' => $desbloqueado,
+            'protocolo'    => $protocolo
+        ]);
+    }
+
+    /**
+     * Retorna o histórico de eventos e contestações MED
+     */
+    public static function listarHistoricoMed(array|int $filtros = [], int $limite = 50): array
+    {
+        if (is_int($filtros)) {
+            $limite = $filtros;
+            $filtros = [];
+        }
+
+        $where = ["(tc.tipo_transacao = 'debito_contestacao_med' OR (tc.tipo_transacao = 'ajuste_manual' AND tc.referencia_id LIKE 'QUIT-%'))"];
+        $params = [];
+
+        if (!empty($filtros['data_inicio'])) {
+            $where[] = "DATE(tc.created_at) >= :data_inicio";
+            $params['data_inicio'] = $filtros['data_inicio'];
+        }
+        if (!empty($filtros['data_fim'])) {
+            $where[] = "DATE(tc.created_at) <= :data_fim";
+            $params['data_fim'] = $filtros['data_fim'];
+        }
+        if (!empty($filtros['responsavel_id'])) {
+            $where[] = "tc.responsavel_id = :resp_id";
+            $params['resp_id'] = (int)$filtros['responsavel_id'];
+        }
+
+        $whereSql = implode(' AND ', $where);
+        $limite = max(1, min(200, $limite));
+
+        $sql = "SELECT tc.*, 
+                       tc.tipo_transacao AS tipo,
+                       tc.descricao AS motivo,
+                       tc.created_at AS data_hora,
+                       r.nome AS titular,
+                       r.nome AS responsavel_nome, 
+                       r.cpf AS responsavel_cpf, 
+                       r.whatsapp AS responsavel_whatsapp,
+                       r.saldo_atual AS responsavel_saldo_atual,
+                       r.bloqueado_med AS responsavel_bloqueado_med,
+                       u.nome AS operador_nome
+                FROM transacoes_carteira tc
+                INNER JOIN responsaveis r ON r.id = tc.responsavel_id
+                LEFT JOIN usuarios u ON u.id = tc.operador_id
+                WHERE {$whereSql}
+                ORDER BY tc.created_at DESC, tc.id DESC
+                LIMIT {$limite}";
+
+        return self::fetchAll($sql, $params);
+    }
 }
+

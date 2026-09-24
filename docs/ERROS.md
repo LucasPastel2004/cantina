@@ -619,6 +619,30 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. *Testes Automatizados:* Suítes `tests/fase14_test.php` (45/45) e `tests/fase15_test.php` (67/67) reexecutadas e 100% aprovadas.
 - Como evitar no futuro: Em tabelas com mais de 8 a 10 colunas, utilizar cabeçalhos sintéticos, agrupar ações em `.btn-group` e sempre validar a renderização na resolução corporativa de 1366x768 tanto com a barra lateral expandida quanto colapsada. Toda listagem corporativa deve obrigatoriamente herdar a configuração institucional de paginação.
 
+---
+
+## 2026-09-24 - Warning de conversão de array em string no parse de devoluções Pix MED e compatibilidade de identificadores
+
+- Sintoma:
+  1. `Warning: Array to string conversion in app/Services/PixService.php on line 332` ao processar webhooks de devolução Pix que seguem estritamente a especificação do Banco Central e de gateways como a Efí.
+  2. Inconsistência de acesso a propriedades entre diferentes nomenclaturas de identificadores (`rtrId` vs `rtr_id`).
+- Causa:
+  1. No padrão BACEN (Resolução BCB nº 103), o campo `horario` dentro de cada objeto de `devolucoes` pode ser um objeto JSON aninhado `{"solicitacao": "...", "liquidacao": "..."}` em vez de uma string simples. O cast direto `(string)$dev['horario']` provocava warning no PHP 8.2+.
+  2. Diferentes partes do sistema ou integrações externas podem esperar chaves em camelCase (`rtrId`) ou snake_case (`rtr_id`).
+- Solução aplicada:
+  1. Tratamento defensivo em `PixService::parseWebhookDevolucaoPayload`:
+     ```php
+     $horarioRaw = $dev['horario'] ?? $pixItem['horario'] ?? date('Y-m-d H:i:s');
+     $horarioStr = is_array($horarioRaw)
+         ? ($horarioRaw['liquidacao'] ?? $horarioRaw['solicitacao'] ?? date('Y-m-d H:i:s'))
+         : (string)$horarioRaw;
+     ```
+  2. Retorno simultâneo de ambas as chaves (`rtrId` e `rtr_id`) em todos os formatos de payload decodificados.
+  3. Flexibilização de assinaturas e aliases em `TransacaoCarteira` e `Responsavel` para aceitar parâmetros tanto de forma associativa quanto posicional.
+  4. Suíte de testes `tests/fase16_test.php` executada com 100% de sucesso (60/60 asserções aprovadas).
+- Como evitar no futuro: Em integrações de webhooks bancários e padrões de mensageria externa com especificações que variam entre versões de APIs, sempre inspecionar se campos de data/hora podem vir estruturados como arrays associativos antes de tentar conversão para string simples.
+
+
 
 
 

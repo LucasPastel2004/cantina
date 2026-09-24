@@ -1063,4 +1063,250 @@ class AdminController extends Controller
             'activeMenu' => 'relatorios'
         ], 'admin');
     }
+
+    /**
+     * Painel de Gestão de Contestações Bancárias e Negativados MED (FSD Módulo 7.3 & Tela 8.4)
+     */
+    public function contestacoes(): void
+    {
+        $usuario = Auth::user();
+        $busca   = trim((string)$this->input('busca', ''));
+        $status  = trim((string)$this->input('status', ''));
+        $pagina  = max(1, (int)$this->input('pagina', 1));
+
+        $itensPorPagina = Configuracao::getItensPorPagina();
+
+        $filtros = [];
+        if (!empty($busca)) {
+            $filtros['busca'] = $busca;
+        }
+        if (!empty($status)) {
+            $filtros['status'] = $status;
+        }
+
+        $resultado = Responsavel::listarNegativadosMed($filtros, $pagina, $itensPorPagina);
+
+        // Métricas do Stat-Strip
+        $totalNegativados   = Responsavel::contarNegativadosMed();
+        $totalSaldoDevedor  = Responsavel::somarSaldoDevedorMed();
+        $historicoEventos   = TransacaoCarteira::listarHistoricoMed([], 15);
+        $totalContestacoes  = (int)(Responsavel::fetchOne("SELECT COUNT(*) AS total FROM transacoes_carteira WHERE tipo_transacao = 'debito_contestacao_med'")['total'] ?? 0);
+        $totalRegularizados = (int)(Responsavel::fetchOne("SELECT COUNT(*) AS total FROM logs_auditoria WHERE acao IN ('desbloqueio_med', 'quitacao_med')")['total'] ?? 0);
+
+        // Monta estrutura de paginação
+        $paginacao = [
+            'pagina_atual'  => $resultado['pagina'],
+            'total_paginas' => $resultado['total_paginas'],
+            'total_itens'   => $resultado['total'],
+            'itens_por_pag' => $resultado['por_pagina'],
+            'url_base'      => '/admin/contestacoes'
+        ];
+
+        // Responsáveis para o dropdown de lançamento manual
+        $responsaveisParaSelecao = Responsavel::listarParaSelecao();
+
+        $this->render('admin/contestacoes', [
+            'pageTitle'          => 'Contestações Pix & Negativados MED',
+            'pageHeading'        => 'Mecanismo Especial de Devolução (MED)',
+            'activeMenu'         => 'contestacoes',
+            'familias'           => $resultado['itens'],
+            'totalNegativados'   => $totalNegativados,
+            'totalSaldoDevedor'  => $totalSaldoDevedor,
+            'totalContestacoes'  => $totalContestacoes,
+            'totalRegularizados' => $totalRegularizados,
+            'historicoEventos'   => $historicoEventos,
+            'paginacao'          => $paginacao,
+            'busca'              => $busca,
+            'statusFiltro'       => $status,
+            'responsaveisSelect' => $responsaveisParaSelecao,
+            'usuario'            => $usuario,
+            'user'               => $usuario
+        ], 'admin');
+    }
+
+    /**
+     * Processa o lançamento manual de contestação MED pelo Administrador (FSD Tela 7.3)
+     */
+    public function contestacaoManualSalvar(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/contestacoes');
+            return;
+        }
+
+        $responsavelId = (int)$this->input('responsavel_id', 0);
+        $valorRaw      = trim((string)$this->input('valor', ''));
+        $rtrId         = trim((string)$this->input('rtr_id', ''));
+        $motivo        = trim((string)$this->input('motivo', ''));
+        $justificativa = trim((string)$this->input('justificativa', ''));
+        $notificar     = (bool)$this->input('notificar_whatsapp', true);
+
+        // Normalização de moeda
+        if (str_contains($valorRaw, ',')) {
+            $valorLimpo = str_replace('.', '', $valorRaw);
+            $valorLimpo = str_replace(',', '.', $valorLimpo);
+            $valor = (float)$valorLimpo;
+        } else {
+            $valor = (float)$valorRaw;
+        }
+
+        if ($responsavelId <= 0 || $valor <= 0) {
+            Session::setFlash('danger', 'Selecione um responsável válido e informe um valor maior que zero.');
+            $this->redirect('/admin/contestacoes');
+            return;
+        }
+
+        $resp = Responsavel::buscarPorId($responsavelId);
+        if (!$resp) {
+            Session::setFlash('danger', 'Responsável titular não localizado no sistema.');
+            $this->redirect('/admin/contestacoes');
+            return;
+        }
+
+        if (empty($rtrId)) {
+            $rtrId = 'MAN-MED-' . date('YmdHis') . '-' . bin2hex(random_bytes(3));
+        }
+
+        $motivoCompleto = !empty($justificativa) ? ($motivo . ' - ' . $justificativa) : ($motivo ?: 'Contestação MED Lançada Manualmente pela Administração');
+        $operadorId = Auth::id() ?: 1;
+
+        try {
+            $res = TransacaoCarteira::processarEstornoMed(
+                $responsavelId,
+                $valor,
+                $rtrId,
+                $motivoCompleto,
+                $operadorId,
+                $notificar
+            );
+
+            if (!empty($res['ja_processado'])) {
+                Session::setFlash('warning', "Esta contestação já havia sido lançada anteriormente (Ref: {$rtrId}).");
+            } else {
+                $statusMsg = $res['bloqueado_med'] 
+                    ? "Contestação de R$ " . number_format($valor, 2, ',', '.') . " registrada com sucesso. A conta familiar ficou com saldo devedor e foi suspensa preventivamente."
+                    : "Contestação de R$ " . number_format($valor, 2, ',', '.') . " debitada com sucesso da carteira familiar.";
+
+                Session::setFlash('success', $statusMsg);
+            }
+        } catch (\Throwable $e) {
+            Session::setFlash('danger', 'Erro ao processar contestação: ' . $e->getMessage());
+        }
+
+        $this->redirect('/admin/contestacoes');
+    }
+
+    /**
+     * Processa a quitação de saldo devedor e regularização da família (FSD Tela 7.3)
+     */
+    public function quitacaoMedSalvar(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/contestacoes');
+            return;
+        }
+
+        $responsavelId  = (int)$this->input('responsavel_id', 0);
+        $valorRaw       = trim((string)$this->input('valor', ''));
+        $formaPagamento = trim((string)$this->input('forma_pagamento', 'dinheiro'));
+        $justificativa  = trim((string)$this->input('justificativa', ''));
+        $desbloquear    = (bool)$this->input('desbloquear_se_positivo', true);
+
+        // Normalização de moeda
+        if (str_contains($valorRaw, ',')) {
+            $valorLimpo = str_replace('.', '', $valorRaw);
+            $valorLimpo = str_replace(',', '.', $valorLimpo);
+            $valor = (float)$valorLimpo;
+        } else {
+            $valor = (float)$valorRaw;
+        }
+
+        if ($responsavelId <= 0 || $valor <= 0) {
+            Session::setFlash('danger', 'Informe um valor de quitação válido maior que zero.');
+            $this->redirect('/admin/contestacoes');
+            return;
+        }
+
+        $operadorId = Auth::id() ?: 1;
+
+        try {
+            $res = TransacaoCarteira::processarQuitacaoMed(
+                $responsavelId,
+                $valor,
+                $formaPagamento,
+                $justificativa,
+                $operadorId,
+                $desbloquear
+            );
+
+            $msg = "Quitação de R$ " . number_format($valor, 2, ',', '.') . " registrada com sucesso (Protocolo: {$res['protocolo']}).";
+            if (!empty($res['desbloqueado'])) {
+                $msg .= " A conta familiar foi devidamente regularizada e desbloqueada.";
+            }
+
+            Session::setFlash('success', $msg);
+        } catch (\Throwable $e) {
+            Session::setFlash('danger', 'Erro ao processar quitação: ' . $e->getMessage());
+        }
+
+        $this->redirect('/admin/contestacoes');
+    }
+
+    /**
+     * Remove manualmente o bloqueio MED de uma família com justificativa
+     */
+    public function desbloquearContaMed(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/contestacoes');
+            return;
+        }
+
+        $responsavelId = (int)$this->input('responsavel_id', 0);
+        $justificativa = trim((string)$this->input('justificativa', ''));
+
+        if ($responsavelId <= 0 || empty($justificativa)) {
+            Session::setFlash('danger', 'A justificativa de desbloqueio é de preenchimento obrigatório.');
+            $this->redirect('/admin/contestacoes');
+            return;
+        }
+
+        $operadorId = Auth::id() ?: 1;
+        Responsavel::desbloquearMed($responsavelId, $operadorId, $justificativa);
+
+        Session::setFlash('success', 'Suspensão preventiva MED removida com sucesso para o responsável.');
+        $this->redirect('/admin/contestacoes');
+    }
+
+    /**
+     * Emissão do Relatório A4 em PDF Timbrado de Negativados MED (FSD Tela 8.4)
+     */
+    public function contestacoesPdf(): void
+    {
+        $dados = Responsavel::listarNegativadosMed([], 1, 1000);
+        $totalDevedor = Responsavel::somarSaldoDevedorMed();
+        $usuario = Auth::user();
+
+        $pdfBinario = \App\Services\PdfService::gerarRelatorioNegativadosMedPdf([
+            'familias'       => $dados['itens'],
+            'total_devedor'  => $totalDevedor,
+            'total_familias' => $dados['total'],
+            'operador'       => $usuario['nome'] ?? 'Administração'
+        ]);
+
+        $nomeArquivo = 'relatorio_negativados_med_' . date('Ymd_His') . '.pdf';
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+        header('Content-Length: ' . strlen($pdfBinario));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
+        echo $pdfBinario;
+        exit;
+    }
 }
+

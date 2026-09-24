@@ -297,6 +297,13 @@ class PortalController extends Controller
         $usuario = Auth::user();
         $respId  = (int)$usuario['id'];
 
+        $resumoCarteira = TransacaoCarteira::obterResumoCarteira($respId);
+        if (!empty($resumoCarteira['bloqueado_med'])) {
+            Session::setFlash('danger', 'Sua conta familiar está temporariamente suspensa por contestação bancária (MED). Novos agendamentos estão bloqueados.');
+            $this->redirect('/portal/carteira');
+            return;
+        }
+
         $alunoId     = (int)$this->input('aluno_id', 0);
         $dataConsumo = trim((string)$this->input('data_consumo', ''));
         $itensPost   = (array)($this->input('itens', []) ?: []);

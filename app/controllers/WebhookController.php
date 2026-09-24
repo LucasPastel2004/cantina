@@ -59,6 +59,12 @@ class WebhookController extends Controller
             return;
         }
 
+        // Se o payload corresponder a uma devolução ou contestação MED, roteia para o processador MED
+        if (PixService::isPayloadDevolucao($rawBody)) {
+            $this->processarWebhookDevolucao($headers, $rawBody, $queryToken);
+            return;
+        }
+
         // 2. Extração dos dados normalizados do payload
         $dadosPix = PixService::parseWebhookPayload($rawBody);
         if (!$dadosPix || empty($dadosPix['txid']) || ($dadosPix['valor'] ?? 0) <= 0) {
@@ -72,6 +78,7 @@ class WebhookController extends Controller
         $txid = trim($dadosPix['txid']);
         $valor = (float)$dadosPix['valor'];
         $endToEndId = $dadosPix['end_to_end_id'] ?? null;
+
 
         // 3. Garantia de Idempotência: verifica se a transação já foi liquidada anteriormente
         $transacaoExistente = TransacaoCarteira::buscarPorReferencia($txid);
@@ -191,9 +198,152 @@ class WebhookController extends Controller
     }
 
     /**
+     * Endpoint dedicado de recepção de devoluções e contestações Pix MED
+     * Rota: POST /webhook/pix/devolucao e POST /webhook/pix/med
+     */
+    public function devolucao(): void
+    {
+        $headers = array_change_key_case(getallheaders() ?: [], CASE_LOWER);
+        $rawBody = file_get_contents('php://input') ?: '';
+        $queryToken = $_GET['token'] ?? null;
+
+        // Se for requisição GET de verificação
+        if ($_SERVER['REQUEST_METHOD'] === 'GET' || empty($rawBody)) {
+            $this->json([
+                'sucesso' => true,
+                'servico' => 'Webhook Pix MED Cantina Web',
+                'status'  => 'operacional',
+                'horario' => date('Y-m-d H:i:s')
+            ], 200);
+            return;
+        }
+
+        $this->processarWebhookDevolucao($headers, $rawBody, $queryToken);
+    }
+
+    /**
+     * Processa a notificação bancária de devolução ou estorno MED
+     */
+    private function processarWebhookDevolucao(array $headers, string $rawBody, ?string $queryToken): void
+    {
+        // 1. Validação de autenticidade da notificação bancária
+        if (!PixService::validarWebhook($headers, $rawBody, $queryToken)) {
+            $this->registrarLogSeguranca('webhook_med_invalido', [
+                'ip'      => $_SERVER['REMOTE_ADDR'] ?? 'desconhecido',
+                'headers' => $headers,
+                'motivo'  => 'Assinatura ou token de webhook inválido para devolução MED.'
+            ]);
+
+            $this->json([
+                'sucesso' => false,
+                'erro'    => 'Não autorizado. Assinatura ou credencial de webhook inválida.'
+            ], 401);
+            return;
+        }
+
+        // 2. Extração dos dados normalizados de devolução
+        $dadosDev = PixService::parseWebhookDevolucaoPayload($rawBody);
+        if (!$dadosDev || ($dadosDev['valor'] ?? 0) <= 0) {
+            $this->json([
+                'sucesso' => false,
+                'erro'    => 'Payload de devolução MED malformado ou valor inválido.'
+            ], 400);
+            return;
+        }
+
+        $valor = (float)$dadosDev['valor'];
+        $txid = trim((string)($dadosDev['txid'] ?? ''));
+        $rtrId = trim((string)($dadosDev['rtr_id'] ?? ('RTR' . date('YmdHis'))));
+        $motivo = (string)($dadosDev['motivo'] ?? 'Mecanismo Especial de Devolução (MED) - Banco Central');
+
+        // 3. Identificação do Responsável
+        $responsavelId = null;
+
+        if (!empty($dadosDev['responsavel_id'])) {
+            $responsavelId = (int)$dadosDev['responsavel_id'];
+        }
+
+        // Busca pela transação original usando o txid
+        if (!$responsavelId && !empty($txid)) {
+            $txOriginal = TransacaoCarteira::buscarPorReferencia($txid);
+            if ($txOriginal && !empty($txOriginal['responsavel_id'])) {
+                $responsavelId = (int)$txOriginal['responsavel_id'];
+            }
+        }
+
+        // Busca pelo endToEndId ou no cache do Pix
+        if (!$responsavelId && !empty($txid)) {
+            $cobrancaCache = PixService::obterCobrancaCache($txid);
+            if ($cobrancaCache && !empty($cobrancaCache['responsavel_id'])) {
+                $responsavelId = (int)$cobrancaCache['responsavel_id'];
+            }
+        }
+
+        // Busca por CPF se informado
+        if (!$responsavelId && !empty($dadosDev['cpf'])) {
+            $respCpf = (new Responsavel())->findByCpf($dadosDev['cpf']);
+            if ($respCpf) {
+                $responsavelId = (int)$respCpf['id'];
+            }
+        }
+
+        if (!$responsavelId) {
+            $this->registrarLogSeguranca('webhook_med_orfao', [
+                'rtr_id'  => $rtrId,
+                'txid'    => $txid,
+                'valor'   => $valor,
+                'payload' => $dadosDev,
+                'motivo'  => 'Devolução MED não vinculada a nenhum responsável titular no sistema.'
+            ]);
+
+            $this->json([
+                'sucesso' => false,
+                'erro'    => 'Responsável não identificado para a devolução MED informada.'
+            ], 404);
+            return;
+        }
+
+        // 4. Executa a rotina atômica de estorno MED
+        try {
+            $resultado = TransacaoCarteira::processarEstornoMed(
+                $responsavelId,
+                $valor,
+                $rtrId,
+                $motivo,
+                null, // Notificação via webhook sem operador humano
+                true  // Dispara notificação urgente via WhatsApp
+            );
+
+            $this->json([
+                'sucesso'          => true,
+                'status'           => $resultado['ja_processado'] ? 'ja_processado' : 'devolvido_med',
+                'mensagem'         => $resultado['mensagem'] ?? 'Devolução MED processada e debitada com sucesso da carteira familiar.',
+                'rtr_id'           => $rtrId,
+                'txid'             => $txid,
+                'transacao_id'     => $resultado['id'] ?? $resultado['transacao_id'] ?? null,
+                'valor'            => $valor,
+                'saldo_resultante' => $resultado['saldo_resultante'],
+                'bloqueado_med'    => $resultado['bloqueado_med']
+            ], 200);
+        } catch (\Throwable $e) {
+            $this->registrarLogSeguranca('webhook_med_falha_contabil', [
+                'rtr_id' => $rtrId,
+                'txid'   => $txid,
+                'erro'   => $e->getMessage()
+            ]);
+
+            $this->json([
+                'sucesso' => false,
+                'erro'    => 'Erro interno ao processar a devolução MED: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Registra evento na tabela logs_seguranca com contingência em arquivo
      */
     private function registrarLogSeguranca(string $evento, array $detalhes): void
+
     {
         try {
             $sql = "INSERT INTO logs_seguranca (evento, cpf_ou_usuario, detalhes_json, ip_origem, created_at)

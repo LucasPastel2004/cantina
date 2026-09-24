@@ -182,6 +182,12 @@ $isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
                         <span class="nav-label">Configurações Globais</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/admin/contestacoes" class="nav-link <?php echo ($activeMenu === 'contestacoes') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Contestações MED</span>
+                    </a>
+                </li>
             </ul>
         </div>
     </nav>

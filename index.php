@@ -82,9 +82,11 @@ $router->post('/recuperar-senha/redefinir', [\App\Controllers\AuthController::cl
 
 $router->get('/termos', [\App\Controllers\AuthController::class, 'termos']);
 
-// 0.1. Integrações Externas e Webhooks Bancários (Público de Servidor para Servidor - Fase 9)
+// 0.1. Integrações Externas e Webhooks Bancários (Público de Servidor para Servidor - Fase 9 e Fase 16)
 $router->post('/webhook/pix', [\App\Controllers\WebhookController::class, 'pix']);
 $router->get('/webhook/pix', [\App\Controllers\WebhookController::class, 'pix']);
+$router->post('/webhook/pix/devolucao', [\App\Controllers\WebhookController::class, 'devolucao']);
+$router->post('/webhook/pix/med', [\App\Controllers\WebhookController::class, 'devolucao']);
 
 // Rotas Protegidas por Perfil (RBAC)
 // 1. Portal da Família: Acesso exclusivo do perfil 'responsavel'
@@ -404,6 +406,23 @@ $router->get('/admin/calendario', [\App\Controllers\AdminController::class, 'cal
 // 4. Central de Relatórios Gerenciais
 $router->get('/relatorios', [\App\Controllers\AdminController::class, 'relatorios'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+
+// 5. Gestão de Contestações e Mecanismo Especial de Devolução - MED Pix (Fase 16 — Acesso exclusivo 'administrador')
+$router->get('/admin/contestacoes', [\App\Controllers\AdminController::class, 'contestacoes'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/contestacoes/manual', [\App\Controllers\AdminController::class, 'contestacaoManualSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/contestacoes/quitar', [\App\Controllers\AdminController::class, 'quitacaoMedSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/contestacoes/desbloquear', [\App\Controllers\AdminController::class, 'desbloquearContaMed'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/admin/contestacoes/pdf', [\App\Controllers\AdminController::class, 'contestacoesPdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 
 // 9. Despacha a requisição HTTP atual

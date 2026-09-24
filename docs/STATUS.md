@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
-* **Status da Fase 15:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
-* **Última Atualização:** 2026-09-24 10:55:00 (Ajuste do comportamento de expansão da Barra Lateral: ao expandir automaticamente por hover, o conteúdo da tela se reajusta suavemente para o lado através do fluxo Flexbox normal, impedindo que a barra cubra ou 'coma' qualquer informação da tela; ao recolher, a tela volta a ocupar 100% da largura, com assetVersion 5.7.0)
+* **Fase Atual:** Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
+* **Status da Fase 16:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 17 — Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança e Entrega
+* **Última Atualização:** 2026-09-24 13:50:00 (Conclusão integral da Fase 16: processamento de Webhooks MED, estorno atômico permitindo saldo negativo, bloqueio cautelar compulsório, notificações transacionais WhatsApp, painel administrativo de contestações, regularização e emissão de Relatório Oficial A4 em PDF timbrado)
 
 ---
 
@@ -561,9 +561,44 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
-* [ ] Webhook de notificação MED com débito imediato na carteira.
-* [ ] Bloqueio automático de novas compras em caso de saldo negativo e aviso WhatsApp.
+### [x] Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
+* [x] **Tratamento de Webhooks de Devolução MED (Bacen / Efí / REST):**
+  * `PixService::isPayloadDevolucao` e `PixService::parseWebhookDevolucaoPayload` com suporte inteligente ao padrão BACEN com array `devolucoes` em `pix[0]`, chave aninhada `devolucao` e payloads em formato plano REST;
+  * Extração precisa de `txid`, `endToEndId`, `rtrId` (ID da devolução), valor, status, data/hora e justificativa bancária.
+* [x] **Débito Atômico e Permissão Excepcional de Saldo Negativo na Carteira:**
+  * Implementação de `TransacaoCarteira::processarEstornoMed` com bloqueio pessimista `FOR UPDATE` na carteira do responsável;
+  * Execução do débito com tipo contábil `debito_contestacao_med`, permitindo saldo negativo excepcional conforme determinação regulamentar do BACEN (Resolução BCB nº 103);
+  * Idempotência estrita baseada no identificador único de devolução (`referencia_id = rtrId`), impedindo qualquer débito duplicado em caso de reenvio de webhooks.
+* [x] **Bloqueio Cautelar Compulsório de Agendamentos e Compras (`bloqueado_med = 1`):**
+  * Se o saldo resultante da família for menor que zero (`saldoResultante < 0`), a conta é compulsoriamente marcada como `bloqueado_med = 1`;
+  * Bloqueio preventivo automático no modelo `TransacaoCarteira::debitar` e nos métodos `agendamento()` e `agendamentoSalvar()` de `PortalController`, impedindo novos agendamentos para todos os dependentes enquanto perdurar o débito;
+  * Mensagem clara de orientação e banner informativo de advertência no Portal da Família.
+* [x] **Disparo de Mensagens Transacionais Emergenciais via WhatsApp:**
+  * `WhatsAppService::sendNotificacaoMed` com notificação urgente da contestação bancária, saldo devedor atual e orientação para regularização junto à administração;
+  * `WhatsAppService::sendNotificacaoDesbloqueioMed` confirmando a quitação do débito e liberação imediata da conta familiar;
+  * Trilha de contingência e registro seguro em `storage/logs/security.log`.
+* [x] **Painel Administrativo Corporativo de Contestações MED (`/admin/contestacoes`):**
+  * Interface de alta densidade no padrão Anti-Slop (`app/views/admin/contestacoes.php`) exclusiva para administradores (`ROLE_ADMINISTRADOR`);
+  * Stat-strip com 4 métricas em tempo real: Famílias Bloqueadas MED, Saldo Devedor Total, Estornos MED Processados e Contas Regularizadas;
+  * Barra de filtros combinados por busca (nome, e-mail, WhatsApp, alunos dependentes) e status (todos, bloqueados, saldo negativo);
+  * Tabela data-grid de inadimplentes com titular, relação de dependentes vinculados com turma, saldo devedor destacado em tipografia tabular (`.font-tabular`), status MED e ações administrativas;
+  * Tabela de histórico analítico com trilha de auditoria de estornos bancários e baixas de quitação.
+* [x] **Lançamento Manual de Contestações e Quitação de Débitos com Desbloqueio:**
+  * Modal corporativo `#modalContestacaoManual` para lançamento de estornos com seleção de responsável, valor, protocolo bancário e justificativa com auditoria;
+  * Modal corporativo `#modalQuitacaoMed` para baixa de débito com valor pré-preenchido, forma de pagamento, justificativa e opção de desbloqueio automático se o saldo resultante for >= 0;
+  * Ação de desbloqueio manual direto com confirmação e justificativa administrativa (`AdminController::desbloquearContaMed`);
+  * Registro de auditoria compulsório em `logs_auditoria` e `logs_seguranca`.
+* [x] **Emissão de Relatório Oficial A4 em PDF Timbrado (`/admin/contestacoes/pdf`):**
+  * `PdfService::gerarRelatorioNegativadosMedPdf` gerando documento PDF 1.4 binário puro timbrado em papel A4 (595.28 x 841.89 pt);
+  * Cabeçalho oficial institucional com brasão circular vetorial oficial (`desenharLogoCircular`), identificação da unidade escolar e data de emissão;
+  * Resumo executivo com métricas globais e tabela data-grid de famílias inadimplentes com CPF, titular, WhatsApp, dependentes vinculados e montante devedor alinhado à direita.
+* [x] **Navegação e Roteamento:**
+  * Registro de item "Contestações MED" na barra lateral de navegação (`app/views/layouts/sidebar.php`);
+  * Rotas `/webhook/pix/devolucao` e `/webhook/pix/med` registradas no Front Controller `index.php`;
+  * Rotas administrativas `/admin/contestacoes*` protegidas estritamente por RBAC para administradores.
+* [x] **Homologação Automatizada:**
+  * Suíte de testes dedicada `tests/fase16_test.php` executada e aprovada com 100% de sucesso (60/60 asserções);
+  * Suítes de regressão (Fases 9, 10, 13, 14 e 15) reexecutadas e 100% aprovadas.
 
 ---
 
@@ -576,7 +611,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED**, implementando o tratamento completo do Mecanismo Especial de Devolução (MED) do Banco Central, processando as notificações bancárias de estorno via Webhook com débito imediato e atômico na carteira familiar, permitindo saldo negativo excepcional, bloqueio cautelar automático de novas compras e pedidos agendados caso a carteira fique negativa (`bloqueado_med = 1`), envio de alerta transacional emergencial via WhatsApp ao responsável e painel administrativo para auditoria, conciliação e desbloqueio manual após quitação do débito pendente.
+Iniciar a **Fase 17 — Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança e Entrega**, construindo os relatórios gerenciais consolidados em PDF A4 timbrado (extrato consolidado de consumo, vendas por produto e curva ABC, espelho mensal de fechamento contábil), exportações em formato CSV e PDF timbrado do consumo de colaboradores com matrícula para envio direto ao departamento de Recursos Humanos (folha de pagamento), auditoria final de segurança OWASP/LGPD, validação das diretrizes de acessibilidade e verificação conclusiva dos critérios de aceitação do `docs/FSD.md`.
 
 
 
