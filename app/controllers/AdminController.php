@@ -22,7 +22,10 @@ use App\Models\Turma;
 use App\Models\Usuario;
 use App\Models\Aluno;
 use App\Models\Responsavel;
+use App\Models\TransacaoCarteira;
 use App\Services\SpreadsheetService;
+use App\Services\PdfService;
+use App\Services\WhatsAppService;
 
 class AdminController extends Controller
 {
@@ -1106,21 +1109,31 @@ class AdminController extends Controller
         $responsaveisParaSelecao = Responsavel::listarParaSelecao();
 
         $this->render('admin/contestacoes', [
-            'pageTitle'          => 'Contestações Pix & Negativados MED',
-            'pageHeading'        => 'Mecanismo Especial de Devolução (MED)',
-            'activeMenu'         => 'contestacoes',
-            'familias'           => $resultado['itens'],
-            'totalNegativados'   => $totalNegativados,
-            'totalSaldoDevedor'  => $totalSaldoDevedor,
-            'totalContestacoes'  => $totalContestacoes,
-            'totalRegularizados' => $totalRegularizados,
-            'historicoEventos'   => $historicoEventos,
-            'paginacao'          => $paginacao,
-            'busca'              => $busca,
-            'statusFiltro'       => $status,
-            'responsaveisSelect' => $responsaveisParaSelecao,
-            'usuario'            => $usuario,
-            'user'               => $usuario
+            'pageTitle'           => 'Contestações Pix & Negativados MED',
+            'pageHeading'         => 'Mecanismo Especial de Devolução (MED)',
+            'activeMenu'          => 'contestacoes',
+            'negativados'         => $resultado['itens'],
+            'familias'            => $resultado['itens'],
+            'totalNegativados'    => $totalNegativados,
+            'saldoDevedorTotal'   => $totalSaldoDevedor,
+            'totalSaldoDevedor'   => $totalSaldoDevedor,
+            'totalEstornos'       => $totalContestacoes,
+            'totalContestacoes'   => $totalContestacoes,
+            'contasRegularizadas' => $totalRegularizados,
+            'totalRegularizados'  => $totalRegularizados,
+            'historicoMed'        => $historicoEventos,
+            'historicoEventos'    => $historicoEventos,
+            'todosResponsaveis'   => $responsaveisParaSelecao,
+            'responsaveisSelect'  => $responsaveisParaSelecao,
+            'filtroBusca'         => $busca,
+            'busca'               => $busca,
+            'filtroStatus'        => $status,
+            'statusFiltro'        => $status,
+            'pagina'              => $resultado['pagina'],
+            'totalPaginas'        => $resultado['total_paginas'],
+            'paginacao'           => $paginacao,
+            'usuario'             => $usuario,
+            'user'                => $usuario
         ], 'admin');
     }
 
