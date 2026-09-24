@@ -117,10 +117,10 @@ $totalPaginas = $totalPaginas ?? 1;
 </div>
 
 <!-- Filtros e Busca -->
-<div class="card-enterprise mb-4">
-    <div class="card-enterprise-body p-3">
-        <form id="formFiltrosContestacoes" action="<?php echo $baseUrl; ?>/admin/contestacoes" method="GET" class="row g-2 align-items-end">
-            <div class="col-12 col-sm-6 col-md-5 position-relative">
+<div class="card-enterprise card-overflow-visible mb-4" style="overflow: visible !important;">
+    <div class="card-enterprise-body p-3" style="overflow: visible !important;">
+        <form id="formFiltrosContestacoes" action="<?php echo $baseUrl; ?>/admin/contestacoes" method="GET" class="row g-2 align-items-end" style="position: relative;">
+            <div class="col-12 col-sm-6 col-md-5 position-relative" style="position: relative;">
                 <label for="busca" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">
                     Buscar Responsável ou Titular
                 </label>
@@ -134,9 +134,9 @@ $totalPaginas = $totalPaginas ?? 1;
                         &times;
                     </button>
                 </div>
-                <!-- Dropdown flutuante de sugestões em tempo real -->
-                <div id="buscaSugestoesDropdown" class="card-enterprise shadow-sm position-absolute w-100 mt-1 py-1" 
-                     style="z-index: 1050; max-height: 280px; overflow-y: auto; display: none; background: #ffffff; border: 1px solid #cbd5e1; left: 0;">
+                <!-- Dropdown flutuante de sugestões em tempo real (flutua livremente para fora da caixa) -->
+                <div id="buscaSugestoesDropdown" class="shadow-sm position-absolute rounded" 
+                     style="top: calc(100% + 4px); left: 0; right: 0; z-index: 1060; max-height: 280px; overflow-y: auto; display: none; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.1) !important;">
                 </div>
             </div>
 

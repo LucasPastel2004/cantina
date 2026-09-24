@@ -1257,72 +1257,51 @@ textarea.form-control {
   z-index: 1030;
 }
 
-/* Gatilho e Overlay de Auto-Hide da Barra Lateral */
-.sidebar-edge-trigger,
-.sidebar-floating-overlay {
-  display: none;
+/* Suporte a overflow visível para dropdowns flutuantes (autocomplete, etc.) */
+.card-enterprise.card-overflow-visible,
+.card-overflow-visible,
+.card-overflow-visible .card-enterprise-body {
+  overflow: visible !important;
 }
 
-/* Colapso e Auto-Appear da Barra Lateral no Desktop (>= 992px) */
-@media (min-width: 992px) {
+/* Gatilho e Overlay de Auto-Hide desativados (elimina gaveta flutuante sobreposta) */
+.sidebar-edge-trigger,
+.sidebar-floating-overlay {
+  display: none !important;
+}
+
+/* Colapso e Expansão Sólida da Barra Lateral no Desktop e Notebooks (>= 768px) */
+@media (min-width: 768px) {
+  .sidebar-backdrop {
+    display: none !important;
+  }
+
   .app-sidebar {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
+    width: 240px;
     z-index: 1020;
     transform: translateX(0);
     transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Ao expandir a barra lateral: a parte principal se contrai para caber tudo perfeitamente lado a lado */
   .app-main-area {
     margin-left: 240px;
     width: calc(100% - 240px);
     transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Quando colapsada no Desktop */
+  /* Ao colapsar a barra lateral: a barra se esconde e a parte principal se estica para preencher a tela */
   .app-admin-wrapper.sidebar-collapsed .app-sidebar {
     transform: translateX(-240px);
-    margin-left: 0;
   }
 
   .app-admin-wrapper.sidebar-collapsed .app-main-area {
     margin-left: 0;
     width: 100%;
-  }
-
-  /* Quando colapsada e aberta temporariamente por hover (modo flutuante/gaveta) */
-  .app-admin-wrapper.sidebar-collapsed.sidebar-floating-open .app-sidebar {
-    transform: translateX(0) !important;
-    box-shadow: 4px 0 20px rgba(15, 23, 42, 0.12);
-  }
-
-  /* Overlay para fechar modo flutuante */
-  .app-admin-wrapper.sidebar-collapsed.sidebar-floating-open .sidebar-floating-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 1015;
-    background-color: rgba(15, 23, 42, 0.15);
-  }
-
-  /* Faixa de borda invisível na extrema esquerda para acionar hover */
-  .app-admin-wrapper.sidebar-collapsed:not(.sidebar-floating-open) .sidebar-edge-trigger {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 16px;
-    z-index: 1045;
-    background: transparent;
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-
-  .app-admin-wrapper.sidebar-collapsed .sidebar-edge-trigger:hover {
-    background: linear-gradient(to right, rgba(37, 99, 235, 0.18), transparent);
   }
 
   /* Botão toggle da topbar sempre disponível no desktop e notebook para alternar a navegação */
@@ -1347,7 +1326,8 @@ textarea.form-control {
   }
 }
 
-@media (max-width: 991.98px) {
+/* Dispositivos móveis estritos (< 768px) */
+@media (max-width: 767.98px) {
   .app-sidebar {
     position: fixed;
     left: 0;
@@ -1365,6 +1345,11 @@ textarea.form-control {
 
   .sidebar-backdrop.show {
     display: block;
+  }
+
+  .app-main-area {
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 
   .btn-sidebar-toggle .icon-toggle-bars {

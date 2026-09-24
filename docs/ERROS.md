@@ -745,6 +745,27 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. *Testes Automatizados:* Criada e aprovada a suíte `tests/contestacoes_busca_sugestoes_test.php` (27/27 asserções 100% aprovadas) e reexecutada a suíte `tests/fase16_test.php` (60/60 asserções 100% aprovadas).
 - Como evitar no futuro: Padronizar constantes para valores de filtros entre views e modelos ou aceitar arrays de equivalência no backend. Todo campo de busca de clientes/titulares deve dispor de debounce e dropdown acessível com suporte a navegação por teclado.
 
+---
+
+## 2026-09-24 - Dropdown de sugestões cortado por overflow da card e sobreposição da barra lateral comendo a tela em notebooks
+
+- Sintoma:
+  1. O dropdown com as sugestões de autocomplete da busca de contestações ficava aprisionado e cortado dentro da caixa do formulário de filtros (`.card-enterprise`).
+  2. Ao expandir a barra lateral de navegação em notebooks e telas com escalonamento (ex.: 1366x768 com escala de 125% a 150%), a barra sobrepunha o conteúdo principal cobrindo a esquerda do cabeçalho e dos cartões ("comendo um pedaço da tela"), em vez de contrair a área de trabalho.
+- Causa:
+  1. *Overflow da card corporativa:* A classe `.card-enterprise` continha a diretiva `overflow: hidden;`, fazendo com que qualquer menu flutuante com posicionamento absoluto abaixo do campo de entrada fosse sumariamente recortado na borda inferior da caixa.
+  2. *Breakpoint e modo gaveta flutuante:* O breakpoint de transição entre layout fixado e mobile estava definido em 992px (`@media (min-width: 992px)`). Em notebooks com escala de 125% ou 150%, a resolução CSS útil fica abaixo de 992px (~910px), ativando o comportamento offcanvas onde a barra deslizava por cima do conteúdo sem que `.app-main-area` aplicasse `margin-left: 240px; width: calc(100% - 240px);`. Adicionalmente, ouvintes de evento `mouseenter` abriam uma gaveta flutuante por cima da página ao aproximar o mouse do botão de toggle.
+- Solução aplicada:
+  1. *Overflow Visível no Container de Filtros:* Criada a classe `.card-overflow-visible` em `assets/css/custom.css` com `overflow: visible !important;`, aplicada na card de busca e ajustado o dropdown `#buscaSugestoesDropdown` com `top: calc(100% + 4px); z-index: 1060;`, permitindo que as sugestões flutuem livremente sobre a tabela.
+  2. *Ajuste de Breakpoint para 768px:* Atualizadas as media queries de `992px` para `768px` em `custom.css` e em `assets/js/app.js`, cobrindo universalmente notebooks, netbooks e monitores a partir de tablets em modo paisagem.
+  3. *Contração e Esticamento Sólidos do Layout:*
+     - Ao expandir a barra lateral: a barra fixa em 240px e a parte principal (`.app-main-area`) se contrai automaticamente (`margin-left: 240px; width: calc(100% - 240px);`), garantindo que nenhum pixel do conteúdo seja coberto.
+     - Ao colapsar a barra lateral: a barra se esconde (`transform: translateX(-240px)`) e a parte principal se estica suavemente para preencher 100% da largura da tela (`margin-left: 0; width: 100%;`).
+  4. *Remoção da Gaveta Flutuante por Hover:* Eliminadas as rotinas de `abrirSidebarFlutuante` e a classe `.sidebar-floating-open`, assegurando que a expansão e o colapso ocorram estritamente por clique intencional nos botões de alternância.
+  5. *Atualização de Versão de Assets:* Atualizado `$data['assetVersion']` para `5.7.3` em `app/core/Controller.php` para garantir invalidação forçada de cache em todos os clientes.
+  6. *Testes Automatizados:* Criada e aprovada a suíte `tests/sidebar_responsive_test.php` (10/10 asserções 100% aprovadas) e reexecutadas as baterias `tests/sidebar_visibility_test.php` (7/7) e `tests/contestacoes_busca_sugestoes_test.php` (27/27).
+- Como evitar no futuro: Cartões e contêineres que abriguem campos de busca com autocomplete ou dropdowns flutuantes devem ter `overflow: visible`. Breakpoints de layouts corporativos operacionais que dividem painéis laterais de áreas principais devem considerar a faixa de 768px para assegurar suporte pleno a notebooks escolares com fator de zoom/DPI elevado.
+
 
 
 

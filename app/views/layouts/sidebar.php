@@ -20,14 +20,8 @@ $userRole = $user['role'] ?? $user['perfil'] ?? '';
 $isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
 ?>
 
-<!-- Backdrop para Mobile (Offcanvas) -->
+<!-- Backdrop para Mobile (Offcanvas estrito < 768px) -->
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
-
-<!-- Gatilho de Borda Invisível para Auto-Aparecer ao aproximar o mouse (Desktop) -->
-<div class="sidebar-edge-trigger" id="sidebarEdgeTrigger" aria-hidden="true" title="Aproximar o cursor para abrir o menu"></div>
-
-<!-- Overlay Transparente para fechamento de clique-fora no modo flutuante -->
-<div class="sidebar-floating-overlay" id="sidebarFloatingOverlay" onclick="fecharSidebarFlutuanteImediato()"></div>
 
 <aside class="app-sidebar" id="appSidebar">
     <!-- Cabeçalho da Sidebar com Logotipo Oficial -->
@@ -40,12 +34,12 @@ $isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
             </div>
         </a>
         <div class="d-flex align-items-center gap-1">
-            <button type="button" class="btn-sidebar-collapse d-none d-lg-inline-flex" onclick="toggleSidebarCollapse()" title="Recolher barra lateral" aria-label="Recolher barra lateral">
+            <button type="button" class="btn-sidebar-collapse d-none d-md-inline-flex" onclick="toggleSidebarCollapse()" title="Recolher barra lateral" aria-label="Recolher barra lateral">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
                     <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
                 </svg>
             </button>
-            <button type="button" class="btn-sidebar-close d-lg-none" onclick="toggleSidebar()" aria-label="Fechar menu">
+            <button type="button" class="btn-sidebar-close d-md-none" onclick="toggleSidebar()" aria-label="Fechar menu">
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg>
             </button>
         </div>

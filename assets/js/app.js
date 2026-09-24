@@ -221,54 +221,19 @@ function toggleSidebar() {
   }
 }
 
-let sidebarHoverTimeout = null;
-
 /**
- * Abre a barra lateral no modo flutuante (Hover Drawer) quando ela estiver colapsada
- */
-function abrirSidebarFlutuante() {
-  const wrapper = document.querySelector('.app-admin-wrapper');
-  if (!wrapper || !wrapper.classList.contains('sidebar-collapsed')) return;
-  clearTimeout(sidebarHoverTimeout);
-  wrapper.classList.add('sidebar-floating-open');
-}
-
-/**
- * Agenda o fechamento suave da barra lateral flutuante ao tirar o mouse
- */
-function fecharSidebarFlutuanteComDelay() {
-  const wrapper = document.querySelector('.app-admin-wrapper');
-  if (!wrapper || !wrapper.classList.contains('sidebar-floating-open')) return;
-  clearTimeout(sidebarHoverTimeout);
-  sidebarHoverTimeout = setTimeout(function () {
-    wrapper.classList.remove('sidebar-floating-open');
-  }, 280);
-}
-
-/**
- * Fecha imediatamente a barra lateral flutuante
- */
-function fecharSidebarFlutuanteImediato() {
-  const wrapper = document.querySelector('.app-admin-wrapper');
-  clearTimeout(sidebarHoverTimeout);
-  if (wrapper) {
-    wrapper.classList.remove('sidebar-floating-open');
-  }
-}
-
-/**
- * Inicializa a detecção de auto-hide e listeners de hover na barra lateral
+ * Inicializa o estado da barra lateral (expandida ou colapsada) a partir das preferências do usuário
  */
 function initSidebarAutoHide() {
   const wrapper = document.querySelector('.app-admin-wrapper');
   if (!wrapper) return;
 
-  // 1. Restaurar preferência do usuário (padrão desktop e notebook: visível e fixada)
   try {
     const pref = localStorage.getItem('cantina_sidebar_preference');
     const legacy = localStorage.getItem('cantina_sidebar_collapsed');
     
-    if (window.innerWidth >= 992) {
+    // No Desktop / Notebooks (>= 768px): respeita a preferência salva
+    if (window.innerWidth >= 768) {
       if (pref === 'pinned_collapsed' || (pref === null && legacy === 'true')) {
         wrapper.classList.add('sidebar-collapsed');
       } else {
@@ -276,50 +241,17 @@ function initSidebarAutoHide() {
       }
     }
   } catch (e) {}
-
-  // 2. Ouvintes da faixa invisível na borda esquerda (Edge Trigger)
-  const edgeTrigger = document.getElementById('sidebarEdgeTrigger');
-  if (edgeTrigger) {
-    edgeTrigger.addEventListener('mouseenter', abrirSidebarFlutuante);
-  }
-
-  // 3. Ouvintes do botão toggle na topbar
-  const btnToggle = document.querySelector('.btn-sidebar-toggle');
-  if (btnToggle) {
-    btnToggle.addEventListener('mouseenter', function () {
-      if (wrapper.classList.contains('sidebar-collapsed')) {
-        abrirSidebarFlutuante();
-      }
-    });
-  }
-
-  // 4. Ouvintes na própria sidebar para manter aberta no hover e fechar ao sair
-  const sidebar = document.getElementById('appSidebar');
-  if (sidebar) {
-    sidebar.addEventListener('mouseenter', function () {
-      clearTimeout(sidebarHoverTimeout);
-    });
-    sidebar.addEventListener('mouseleave', function () {
-      fecharSidebarFlutuanteComDelay();
-    });
-  }
-
-  // 5. Tecla Esc fecha modo flutuante
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && wrapper.classList.contains('sidebar-floating-open')) {
-      fecharSidebarFlutuanteImediato();
-    }
-  });
 }
 
 /**
- * Alterna a fixação da barra lateral no Desktop (fixa aberta vs auto-recolhida)
+ * Alterna a expansão/colapso da barra lateral no Desktop e Notebooks (>= 768px).
+ * Ao expandir: a parte principal (.app-main-area) se contrai para caber tudo certinho lado a lado.
+ * Ao colapsar: a barra se esconde e a parte principal se estica para preencher a tela inteira.
  */
 function toggleSidebarCollapse() {
   const wrapper = document.querySelector('.app-admin-wrapper');
   if (!wrapper) return;
   
-  fecharSidebarFlutuanteImediato();
   const isNowCollapsed = wrapper.classList.toggle('sidebar-collapsed');
   
   try {
@@ -330,10 +262,10 @@ function toggleSidebarCollapse() {
 
 /**
  * Manipulador inteligente do botão toggle da topbar
- * No desktop alterna fixação; no mobile abre/fecha o offcanvas
+ * No desktop/notebook (>= 768px) contrai/estica o layout; no celular (< 768px) abre/fecha o offcanvas
  */
 function handleSidebarToggle() {
-  if (window.innerWidth >= 992) {
+  if (window.innerWidth >= 768) {
     toggleSidebarCollapse();
   } else {
     toggleSidebar();
