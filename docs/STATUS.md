@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
 * **Status da Fase 15:** Concluída com Sucesso [x]
 * **Próxima Fase:** Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
-* **Última Atualização:** 2026-09-24 10:41:00 (Garantia de layout 100% fluido e proporcional em porcentagens: remoção da trava max-width: 1440px de app-page-content para expansão livre em monitores 1080p, 2K e 4K, aplicação de larguras percentuais com min-width nas colunas da tabela de caixa e expansão do operador, além de assetVersion 5.5.0)
+* **Última Atualização:** 2026-09-24 10:48:00 (Implementação de Auto-Hide inteligente e Gaveta Flutuante / Hover Drawer da Barra Lateral: em telas <= 1400px a barra lateral colapsa automaticamente liberando 100% da largura da tela para tabelas e PDV; ao aproximar o mouse da borda esquerda ou do botão toggle da topbar, a barra desliza suavemente sobreposta sem empurrar o layout; ao afastar o mouse, ela recolhe automaticamente; suporte a fixação manual via clique e persistência em localStorage)
 
 ---
 

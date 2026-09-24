@@ -23,6 +23,12 @@ $isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
 <!-- Backdrop para Mobile (Offcanvas) -->
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 
+<!-- Gatilho de Borda Invisível para Auto-Aparecer ao aproximar o mouse (Desktop) -->
+<div class="sidebar-edge-trigger" id="sidebarEdgeTrigger" aria-hidden="true" title="Aproximar o cursor para abrir o menu"></div>
+
+<!-- Overlay Transparente para fechamento de clique-fora no modo flutuante -->
+<div class="sidebar-floating-overlay" id="sidebarFloatingOverlay" onclick="fecharSidebarFlutuanteImediato()"></div>
+
 <aside class="app-sidebar" id="appSidebar">
     <!-- Cabeçalho da Sidebar com Logotipo Oficial -->
     <div class="sidebar-header">

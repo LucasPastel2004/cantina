@@ -74,14 +74,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Restaurar estado de colapso da sidebar no Desktop
-  try {
-    const savedSidebar = localStorage.getItem('cantina_sidebar_collapsed');
-    const wrapper = document.querySelector('.app-admin-wrapper');
-    if (wrapper && savedSidebar === 'true' && window.innerWidth >= 992) {
-      wrapper.classList.add('sidebar-collapsed');
-    }
-  } catch (e) {}
+  // Restaurar estado e inicializar Auto-Hide da sidebar no Desktop
+  initSidebarAutoHide();
 
   // Restaurar estado dos blocos de categoria na sidebar
   document.querySelectorAll('.nav-section-box').forEach(function (box) {
@@ -227,21 +221,119 @@ function toggleSidebar() {
   }
 }
 
+let sidebarHoverTimeout = null;
+
 /**
- * Alterna o colapso da barra lateral inteira no Desktop
+ * Abre a barra lateral no modo flutuante (Hover Drawer) quando ela estiver colapsada
+ */
+function abrirSidebarFlutuante() {
+  const wrapper = document.querySelector('.app-admin-wrapper');
+  if (!wrapper || !wrapper.classList.contains('sidebar-collapsed')) return;
+  clearTimeout(sidebarHoverTimeout);
+  wrapper.classList.add('sidebar-floating-open');
+}
+
+/**
+ * Agenda o fechamento suave da barra lateral flutuante ao tirar o mouse
+ */
+function fecharSidebarFlutuanteComDelay() {
+  const wrapper = document.querySelector('.app-admin-wrapper');
+  if (!wrapper || !wrapper.classList.contains('sidebar-floating-open')) return;
+  clearTimeout(sidebarHoverTimeout);
+  sidebarHoverTimeout = setTimeout(function () {
+    wrapper.classList.remove('sidebar-floating-open');
+  }, 280);
+}
+
+/**
+ * Fecha imediatamente a barra lateral flutuante
+ */
+function fecharSidebarFlutuanteImediato() {
+  const wrapper = document.querySelector('.app-admin-wrapper');
+  clearTimeout(sidebarHoverTimeout);
+  if (wrapper) {
+    wrapper.classList.remove('sidebar-floating-open');
+  }
+}
+
+/**
+ * Inicializa a detecção de auto-hide e listeners de hover na barra lateral
+ */
+function initSidebarAutoHide() {
+  const wrapper = document.querySelector('.app-admin-wrapper');
+  if (!wrapper) return;
+
+  // 1. Restaurar preferência ou aplicar auto-colapso inteligente para telas pequenas (<= 1400px)
+  try {
+    const pref = localStorage.getItem('cantina_sidebar_preference');
+    const legacy = localStorage.getItem('cantina_sidebar_collapsed');
+    
+    if (window.innerWidth >= 992) {
+      if (pref === 'pinned_collapsed' || legacy === 'true') {
+        wrapper.classList.add('sidebar-collapsed');
+      } else if (pref === 'pinned_open' || legacy === 'false') {
+        wrapper.classList.remove('sidebar-collapsed');
+      } else if (window.innerWidth <= 1400) {
+        // Padrão automático: telas de notebooks/cantina (<= 1400px) nascem colapsadas para máximo espaço
+        wrapper.classList.add('sidebar-collapsed');
+      }
+    }
+  } catch (e) {}
+
+  // 2. Ouvintes da faixa invisível na borda esquerda (Edge Trigger)
+  const edgeTrigger = document.getElementById('sidebarEdgeTrigger');
+  if (edgeTrigger) {
+    edgeTrigger.addEventListener('mouseenter', abrirSidebarFlutuante);
+  }
+
+  // 3. Ouvintes do botão toggle na topbar
+  const btnToggle = document.querySelector('.btn-sidebar-toggle');
+  if (btnToggle) {
+    btnToggle.addEventListener('mouseenter', function () {
+      if (wrapper.classList.contains('sidebar-collapsed')) {
+        abrirSidebarFlutuante();
+      }
+    });
+  }
+
+  // 4. Ouvintes na própria sidebar para manter aberta no hover e fechar ao sair
+  const sidebar = document.getElementById('appSidebar');
+  if (sidebar) {
+    sidebar.addEventListener('mouseenter', function () {
+      clearTimeout(sidebarHoverTimeout);
+    });
+    sidebar.addEventListener('mouseleave', function () {
+      fecharSidebarFlutuanteComDelay();
+    });
+  }
+
+  // 5. Tecla Esc fecha modo flutuante
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && wrapper.classList.contains('sidebar-floating-open')) {
+      fecharSidebarFlutuanteImediato();
+    }
+  });
+}
+
+/**
+ * Alterna a fixação da barra lateral no Desktop (fixa aberta vs auto-recolhida)
  */
 function toggleSidebarCollapse() {
   const wrapper = document.querySelector('.app-admin-wrapper');
   if (!wrapper) return;
-  const isCollapsed = wrapper.classList.toggle('sidebar-collapsed');
+  
+  fecharSidebarFlutuanteImediato();
+  const isNowCollapsed = wrapper.classList.toggle('sidebar-collapsed');
+  
   try {
-    localStorage.setItem('cantina_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+    localStorage.setItem('cantina_sidebar_preference', isNowCollapsed ? 'pinned_collapsed' : 'pinned_open');
+    localStorage.setItem('cantina_sidebar_collapsed', isNowCollapsed ? 'true' : 'false');
   } catch (e) {}
 }
 
 /**
  * Manipulador inteligente do botão toggle da topbar
- * No desktop colapsa/expande; no mobile abre/fecha o offcanvas
+ * No desktop alterna fixação; no mobile abre/fecha o offcanvas
  */
 function handleSidebarToggle() {
   if (window.innerWidth >= 992) {

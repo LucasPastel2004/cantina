@@ -1241,10 +1241,54 @@ textarea.form-control {
   z-index: 1030;
 }
 
-/* Colapso da Barra Lateral no Desktop (>= 992px) */
+/* Gatilho e Overlay de Auto-Hide da Barra Lateral */
+.sidebar-edge-trigger,
+.sidebar-floating-overlay {
+  display: none;
+}
+
+/* Colapso e Auto-Appear da Barra Lateral no Desktop (>= 992px) */
 @media (min-width: 992px) {
   .app-admin-wrapper.sidebar-collapsed .app-sidebar {
     margin-left: -240px;
+  }
+
+  /* Faixa de borda invisível na extrema esquerda para acionar hover */
+  .app-admin-wrapper.sidebar-collapsed .sidebar-edge-trigger {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 16px;
+    z-index: 1045;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .app-admin-wrapper.sidebar-collapsed .sidebar-edge-trigger:hover {
+    background: linear-gradient(to right, rgba(37, 99, 235, 0.18), transparent);
+  }
+
+  /* Modo Flutuante Automático (Hover Drawer sobreposto sem empurrar a tela) */
+  .app-admin-wrapper.sidebar-collapsed.sidebar-floating-open .app-sidebar {
+    margin-left: 0 !important;
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1060;
+    box-shadow: 6px 0 28px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.08);
+  }
+
+  /* Overlay transparente para clique-fora fechar a sidebar flutuante */
+  .app-admin-wrapper.sidebar-collapsed.sidebar-floating-open .sidebar-floating-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1055;
+    background-color: transparent;
   }
 
   /* No desktop, se a sidebar NÃO estiver colapsada, oculta o botão toggle da topbar */
