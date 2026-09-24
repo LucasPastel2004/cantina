@@ -1222,8 +1222,8 @@ textarea.form-control {
 .app-page-content {
   flex: 1;
   padding: 20px;
-  max-width: 1440px;
   width: 100%;
+  min-width: 0;
 }
 
 .app-admin-footer {

@@ -401,19 +401,19 @@ if ($caixaAberto) {
             <table class="table table-enterprise table-sm mb-0 align-middle" style="font-size: 11.5px; white-space: nowrap;">
                 <thead>
                     <tr>
-                        <th style="width: 50px;">Sessão</th>
-                        <th style="width: 65px;">Turno</th>
-                        <th style="width: 90px;">Operador</th>
-                        <th style="width: 75px;">Abertura</th>
-                        <th style="width: 75px;">Fechamento</th>
-                        <th class="text-end" style="width: 65px;">Fundo</th>
-                        <th class="text-end" style="width: 70px;">PDV Din.</th>
-                        <th class="text-end" style="width: 70px;">Recargas</th>
-                        <th class="text-end" style="width: 60px;">Pix</th>
-                        <th class="text-end" style="width: 70px;">Gaveta</th>
-                        <th class="text-end" style="width: 70px;">Diferença</th>
-                        <th class="text-center" style="width: 70px;">Status</th>
-                        <th class="text-end" style="width: 120px;">Ações</th>
+                        <th style="min-width: 50px; width: 5%;">Sessão</th>
+                        <th style="min-width: 60px; width: 6%;">Turno</th>
+                        <th style="min-width: 100px;">Operador</th>
+                        <th style="min-width: 75px; width: 8%;">Abertura</th>
+                        <th style="min-width: 75px; width: 8%;">Fechamento</th>
+                        <th class="text-end" style="min-width: 65px; width: 7%;">Fundo</th>
+                        <th class="text-end" style="min-width: 70px; width: 8%;">PDV Din.</th>
+                        <th class="text-end" style="min-width: 70px; width: 8%;">Recargas</th>
+                        <th class="text-end" style="min-width: 60px; width: 7%;">Pix</th>
+                        <th class="text-end" style="min-width: 70px; width: 8%;">Gaveta</th>
+                        <th class="text-end" style="min-width: 70px; width: 8%;">Diferença</th>
+                        <th class="text-center" style="min-width: 70px; width: 7%;">Status</th>
+                        <th class="text-end" style="min-width: 120px; width: 12%;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -442,7 +442,7 @@ if ($caixaAberto) {
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="d-inline-block text-truncate" style="max-width: 90px;" title="<?php echo htmlspecialchars($s['operador_nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?>">
+                                    <span class="d-inline-block text-truncate" style="max-width: 160px;" title="<?php echo htmlspecialchars($s['operador_nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?>">
                                         <?php echo htmlspecialchars($s['operador_nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?>
                                     </span>
                                 </td>
