@@ -392,32 +392,46 @@ class Responsavel extends Model
             $pagina = 1;
         }
 
-        $where = ["(r.bloqueado_med = 1 OR r.saldo_atual < 0)"];
+        $where = [];
         $params = [];
 
-        // Filtro por busca de texto (Nome ou CPF do responsável, ou nome do dependente)
+        // Filtro por status
+        $status = $filtros['status'] ?? 'todos';
+        if (in_array($status, ['bloqueado', 'bloqueados'], true)) {
+            $where[] = "r.bloqueado_med = 1";
+        } elseif (in_array($status, ['negativo', 'negativos'], true)) {
+            $where[] = "r.saldo_atual < 0";
+        } elseif (in_array($status, ['regularizado', 'regularizados'], true)) {
+            $where[] = "r.bloqueado_med = 0 AND r.saldo_atual >= 0";
+        } else {
+            // Padrão 'todos': todas as contas sob restrição MED (bloqueadas preventivamente ou com saldo devedor)
+            $where[] = "(r.bloqueado_med = 1 OR r.saldo_atual < 0)";
+        }
+
+        // Filtro por busca de texto (Nome, CPF, E-mail, WhatsApp do responsável ou nome do dependente)
         if (!empty($filtros['busca'])) {
-            $termo = '%' . trim($filtros['busca']) . '%';
-            $where[] = "(r.nome LIKE :b_nome OR r.cpf LIKE :b_cpf OR EXISTS (
+            $buscaLimpa = trim($filtros['busca']);
+            $termo = '%' . $buscaLimpa . '%';
+            $digitsOnly = preg_replace('/\D/', '', $buscaLimpa);
+
+            $cpfClause = "r.cpf LIKE :b_cpf";
+            $params['b_cpf'] = $termo;
+
+            if (strlen($digitsOnly) >= 3) {
+                $cpfClause .= " OR r.cpf LIKE :b_cpf_dig";
+                $params['b_cpf_dig'] = '%' . $digitsOnly . '%';
+            }
+
+            $where[] = "(r.nome LIKE :b_nome OR {$cpfClause} OR r.email LIKE :b_email OR r.whatsapp LIKE :b_whats OR EXISTS (
                 SELECT 1 FROM alunos a_sub WHERE a_sub.responsavel_id = r.id AND a_sub.nome LIKE :b_aluno
             ))";
             $params['b_nome'] = $termo;
-            $params['b_cpf'] = $termo;
+            $params['b_email'] = $termo;
+            $params['b_whats'] = $termo;
             $params['b_aluno'] = $termo;
         }
 
-        // Filtro por status
-        if (!empty($filtros['status'])) {
-            if ($filtros['status'] === 'bloqueado') {
-                $where[] = "r.bloqueado_med = 1";
-            } elseif ($filtros['status'] === 'negativo') {
-                $where[] = "r.saldo_atual < 0";
-            } elseif ($filtros['status'] === 'regularizado') {
-                $where[] = "r.bloqueado_med = 0 AND r.saldo_atual >= 0";
-            }
-        }
-
-        $whereSql = implode(' AND ', $where);
+        $whereSql = !empty($where) ? implode(' AND ', $where) : '1=1';
 
         // 1. Contagem total de registros
         $countSql = "SELECT COUNT(*) AS total FROM responsaveis r WHERE {$whereSql}";
@@ -466,5 +480,81 @@ class Responsavel extends Model
             'total_paginas' => max(1, $totalPaginas)
         ];
     }
+
+    /**
+     * Retorna sugestões rápidas para autocomplete no painel MED
+     */
+    public static function buscarSugestoesMed(string $termo, int $limite = 10): array
+    {
+        $termoLimpo = trim($termo);
+        if (empty($termoLimpo)) {
+            return [];
+        }
+
+        $digitsOnly = preg_replace('/\D/', '', $termoLimpo);
+        $like = '%' . $termoLimpo . '%';
+        $params = [
+            't1' => $like,
+            't2' => $like,
+            't3' => $like,
+            't4' => $like,
+            't5' => $like
+        ];
+
+        $cpfClause = "r.cpf LIKE :t2";
+        if (strlen($digitsOnly) >= 3) {
+            $cpfClause .= " OR r.cpf LIKE :t_dig";
+            $params['t_dig'] = '%' . $digitsOnly . '%';
+        }
+
+        $sql = "SELECT DISTINCT r.id, r.nome, r.cpf, r.email, r.whatsapp, r.saldo_atual, r.bloqueado_med
+                FROM responsaveis r
+                LEFT JOIN alunos a ON a.responsavel_id = r.id AND a.deleted_at IS NULL
+                WHERE (r.nome LIKE :t1 OR {$cpfClause} OR r.email LIKE :t3 OR r.whatsapp LIKE :t4 OR a.nome LIKE :t5)
+                ORDER BY (r.bloqueado_med = 1 OR r.saldo_atual < 0) DESC, r.nome ASC
+                LIMIT {$limite}";
+
+        $linhas = self::fetchAll($sql, $params);
+
+        $sugestoes = [];
+        $respModel = new self();
+        foreach ($linhas as $r) {
+            $saldo = (float)$r['saldo_atual'];
+            $isBloqueado = !empty($r['bloqueado_med']);
+            $isNegativo = ($saldo < 0);
+
+            $deps = $respModel->getDependentes((int)$r['id']);
+            $nomesDeps = array_map(fn($d) => $d['nome'], $deps);
+            $depsStr = !empty($nomesDeps) ? implode(', ', $nomesDeps) : 'Sem dependentes ativos';
+
+            $badge = 'Regular';
+            $badgeClass = 'badge bg-light text-secondary border';
+            if ($isBloqueado) {
+                $badge = 'Bloqueado MED';
+                $badgeClass = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+            } elseif ($isNegativo) {
+                $badge = 'Saldo Devedor';
+                $badgeClass = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+            }
+
+            $sugestoes[] = [
+                'id'            => (int)$r['id'],
+                'nome'          => $r['nome'],
+                'nome_busca'    => $r['nome'],
+                'cpf'           => preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', str_pad($r['cpf'], 11, '0', STR_PAD_LEFT)),
+                'contato'       => $r['whatsapp'] ?: ($r['email'] ?: ''),
+                'saldo'         => $saldo,
+                'saldo_fmt'     => 'R$ ' . number_format($saldo, 2, ',', '.'),
+                'bloqueado_med' => $isBloqueado,
+                'is_negativado' => ($isBloqueado || $isNegativo),
+                'badge'         => $badge,
+                'badge_class'   => $badgeClass,
+                'dependentes'   => $depsStr
+            ];
+        }
+
+        return $sugestoes;
+    }
 }
+
 

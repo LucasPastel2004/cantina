@@ -421,6 +421,9 @@ $router->post('/admin/contestacoes/quitar', [\App\Controllers\AdminController::c
 $router->post('/admin/contestacoes/desbloquear', [\App\Controllers\AdminController::class, 'desbloquearContaMed'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
+$router->get('/admin/contestacoes/sugestoes', [\App\Controllers\AdminController::class, 'contestacoesSugestoes'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
 $router->get('/admin/contestacoes/pdf', [\App\Controllers\AdminController::class, 'contestacoesPdf'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);

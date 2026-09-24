@@ -1330,7 +1330,25 @@ class AdminController extends Controller
 
         Session::setFlash('success', 'Suspensão preventiva MED removida com sucesso para o responsável.');
         $this->redirect('/admin/contestacoes');
+    }
 
+    /**
+     * Retorna sugestões rápidas em JSON para autocomplete na busca de contestações MED
+     */
+    public function contestacoesSugestoes(): void
+    {
+        $termo = trim((string)$this->input('q', (string)$this->input('busca', '')));
+        $limite = max(1, min(20, (int)$this->input('limite', 10)));
+
+        $sugestoes = Responsavel::buscarSugestoesMed($termo, $limite);
+
+        $this->json([
+            'sucesso'   => true,
+            'success'   => true,
+            'termo'     => $termo,
+            'sugestoes' => $sugestoes,
+            'total'     => count($sugestoes)
+        ]);
     }
 
     /**

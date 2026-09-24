@@ -119,13 +119,25 @@ $totalPaginas = $totalPaginas ?? 1;
 <!-- Filtros e Busca -->
 <div class="card-enterprise mb-4">
     <div class="card-enterprise-body p-3">
-        <form action="<?php echo $baseUrl; ?>/admin/contestacoes" method="GET" class="row g-2 align-items-end">
-            <div class="col-12 col-sm-6 col-md-5">
+        <form id="formFiltrosContestacoes" action="<?php echo $baseUrl; ?>/admin/contestacoes" method="GET" class="row g-2 align-items-end">
+            <div class="col-12 col-sm-6 col-md-5 position-relative">
                 <label for="busca" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">
                     Buscar Responsável ou Titular
                 </label>
-                <input type="text" class="form-control form-control-sm" id="busca" name="busca" 
-                       placeholder="Nome, e-mail ou telefone..." value="<?php echo htmlspecialchars($filtroBusca, ENT_QUOTES, 'UTF-8'); ?>">
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control form-control-sm" id="busca" name="busca" 
+                           placeholder="Nome, e-mail, telefone ou dependente..." 
+                           value="<?php echo htmlspecialchars($filtroBusca, ENT_QUOTES, 'UTF-8'); ?>"
+                           autocomplete="off">
+                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm" id="btnLimparBuscaInput" 
+                            style="<?php echo empty($filtroBusca) ? 'display: none;' : ''; ?>" title="Limpar busca rápida">
+                        &times;
+                    </button>
+                </div>
+                <!-- Dropdown flutuante de sugestões em tempo real -->
+                <div id="buscaSugestoesDropdown" class="card-enterprise shadow-sm position-absolute w-100 mt-1 py-1" 
+                     style="z-index: 1050; max-height: 280px; overflow-y: auto; display: none; background: #ffffff; border: 1px solid #cbd5e1; left: 0;">
+                </div>
             </div>
 
             <div class="col-12 col-sm-3 col-md-3">
@@ -133,7 +145,7 @@ $totalPaginas = $totalPaginas ?? 1;
                     Filtrar por Status
                 </label>
                 <select class="form-select form-select-sm" id="status" name="status">
-                    <option value="todos" <?php echo ($filtroStatus === 'todos') ? 'selected' : ''; ?>>Todos os Registros</option>
+                    <option value="todos" <?php echo ($filtroStatus === 'todos' || empty($filtroStatus)) ? 'selected' : ''; ?>>Todos os Registros</option>
                     <option value="bloqueados" <?php echo ($filtroStatus === 'bloqueados') ? 'selected' : ''; ?>>Apenas Bloqueados MED</option>
                     <option value="negativos" <?php echo ($filtroStatus === 'negativos') ? 'selected' : ''; ?>>Saldo Devedor (< R$ 0)</option>
                 </select>
@@ -143,7 +155,7 @@ $totalPaginas = $totalPaginas ?? 1;
                 <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-grow-1">
                     Filtrar Registros
                 </button>
-                <?php if (!empty($filtroBusca) || $filtroStatus !== 'todos'): ?>
+                <?php if (!empty($filtroBusca) || ($filtroStatus !== 'todos' && !empty($filtroStatus))): ?>
                     <a href="<?php echo $baseUrl; ?>/admin/contestacoes" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
                         Limpar
                     </a>
@@ -178,7 +190,7 @@ $totalPaginas = $totalPaginas ?? 1;
             </div>
         <?php else: ?>
             <div class="table-responsive">
-                <table class="table-enterprise mb-0">
+                <table class="table-enterprise mb-0" id="tabelaContestacoes">
                     <thead>
                         <tr>
                             <th class="cell-left" style="width: 250px;">Responsável Titular</th>
@@ -189,15 +201,18 @@ $totalPaginas = $totalPaginas ?? 1;
                             <th class="cell-right" style="width: 200px;">Ações Administrativas</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="tabelaContestacoesBody">
                         <?php foreach ($negativados as $fam): ?>
                             <?php 
                             $saldo = (float)($fam['saldo_atual'] ?? $fam['saldo'] ?? 0);
                             $isBloqueado = !empty($fam['bloqueado_med']);
                             $dependentes = $fam['dependentes'] ?? [];
                             $contatoFam = $fam['whatsapp'] ?? $fam['telefone'] ?? '';
+                            $cpfLimpo = preg_replace('/\D/', '', $fam['cpf'] ?? '');
+                            $nomesDeps = array_map(fn($d) => is_array($d) ? ($d['nome'] ?? '') : (string)$d, $dependentes);
+                            $termoBuscaRow = strtolower(trim($fam['nome'] . ' ' . ($fam['email'] ?? '') . ' ' . $contatoFam . ' ' . ($fam['cpf'] ?? '') . ' ' . $cpfLimpo . ' ' . implode(' ', $nomesDeps)));
                             ?>
-                            <tr>
+                            <tr class="linha-contestacao" data-busca="<?php echo htmlspecialchars($termoBuscaRow, ENT_QUOTES, 'UTF-8'); ?>" data-nome="<?php echo htmlspecialchars($fam['nome'], ENT_QUOTES, 'UTF-8'); ?>">
                                 <td class="cell-left">
                                     <div class="font-weight-semibold text-dark">
                                         <?php echo htmlspecialchars($fam['nome'], ENT_QUOTES, 'UTF-8'); ?>
@@ -686,5 +701,253 @@ window.abrirModalDesbloqueio = function (dados) {
         modal.show();
     }
 };
+
+// =========================================================================
+// AUTOCOMPLETE DE SUGESTÕES E FILTRO LIVE PARA CONTESTAÇÕES MED
+// =========================================================================
+(function() {
+    var inputBusca = document.getElementById('busca');
+    var dropdown = document.getElementById('buscaSugestoesDropdown');
+    var btnLimpar = document.getElementById('btnLimparBuscaInput');
+    var selectStatus = document.getElementById('status');
+    var formFiltros = document.getElementById('formFiltrosContestacoes');
+    var tabelaBody = document.getElementById('tabelaContestacoesBody');
+    var baseUrl = '<?php echo $baseUrl; ?>';
+
+    if (!inputBusca || !dropdown) return;
+
+    var debounceTimer = null;
+    var itemAtivoIndex = -1;
+    var sugestoesAtuais = [];
+
+    // Auto-submete ao alterar o status do filtro
+    if (selectStatus && formFiltros) {
+        selectStatus.addEventListener('change', function() {
+            formFiltros.submit();
+        });
+    }
+
+    // Botão rápido para limpar o campo de busca
+    if (btnLimpar) {
+        btnLimpar.addEventListener('click', function() {
+            inputBusca.value = '';
+            btnLimpar.style.display = 'none';
+            fecharDropdown();
+            filtrarTabelaClientSide('');
+            inputBusca.focus();
+        });
+    }
+
+    // Filtragem instantânea client-side nas linhas visíveis da tabela
+    function filtrarTabelaClientSide(termo) {
+        if (!tabelaBody) return;
+        var termoNorm = termo.toLowerCase().trim();
+        var linhas = tabelaBody.querySelectorAll('tr.linha-contestacao');
+        var visiveis = 0;
+
+        linhas.forEach(function(linha) {
+            var dataBusca = (linha.getAttribute('data-busca') || '').toLowerCase();
+            if (!termoNorm || dataBusca.indexOf(termoNorm) !== -1) {
+                linha.style.display = '';
+                visiveis++;
+            } else {
+                linha.style.display = 'none';
+            }
+        });
+
+        // Alerta de nenhum resultado na página corrente
+        var msgLinha = document.getElementById('linhaSemResultadosFiltro');
+        if (termoNorm && visiveis === 0 && linhas.length > 0) {
+            if (!msgLinha) {
+                msgLinha = document.createElement('tr');
+                msgLinha.id = 'linhaSemResultadosFiltro';
+                msgLinha.innerHTML = '<td colspan="6" class="p-3 text-center text-secondary text-microcopy">' +
+                    'Nenhum registro nesta página corresponde a "<strong>' + escapeHtml(termo) + '</strong>". ' +
+                    'Pressione <strong>Enter</strong> para consultar em todo o cadastro ou selecione uma sugestão acima.' +
+                    '</td>';
+                tabelaBody.appendChild(msgLinha);
+            } else {
+                msgLinha.innerHTML = '<td colspan="6" class="p-3 text-center text-secondary text-microcopy">' +
+                    'Nenhum registro nesta página corresponde a "<strong>' + escapeHtml(termo) + '</strong>". ' +
+                    'Pressione <strong>Enter</strong> para consultar em todo o cadastro ou selecione uma sugestão acima.' +
+                    '</td>';
+                msgLinha.style.display = '';
+            }
+        } else if (msgLinha) {
+            msgLinha.style.display = 'none';
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function fecharDropdown() {
+        dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
+        itemAtivoIndex = -1;
+        sugestoesAtuais = [];
+    }
+
+    function destacarItem(index) {
+        var itens = dropdown.querySelectorAll('.sugestao-med-item');
+        itens.forEach(function(el, idx) {
+            if (idx === index) {
+                el.style.backgroundColor = '#f1f5f9';
+                el.setAttribute('aria-selected', 'true');
+                el.scrollIntoView({ block: 'nearest' });
+            } else {
+                el.style.backgroundColor = '#ffffff';
+                el.setAttribute('aria-selected', 'false');
+            }
+        });
+    }
+
+    function selecionarSugestao(item) {
+        if (!item) return;
+        inputBusca.value = item.nome;
+        fecharDropdown();
+        if (btnLimpar) btnLimpar.style.display = '';
+        // Submete o formulário com o responsável selecionado para sincronizar filtros e paginação
+        if (formFiltros) {
+            formFiltros.submit();
+        }
+    }
+
+    function buscarSugestoes(termo) {
+        if (!termo || termo.length < 1) {
+            fecharDropdown();
+            return;
+        }
+
+        dropdown.innerHTML = '<div class="p-2 text-center text-secondary text-microcopy">' +
+            '<span class="spinner-border spinner-border-sm me-1 text-primary" role="status"></span> Buscando titulares e alunos...</div>';
+        dropdown.style.display = 'block';
+
+        fetch(baseUrl + '/admin/contestacoes/sugestoes?q=' + encodeURIComponent(termo))
+            .then(function(res) {
+                if (!res.ok) throw new Error('Falha na requisição');
+                return res.json();
+            })
+            .then(function(data) {
+                var lista = data.sugestoes || [];
+                sugestoesAtuais = lista;
+                itemAtivoIndex = -1;
+
+                if (lista.length === 0) {
+                    dropdown.innerHTML = '<div class="p-2 text-center text-secondary text-microcopy">' +
+                        'Nenhum titular ou dependente localizado para "' + escapeHtml(termo) + '".</div>';
+                    dropdown.style.display = 'block';
+                    return;
+                }
+
+                var html = '';
+                lista.forEach(function(item, idx) {
+                    var saldoNum = parseFloat(item.saldo) || 0;
+                    var saldoCor = saldoNum < 0 ? 'text-danger' : (saldoNum > 0 ? 'text-success' : 'text-secondary');
+
+                    html += '<div class="sugestao-med-item px-3 py-2 border-bottom text-start" data-idx="' + idx + '" role="option" tabindex="0" style="cursor: pointer; background: #ffffff;">' +
+                        '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                            '<div>' +
+                                '<span class="font-weight-semibold text-dark font-13">' + escapeHtml(item.nome) + '</span>' +
+                                '<span class="' + (item.badge_class || 'badge bg-light text-secondary border') + ' ms-2 px-2 py-0" style="font-size: 10px;">' + escapeHtml(item.badge) + '</span>' +
+                            '</div>' +
+                            '<span class="font-tabular font-weight-bold font-12 ' + saldoCor + '">' + escapeHtml(item.saldo_fmt) + '</span>' +
+                        '</div>' +
+                        '<div class="d-flex justify-content-between text-secondary text-microcopy">' +
+                            '<span>CPF: <strong class="font-tabular">' + escapeHtml(item.cpf) + '</strong> &bull; ' + escapeHtml(item.contato || 'Sem contato') + '</span>' +
+                            '<span class="text-truncate ms-2" style="max-width: 180px;">Alunos: ' + escapeHtml(item.dependentes) + '</span>' +
+                        '</div>' +
+                    '</div>';
+                });
+
+                dropdown.innerHTML = html;
+                dropdown.style.display = 'block';
+
+                // Eventos de clique e hover
+                dropdown.querySelectorAll('.sugestao-med-item').forEach(function(el) {
+                    el.addEventListener('mouseenter', function() {
+                        var idx = parseInt(el.getAttribute('data-idx'), 10);
+                        itemAtivoIndex = idx;
+                        destacarItem(idx);
+                    });
+                    el.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var idx = parseInt(el.getAttribute('data-idx'), 10);
+                        selecionarSugestao(sugestoesAtuais[idx]);
+                    });
+                });
+            })
+            .catch(function(err) {
+                dropdown.innerHTML = '<div class="p-2 text-center text-secondary text-microcopy">Erro ao carregar sugestões.</div>';
+                dropdown.style.display = 'block';
+            });
+    }
+
+    // Digitação no input
+    inputBusca.addEventListener('input', function() {
+        var termo = inputBusca.value;
+        if (btnLimpar) {
+            btnLimpar.style.display = termo.trim() ? '' : 'none';
+        }
+
+        // Live-filtering imediato na tabela
+        filtrarTabelaClientSide(termo);
+
+        // Busca assíncrona debounced para sugestões
+        clearTimeout(debounceTimer);
+        if (!termo.trim()) {
+            fecharDropdown();
+            return;
+        }
+
+        debounceTimer = setTimeout(function() {
+            buscarSugestoes(termo.trim());
+        }, 180);
+    });
+
+    // Teclado no input de busca
+    inputBusca.addEventListener('keydown', function(e) {
+        var total = sugestoesAtuais.length;
+
+        if (dropdown.style.display === 'block' && total > 0) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                itemAtivoIndex = (itemAtivoIndex + 1) >= total ? 0 : itemAtivoIndex + 1;
+                destacarItem(itemAtivoIndex);
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                itemAtivoIndex = (itemAtivoIndex - 1) < 0 ? total - 1 : itemAtivoIndex - 1;
+                destacarItem(itemAtivoIndex);
+                return;
+            }
+            if (e.key === 'Enter') {
+                if (itemAtivoIndex >= 0 && itemAtivoIndex < total) {
+                    e.preventDefault();
+                    selecionarSugestao(sugestoesAtuais[itemAtivoIndex]);
+                    return;
+                }
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                fecharDropdown();
+                return;
+            }
+        }
+    });
+
+    // Fecha ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target) && e.target !== inputBusca && e.target !== btnLimpar) {
+            fecharDropdown();
+        }
+    });
+})();
 </script>
 

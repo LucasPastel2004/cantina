@@ -722,6 +722,29 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - Criada e aprovada a suíte `tests/turmas_pagination_test.php` (10/10 asserções 100% aprovadas) e reexecutadas as baterias de regressão `tests/fase7_test.php` (68/68) e `tests/fase8_test.php` (57/57).
 - Como evitar no futuro: Toda e qualquer listagem ou tabela de dados administrativos que possa conter mais do que 10 a 20 registros deve nascer obrigatoriamente integrada com `Configuracao::getItensPorPagina()` e o componente parcial `pagination.php`, com os respectivos métodos de contagem (`contar*`) nos modelos.
 
+---
+
+## 2026-09-24 - Inconsistência nos filtros de status e ausência de sugestões (autocomplete) na tela de Contestações MED
+
+- Sintoma: Na tela de Contestações Pix & Negativados MED (`/admin/contestacoes`), ao digitar termos no campo de busca não apareciam sugestões com nomes correspondentes (autocomplete dinâmico), e o filtro por status exibia registros indevidos (ex.: titular sem bloqueio ativo aparecendo ao filtrar por "Apenas Bloqueados MED").
+- Causa:
+  1. *Divergência de valores no filtro de status:* As opções do `<select id="status">` enviavam `bloqueados` e `negativos` (no plural), enquanto `Responsavel::listarNegativadosMed` comparava rigidamente com `'bloqueado'` e `'negativo'` (no singular). Por essa discrepância, o filtro por status era ignorado no SQL e qualquer conta com restrição (bloqueio ou saldo devedor) era retornada indiscriminadamente.
+  2. *Busca incompleta no banco:* A cláusula SQL de busca verificava apenas `r.nome` e `r.cpf`, omitindo `r.email`, `r.whatsapp` e o tratamento de CPF numérico sem máscara.
+  3. *Ausência de autocomplete e feedback em tempo real:* O campo `#busca` não possuía dropdown de sugestões nem filtragem instantânea client-side enquanto o operador digitava.
+- Solução aplicada:
+  1. *Correção dos Filtros no Modelo (`app/models/Responsavel.php`):* Unificado o tratamento de status aceitando tanto singular quanto plural (`['bloqueado', 'bloqueados']`, `['negativo', 'negativos']`, `['regularizado', 'regularizados']`), com montagem atômica da cláusula `WHERE`. Adicionada busca por e-mail, telefone/WhatsApp, nome do aluno dependente e CPF desformatado (dígitos puros).
+  2. *Método de Sugestões Rápidas (`Responsavel::buscarSugestoesMed`):* Implementado método otimizado que retorna responsáveis e dependentes vinculados com ordenação prioritária para contas sob restrição MED/saldo devedor, formatando saldo, CPF e badges contextuais.
+  3. *Endpoint REST Corporativo (`/admin/contestacoes/sugestoes`):* Registrada a rota protegida para administradores no Front Controller `index.php` e implementada a action `AdminController::contestacoesSugestoes` retornando payload JSON.
+  4. *Interface e Experiência do Usuário (`app/views/admin/contestacoes.php`):*
+     - Container relativo com dropdown flutuante `#buscaSugestoesDropdown` de alta densidade corporativa;
+     - Debounce de 180ms para consulta assíncrona;
+     - Suporte a navegação por teclado (ArrowDown, ArrowUp, Enter para selecionar, Escape para fechar);
+     - Filtragem instantânea client-side nas linhas visíveis da tabela durante a digitação para feedback imediato;
+     - Botão rápido de limpeza (`&times;`);
+     - Submissão automática do formulário ao alternar a opção do `<select id="status">`.
+  5. *Testes Automatizados:* Criada e aprovada a suíte `tests/contestacoes_busca_sugestoes_test.php` (27/27 asserções 100% aprovadas) e reexecutada a suíte `tests/fase16_test.php` (60/60 asserções 100% aprovadas).
+- Como evitar no futuro: Padronizar constantes para valores de filtros entre views e modelos ou aceitar arrays de equivalência no backend. Todo campo de busca de clientes/titulares deve dispor de debounce e dropdown acessível com suporte a navegação por teclado.
+
 
 
 
