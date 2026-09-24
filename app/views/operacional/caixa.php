@@ -54,8 +54,8 @@ if ($caixaAberto) {
         </p>
     </div>
 
-    <!-- Alternador de Turno -->
-    <div class="d-flex align-items-center gap-2">
+    <!-- Alternador de Turno e Ações Principais -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
         <div class="btn-group btn-group-sm" role="group" aria-label="Seletor de Turno">
             <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=matutino" 
                class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-secondary'; ?>">
@@ -66,6 +66,24 @@ if ($caixaAberto) {
                 Vespertino (Tarde)
             </a>
         </div>
+
+        <?php if ($caixaAberto): ?>
+            <button type="button" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#modalRecargaDinheiro">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+                Recarga em Dinheiro
+            </button>
+            <a href="<?php echo $baseUrl; ?>/operacional/caixa/detalhes/<?php echo $sessaoAberta['id']; ?>" class="btn btn-enterprise btn-secondary btn-sm" title="Extrato Analítico das Operações">
+                Extrato da Sessão
+            </a>
+        <?php else: ?>
+            <button type="button" class="btn btn-enterprise btn-secondary btn-sm" disabled title="Caixa fechado: Abra a sessão do turno para receber recargas presenciais em dinheiro">
+                + Recarga em Dinheiro (Caixa Fechado)
+            </button>
+        <?php endif; ?>
+
         <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="btn btn-enterprise btn-secondary btn-sm" title="Ir para o Terminal do PDV">
             ← Voltar ao PDV
         </a>
@@ -329,12 +347,45 @@ if ($caixaAberto) {
 <?php endif; ?>
 
 <!-- ========================================================================
-     HISTÓRICO RECENTE DE SESSÕES DE CAIXA
+     FILTRO E HISTÓRICO DE SESSÕES DE CAIXA
      ======================================================================== -->
-<div class="card-enterprise">
+<div class="card-enterprise mb-3">
+    <div class="card-enterprise-body p-3">
+        <form action="<?php echo $baseUrl; ?>/operacional/caixa" method="GET" class="row g-2 align-items-end">
+            <input type="hidden" name="turno" value="<?php echo htmlspecialchars($turnoAtual, ENT_QUOTES, 'UTF-8'); ?>">
+            
+            <div class="col-12 col-md-3">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Filtrar Histórico por Turno</label>
+                <select name="filtro_turno" class="form-select form-select-sm font-12">
+                    <option value="" <?php echo empty($filtroTurno) ? 'selected' : ''; ?>>Todos os Turnos</option>
+                    <option value="matutino" <?php echo (($filtroTurno ?? '') === 'matutino') ? 'selected' : ''; ?>>Matutino (Manhã)</option>
+                    <option value="vespertino" <?php echo (($filtroTurno ?? '') === 'vespertino') ? 'selected' : ''; ?>>Vespertino (Tarde)</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Data Início</label>
+                <input type="date" name="data_inicio" class="form-control form-control-sm font-tabular font-12" value="<?php echo htmlspecialchars($dataInicio ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Data Fim</label>
+                <input type="date" name="data_fim" class="form-control form-control-sm font-tabular font-12" value="<?php echo htmlspecialchars($dataFim ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+            </div>
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-fill">
+                    Filtrar
+                </button>
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo $turnoAtual; ?>" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
+                    Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card-enterprise mb-4">
     <div class="card-enterprise-header d-flex justify-content-between align-items-center">
         <span class="font-weight-bold text-dark">Histórico de Sessões de Caixa</span>
-        <span class="text-microcopy">Últimos fechamentos registrados</span>
+        <span class="text-microcopy">Registros e conciliações de gaveta</span>
     </div>
     <div class="card-enterprise-body p-0">
         <div class="table-responsive">
@@ -348,18 +399,19 @@ if ($caixaAberto) {
                         <th>Fechamento</th>
                         <th class="text-end">Fundo Inicial</th>
                         <th class="text-end">Dinheiro PDV</th>
+                        <th class="text-end">Recargas Dinheiro</th>
                         <th class="text-end">Pix Balcão</th>
                         <th class="text-end">Gaveta Informada</th>
                         <th class="text-end">Diferença</th>
                         <th class="text-center">Status</th>
-                        <th class="text-end" style="width: 140px;">Ações</th>
+                        <th class="text-end" style="width: 190px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($historico)): ?>
                         <tr>
-                            <td colspan="12" class="text-center py-4 text-muted">
-                                Nenhuma sessão de caixa registrada no histórico recente.
+                            <td colspan="13" class="text-center py-4 text-muted">
+                                Nenhuma sessão de caixa encontrada para os filtros aplicados.
                             </td>
                         </tr>
                     <?php else: ?>
@@ -367,6 +419,7 @@ if ($caixaAberto) {
                             <?php 
                                 $dif = ($s['diferenca_quebra_sobra'] !== null) ? (float)$s['diferenca_quebra_sobra'] : null;
                                 $isFechado = ($s['status'] === 'fechado');
+                                $recargasSessao = (float)($s['total_dinheiro_recargas'] ?? 0.0);
                             ?>
                             <tr>
                                 <td class="font-tabular font-semibold">#<?php echo $s['id']; ?></td>
@@ -382,6 +435,7 @@ if ($caixaAberto) {
                                 </td>
                                 <td class="text-end font-tabular">R$ <?php echo number_format((float)$s['fundo_troco_inicial'], 2, ',', '.'); ?></td>
                                 <td class="text-end font-tabular">R$ <?php echo number_format((float)$s['total_dinheiro_avulso'], 2, ',', '.'); ?></td>
+                                <td class="text-end font-tabular text-success font-semibold">R$ <?php echo number_format($recargasSessao, 2, ',', '.'); ?></td>
                                 <td class="text-end font-tabular">R$ <?php echo number_format((float)$s['total_pix_balcao'], 2, ',', '.'); ?></td>
                                 <td class="text-end font-tabular font-semibold">
                                     <?php echo ($s['total_informado_gaveta'] !== null) ? 'R$ ' . number_format((float)$s['total_informado_gaveta'], 2, ',', '.') : '—'; ?>
@@ -406,6 +460,10 @@ if ($caixaAberto) {
                                 </td>
                                 <td class="text-end">
                                     <div class="d-flex justify-content-end gap-1">
+                                        <a href="<?php echo $baseUrl; ?>/operacional/caixa/detalhes/<?php echo $s['id']; ?>" 
+                                           class="btn btn-enterprise btn-secondary btn-sm" title="Extrato Analítico Detalhado">
+                                            Extrato
+                                        </a>
                                         <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $s['id']; ?>" 
                                            class="btn btn-enterprise btn-secondary btn-sm" target="_blank" title="Visualizar Espelho A4">
                                             Espelho
@@ -425,14 +483,196 @@ if ($caixaAberto) {
     </div>
 </div>
 
+<!-- ========================================================================
+     MODAL DE RECARGA PRESENCIAL EM DINHEIRO NO BALCÃO (Tela 5.4 do FSD)
+     ======================================================================== -->
+<div class="modal fade" id="modalRecargaDinheiro" tabindex="-1" aria-labelledby="modalRecargaDinheiroLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content card-enterprise" style="border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);">
+            <div class="modal-header card-enterprise-header d-flex justify-content-between align-items-center py-3 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="font-weight-bold text-dark" id="modalRecargaDinheiroLabel">Recarga Presencial em Dinheiro (Balcão)</span>
+                    <span class="badge bg-white text-dark border" style="font-size: 11px;">
+                        Turno <?php echo ucfirst($turnoAtual); ?> — Caixa #<?php echo (int)($sessaoAberta['id'] ?? 0); ?>
+                    </span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <!-- Painel de Erros do Modal -->
+                <div id="recargaErroBox" class="alert alert-danger font-12 py-2 px-3 mb-3 d-none"></div>
+
+                <!-- ETAPA 1 E 2: BUSCA E SELEÇÃO DE RESPONSÁVEL -->
+                <div id="recargaEtapaSelecao">
+                    <label class="form-label font-12 font-semibold text-secondary">
+                        1. Localizar Titular da Carteira Familiar (Responsável ou Aluno)
+                    </label>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text bg-light">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                            </svg>
+                        </span>
+                        <input type="text" id="recargaInputBusca" class="form-control form-control-sm font-13" 
+                               placeholder="Digite nome do responsável, CPF ou nome/matrícula do aluno..." 
+                               autocomplete="off" autofocus>
+                        <button type="button" class="btn btn-enterprise btn-secondary btn-sm" id="recargaBtnLimparBusca" style="display: none;">
+                            Limpar
+                        </button>
+                    </div>
+
+                    <!-- Indicador de Carregamento -->
+                    <div id="recargaLoadingBusca" class="text-center py-2 text-secondary font-12 d-none">
+                        <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span> Buscando responsáveis...
+                    </div>
+
+                    <!-- Lista de Resultados -->
+                    <div id="recargaListaResultados" class="list-group mb-3 border rounded" style="max-height: 200px; overflow-y: auto; display: none;"></div>
+
+                    <!-- Card de Responsável Selecionado -->
+                    <div id="recargaCardSelecionado" class="p-3 mb-3 rounded border bg-light d-none">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-primary text-white font-11 mb-1">Responsável Selecionado</span>
+                                <h6 class="font-weight-bold text-dark mb-0 font-14" id="recargaNomeSelecionado">—</h6>
+                                <div class="font-11 text-secondary mt-1">
+                                    <span>CPF: <strong id="recargaCpfSelecionado" class="font-tabular">—</strong></span>
+                                    <span class="ms-2">Email: <span id="recargaEmailSelecionado">—</span></span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="font-11 text-secondary d-block">Saldo Atual da Família</span>
+                                <span class="font-tabular font-16 font-bold text-dark" id="recargaSaldoAtualSelecionado">R$ 0,00</span>
+                            </div>
+                        </div>
+
+                        <!-- Dependentes Vinculados -->
+                        <div class="pt-2 border-top">
+                            <span class="font-11 font-semibold text-secondary">Alunos Dependentes:</span>
+                            <div id="recargaDependentesSelecionados" class="font-11 text-dark mt-1">—</div>
+                        </div>
+
+                        <div class="text-end mt-2">
+                            <button type="button" class="btn btn-enterprise btn-secondary btn-sm" id="recargaBtnTrocarResponsavel">
+                                Trocar Titular
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ETAPA 3: VALOR EM DINHEIRO DA RECARGA -->
+                <div id="recargaEtapaValor" class="d-none">
+                    <hr class="my-3 text-muted">
+                    <label class="form-label font-12 font-semibold text-secondary">
+                        2. Valor em Dinheiro Recebido no Balcão
+                    </label>
+
+                    <div class="row g-3 align-items-center mb-3">
+                        <div class="col-12 col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text font-bold font-14">R$</span>
+                                <input type="text" id="recargaInputValor" class="form-control form-control-lg font-tabular font-bold input-money" 
+                                       placeholder="0,00" required>
+                            </div>
+                            <div class="form-text font-11 text-muted">
+                                O valor será creditado imediatamente na carteira familiar e somado à gaveta do caixa.
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label font-11 text-secondary mb-1">Atalhos de Valor:</label>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <button type="button" class="btn btn-enterprise btn-secondary btn-sm font-tabular btn-atalho-valor" data-valor="20,00">R$ 20</button>
+                                <button type="button" class="btn btn-enterprise btn-secondary btn-sm font-tabular btn-atalho-valor" data-valor="50,00">R$ 50</button>
+                                <button type="button" class="btn btn-enterprise btn-secondary btn-sm font-tabular btn-atalho-valor" data-valor="100,00">R$ 100</button>
+                                <button type="button" class="btn btn-enterprise btn-secondary btn-sm font-tabular btn-atalho-valor" data-valor="200,00">R$ 200</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-11 font-semibold text-secondary">Observações da Recarga (Opcional)</label>
+                        <input type="text" id="recargaInputObservacoes" class="form-control form-control-sm font-12" 
+                               placeholder="Ex: Entregue em cédulas de R$ 50 pelo responsável na entrada...">
+                    </div>
+                </div>
+
+                <!-- ETAPA 4: PAINEL DE SUCESSO E COMPROVANTE -->
+                <div id="recargaPainelSucesso" class="d-none text-center py-3">
+                    <div class="mb-3">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success text-white" style="width: 48px; height: 48px;">
+                            <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h5 class="font-weight-bold text-dark mb-1">Recarga em Dinheiro Confirmada!</h5>
+                    <p class="font-13 text-secondary mb-3" id="recargaMsgSucessoTexto">
+                        O crédito foi adicionado com sucesso à carteira familiar.
+                    </p>
+
+                    <div class="card p-3 bg-light border text-start mx-auto mb-4" style="max-width: 460px;">
+                        <div class="d-flex justify-content-between font-12 mb-1">
+                            <span class="text-secondary">Responsável:</span>
+                            <span class="font-semibold text-dark" id="recargaResumoNome">—</span>
+                        </div>
+                        <div class="d-flex justify-content-between font-12 mb-1">
+                            <span class="text-secondary">Valor Recebido em Espécie:</span>
+                            <span class="font-tabular font-bold text-success font-13" id="recargaResumoValor">+ R$ 0,00</span>
+                        </div>
+                        <div class="d-flex justify-content-between font-12 mb-1">
+                            <span class="text-secondary">Novo Saldo da Carteira:</span>
+                            <span class="font-tabular font-bold text-dark font-14" id="recargaResumoNovoSaldo">R$ 0,00</span>
+                        </div>
+                        <div class="d-flex justify-content-between font-12 pt-1 border-top mt-1">
+                            <span class="text-secondary">Protocolo / Transação:</span>
+                            <span class="font-tabular text-muted" id="recargaResumoProtocolo">#0</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <button type="button" class="btn btn-enterprise btn-primary px-3" id="recargaBtnImprimirHtml">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1">
+                                <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                                <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                            </svg>
+                            Imprimir Comprovante Térmico (80mm)
+                        </button>
+                        <a href="#" target="_blank" class="btn btn-enterprise btn-secondary px-3" id="recargaBtnBaixarPdf">
+                            Baixar Comprovante em PDF
+                        </a>
+                        <button type="button" class="btn btn-enterprise btn-secondary px-3" onclick="window.location.reload();">
+                            Concluir e Atualizar Caixa
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer card-enterprise-footer py-2 px-4 d-flex justify-content-between" id="recargaModalFooter">
+                <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-enterprise btn-success btn-sm px-4" id="recargaBtnConfirmarRecarga" disabled>
+                    Confirmar Recarga em Dinheiro
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// ============================================================================
+// CONFERÊNCIA FÍSICA E QUEBRA/SOBRA DE CAIXA
+// ============================================================================
 function calcularQuebraSobra() {
     const input = document.getElementById('inputTotalInformado');
     const box = document.getElementById('boxDiferencaCaixa');
     const valorEl = document.getElementById('valorDiferenca');
     const labelEl = document.getElementById('labelDiferenca');
     const msgEl = document.getElementById('msgDiferenca');
-    const esperado = parseFloat(document.getElementById('valorEsperadoGaveta').value) || 0.0;
+    const esperado = parseFloat(document.getElementById('valorEsperadoGaveta')?.value) || 0.0;
+
+    if (!input || !box) return;
 
     let texto = input.value.replace(/\./g, '').replace(',', '.');
     let informado = parseFloat(texto);
@@ -466,4 +706,240 @@ function calcularQuebraSobra() {
 function confirmarFechamento() {
     return confirm('Atenção: O fechamento de caixa encerrará a sessão operacional do turno e emitirá o espelho oficial. Deseja realmente concluir?');
 }
+
+// ============================================================================
+// MODAL DE RECARGA PRESENCIAL EM DINHEIRO NO BALCÃO (Tela 5.4 do FSD)
+// ============================================================================
+(function() {
+    let responsavelSelecionado = null;
+    let timerBusca = null;
+    let transacaoConcluidaId = null;
+
+    const inputBusca = document.getElementById('recargaInputBusca');
+    const btnLimparBusca = document.getElementById('recargaBtnLimparBusca');
+    const loadingBusca = document.getElementById('recargaLoadingBusca');
+    const listaResultados = document.getElementById('recargaListaResultados');
+    const cardSelecionado = document.getElementById('recargaCardSelecionado');
+    const etapaValor = document.getElementById('recargaEtapaValor');
+    const inputValor = document.getElementById('recargaInputValor');
+    const inputObs = document.getElementById('recargaInputObservacoes');
+    const btnConfirmar = document.getElementById('recargaBtnConfirmarRecarga');
+    const btnTrocar = document.getElementById('recargaBtnTrocarResponsavel');
+    const erroBox = document.getElementById('recargaErroBox');
+    const painelSucesso = document.getElementById('recargaPainelSucesso');
+    const etapaSelecao = document.getElementById('recargaEtapaSelecao');
+    const modalFooter = document.getElementById('recargaModalFooter');
+    const btnImprimirHtml = document.getElementById('recargaBtnImprimirHtml');
+    const btnBaixarPdf = document.getElementById('recargaBtnBaixarPdf');
+
+    if (!inputBusca) return;
+
+    // Busca com debounce de 250ms
+    inputBusca.addEventListener('input', function() {
+        const termo = this.value.trim();
+        btnLimparBusca.style.display = (termo.length > 0) ? 'block' : 'none';
+
+        if (timerBusca) clearTimeout(timerBusca);
+
+        if (termo.length < 2) {
+            listaResultados.innerHTML = '';
+            listaResultados.style.display = 'none';
+            loadingBusca.classList.add('d-none');
+            return;
+        }
+
+        loadingBusca.classList.remove('d-none');
+        listaResultados.style.display = 'none';
+
+        timerBusca = setTimeout(async function() {
+            try {
+                const url = '<?php echo $baseUrl; ?>/operacional/caixa/buscar-responsavel?q=' + encodeURIComponent(termo);
+                const resp = await fetch(url);
+                const data = await resp.json();
+
+                loadingBusca.classList.add('d-none');
+
+                if (data.sucesso && data.dados && data.dados.length > 0) {
+                    renderizarResultados(data.dados);
+                } else {
+                    listaResultados.innerHTML = '<div class="p-3 text-center text-muted font-12">Nenhum responsável ou aluno localizado para "' + escapeHtml(termo) + '".</div>';
+                    listaResultados.style.display = 'block';
+                }
+            } catch (err) {
+                loadingBusca.classList.add('d-none');
+                listaResultados.innerHTML = '<div class="p-3 text-center text-danger font-12">Erro ao consultar responsáveis. Tente novamente.</div>';
+                listaResultados.style.display = 'block';
+            }
+        }, 250);
+    });
+
+    btnLimparBusca.addEventListener('click', function() {
+        inputBusca.value = '';
+        btnLimparBusca.style.display = 'none';
+        listaResultados.innerHTML = '';
+        listaResultados.style.display = 'none';
+        inputBusca.focus();
+    });
+
+    function renderizarResultados(lista) {
+        listaResultados.innerHTML = '';
+        lista.forEach(function(item) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'list-group-item list-group-item-action p-2 text-start';
+
+            const saldoFormatado = parseFloat(item.saldo_atual || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            const dependentes = item.dependentes_str ? item.dependentes_str : 'Sem dependentes cadastrados';
+
+            btn.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong class="font-13 text-dark">${escapeHtml(item.nome)}</strong>
+                        <span class="text-secondary font-11 ms-2">CPF: ${escapeHtml(item.cpf || '—')}</span>
+                        <div class="font-11 text-muted mt-1">Dependentes: ${escapeHtml(dependentes)}</div>
+                    </div>
+                    <div class="text-end ps-2">
+                        <span class="font-11 text-secondary d-block">Saldo</span>
+                        <span class="font-tabular font-semibold text-dark font-12">R$ ${saldoFormatado}</span>
+                    </div>
+                </div>
+            `;
+
+            btn.addEventListener('click', function() {
+                selecionarResponsavel(item);
+            });
+
+            listaResultados.appendChild(btn);
+        });
+        listaResultados.style.display = 'block';
+    }
+
+    function selecionarResponsavel(item) {
+        responsavelSelecionado = item;
+        listaResultados.style.display = 'none';
+        inputBusca.value = '';
+        inputBusca.closest('.input-group').classList.add('d-none');
+
+        document.getElementById('recargaNomeSelecionado').textContent = item.nome;
+        document.getElementById('recargaCpfSelecionado').textContent = item.cpf || 'Não informado';
+        document.getElementById('recargaEmailSelecionado').textContent = item.email || '—';
+        document.getElementById('recargaSaldoAtualSelecionado').textContent = 'R$ ' + parseFloat(item.saldo_atual || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('recargaDependentesSelecionados').textContent = item.dependentes_str || 'Nenhum aluno vinculado';
+
+        cardSelecionado.classList.remove('d-none');
+        etapaValor.classList.remove('d-none');
+        btnConfirmar.disabled = false;
+        inputValor.focus();
+    }
+
+    btnTrocar.addEventListener('click', function() {
+        responsavelSelecionado = null;
+        cardSelecionado.classList.add('d-none');
+        etapaValor.classList.add('d-none');
+        btnConfirmar.disabled = true;
+        inputBusca.closest('.input-group').classList.remove('d-none');
+        inputBusca.value = '';
+        inputBusca.focus();
+    });
+
+    // Atalhos de valor rápido
+    document.querySelectorAll('.btn-atalho-valor').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            inputValor.value = this.dataset.valor;
+            inputValor.focus();
+        });
+    });
+
+    // Submissão da recarga
+    btnConfirmar.addEventListener('click', async function() {
+        if (!responsavelSelecionado) {
+            mostrarErro('Selecione o responsável para a recarga.');
+            return;
+        }
+
+        const valorTexto = inputValor.value.replace(/\./g, '').replace(',', '.').trim();
+        const valor = parseFloat(valorTexto);
+
+        if (isNaN(valor) || valor <= 0) {
+            mostrarErro('Informe um valor de recarga válido maior que zero.');
+            inputValor.focus();
+            return;
+        }
+
+        ocultarErro();
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registrando Recarga...';
+
+        try {
+            const formData = new FormData();
+            formData.append('csrf_token', '<?php echo $csrfToken; ?>');
+            formData.append('responsavel_id', responsavelSelecionado.id);
+            formData.append('valor', valor.toFixed(2));
+            formData.append('observacoes', inputObs.value.trim());
+
+            const url = '<?php echo $baseUrl; ?>/operacional/caixa/recarga-dinheiro';
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+
+            const data = await resp.json();
+
+            if (data.sucesso) {
+                transacaoConcluidaId = data.transacao_id;
+                exibirSucessoRecarga(data);
+            } else {
+                mostrarErro(data.mensagem || 'Falha ao registrar recarga.');
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerHTML = 'Confirmar Recarga em Dinheiro';
+            }
+        } catch (err) {
+            mostrarErro('Erro de conexão ao processar recarga. Verifique a rede.');
+            btnConfirmar.disabled = false;
+            btnConfirmar.innerHTML = 'Confirmar Recarga em Dinheiro';
+        }
+    });
+
+    function exibirSucessoRecarga(data) {
+        etapaSelecao.classList.add('d-none');
+        etapaValor.classList.add('d-none');
+        modalFooter.classList.add('d-none');
+        painelSucesso.classList.remove('d-none');
+
+        document.getElementById('recargaResumoNome').textContent = data.responsavel_nome;
+        document.getElementById('recargaResumoValor').textContent = '+ R$ ' + parseFloat(data.valor_creditado).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('recargaResumoNovoSaldo').textContent = 'R$ ' + parseFloat(data.novo_saldo).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('recargaResumoProtocolo').textContent = '#' + data.transacao_id;
+
+        const urlHtml = '<?php echo $baseUrl; ?>/operacional/caixa/comprovante-recarga/' + data.transacao_id;
+        const urlPdf = '<?php echo $baseUrl; ?>/operacional/caixa/comprovante-recarga/' + data.transacao_id + '/pdf';
+
+        btnImprimirHtml.onclick = function() {
+            window.open(urlHtml, 'comprovante_recarga', 'width=380,height=600,scrollbars=yes');
+        };
+
+        btnBaixarPdf.href = urlPdf;
+    }
+
+    function mostrarErro(msg) {
+        erroBox.textContent = msg;
+        erroBox.classList.remove('d-none');
+    }
+
+    function ocultarErro() {
+        erroBox.textContent = '';
+        erroBox.classList.add('d-none');
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+})();
 </script>

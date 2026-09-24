@@ -508,6 +508,16 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   6. Validado o fluxo completo com Chrome Headless real via Chrome DevTools Protocol (CDP) e criado o teste automatizado `tests/pdv_modal_test.php` aprovado com 100% de sucesso (18/18 asserções).
 - Como evitar no futuro: Nunca acionar componentes JavaScript de bibliotecas externas (como `bootstrap.Modal`) sobre elementos que não implementam a sua estrutura de classes esperada (`.modal`, `.modal-dialog`). Em telas críticas como o PDV, a exibição de modais e recibos deve operar de forma autônoma e defensiva, sem depender de scripts externos que possam estar desatualizados no cache do navegador cliente.
 
+---
+
+## 2026-09-24 - Violação de chave única (1062 Duplicate entry) em código interno de produto em testes de integração repetidos
+
+- Sintoma: `Fatal error: Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'PDV-COL-755' for key 'produtos.codigo_interno'` ao rodar testes de regressão automatizados (`tests/fase13_test.php`).
+- Causa: Na preparação da massa de dados temporária do teste, o código interno do produto era gerado com um intervalo curto e pseudoaleatório (`'PDV-COL-' . rand(100, 999)`). Após sucessivas execuções da suíte de testes no mesmo banco de dados local, ocorreu colisão com um código inserido em execução prévia.
+- Solução aplicada: Substituído o gerador de identificadores por `uniqid()` (`'PDV-COL-' . uniqid()`), garantindo unicidade temporal estrita mesmo em execuções repetidas ou concorrentes da suíte de testes.
+- Como evitar no futuro: Em suítes de testes automatizados, campos com constraint `UNIQUE` no banco de dados (como `codigo_interno`, `matricula`, `cpf`) devem ser gerados com identificadores únicos baseados em tempo (`uniqid()`, `hrtime()` ou UUID) em vez de intervalos inteiros pequenos de `rand()`.
+
+
 
 
 

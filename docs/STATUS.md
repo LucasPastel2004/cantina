@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 14 — Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas
-* **Status da Fase 14:** Concluída com Sucesso [x]
-* **Próxima Fase:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
-* **Última Atualização:** 2026-09-23 16:05:00 (Abertura defensiva e autônoma do modal pós-venda no PDV, blindagem contra cache com v=5.3.2 e validação no Chrome Headless via CDP)
+* **Fase Atual:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
+* **Status da Fase 15:** Concluída com Sucesso [x]
+* **Próxima Fase:** Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
+* **Última Atualização:** 2026-09-24 07:35:00 (Fase 15 concluída com ciclo completo de abertura/fechamento por turno, recarga presencial em dinheiro com busca rápida e emissão de comprovante 80mm/PDF, apuração assistida de quebra/sobra, extrato analítico da sessão e espelho A4 timbrado com assinaturas)
 
 ---
 
@@ -511,10 +511,47 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
-* [ ] Abertura de caixa com Fundo de Troco por turno.
-* [ ] Fechamento de caixa pontual às 11:00 e 16:00 com conciliação físico vs sistema.
-* [ ] Espelho de fechamento em PDF timbrado para assinatura.
+### [x] Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
+* [x] **Ciclo de Vida das Sessões de Caixa por Turno (FSD Áreas 4, 6 e Módulo 7):**
+  * Abertura de sessão com Fundo de Troco inicial em espécie na gaveta;
+  * Travas de turno: Matutino (expediente encerra às 11:00) e Vespertino (expediente encerra às 16:00) com detecção automática de atraso de fechamento e alerta visual;
+  * Prevenção de duplicidade: bloqueio rigoroso contra abertura simultânea de mais de uma sessão no mesmo turno;
+  * Alerta preventivo se o caixa do outro turno permaneceu aberto sem encerramento.
+* [x] **Bloqueio Estrito de Operações Financeiras em Espécie:**
+  * Bloqueio contra qualquer venda em dinheiro ou recarga presencial caso a sessão do turno não tenha sido formalmente aberta.
+* [x] **Recarga Presencial em Dinheiro no Balcão da Cantina (Tela 5.4 do FSD):**
+  * Modal corporativo de alta densidade no padrão Anti-Slop integrado à tela de Caixa (`app/views/operacional/caixa.php`);
+  * Mecanismo de busca rápida com debounce de 250ms por nome ou CPF do responsável, ou matrícula/nome do aluno dependente;
+  * Card com dados consolidados da família: titular, CPF formatado, alunos dependentes matriculados e Saldo Atual da Carteira;
+  * Entrada monetária com máscara em reais e botões de atalho rápido (+R$ 20, +R$ 50, +R$ 100, +R$ 200);
+  * Crédito financeiro atômico na carteira familiar via `TransacaoCarteira::creditar` (`tipo_transacao = 'recarga_dinheiro'`);
+  * Incremento automático e em tempo real do acumulador `total_dinheiro_recargas` na sessão de caixa aberta;
+  * Trilha de auditoria compulsória em `logs_auditoria` com ação `recarga_dinheiro_balcao`, ID do operador, justificativa e IP de origem.
+* [x] **Emissão de Comprovante Térmico de Recarga em Bobina de 80mm:**
+  * Geração de espelho HTML para impressão térmica rápida (`/operacional/caixa/comprovante-recarga/{id}`) com folha de 80mm, `@media print` e logotipo circular oficial em Data-URI;
+  * Geração de PDF 1.4 binário puro (`/operacional/caixa/comprovante-recarga/{id}/pdf`) dimensionado estritamente na largura de bobina térmica (226.77 pt) com logotipo oficial circular vetorial desenhado via clipping path (`desenharLogoCircular`), protocolo, titular, dependentes, valor recebido e novo saldo familiar.
+* [x] **Conferência Física de Gaveta e Fechamento Assistido:**
+  * Tela dedicada de fechamento (`app/views/operacional/fechamento_caixa.php`) e formulário inline na tela de caixa;
+  * Apuração do total de dinheiro em espécie esperado na gaveta: `Fundo Inicial + Vendas Dinheiro Balcão + Recargas em Dinheiro`;
+  * Confronto dinâmico com o montante contado fisicamente, com cálculo reativo em tempo real de Quebra / Falta ou Sobra de caixa;
+  * Campo obrigatório para justificativa operacional de divergências para a gerência;
+  * Encerramento formal da sessão com timestamp de fechamento e gravação de `diferenca_quebra_sobra`.
+* [x] **Emissão de Espelho Oficial A4 Timbrado de Fechamento de Caixa:**
+  * Espelho A4 em HTML (`/operacional/caixa/espelho/{id}`) formatado para impressão;
+  * Documento PDF 1.4 binário puro timbrado em A4 (`/operacional/caixa/espelho/{id}/pdf`) com logotipo oficial circular vetorial, discriminação contábil detalhada e linhas formais para assinatura física do operador de caixa e do gerente/coordenação.
+* [x] **Extrato Analítico Detalhado da Sessão de Caixa:**
+  * Tela de extrato analítico da sessão (`app/views/operacional/caixa_detalhes.php` e `/operacional/caixa/detalhes/{id}`);
+  * Discriminação linha a linha de todas as vendas avulsas no balcão com itens e horários;
+  * Discriminação de todas as recargas presenciais em dinheiro com dados dos responsáveis e operadores;
+  * Totalizadores de entradas digitais em Pix balcão creditadas na conta bancária.
+* [x] **Histórico de Caixas com Filtros Multi-critério:**
+  * Formulário de filtros por turno (`matutino`, `vespertino`), data de início e data de término;
+  * Data-grid corporativo com ações rápidas para visualização de extrato analítico, espelho de impressão e download em PDF.
+* [x] **Roteamento e Permissões RBAC:**
+  * 12 rotas protegidas sob `/operacional/caixa*` no Front Controller `index.php` autorizadas exclusivamente para `ROLE_OPERADOR` e `ROLE_ADMINISTRADOR`.
+* [x] **Homologação Automatizada:**
+  * Suíte de testes `tests/fase15_test.php` executada e homologada com 100% de sucesso (67/67 asserções aprovadas);
+  * Suítes de regressão (Fases 13 e 14) reexecutadas e 100% aprovadas.
 
 ---
 
@@ -533,7 +570,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Iniciar a **Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno**, consolidando e aprofundando o módulo financeiro e a prestação de contas dos turnos matutino (11:00) e vespertino (16:00), integrando a conciliação completa entre contagem física de gaveta e valores apurados no sistema (dinheiro, Pix balcão, saldo de carteira digital e desconto em folha), tratamento de quebras e sobras com justificativa obrigatória, auditoria e emissão do espelho A4 timbrado para assinatura física do operador e da coordenação.
+Iniciar a **Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED**, implementando o tratamento completo do Mecanismo Especial de Devolução (MED) do Banco Central, processando as notificações bancárias de estorno via Webhook com débito imediato e atômico na carteira familiar, permitindo saldo negativo excepcional, bloqueio cautelar automático de novas compras e pedidos agendados caso a carteira fique negativa (`bloqueado_med = 1`), envio de alerta transacional emergencial via WhatsApp ao responsável e painel administrativo para auditoria, conciliação e desbloqueio manual após quitação do débito pendente.
 
 
 

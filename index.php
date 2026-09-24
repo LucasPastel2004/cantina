@@ -227,14 +227,35 @@ $router->get('/operacional/pdv/comprovante/{id}/pdf', [\App\Controllers\PdvContr
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 
-// 2.5. Controle Financeiro e Fechamento de Caixas por Turno (FSD Módulo 7)
+// 2.5. Controle Financeiro e Fechamento de Caixas por Turno (Fase 15 — FSD Área 4, Área 6 e Módulo 7)
 $router->get('/operacional/caixa', [\App\Controllers\CaixaController::class, 'index'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/caixa/abertura', [\App\Controllers\CaixaController::class, 'abrirTela'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 $router->post('/operacional/caixa/abrir', [\App\Controllers\CaixaController::class, 'abrir'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
+$router->get('/operacional/caixa/fechamento', [\App\Controllers\CaixaController::class, 'fecharTela'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
 $router->post('/operacional/caixa/fechar', [\App\Controllers\CaixaController::class, 'fechar'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/caixa/buscar-responsavel', [\App\Controllers\CaixaController::class, 'buscarResponsavel'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/caixa/recarga-dinheiro', [\App\Controllers\CaixaController::class, 'recargaDinheiro'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/caixa/detalhes/{id}', [\App\Controllers\CaixaController::class, 'detalhes'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/caixa/comprovante-recarga/{id}', [\App\Controllers\CaixaController::class, 'comprovanteRecargaHtml'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/caixa/comprovante-recarga/{id}/pdf', [\App\Controllers\CaixaController::class, 'comprovanteRecargaPdf'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 $router->get('/operacional/caixa/espelho/{id}', [\App\Controllers\CaixaController::class, 'espelhoHtml'], [

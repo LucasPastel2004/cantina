@@ -30,6 +30,7 @@ class Auditoria extends Model
     public const ACAO_CANCELAMENTO_LETIVO   = 'cancelamento_letivo_lote';
     public const ACAO_ABERTURA_CAIXA        = 'abertura_caixa';
     public const ACAO_FECHAMENTO_CAIXA      = 'fechamento_caixa';
+    public const ACAO_RECARGA_DINHEIRO_BALCAO = 'recarga_dinheiro_balcao';
 
     /**
      * Registra uma ação na trilha de auditoria

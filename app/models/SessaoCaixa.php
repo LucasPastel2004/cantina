@@ -9,6 +9,9 @@
 namespace App\Models;
 
 use App\Core\Model;
+use App\Models\Auditoria;
+use App\Models\TransacaoCarteira;
+use App\Models\Responsavel;
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
@@ -311,20 +314,42 @@ class SessaoCaixa extends Model
     }
 
     /**
-     * Lista o histórico recente de sessões de caixa
+     * Lista o histórico de sessões de caixa com suporte a filtros de turno e período
      * 
+     * @param string|null $turno
+     * @param string|null $dataInicio
+     * @param string|null $dataFim
      * @param int $limite
      * @return array
      */
-    public static function listarHistorico(int $limite = 15): array
+    public static function listarHistorico(?string $turno = null, ?string $dataInicio = null, ?string $dataFim = null, int $limite = 20): array
     {
-        return self::fetchAll("
+        $sql = "
             SELECT sc.*, u.nome AS operador_nome, u.usuario AS operador_login
             FROM sessoes_caixa sc
             INNER JOIN usuarios u ON u.id = sc.operador_id
-            ORDER BY sc.id DESC
-            LIMIT :limite
-        ", ['limite' => $limite]);
+            WHERE 1=1
+        ";
+        $params = [];
+
+        if (!empty($turno) && in_array($turno, [self::TURNO_MATUTINO, self::TURNO_VESPERTINO], true)) {
+            $sql .= " AND sc.turno = :turno";
+            $params['turno'] = $turno;
+        }
+
+        if (!empty($dataInicio)) {
+            $sql .= " AND DATE(sc.aberto_em) >= :data_inicio";
+            $params['data_inicio'] = $dataInicio;
+        }
+
+        if (!empty($dataFim)) {
+            $sql .= " AND DATE(sc.aberto_em) <= :data_fim";
+            $params['data_fim'] = $dataFim;
+        }
+
+        $sql .= " ORDER BY sc.id DESC LIMIT " . (int)$limite;
+
+        return self::fetchAll($sql, $params);
     }
 
     /**
@@ -350,5 +375,273 @@ class SessaoCaixa extends Model
             'turno' => $turno,
             'data'  => $data
         ]);
+    }
+
+    /**
+     * Registra uma recarga presencial em dinheiro no balcão da cantina
+     * Conforme Tela 5.4 e Área 6 do docs/FSD.md
+     * 
+     * @param int $responsavelId ID do titular da conta
+     * @param float $valor Valor em espécie recebido
+     * @param int $operadorId ID do operador logado
+     * @param string|null $observacoes Observações opcionais
+     * @param string $ipOrigem IP de origem do operador
+     * @return array Dados da transação gerada
+     * @throws \DomainException|\InvalidArgumentException
+     */
+    public static function registrarRecargaDinheiro(
+        int $responsavelId,
+        float $valor,
+        int $operadorId,
+        ?string $observacoes = null,
+        string $ipOrigem = '127.0.0.1'
+    ): array {
+        if ($valor <= 0) {
+            throw new \InvalidArgumentException('O valor da recarga deve ser maior que zero.');
+        }
+
+        $turno = self::inferirTurnoAtual();
+        $sessaoAberta = self::obterSessaoAberta($turno);
+        if (!$sessaoAberta) {
+            // Tenta verificar se há outro turno aberto antes de recusar
+            $sessaoAberta = self::obterSessaoAberta('matutino') ?? self::obterSessaoAberta('vespertino');
+        }
+
+        if (!$sessaoAberta) {
+            throw new \DomainException('Operação bloqueada: Não há sessão de caixa aberta para o turno corrente. Abra o caixa antes de receber valores em dinheiro.');
+        }
+
+        $sessaoId = (int)$sessaoAberta['id'];
+        $valor = round($valor, 2);
+
+        $pdo = self::getPdo();
+        $iniciouTransacao = false;
+        if (!$pdo->inTransaction()) {
+            $pdo->beginTransaction();
+            $iniciouTransacao = true;
+        }
+
+        try {
+            // 1. Incrementa total_dinheiro_recargas na sessão de caixa
+            self::incrementarTotais($sessaoId, 0.0, 0.0, $valor);
+
+            // 2. Credita o saldo na carteira familiar via TransacaoCarteira
+            $descricao = "Recarga em Dinheiro no Balcão (Sessão #{$sessaoId})";
+            if (!empty($observacoes)) {
+                $descricao .= " - " . trim($observacoes);
+            }
+
+            $transacao = TransacaoCarteira::creditar(
+                $responsavelId,
+                $valor,
+                TransacaoCarteira::TIPO_RECARGA_DINHEIRO,
+                $descricao,
+                (string)$sessaoId,
+                null,
+                $operadorId
+            );
+
+            // 3. Auditoria de negócio
+            $justificativa = "Recarga presencial em dinheiro no valor de R$ " . number_format($valor, 2, ',', '.') . " creditada na conta do responsável #{$responsavelId} (Sessão de Caixa #{$sessaoId}).";
+            if (!empty($observacoes)) {
+                $justificativa .= " Obs: " . trim($observacoes);
+            }
+
+            Auditoria::registrar(
+                $operadorId,
+                Auditoria::ACAO_RECARGA_DINHEIRO_BALCAO,
+                'transacoes_carteira',
+                (int)$transacao['id'],
+                $justificativa,
+                $ipOrigem
+            );
+
+            if ($iniciouTransacao) {
+                $pdo->commit();
+            }
+
+            // Busca dados completos do responsável para retorno
+            $resp = Responsavel::buscarPorId($responsavelId);
+
+            return [
+                'transacao_id'     => $transacao['id'],
+                'sessao_caixa_id'  => $sessaoId,
+                'responsavel_id'   => $responsavelId,
+                'responsavel_nome' => $resp['nome'] ?? 'Responsável',
+                'responsavel_cpf'  => $resp['cpf'] ?? '',
+                'valor'            => $valor,
+                'saldo_anterior'   => $transacao['saldo_anterior'],
+                'saldo_resultante' => $transacao['saldo_resultante'],
+                'created_at'       => $transacao['created_at'],
+                'operador_id'      => $operadorId
+            ];
+        } catch (\Throwable $e) {
+            if ($iniciouTransacao && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Busca responsáveis para recarga presencial por CPF ou Nome do responsável,
+     * ou por matrícula ou nome do aluno dependente
+     * 
+     * @param string $termo
+     * @param int $limite
+     * @return array
+     */
+    public static function buscarResponsavelParaRecarga(string $termo, int $limite = 10): array
+    {
+        $termoLimpo = trim($termo);
+        if (strlen($termoLimpo) < 2) {
+            return [];
+        }
+
+        $cpfNumerico = preg_replace('/\D/', '', $termoLimpo);
+        $termoLike = '%' . $termoLimpo . '%';
+        $cpfLike = !empty($cpfNumerico) ? '%' . $cpfNumerico . '%' : $termoLike;
+
+        $pdo = self::getPdo();
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT r.id, r.cpf, r.nome, r.whatsapp, r.saldo_atual, r.bloqueado_med
+            FROM responsaveis r
+            LEFT JOIN alunos a ON a.responsavel_id = r.id AND a.deleted_at IS NULL
+            WHERE r.cpf LIKE :cpf
+               OR r.nome LIKE :nome
+               OR a.nome LIKE :aluno_nome
+               OR a.matricula LIKE :matricula
+            ORDER BY r.nome ASC
+            LIMIT :limite
+        ");
+
+        $stmt->bindValue(':cpf', $cpfLike, \PDO::PARAM_STR);
+        $stmt->bindValue(':nome', $termoLike, \PDO::PARAM_STR);
+        $stmt->bindValue(':aluno_nome', $termoLike, \PDO::PARAM_STR);
+        $stmt->bindValue(':matricula', $termoLike, \PDO::PARAM_STR);
+        $stmt->bindValue(':limite', $limite, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $responsaveis = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Agrega dependentes para cada responsável localizado
+        foreach ($responsaveis as &$resp) {
+            $stmtAlunos = $pdo->prepare("
+                SELECT a.id, a.nome, a.matricula, t.nome_turma, a.turno
+                FROM alunos a
+                LEFT JOIN turmas t ON t.id = a.turma_id
+                WHERE a.responsavel_id = :resp_id AND a.deleted_at IS NULL
+                ORDER BY a.nome ASC
+            ");
+            $stmtAlunos->execute(['resp_id' => $resp['id']]);
+            $resp['dependentes'] = $stmtAlunos->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        return $responsaveis;
+    }
+
+    /**
+     * Retorna o extrato analítico discriminando todas as vendas, recargas e entradas da sessão
+     * 
+     * @param int $sessaoId
+     * @return array
+     */
+    public static function obterExtratoAnaliticoSessao(int $sessaoId): array
+    {
+        $sessao = self::buscarPorId($sessaoId);
+        if (!$sessao) {
+            return [];
+        }
+
+        $pdo = self::getPdo();
+
+        // 1. Vendas no balcão da sessão
+        $stmtVendas = $pdo->prepare("
+            SELECT vb.*, u.nome AS operador_venda_nome, c.nome AS colaborador_nome, c.matricula_funcional AS colaborador_matricula
+            FROM vendas_balcao vb
+            LEFT JOIN usuarios u ON u.id = vb.operador_id
+            LEFT JOIN colaboradores c ON c.id = vb.colaborador_id
+            WHERE vb.sessao_caixa_id = :sessao_id
+            ORDER BY vb.id DESC
+        ");
+        $stmtVendas->execute(['sessao_id' => $sessaoId]);
+        $vendas = $stmtVendas->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Itens de cada venda
+        foreach ($vendas as &$venda) {
+            $stmtItens = $pdo->prepare("
+                SELECT ivb.*, p.descricao AS produto_descricao, p.codigo_interno
+                FROM itens_venda_balcao ivb
+                INNER JOIN produtos p ON p.id = ivb.produto_id
+                WHERE ivb.venda_balcao_id = :venda_id
+            ");
+            $stmtItens->execute(['venda_id' => $venda['id']]);
+            $venda['itens'] = $stmtItens->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        // 2. Recargas presenciais em dinheiro vinculadas à sessão
+        $stmtRecargas = $pdo->prepare("
+            SELECT tc.*, r.nome AS responsavel_nome, r.cpf AS responsavel_cpf, u.nome AS operador_nome
+            FROM transacoes_carteira tc
+            INNER JOIN responsaveis r ON r.id = tc.responsavel_id
+            LEFT JOIN usuarios u ON u.id = tc.operador_id
+            WHERE tc.tipo_transacao = 'recarga_dinheiro'
+              AND tc.referencia_id = :sessao_id
+            ORDER BY tc.id DESC
+        ");
+        $stmtRecargas->execute(['sessao_id' => (string)$sessaoId]);
+        $recargas = $stmtRecargas->fetchAll(\PDO::FETCH_ASSOC);
+
+        $totais = self::obterTotaisEsperados($sessao);
+
+        return [
+            'sessao'    => $sessao,
+            'totais'    => $totais,
+            'vendas'    => $vendas,
+            'recargas'  => $recargas
+        ];
+    }
+
+    /**
+     * Busca os dados consolidados de uma recarga em dinheiro para emissão de comprovante térmico
+     * 
+     * @param int $transacaoId
+     * @return array|null
+     */
+    public static function buscarDadosRecarga(int $transacaoId): ?array
+    {
+        $pdo = self::getPdo();
+        $stmt = $pdo->prepare("
+            SELECT tc.*, 
+                   r.nome AS responsavel_nome, 
+                   r.cpf AS responsavel_cpf,
+                   u.nome AS operador_nome,
+                   sc.turno AS sessao_turno
+            FROM transacoes_carteira tc
+            INNER JOIN responsaveis r ON r.id = tc.responsavel_id
+            LEFT JOIN usuarios u ON u.id = tc.operador_id
+            LEFT JOIN sessoes_caixa sc ON sc.id = CAST(tc.referencia_id AS UNSIGNED)
+            WHERE tc.id = :id AND tc.tipo_transacao = 'recarga_dinheiro'
+            LIMIT 1
+        ");
+        $stmt->execute(['id' => $transacaoId]);
+        $dados = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$dados) {
+            return null;
+        }
+
+        // Dependentes do responsável
+        $stmtAlunos = $pdo->prepare("
+            SELECT a.nome, t.nome_turma 
+            FROM alunos a 
+            LEFT JOIN turmas t ON t.id = a.turma_id 
+            WHERE a.responsavel_id = :resp_id AND a.deleted_at IS NULL
+            ORDER BY a.nome ASC
+        ");
+        $stmtAlunos->execute(['resp_id' => $dados['responsavel_id']]);
+        $dados['dependentes'] = $stmtAlunos->fetchAll(\PDO::FETCH_ASSOC);
+
+        return $dados;
     }
 }

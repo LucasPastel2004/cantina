@@ -2169,5 +2169,277 @@ class PdfService
 
         return self::montarPdfEstruturado($stream);
     }
+
+    /**
+     * Renderiza o espelho de impressão HTML para o comprovante térmico de recarga presencial em dinheiro (80mm)
+     * Conforme Tela 5.4 e Área 6 do docs/FSD.md
+     * 
+     * @param array $dados
+     * @return string
+     */
+    public static function gerarComprovanteRecargaDinheiroHtml(array $dados): string
+    {
+        ob_start();
+        $transacaoId = (int)($dados['transacao_id'] ?? ($dados['id'] ?? 0));
+        $sessaoId = (int)($dados['sessao_caixa_id'] ?? ($dados['referencia_id'] ?? 0));
+        $dataHora = !empty($dados['created_at']) ? date('d/m/Y H:i:s', strtotime($dados['created_at'])) : date('d/m/Y H:i:s');
+        $operador = $dados['operador_nome'] ?? 'Operador de Caixa';
+        $responsavel = $dados['responsavel_nome'] ?? 'Responsável Titular';
+        $cpfRaw = preg_replace('/\D/', '', (string)($dados['responsavel_cpf'] ?? ''));
+        $cpfMascarado = (strlen($cpfRaw) === 11)
+            ? substr($cpfRaw, 0, 3) . '.***.***-' . substr($cpfRaw, -2)
+            : $dados['responsavel_cpf'] ?? '';
+
+        $valor = (float)($dados['valor'] ?? 0.0);
+        $saldoAnterior = (float)($dados['saldo_anterior'] ?? 0.0);
+        $saldoResultante = (float)($dados['saldo_resultante'] ?? 0.0);
+        $dependentes = $dados['dependentes'] ?? [];
+        ?>
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Comprovante de Recarga #<?php echo $transacaoId; ?> — Cantina Web</title>
+            <style>
+                @page { size: 80mm auto; margin: 0; }
+                body {
+                    margin: 0;
+                    padding: 6mm 4mm;
+                    font-family: 'Courier New', Courier, monospace, sans-serif;
+                    font-size: 11px;
+                    color: #000;
+                    background: #fff;
+                    line-height: 1.35;
+                }
+                .thermal-wrapper { width: 72mm; margin: 0 auto; }
+                .center { text-align: center; }
+                .bold { font-weight: bold; }
+                .title { font-size: 13px; font-weight: bold; margin-bottom: 2px; }
+                .sub { font-size: 10px; color: #333; margin-bottom: 6px; }
+                .divider { border-top: 1px dashed #444; margin: 6px 0; }
+                .info-line { font-size: 10px; margin: 2px 0; }
+                .text-right { text-align: right; }
+                .total-box { font-size: 14px; font-weight: bold; margin: 8px 0; text-align: center; background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px; }
+                .footer { margin-top: 10px; font-size: 9px; text-align: center; color: #555; }
+                @media screen {
+                    body { background: #f1f5f9; padding: 20px; }
+                    .thermal-wrapper {
+                        background: #fff;
+                        padding: 16px;
+                        border: 1px dashed #cbd5e1;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                    }
+                    .no-print { display: flex; justify-content: center; margin-bottom: 16px; gap: 8px; }
+                    .btn-print {
+                        background: #1d4ed8; color: #fff; border: none; padding: 8px 16px;
+                        border-radius: 4px; font-weight: 600; cursor: pointer; font-family: sans-serif;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="no-print">
+                <button onclick="window.print()" class="btn-print">Imprimir Comprovante (80mm)</button>
+            </div>
+            <div class="thermal-wrapper">
+                <div class="center">
+                    <?php $logoUri = self::getLogoDataUri(); if (!empty($logoUri)): ?>
+                        <img src="<?php echo $logoUri; ?>" alt="Logo" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; margin: 0 auto 6px auto; display: block; border: 1px solid #e2e8f0;">
+                    <?php endif; ?>
+                    <div class="title">COLÉGIO MONTEIRO LOBATO</div>
+                    <div class="sub">Cantina Escolar • Valores para o Futuro!</div>
+                </div>
+                <div class="divider"></div>
+                <div class="center bold" style="font-size: 12px; margin: 4px 0;">COMPROVANTE DE RECARGA</div>
+                <div class="center" style="font-size: 10px; color: #333;">PAGAMENTO EM DINHEIRO FÍSICO</div>
+                <div class="divider"></div>
+                <div class="info-line">Transação: #<?php echo $transacaoId; ?></div>
+                <div class="info-line">Sessão Caixa: #<?php echo $sessaoId; ?></div>
+                <div class="info-line">Data/Hora: <?php echo htmlspecialchars($dataHora, ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="info-line">Atendente: <?php echo htmlspecialchars($operador, ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="divider"></div>
+                <div class="info-line"><strong>TITULAR DA CARTEIRA:</strong></div>
+                <div class="info-line">Nome: <?php echo htmlspecialchars($responsavel, ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="info-line">CPF: <?php echo htmlspecialchars($cpfMascarado, ENT_QUOTES, 'UTF-8'); ?></div>
+                <?php if (!empty($dependentes)): ?>
+                    <div class="info-line" style="color: #444; font-size: 9px;">Dependentes: <?php 
+                        $nomesAlunos = array_map(fn($a) => $a['nome'] . (!empty($a['nome_turma']) ? ' (' . $a['nome_turma'] . ')' : ''), $dependentes);
+                        echo htmlspecialchars(implode(', ', $nomesAlunos), ENT_QUOTES, 'UTF-8'); 
+                    ?></div>
+                <?php endif; ?>
+                <div class="divider"></div>
+                <div class="total-box">
+                    VALOR RECEBIDO: R$ <?php echo number_format($valor, 2, ',', '.'); ?>
+                </div>
+                <table style="width: 100%; font-size: 10px; margin-top: 4px;">
+                    <tr>
+                        <td>Saldo Anterior:</td>
+                        <td class="text-right">R$ <?php echo number_format($saldoAnterior, 2, ',', '.'); ?></td>
+                    </tr>
+                    <tr style="font-weight: bold; font-size: 11px;">
+                        <td>NOVO SALDO DISPONÍVEL:</td>
+                        <td class="text-right">R$ <?php echo number_format($saldoResultante, 2, ',', '.'); ?></td>
+                    </tr>
+                </table>
+                <div class="divider"></div>
+                <div class="footer">
+                    Crédito disponibilizado instantaneamente.<br>
+                    Consulte o extrato em tempo real no Portal da Família.<br>
+                    Obrigado pela confiança!
+                </div>
+            </div>
+            <script>
+                window.addEventListener('load', function() {
+                    if (window.location.search.includes('autoprint=1')) {
+                        setTimeout(function() { window.print(); }, 400);
+                    }
+                });
+            </script>
+        </body>
+        </html>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Gera o arquivo binário PDF 1.4 de Comprovante Térmico de Recarga em Dinheiro (80mm)
+     * 
+     * @param array $dados
+     * @return string
+     */
+    public static function gerarComprovanteRecargaDinheiroPdf(array $dados): string
+    {
+        $transacaoId = (int)($dados['transacao_id'] ?? ($dados['id'] ?? 0));
+        $sessaoId = (int)($dados['sessao_caixa_id'] ?? ($dados['referencia_id'] ?? 0));
+        $dataHora = !empty($dados['created_at']) ? date('d/m/Y H:i:s', strtotime($dados['created_at'])) : date('d/m/Y H:i:s');
+        $operador = $dados['operador_nome'] ?? 'Operador de Caixa';
+        $responsavel = $dados['responsavel_nome'] ?? 'Responsavel Titular';
+        $cpfRaw = preg_replace('/\D/', '', (string)($dados['responsavel_cpf'] ?? ''));
+        $cpfMascarado = (strlen($cpfRaw) === 11)
+            ? substr($cpfRaw, 0, 3) . '.***.***-' . substr($cpfRaw, -2)
+            : $dados['responsavel_cpf'] ?? '';
+
+        $valor = (float)($dados['valor'] ?? 0.0);
+        $saldoAnterior = (float)($dados['saldo_anterior'] ?? 0.0);
+        $saldoResultante = (float)($dados['saldo_resultante'] ?? 0.0);
+
+        $pageWidth = self::PAGE_WIDTH_THERMAL;
+        $left = 8.0;
+        $right = $pageWidth - 8.0;
+        $width = $right - $left;
+        $pageHeight = 310.0;
+
+        $stream = "";
+        $y = $pageHeight - 16.0;
+
+        // Logotipo oficial circular
+        $logoSize = 34.0;
+        $logoX = ($pageWidth - $logoSize) / 2.0;
+        $stream .= self::desenharLogoCircular($logoX, $y - $logoSize, $logoSize);
+        $y -= ($logoSize + 8.0);
+
+        // Cabeçalho institucional centralizado
+        $stream .= "BT\n/F2 11 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", ($pageWidth - 140.0) / 2.0, $y);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("COLÉGIO MONTEIRO LOBATO"));
+
+        $y -= 11.0;
+        $stream .= "BT\n/F1 7.5 Tf\n0.39 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", ($pageWidth - 145.0) / 2.0, $y);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Cantina Escolar • Valores para o Futuro!"));
+
+        // Linha divisória
+        $y -= 8.0;
+        $stream .= "0.75 0.75 0.75 RG\n0.8 w\n";
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y, $right, $y);
+
+        // Título do documento
+        $y -= 12.0;
+        $stream .= "BT\n/F2 9.5 Tf\n0.11 0.31 0.85 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", ($pageWidth - 150.0) / 2.0, $y);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("COMPROVANTE DE RECARGA"));
+
+        $y -= 10.0;
+        $stream .= "BT\n/F1 7 Tf\n0.39 0.45 0.55 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", ($pageWidth - 110.0) / 2.0, $y);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("PAGAMENTO EM DINHEIRO"));
+
+        $y -= 8.0;
+        $stream .= "0.75 0.75 0.75 RG\n0.8 w\n";
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y, $right, $y);
+
+        // Metadados da transação
+        $y -= 11.0;
+        $stream .= "BT\n/F1 8 Tf\n0.20 0.20 0.20 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left, $y);
+        $stream .= sprintf("(Transacao: #%d    Sessao: #%d) Tj\nET\n", $transacaoId, $sessaoId);
+
+        $y -= 11.0;
+        $stream .= "BT\n/F1 7.5 Tf\n0.20 0.20 0.20 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left, $y);
+        $stream .= sprintf("(Data/Hora: %s) Tj\nET\n", self::escapeText($dataHora));
+
+        $y -= 11.0;
+        $stream .= "BT\n/F1 7.5 Tf\n0.20 0.20 0.20 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left, $y);
+        $stream .= sprintf("(Atendente: %s) Tj\nET\n", self::escapeText(substr($operador, 0, 26)));
+
+        $y -= 8.0;
+        $stream .= "0.75 0.75 0.75 RG\n0.8 w\n";
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y, $right, $y);
+
+        // Dados do titular
+        $y -= 11.0;
+        $stream .= "BT\n/F2 8 Tf\n0.10 0.10 0.10 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left, $y);
+        $stream .= sprintf("(TITULAR: %s) Tj\nET\n", self::escapeText(substr($responsavel, 0, 24)));
+
+        $y -= 10.0;
+        $stream .= "BT\n/F1 7.5 Tf\n0.30 0.30 0.30 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left, $y);
+        $stream .= sprintf("(CPF: %s) Tj\nET\n", self::escapeText($cpfMascarado));
+
+        // Box de valor em destaque
+        $y -= 16.0;
+        $boxHeight = 22.0;
+        $stream .= "0.95 0.97 0.99 rg\n";
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $boxHeight, $width, $boxHeight);
+        $stream .= "0.80 0.85 0.90 RG\n1 w\n";
+        $stream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $boxHeight, $width, $boxHeight);
+
+        $valorStr = "RECEBIDO: R$ " . number_format($valor, 2, ',', '.');
+        $stream .= "BT\n/F2 10.5 Tf\n0.08 0.50 0.20 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", ($pageWidth - (strlen($valorStr) * 5.8)) / 2.0, $y - 15.0);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText($valorStr));
+
+        $y -= ($boxHeight + 8.0);
+        $stream .= "BT\n/F1 8 Tf\n0.25 0.25 0.25 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left, $y);
+        $stream .= sprintf("(Saldo Anterior: R$ %s) Tj\nET\n", number_format($saldoAnterior, 2, ',', '.'));
+
+        $y -= 12.0;
+        $stream .= "BT\n/F2 8.5 Tf\n0.06 0.09 0.16 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", $left, $y);
+        $stream .= sprintf("(NOVO SALDO: R$ %s) Tj\nET\n", number_format($saldoResultante, 2, ',', '.'));
+
+        // Linha divisória de corte pontilhada
+        $y -= 10.0;
+        $stream .= "0.75 0.75 0.75 RG\n0.8 w\n[2 2] 0 d\n";
+        $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y, $right, $y);
+        $stream .= "[] 0 d\n";
+
+        // Mensagem de rodapé
+        $y -= 11.0;
+        $stream .= "BT\n/F1 6.5 Tf\n0.45 0.50 0.60 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", ($pageWidth - 170.0) / 2.0, $y);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Credito disponibilizado na Carteira Familiar."));
+
+        $y -= 9.0;
+        $stream .= "BT\n/F1 6.5 Tf\n0.45 0.50 0.60 rg\n";
+        $stream .= sprintf("%.2f %.2f Td\n", ($pageWidth - 165.0) / 2.0, $y);
+        $stream .= sprintf("(%s) Tj\nET\n", self::escapeText("Consulte o extrato no Portal da Familia."));
+
+        return self::montarPdfEstruturado($stream, $pageWidth, $pageHeight);
+    }
 }
 

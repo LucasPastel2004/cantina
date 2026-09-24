@@ -309,7 +309,7 @@ class Fase13Test
         $colabId = (int)$this->pdo->lastInsertId();
 
         // Cria produto
-        $cod = 'PDV-COL-' . rand(100, 999);
+        $cod = 'PDV-COL-' . uniqid();
         $this->pdo->exec("INSERT INTO produtos (codigo_interno, descricao, categoria_id, tipo, preco_venda, estoque_atual, estoque_minimo, status_pausa, created_at) VALUES ('{$cod}', 'Café com Torrada', {$catId}, 'industrializado_continuo', 8.50, 10, 2, 'ativo', NOW())");
         $prodId = (int)$this->pdo->lastInsertId();
 
