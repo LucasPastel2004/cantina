@@ -111,9 +111,13 @@ class CaixaController extends Controller
         }
 
         $turno = trim($_POST['turno'] ?? 'matutino');
-        $fundoRaw = $_POST['fundo_troco_inicial'] ?? '0';
-        $fundoLimpo = str_replace('.', '', $fundoRaw);
-        $fundoLimpo = str_replace(',', '.', $fundoLimpo);
+        $fundoRaw = trim((string)($_POST['fundo_troco_inicial'] ?? '0'));
+        if (str_contains($fundoRaw, ',')) {
+            $fundoLimpo = str_replace('.', '', $fundoRaw);
+            $fundoLimpo = str_replace(',', '.', $fundoLimpo);
+        } else {
+            $fundoLimpo = $fundoRaw;
+        }
         $fundoTroco = (float)$fundoLimpo;
         $observacoes = trim($_POST['observacoes'] ?? '');
 
@@ -176,9 +180,13 @@ class CaixaController extends Controller
         }
 
         $sessaoId = (int)($_POST['sessao_id'] ?? 0);
-        $informadoRaw = $_POST['total_informado_gaveta'] ?? '0';
-        $informadoLimpo = str_replace('.', '', $informadoRaw);
-        $informadoLimpo = str_replace(',', '.', $informadoLimpo);
+        $informadoRaw = trim((string)($_POST['total_informado_gaveta'] ?? '0'));
+        if (str_contains($informadoRaw, ',')) {
+            $informadoLimpo = str_replace('.', '', $informadoRaw);
+            $informadoLimpo = str_replace(',', '.', $informadoLimpo);
+        } else {
+            $informadoLimpo = $informadoRaw;
+        }
         $totalInformado = (float)$informadoLimpo;
         $observacoes = trim($_POST['observacoes'] ?? '');
 
@@ -210,12 +218,22 @@ class CaixaController extends Controller
     {
         $termo = trim((string)($_GET['q'] ?? ($_GET['busca'] ?? '')));
         if (strlen($termo) < 2) {
-            $this->json(['success' => true, 'responsaveis' => []]);
+            $this->json([
+                'success' => true,
+                'sucesso' => true,
+                'responsaveis' => [],
+                'dados' => []
+            ]);
             return;
         }
 
         $responsaveis = SessaoCaixa::buscarResponsavelParaRecarga($termo, 10);
-        $this->json(['success' => true, 'responsaveis' => $responsaveis]);
+        $this->json([
+            'success' => true,
+            'sucesso' => true,
+            'responsaveis' => $responsaveis,
+            'dados' => $responsaveis
+        ]);
     }
 
     /**
@@ -235,22 +253,36 @@ class CaixaController extends Controller
         $csrf = $_POST['csrf_token'] ?? '';
         if (!$this->validateCsrf($csrf, '/operacional/caixa')) {
             if ($isAjax) {
-                $this->json(['success' => false, 'message' => 'Token CSRF inválido ou expirado.'], 403);
+                $this->json([
+                    'success'  => false,
+                    'sucesso'  => false,
+                    'message'  => 'Token CSRF inválido ou expirado.',
+                    'mensagem' => 'Token CSRF inválido ou expirado.'
+                ], 403);
             }
             return;
         }
 
         $responsavelId = (int)($_POST['responsavel_id'] ?? 0);
-        $valorRaw = $_POST['valor'] ?? '0';
-        $valorLimpo = str_replace('.', '', $valorRaw);
-        $valorLimpo = str_replace(',', '.', $valorLimpo);
+        $valorRaw = trim((string)($_POST['valor'] ?? '0'));
+        if (str_contains($valorRaw, ',')) {
+            $valorLimpo = str_replace('.', '', $valorRaw);
+            $valorLimpo = str_replace(',', '.', $valorLimpo);
+        } else {
+            $valorLimpo = $valorRaw;
+        }
         $valor = (float)$valorLimpo;
         $observacoes = trim((string)($_POST['observacoes'] ?? ''));
 
         if ($responsavelId <= 0) {
             $msg = 'Selecione um responsável válido para efetuar a recarga.';
             if ($isAjax) {
-                $this->json(['success' => false, 'message' => $msg], 400);
+                $this->json([
+                    'success'  => false,
+                    'sucesso'  => false,
+                    'message'  => $msg,
+                    'mensagem' => $msg
+                ], 400);
             } else {
                 Session::setFlash('danger', $msg);
                 $this->redirect('/operacional/caixa');
@@ -261,7 +293,12 @@ class CaixaController extends Controller
         if ($valor <= 0) {
             $msg = 'Informe um valor válido e positivo para a recarga em dinheiro.';
             if ($isAjax) {
-                $this->json(['success' => false, 'message' => $msg], 400);
+                $this->json([
+                    'success'  => false,
+                    'sucesso'  => false,
+                    'message'  => $msg,
+                    'mensagem' => $msg
+                ], 400);
             } else {
                 Session::setFlash('danger', $msg);
                 $this->redirect('/operacional/caixa');
@@ -280,10 +317,14 @@ class CaixaController extends Controller
             if ($isAjax) {
                 $this->json([
                     'success'            => true,
+                    'sucesso'            => true,
                     'message'            => $msgSucesso,
+                    'mensagem'           => $msgSucesso,
                     'transacao_id'       => $resultado['transacao_id'],
                     'comprovante_url'    => '/operacional/caixa/comprovante-recarga/' . $resultado['transacao_id'],
                     'comprovante_pdf'    => '/operacional/caixa/comprovante-recarga/' . $resultado['transacao_id'] . '/pdf',
+                    'responsavel_nome'   => $resultado['responsavel_nome'],
+                    'valor_creditado'    => $resultado['valor'],
                     'novo_saldo'         => $resultado['saldo_resultante'],
                     'dados'              => $resultado
                 ]);
@@ -293,7 +334,12 @@ class CaixaController extends Controller
             }
         } catch (\Throwable $e) {
             if ($isAjax) {
-                $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+                $this->json([
+                    'success'  => false,
+                    'sucesso'  => false,
+                    'message'  => $e->getMessage(),
+                    'mensagem' => $e->getMessage()
+                ], 400);
             } else {
                 Session::setFlash('danger', 'Erro ao registrar recarga em dinheiro: ' . $e->getMessage());
                 $this->redirect('/operacional/caixa');

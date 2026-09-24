@@ -314,7 +314,8 @@ if ($caixaAberto) {
                                 <span class="input-group-text font-bold">R$</span>
                                 <input type="text" name="total_informado_gaveta" id="inputTotalInformado" 
                                        class="form-control form-control-lg font-tabular font-bold input-money" 
-                                       placeholder="0,00" required autofocus oninput="calcularQuebraSobra();">
+                                       placeholder="0,00" required autofocus 
+                                       oninput="calcularQuebraSobra();" onkeyup="calcularQuebraSobra();" onchange="calcularQuebraSobra();">
                             </div>
                             <div class="form-text font-11 text-muted">Inclua o fundo de troco inicial na contagem das cédulas.</div>
                         </div>
@@ -645,6 +646,11 @@ if ($caixaAberto) {
                             Concluir e Atualizar Caixa
                         </button>
                     </div>
+                    <div class="d-flex justify-content-center gap-3 font-11 mt-2">
+                        <a id="recargaBtnAba" href="#" target="_blank" class="text-secondary text-decoration-none" title="Abrir comprovante em nova aba">
+                            ↗ Abrir em nova aba
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -674,12 +680,30 @@ function calcularQuebraSobra() {
 
     if (!input || !box) return;
 
-    let texto = input.value.replace(/\./g, '').replace(',', '.');
-    let informado = parseFloat(texto);
-
-    if (isNaN(informado) || input.value.trim() === '') {
+    const raw = (input.value || '').trim();
+    if (raw === '') {
         box.classList.add('d-none');
         return;
+    }
+
+    let informado = 0;
+    if (typeof converterMoedaParaFloat === 'function') {
+        informado = converterMoedaParaFloat(raw);
+    } else {
+        if (raw.indexOf(',') !== -1) {
+            const partes = raw.split(',');
+            if (partes.length === 2 && partes[1].length <= 2) {
+                informado = parseFloat(partes[0].replace(/\./g, '') + '.' + partes[1]) || 0;
+            } else {
+                const digits = raw.replace(/\D/g, '');
+                informado = digits ? (parseInt(digits, 10) / 100) : 0;
+            }
+        } else if (/^\d+(\.\d{1,2})$/.test(raw)) {
+            informado = parseFloat(raw) || 0;
+        } else {
+            const digits = raw.replace(/\D/g, '');
+            informado = digits ? (parseInt(digits, 10) / 100) : 0;
+        }
     }
 
     box.classList.remove('d-none');
@@ -702,6 +726,16 @@ function calcularQuebraSobra() {
         msgEl.textContent = 'Atenção: O valor físico contado é inferior ao total esperado pelas operações.';
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const inputInf = document.getElementById('inputTotalInformado');
+    if (inputInf) {
+        inputInf.addEventListener('moneychange', calcularQuebraSobra);
+        inputInf.addEventListener('moneyinput', calcularQuebraSobra);
+        inputInf.addEventListener('change', calcularQuebraSobra);
+        inputInf.addEventListener('blur', calcularQuebraSobra);
+    }
+});
 
 function confirmarFechamento() {
     return confirm('Atenção: O fechamento de caixa encerrará a sessão operacional do turno e emitirá o espelho oficial. Deseja realmente concluir?');
@@ -759,8 +793,11 @@ function confirmarFechamento() {
 
                 loadingBusca.classList.add('d-none');
 
-                if (data.sucesso && data.dados && data.dados.length > 0) {
-                    renderizarResultados(data.dados);
+                const lista = data.dados || data.responsaveis || [];
+                const ok = (data.sucesso === true || data.success === true);
+
+                if (ok && lista.length > 0) {
+                    renderizarResultados(lista);
                 } else {
                     listaResultados.innerHTML = '<div class="p-3 text-center text-muted font-12">Nenhum responsável ou aluno localizado para "' + escapeHtml(termo) + '".</div>';
                     listaResultados.style.display = 'block';
@@ -781,6 +818,18 @@ function confirmarFechamento() {
         inputBusca.focus();
     });
 
+    function formatarDependentesItem(item) {
+        if (item.dependentes_str && item.dependentes_str.trim().length > 0) {
+            return item.dependentes_str;
+        }
+        if (Array.isArray(item.dependentes) && item.dependentes.length > 0) {
+            return item.dependentes.map(function(d) {
+                return d.nome + (d.nome_turma ? ' (' + d.nome_turma + ')' : '');
+            }).join(', ');
+        }
+        return 'Nenhum aluno vinculado';
+    }
+
     function renderizarResultados(lista) {
         listaResultados.innerHTML = '';
         lista.forEach(function(item) {
@@ -789,13 +838,14 @@ function confirmarFechamento() {
             btn.className = 'list-group-item list-group-item-action p-2 text-start';
 
             const saldoFormatado = parseFloat(item.saldo_atual || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-            const dependentes = item.dependentes_str ? item.dependentes_str : 'Sem dependentes cadastrados';
+            const dependentes = formatarDependentesItem(item);
+            const cpfExibicao = item.cpf_formatado || item.cpf || '—';
 
             btn.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <strong class="font-13 text-dark">${escapeHtml(item.nome)}</strong>
-                        <span class="text-secondary font-11 ms-2">CPF: ${escapeHtml(item.cpf || '—')}</span>
+                        <span class="text-secondary font-11 ms-2">CPF: ${escapeHtml(cpfExibicao)}</span>
                         <div class="font-11 text-muted mt-1">Dependentes: ${escapeHtml(dependentes)}</div>
                     </div>
                     <div class="text-end ps-2">
@@ -820,11 +870,14 @@ function confirmarFechamento() {
         inputBusca.value = '';
         inputBusca.closest('.input-group').classList.add('d-none');
 
+        const cpfExibicao = item.cpf_formatado || item.cpf || 'Não informado';
+        const dependentes = formatarDependentesItem(item);
+
         document.getElementById('recargaNomeSelecionado').textContent = item.nome;
-        document.getElementById('recargaCpfSelecionado').textContent = item.cpf || 'Não informado';
-        document.getElementById('recargaEmailSelecionado').textContent = item.email || '—';
+        document.getElementById('recargaCpfSelecionado').textContent = cpfExibicao;
+        document.getElementById('recargaEmailSelecionado').textContent = item.email || item.whatsapp || '—';
         document.getElementById('recargaSaldoAtualSelecionado').textContent = 'R$ ' + parseFloat(item.saldo_atual || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-        document.getElementById('recargaDependentesSelecionados').textContent = item.dependentes_str || 'Nenhum aluno vinculado';
+        document.getElementById('recargaDependentesSelecionados').textContent = dependentes;
 
         cardSelecionado.classList.remove('d-none');
         etapaValor.classList.remove('d-none');
@@ -886,11 +939,13 @@ function confirmarFechamento() {
 
             const data = await resp.json();
 
-            if (data.sucesso) {
+            const ok = (data.sucesso === true || data.success === true);
+
+            if (ok) {
                 transacaoConcluidaId = data.transacao_id;
                 exibirSucessoRecarga(data);
             } else {
-                mostrarErro(data.mensagem || 'Falha ao registrar recarga.');
+                mostrarErro(data.mensagem || data.message || 'Falha ao registrar recarga.');
                 btnConfirmar.disabled = false;
                 btnConfirmar.innerHTML = 'Confirmar Recarga em Dinheiro';
             }
@@ -907,19 +962,49 @@ function confirmarFechamento() {
         modalFooter.classList.add('d-none');
         painelSucesso.classList.remove('d-none');
 
-        document.getElementById('recargaResumoNome').textContent = data.responsavel_nome;
-        document.getElementById('recargaResumoValor').textContent = '+ R$ ' + parseFloat(data.valor_creditado).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-        document.getElementById('recargaResumoNovoSaldo').textContent = 'R$ ' + parseFloat(data.novo_saldo).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        const nomeResp = data.responsavel_nome || (data.dados ? data.dados.responsavel_nome : (responsavelSelecionado ? responsavelSelecionado.nome : '—'));
+        const valorCred = data.valor_creditado ?? (data.dados ? data.dados.valor : 0);
+        const novoSaldo = data.novo_saldo ?? (data.dados ? data.dados.saldo_resultante : 0);
+
+        document.getElementById('recargaResumoNome').textContent = nomeResp;
+        document.getElementById('recargaResumoValor').textContent = '+ R$ ' + parseFloat(valorCred).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('recargaResumoNovoSaldo').textContent = 'R$ ' + parseFloat(novoSaldo).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         document.getElementById('recargaResumoProtocolo').textContent = '#' + data.transacao_id;
 
         const urlHtml = '<?php echo $baseUrl; ?>/operacional/caixa/comprovante-recarga/' + data.transacao_id;
         const urlPdf = '<?php echo $baseUrl; ?>/operacional/caixa/comprovante-recarga/' + data.transacao_id + '/pdf';
 
         btnImprimirHtml.onclick = function() {
-            window.open(urlHtml, 'comprovante_recarga', 'width=380,height=600,scrollbars=yes');
+            imprimirComprovanteRecargaIframe(data.transacao_id);
         };
 
         btnBaixarPdf.href = urlPdf;
+
+        const btnAba = document.getElementById('recargaBtnAba');
+        if (btnAba) {
+            btnAba.href = urlHtml;
+        }
+    }
+
+    function imprimirComprovanteRecargaIframe(transacaoId) {
+        const id = transacaoId || transacaoConcluidaId;
+        if (!id) return;
+
+        let iframe = document.getElementById('iframeImpressaoRecarga');
+        if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.id = 'iframeImpressaoRecarga';
+            iframe.style.position = 'fixed';
+            iframe.style.top = '-9999px';
+            iframe.style.left = '-9999px';
+            iframe.style.width = '1px';
+            iframe.style.height = '1px';
+            iframe.style.border = 'none';
+            iframe.style.opacity = '0';
+            document.body.appendChild(iframe);
+        }
+
+        iframe.src = `${baseUrl}/operacional/caixa/comprovante-recarga/${id}?autoprint=1`;
     }
 
     function mostrarErro(msg) {

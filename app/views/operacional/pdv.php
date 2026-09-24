@@ -981,11 +981,20 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             </div>
 
             <div class="d-flex flex-column gap-2">
-                <a id="btnImprimirComprovante" href="#" target="_blank" class="btn btn-enterprise btn-secondary btn-sm py-2">
+                <button type="button" id="btnImprimirComprovante" class="btn btn-enterprise btn-secondary btn-sm py-2" onclick="imprimirComprovanteIframe()">
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/></svg>
                     Imprimir Comprovante Térmico (80mm)
-                </a>
-                <button type="button" class="btn btn-enterprise btn-primary btn-sm py-2" onclick="fecharModal('modalPosVenda')">
+                </button>
+                <div class="d-flex justify-content-center gap-3 font-11 mt-1">
+                    <a id="btnComprovanteAba" href="#" target="_blank" class="text-secondary text-decoration-none" title="Abrir em aba separada">
+                        ↗ Abrir em nova aba
+                    </a>
+                    <span class="text-muted">|</span>
+                    <a id="btnComprovantePdf" href="#" target="_blank" class="text-secondary text-decoration-none" title="Baixar arquivo PDF">
+                        ↓ Baixar PDF Direto
+                    </a>
+                </div>
+                <button type="button" class="btn btn-enterprise btn-primary btn-sm py-2 mt-2" onclick="fecharModal('modalPosVenda')">
                     Nova Venda (F2)
                 </button>
             </div>
@@ -1006,6 +1015,31 @@ let sessaoCaixaId = <?php echo (int)($sessaoAberta['id'] ?? 0); ?>;
 let caixaAberto = <?php echo $caixaAberto ? 'true' : 'false'; ?>;
 let csrfToken = "<?php echo $csrfToken; ?>";
 let baseUrl = "<?php echo $baseUrl; ?>";
+let ultimaVendaIdConcluida = null;
+
+/**
+ * Dispara a impressão do comprovante térmico sem abrir novas abas ou bloquear o operador
+ */
+function imprimirComprovanteIframe(vendaId = null) {
+    const id = vendaId || ultimaVendaIdConcluida;
+    if (!id) return;
+
+    let iframe = document.getElementById('iframeImpressaoPdv');
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'iframeImpressaoPdv';
+        iframe.style.position = 'fixed';
+        iframe.style.top = '-9999px';
+        iframe.style.left = '-9999px';
+        iframe.style.width = '1px';
+        iframe.style.height = '1px';
+        iframe.style.border = 'none';
+        iframe.style.opacity = '0';
+        document.body.appendChild(iframe);
+    }
+
+    iframe.src = `${baseUrl}/operacional/pdv/comprovante/${id}?autoprint=1`;
+}
 
 // Inicia escutas de atalhos de teclado (F2, F3, F4, F8, F9, F10, Esc)
 document.addEventListener('keydown', function(e) {
@@ -1254,7 +1288,15 @@ function calcularTroco() {
     const displayTroco = document.getElementById('displayTroco');
 
     if (!recInput) return;
-    const recValor = parseFloat(recInput.value.replace(/\./g, '').replace(',', '.')) || 0;
+    
+    let recValor = 0;
+    const raw = (recInput.value || '').trim();
+    if (typeof converterMoedaParaFloat === 'function') {
+        recValor = converterMoedaParaFloat(raw);
+    } else {
+        const digits = raw.replace(/\D/g, '');
+        recValor = digits ? (parseInt(digits, 10) / 100) : 0;
+    }
 
     if (recValor >= total && total > 0) {
         const troco = recValor - total;
@@ -1282,7 +1324,14 @@ function definirRecebidoExato() {
 function somarRecebido(valor) {
     const recInput = document.getElementById('inputValorRecebido');
     if (!recInput) return;
-    const atual = parseFloat(recInput.value.replace(/\./g, '').replace(',', '.')) || 0;
+    const raw = (recInput.value || '').trim();
+    let atual = 0;
+    if (typeof converterMoedaParaFloat === 'function') {
+        atual = converterMoedaParaFloat(raw);
+    } else {
+        const digits = raw.replace(/\D/g, '');
+        atual = digits ? (parseInt(digits, 10) / 100) : 0;
+    }
     recInput.value = (atual + valor).toFixed(2).replace('.', ',');
     calcularTroco();
 }
@@ -1530,9 +1579,15 @@ function submeterVendaServidor(valorRecebido) {
             }
         }
 
-        const elBtnComp = document.getElementById('btnImprimirComprovante');
-        if (elBtnComp) {
-            elBtnComp.href = `${baseUrl}/operacional/pdv/comprovante/${data.venda_id}`;
+        ultimaVendaIdConcluida = data.venda_id;
+
+        const elBtnAba = document.getElementById('btnComprovanteAba');
+        if (elBtnAba) {
+            elBtnAba.href = `${baseUrl}/operacional/pdv/comprovante/${data.venda_id}`;
+        }
+        const elBtnPdf = document.getElementById('btnComprovantePdf');
+        if (elBtnPdf) {
+            elBtnPdf.href = `${baseUrl}/operacional/pdv/comprovante/${data.venda_id}/pdf`;
         }
         
         limparCarrinho();

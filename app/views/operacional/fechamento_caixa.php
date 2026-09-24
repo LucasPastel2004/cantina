@@ -115,7 +115,8 @@ $totalFaturado = (float)($totais['total_geral_faturado'] ?? 0.0);
                             <span class="input-group-text font-bold">R$</span>
                             <input type="text" name="total_informado_gaveta" id="inputTotalInformado" 
                                    class="form-control form-control-lg font-tabular font-bold input-money" 
-                                   placeholder="0,00" required autofocus oninput="calcularQuebraSobra();">
+                                   placeholder="0,00" required autofocus 
+                                   oninput="calcularQuebraSobra();" onkeyup="calcularQuebraSobra();" onchange="calcularQuebraSobra();">
                         </div>
                         <div class="form-text font-11 text-muted">Digite o somatório exato de notas e moedas físicas apuradas.</div>
                     </div>
@@ -158,12 +159,30 @@ function calcularQuebraSobra() {
     const msgEl = document.getElementById('msgDiferenca');
     const esperado = parseFloat(document.getElementById('valorEsperadoGaveta').value) || 0.0;
 
-    let texto = input.value.replace(/\./g, '').replace(',', '.');
-    let informado = parseFloat(texto);
-
-    if (isNaN(informado) || input.value.trim() === '') {
+    const raw = (input.value || '').trim();
+    if (raw === '') {
         box.classList.add('d-none');
         return;
+    }
+
+    let informado = 0;
+    if (typeof converterMoedaParaFloat === 'function') {
+        informado = converterMoedaParaFloat(raw);
+    } else {
+        if (raw.indexOf(',') !== -1) {
+            const partes = raw.split(',');
+            if (partes.length === 2 && partes[1].length <= 2) {
+                informado = parseFloat(partes[0].replace(/\./g, '') + '.' + partes[1]) || 0;
+            } else {
+                const digits = raw.replace(/\D/g, '');
+                informado = digits ? (parseInt(digits, 10) / 100) : 0;
+            }
+        } else if (/^\d+(\.\d{1,2})$/.test(raw)) {
+            informado = parseFloat(raw) || 0;
+        } else {
+            const digits = raw.replace(/\D/g, '');
+            informado = digits ? (parseInt(digits, 10) / 100) : 0;
+        }
     }
 
     box.classList.remove('d-none');
@@ -190,4 +209,14 @@ function calcularQuebraSobra() {
 function confirmarFechamento() {
     return confirm('Atenção: O fechamento de caixa encerrará definitivamente a sessão do turno e emitirá o espelho formal para assinatura. Deseja prosseguir?');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const inputInf = document.getElementById('inputTotalInformado');
+    if (inputInf) {
+        inputInf.addEventListener('moneychange', calcularQuebraSobra);
+        inputInf.addEventListener('moneyinput', calcularQuebraSobra);
+        inputInf.addEventListener('change', calcularQuebraSobra);
+        inputInf.addEventListener('blur', calcularQuebraSobra);
+    }
+});
 </script>

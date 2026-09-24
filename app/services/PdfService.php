@@ -53,16 +53,58 @@ class PdfService
         return '';
     }
 
+    private static ?string $cachedLogoDataUri = null;
+    private static ?string $cachedLogoDataUriOriginal = null;
+
+    /**
+     * Retorna o caminho do logotipo otimizado para bobinas térmicas (72x72px, ~2KB)
+     */
+    public static function getLogoThermalPath(): string
+    {
+        $candidatos = [
+            dirname(__DIR__, 2) . '/assets/img/logo-colegio-thermal.jpg',
+            'assets/img/logo-colegio-thermal.jpg',
+            __DIR__ . '/../../assets/img/logo-colegio-thermal.jpg',
+            '/var/www/html/assets/img/logo-colegio-thermal.jpg'
+        ];
+        foreach ($candidatos as $c) {
+            if (file_exists($c)) {
+                return realpath($c) ?: $c;
+            }
+        }
+        return self::getLogoPath();
+    }
+
     /**
      * Retorna a representação em base64 Data-URI do logotipo oficial para inclusão em HTML
+     * Prioriza a versão leve para renderização ultrarrápida no diálogo de impressão do navegador
      */
-    public static function getLogoDataUri(): string
+    public static function getLogoDataUri(bool $usarMiniatura = true): string
     {
+        if ($usarMiniatura) {
+            if (self::$cachedLogoDataUri !== null) {
+                return self::$cachedLogoDataUri;
+            }
+            $path = self::getLogoThermalPath();
+            if (!empty($path) && file_exists($path)) {
+                $data = file_get_contents($path);
+                if ($data !== false) {
+                    self::$cachedLogoDataUri = 'data:image/jpeg;base64,' . base64_encode($data);
+                    return self::$cachedLogoDataUri;
+                }
+            }
+        }
+
+        if (self::$cachedLogoDataUriOriginal !== null) {
+            return self::$cachedLogoDataUriOriginal;
+        }
+
         $path = self::getLogoPath();
         if (!empty($path) && file_exists($path)) {
             $data = file_get_contents($path);
             if ($data !== false) {
-                return 'data:image/jpeg;base64,' . base64_encode($data);
+                self::$cachedLogoDataUriOriginal = 'data:image/jpeg;base64,' . base64_encode($data);
+                return self::$cachedLogoDataUriOriginal;
             }
         }
         return '';
@@ -535,6 +577,7 @@ class PdfService
         $totalPecas = (int)($dadosCorte['total_pecas'] ?? 0);
         $statusCorte = $dadosCorte['status_corte']['rotulo'] ?? 'Corte Fechado';
         $emissao = date('d/m/Y H:i:s');
+        $baseUrl = defined('BASE_URL') ? BASE_URL : '';
 
         ob_start();
         ?>
@@ -635,7 +678,10 @@ class PdfService
             </style>
         </head>
         <body>
-            <div class="no-print" style="justify-content: flex-end;">
+            <div class="no-print" style="display: flex; justify-content: space-between; align-items: center;">
+                <a href="<?php echo $baseUrl; ?>/operacional/corte" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 13px; font-weight: 600; text-decoration: none; color: #0f172a; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px;" title="Retornar à tela de Corte Operacional">
+                    ← Voltar ao Corte
+                </a>
                 <button onclick="this.innerHTML='Preparando Impressão...'; const b=this; setTimeout(function(){ window.print(); b.innerHTML='Imprimir Relatório'; }, 50);" class="btn-print">Imprimir Relatório</button>
             </div>
             <div class="print-header">
@@ -1181,12 +1227,14 @@ class PdfService
         </head>
         <body>
             <div class="action-bar no-print">
-                <button type="button" class="btn-action btn-primary-action" onclick="window.print()">
-                    🖨️ Imprimir Bobina (80mm)
-                </button>
-                <a href="<?php echo htmlspecialchars($baseUrl . '/operacional/tickets?data=' . urlencode($dataConsumo) . '&turno=' . urlencode(strtolower($turno)), ENT_QUOTES, 'UTF-8'); ?>" class="btn-action">
-                    &larr; Voltar
-                </a>
+                <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between; width: 100%;">
+                    <button type="button" class="btn-action btn-primary-action" onclick="window.print()">
+                        🖨️ Imprimir (80mm)
+                    </button>
+                    <a href="<?php echo htmlspecialchars($baseUrl . '/operacional/tickets?data=' . urlencode($dataConsumo) . '&turno=' . urlencode(strtolower($turno)), ENT_QUOTES, 'UTF-8'); ?>" class="btn-action">
+                        &larr; Voltar
+                    </a>
+                </div>
             </div>
 
             <div class="receipt-roll">
@@ -1264,6 +1312,24 @@ class PdfService
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+
+            <script>
+                // Disparo de impressão automática para iframes e chamadas rápidas
+                window.addEventListener('load', function() {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('autoprint') === '1') {
+                        setTimeout(function() {
+                            window.print();
+                        }, 50);
+                    }
+                });
+                // Tecla ESC fecha a janela
+                window.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        window.close();
+                    }
+                });
+            </script>
         </body>
         </html>
         <?php
@@ -1294,86 +1360,162 @@ class PdfService
         $vendaId = (int)($venda['id'] ?? 0);
         $dataHora = date('d/m/Y H:i:s', strtotime($venda['created_at'] ?? 'now'));
         $operador = $venda['operador_nome'] ?? 'Operador';
-        $tipoVenda = $venda['tipo_venda'] ?? 'avulso_aluno';
         $formaPagamento = $venda['forma_pagamento'] ?? 'dinheiro';
         $valorTotal = (float)($venda['valor_total'] ?? 0.0);
         $valorRecebido = (float)($venda['valor_dinheiro_recebido'] ?? 0.0);
         $troco = (float)($venda['troco_devolvido'] ?? 0.0);
         $itens = $venda['itens'] ?? [];
+        $sessaoId = (int)($venda['sessao_caixa_id'] ?? 0);
+        $sessaoTurno = ucfirst($venda['sessao_turno'] ?? 'Turno');
 
-        $pageWidth = self::PAGE_WIDTH_THERMAL;
-        $left = 8.0;
-        $right = $pageWidth - 8.0;
-        $width = $right - $left;
-
-        $alturaItens = count($itens) * 16.0;
-        $pageHeight = max(280.0, 225.0 + $alturaItens);
-        $stream = "";
-        $y = $pageHeight - 16.0;
-
-        // Logotipo oficial centralizado no topo da bobina (34x34 pt)
-        $logoSize = 34.0;
-        $logoX = ($pageWidth - $logoSize) / 2.0;
-        $stream .= self::desenharLogoCircular($logoX, $y - $logoSize, $logoSize);
-        $y -= ($logoSize + 8.0);
-
-        // Cabeçalho
-        $stream .= "BT\n/F2 10 Tf\n0.11 0.31 0.85 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("COLÉGIO MONTEIRO LOBATO"));
-        $y -= 14.0;
-        $stream .= "BT\n/F1 8 Tf\n0.30 0.35 0.45 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("Cantina Escolar • Comprovante de Venda"));
-        $y -= 12.0;
-        $stream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("Venda #{$vendaId} • {$dataHora} • Op: {$operador}"));
-        $y -= 10.0;
-
-        // Cliente
-        if (!empty($venda['colaborador_nome'])) {
-            $stream .= "BT\n/F2 8 Tf\n0.10 0.15 0.25 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Colaborador: %s) Tj\nET\n", self::escapeText($venda['colaborador_nome']));
-            $y -= 10.0;
-        } elseif (!empty($venda['aluno_nome'])) {
-            $stream .= "BT\n/F2 8 Tf\n0.10 0.15 0.25 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Aluno: %s) Tj\nET\n", self::escapeText($venda['aluno_nome']));
-            $y -= 10.0;
-        }
-
-        // Divisor
-        $stream .= sprintf("0.80 0.85 0.90 RG\n1 w\n%.2f %.2f m\n%.2f %.2f l\nS\n", $left, $y, $right, $y);
-        $y -= 12.0;
-
-        // Tabela de itens
-        foreach ($itens as $it) {
-            $qtd = (int)($it['quantidade'] ?? 1);
-            $desc = mb_substr($it['produto_descricao'] ?? '', 0, 20);
-            $sub = number_format((float)($it['subtotal'] ?? 0.0), 2, ',', '.');
-            $stream .= "BT\n/F1 8 Tf\n0.10 0.15 0.25 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%dx %s) Tj\nET\n", $qtd, self::escapeText($desc));
-            $stream .= "BT\n/F2 8 Tf\n0.10 0.15 0.25 rg\n" . sprintf("%.2f %.2f Td\n", $right - 50.0, $y) . sprintf("(R$ %s) Tj\nET\n", self::escapeText($sub));
-            $y -= 14.0;
-        }
-
-        // Divisor
-        $stream .= sprintf("0.80 0.85 0.90 RG\n1 w\n%.2f %.2f m\n%.2f %.2f l\nS\n", $left, $y, $right, $y);
-        $y -= 14.0;
-
-        // Total
         $rotuloPagamento = match($formaPagamento) {
-            'dinheiro' => 'Dinheiro',
+            'dinheiro' => 'Dinheiro Físico',
             'pix_balcao' => 'Pix Balcão',
             'desconto_folha' => 'Desconto em Folha',
             default => ucfirst($formaPagamento)
         };
-        $stream .= "BT\n/F2 10 Tf\n0.11 0.31 0.85 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(TOTAL: R$ %s) Tj\nET\n", self::escapeText(number_format($valorTotal, 2, ',', '.')));
+
+        $pageWidth = self::PAGE_WIDTH_THERMAL; // 226.77 pt (80mm)
+        $left = 10.0;
+        $right = $pageWidth - 10.0;
+
+        // Estimar a altura da bobina dinamicamente para corte exato sem sobras
+        $linhasCliente = 1;
+        if (!empty($venda['colaborador_nome'])) {
+            $linhasCliente = 4;
+        } elseif (!empty($venda['aluno_nome'])) {
+            $linhasCliente = 3;
+        }
+        $linhasTroco = ($formaPagamento === 'dinheiro' && $valorRecebido > 0) ? 2 : 0;
+        $linhasItens = max(1, count($itens));
+
+        $alturaCalculada = 48.0 + 26.0 + 8.0 + 44.0 + 8.0 + ($linhasCliente * 11.0) + 8.0 + 16.0 + ($linhasItens * 12.0) + 8.0 + 26.0 + ($linhasTroco * 11.0) + 8.0 + 24.0 + 18.0;
+        $pageHeight = max(240.0, $alturaCalculada);
+
+        $stream = "";
+        $y = $pageHeight - 14.0;
+
+        // Logotipo oficial centralizado no topo (36x36 pt)
+        $logoSize = 36.0;
+        $logoX = ($pageWidth - $logoSize) / 2.0;
+        $stream .= self::desenharLogoCircular($logoX, $y - $logoSize, $logoSize);
+        $y -= ($logoSize + 8.0);
+
+        // Helpers locais de texto e traçado
+        $drawCenter = function(string $text, float $yPos, string $font, float $size) use ($pageWidth, &$stream) {
+            $charW = ($font === '/F2') ? ($size * 0.58) : ($size * 0.52);
+            $xPos = max(10.0, ($pageWidth - (mb_strlen($text) * $charW)) / 2.0);
+            $stream .= "BT\n{$font} {$size} Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $xPos, $yPos) . sprintf("(%s) Tj\nET\n", self::escapeText($text));
+        };
+
+        $drawRight = function(string $text, float $yPos, string $font, float $size) use ($right, &$stream) {
+            $charW = ($font === '/F2') ? ($size * 0.58) : ($size * 0.52);
+            $xPos = max(10.0, $right - (mb_strlen($text) * $charW));
+            $stream .= "BT\n{$font} {$size} Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $xPos, $yPos) . sprintf("(%s) Tj\nET\n", self::escapeText($text));
+        };
+
+        $drawDashed = function(float $yPos) use ($left, $right, &$stream) {
+            $stream .= sprintf("[2 2] 0 d\n0.5 w\n0 0 0 RG\n%.2f %.2f m\n%.2f %.2f l\nS\n[] 0 d\n", $left, $yPos, $right, $yPos);
+        };
+
+        // Cabeçalho Centralizado
+        $drawCenter("COLÉGIO MONTEIRO LOBATO", $y, '/F2', 10.0);
         $y -= 12.0;
-        $stream .= "BT\n/F1 8 Tf\n0.30 0.35 0.45 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Pagamento: %s) Tj\nET\n", self::escapeText($rotuloPagamento));
+        $drawCenter("Cantina Escolar • Valores para o Futuro!", $y, '/F1', 7.5);
+        $y -= 9.0;
+
+        // Divisória
+        $drawDashed($y);
+        $y -= 10.0;
+
+        // Dados da Venda
+        $stream .= "BT\n/F2 8.5 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Comprovante de Venda #%d) Tj\nET\n", $vendaId);
+        $y -= 11.0;
+        $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Data/Hora: %s) Tj\nET\n", self::escapeText($dataHora));
+        $y -= 10.0;
+        $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Atendente: %s) Tj\nET\n", self::escapeText($operador));
+        $y -= 10.0;
+        $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Sessão Caixa: #%d (%s)) Tj\nET\n", $sessaoId, self::escapeText($sessaoTurno));
+        $y -= 9.0;
+
+        // Divisória
+        $drawDashed($y);
+        $y -= 10.0;
+
+        // Bloco do Cliente
+        if (!empty($venda['colaborador_nome'])) {
+            $stream .= "BT\n/F2 8.5 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . "(CLIENTE: COLABORADOR) Tj\nET\n";
+            $y -= 11.0;
+            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Nome: %s) Tj\nET\n", self::escapeText($venda['colaborador_nome']));
+            $y -= 10.0;
+            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Matrícula: %s) Tj\nET\n", self::escapeText($venda['colaborador_matricula'] ?? ''));
+            $y -= 10.0;
+            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Cargo: %s) Tj\nET\n", self::escapeText($venda['colaborador_cargo'] ?? ''));
+            $y -= 9.0;
+        } elseif (!empty($venda['aluno_nome'])) {
+            $stream .= "BT\n/F2 8.5 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . "(CLIENTE: ALUNO) Tj\nET\n";
+            $y -= 11.0;
+            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Nome: %s) Tj\nET\n", self::escapeText($venda['aluno_nome']));
+            $y -= 10.0;
+            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Turma: %s) Tj\nET\n", self::escapeText($venda['aluno_turma'] ?? 'Geral'));
+            $y -= 9.0;
+        } else {
+            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . "(Cliente: Consumidor Final (Venda Balcão)) Tj\nET\n";
+            $y -= 9.0;
+        }
+
+        // Divisória
+        $drawDashed($y);
+        $y -= 10.0;
+
+        // Cabeçalho da Tabela
+        $stream .= "BT\n/F2 7.5 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . "(QTD) Tj\nET\n";
+        $stream .= "BT\n/F2 7.5 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left + 26.0, $y) . "(ITEM) Tj\nET\n";
+        $drawRight("TOTAL", $y, '/F2', 7.5);
+        $y -= 4.0;
+        // Linha sólida fina sob o cabeçalho
+        $stream .= sprintf("0.5 w\n0 0 0 RG\n%.2f %.2f m\n%.2f %.2f l\nS\n", $left, $y, $right, $y);
+        $y -= 9.0;
+
+        // Itens
+        foreach ($itens as $it) {
+            $qtd = (int)($it['quantidade'] ?? 1);
+            $desc = mb_substr($it['produto_descricao'] ?? '', 0, 22);
+            $sub = 'R$ ' . number_format((float)($it['subtotal'] ?? 0.0), 2, ',', '.');
+            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(%dx) Tj\nET\n", $qtd);
+            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left + 26.0, $y) . sprintf("(%s) Tj\nET\n", self::escapeText($desc));
+            $drawRight($sub, $y, '/F1', 8.0);
+            $y -= 11.0;
+        }
+
+        // Divisória
+        $drawDashed($y);
+        $y -= 12.0;
+
+        // Total
+        $totalStr = 'TOTAL: R$ ' . number_format($valorTotal, 2, ',', '.');
+        $drawRight($totalStr, $y, '/F2', 10.5);
+        $y -= 12.0;
+
+        // Forma de Pagamento
+        $drawRight('Forma: ' . $rotuloPagamento, $y, '/F1', 8.0);
         $y -= 10.0;
 
         if ($formaPagamento === 'dinheiro' && $valorRecebido > 0) {
-            $stream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Recebido: R$ %s  |  Troco: R$ %s) Tj\nET\n", 
-                self::escapeText(number_format($valorRecebido, 2, ',', '.')),
-                self::escapeText(number_format($troco, 2, ',', '.'))
-            );
-            $y -= 12.0;
+            $drawRight('Recebido: R$ ' . number_format($valorRecebido, 2, ',', '.'), $y, '/F1', 8.0);
+            $y -= 10.0;
+            $drawRight('Troco: R$ ' . number_format($troco, 2, ',', '.'), $y, '/F2', 8.5);
+            $y -= 10.0;
         }
 
-        // Rodapé institucional
-        $stream .= "BT\n/F1 7 Tf\n0.55 0.60 0.70 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Valores para o Futuro! Obrigado pela compra.) Tj\nET\n");
+        // Divisória
+        $drawDashed($y);
+        $y -= 11.0;
+
+        // Rodapé
+        $drawCenter("Agradecemos a sua preferência!", $y, '/F1', 7.5);
+        $y -= 10.0;
+        $drawCenter("Colégio Monteiro Lobato", $y, '/F1', 7.5);
 
         return self::montarPdfEstruturado($stream, $pageWidth, $pageHeight);
     }
@@ -1396,6 +1538,7 @@ class PdfService
         $valorRecebido = (float)($venda['valor_dinheiro_recebido'] ?? 0.0);
         $troco = (float)($venda['troco_devolvido'] ?? 0.0);
         $itens = $venda['itens'] ?? [];
+        $baseUrl = $parametros['baseUrl'] ?? (defined('BASE_URL') ? BASE_URL : '');
 
         $rotuloPagamento = match($formaPagamento) {
             'dinheiro' => 'Dinheiro Físico',
@@ -1408,115 +1551,281 @@ class PdfService
         <html lang="pt-BR">
         <head>
             <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Comprovante de Venda #<?php echo $vendaId; ?> — Cantina Web</title>
             <style>
-                @page { size: 80mm auto; margin: 0; }
-                body {
-                    margin: 0;
-                    padding: 6mm 4mm;
-                    font-family: 'Courier New', Courier, monospace, sans-serif;
-                    font-size: 11px;
-                    color: #000;
-                    background: #fff;
-                    line-height: 1.35;
+                @page {
+                    size: auto;
+                    margin: 0 auto;
                 }
-                .thermal-wrapper { width: 72mm; margin: 0 auto; }
+                * {
+                    box-sizing: border-box;
+                    margin: 0;
+                    padding: 0;
+                }
+                body {
+                    font-family: 'Courier New', Courier, monospace, monospace;
+                    font-size: 12.5px;
+                    color: #000;
+                    line-height: 1.35;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                .print-container {
+                    display: flex;
+                    justify-content: center;
+                    width: 100%;
+                }
+                .thermal-wrapper {
+                    width: 76mm;
+                    margin: 0 auto;
+                }
                 .center { text-align: center; }
                 .bold { font-weight: bold; }
-                .title { font-size: 13px; font-weight: bold; margin-bottom: 2px; }
-                .sub { font-size: 10px; color: #333; margin-bottom: 6px; }
-                .divider { border-top: 1px dashed #444; margin: 6px 0; }
-                .info-line { font-size: 10px; margin: 2px 0; }
-                .items-table { width: 100%; font-size: 10px; border-collapse: collapse; margin: 6px 0; }
-                .items-table th { border-bottom: 1px solid #000; text-align: left; padding: 2px 0; font-size: 9px; text-transform: uppercase; }
+                .title { font-size: 14px; font-weight: 800; margin-bottom: 2px; }
+                .sub { font-size: 11px; color: #111; margin-bottom: 5px; }
+                .divider { border-top: 1px dashed #000; margin: 6px 0; }
+                .info-line { font-size: 12px; margin: 2.5px 0; }
+                .items-table { width: 100%; font-size: 12px; border-collapse: collapse; margin: 6px 0; }
+                .items-table th { border-bottom: 1px solid #000; text-align: left; padding: 3px 0; font-size: 11px; text-transform: uppercase; font-weight: 800; }
                 .items-table td { padding: 3px 0; vertical-align: top; }
                 .text-right { text-align: right; }
-                .total-box { font-size: 13px; font-weight: bold; margin: 8px 0 4px 0; }
-                .footer { margin-top: 10px; font-size: 9px; text-align: center; color: #555; }
-                @media screen {
-                    body { background: #f1f5f9; padding: 20px; }
+                .total-box { font-size: 15px; font-weight: 900; margin: 6px 0 3px 0; }
+                .footer { margin-top: 10px; font-size: 11px; text-align: center; color: #222; }
+
+                /* Impressão em bobina térmica de 80mm e visualização em impressoras A4 */
+                @media print {
+                    html, body {
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: #fff !important;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                    .print-container {
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: flex-start !important;
+                        width: 100% !important;
+                        margin: 0 auto !important;
+                        padding: 0 !important;
+                    }
                     .thermal-wrapper {
-                        background: #fff;
-                        padding: 16px;
+                        width: 76mm !important;
+                        max-width: 76mm !important;
+                        margin: 0 auto !important;
+                        padding: 2mm 1mm !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                        page-break-inside: avoid !important;
+                        color: #000 !important;
+                        font-size: 13px !important;
+                        line-height: 1.35 !important;
+                    }
+                    .title { font-size: 15px !important; font-weight: 900 !important; }
+                    .sub { font-size: 11.5px !important; }
+                    .info-line { font-size: 12.5px !important; margin: 3px 0 !important; }
+                    .items-table { font-size: 12.5px !important; }
+                    .items-table th { font-size: 11.5px !important; padding: 3px 0 !important; border-bottom: 1px solid #000 !important; }
+                    .items-table td { font-size: 12.5px !important; padding: 3px 0 !important; }
+                    .total-box { font-size: 16px !important; font-weight: 900 !important; margin: 6px 0 3px 0 !important; }
+                    .footer { font-size: 11px !important; margin-top: 10px !important; }
+                    .divider { border-top: 1px dashed #000 !important; margin: 6px 0 !important; }
+                    .items-table tr { page-break-inside: avoid; }
+                }
+
+                @media screen {
+                    body {
+                        background: #f1f5f9;
+                        padding: 24px 12px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                    }
+                    .no-print {
+                        width: 76mm;
+                        margin-bottom: 14px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                    }
+                    .action-buttons {
+                        display: flex;
+                        gap: 8px;
+                        justify-content: center;
+                    }
+                    .btn-print {
+                        background: #2563eb;
+                        color: #ffffff;
+                        border: 1px solid #1d4ed8;
+                        padding: 8px 14px;
+                        border-radius: 4px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                        font-size: 12px;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        transition: background 0.15s ease;
+                    }
+                    .btn-print:hover { background: #1d4ed8; }
+                    .btn-pdf {
+                        background: #ffffff;
+                        color: #0f172a;
+                        border: 1px solid #cbd5e1;
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        text-decoration: none;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                        font-size: 12px;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        transition: background 0.15s ease;
+                    }
+                    .btn-pdf:hover { background: #f8fafc; }
+                    .btn-close {
+                        background: #ffffff;
+                        color: #475569;
+                        border: 1px solid #cbd5e1;
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                        font-size: 12px;
+                        font-weight: 600;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        transition: all 0.15s ease;
+                    }
+                    .btn-close:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+                    .thermal-wrapper {
+                        background: #ffffff;
+                        padding: 16px 14px;
                         border: 1px dashed #cbd5e1;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-                    }
-                    .no-print { display: flex; justify-content: center; margin-bottom: 16px; gap: 8px; }
-                    .btn-print {
-                        background: #1d4ed8; color: #fff; border: none; padding: 8px 16px;
-                        border-radius: 4px; font-weight: 600; cursor: pointer; font-family: sans-serif;
                     }
                 }
             </style>
         </head>
         <body>
             <div class="no-print">
-                <button onclick="window.print()" class="btn-print">Imprimir Comprovante (80mm)</button>
+                <div class="action-buttons">
+                    <button type="button" onclick="window.print()" class="btn-print" id="btnImprimir">
+                        🖨️ Imprimir (80mm)
+                    </button>
+                    <a href="<?php echo htmlspecialchars($baseUrl . '/operacional/pdv/comprovante/' . $vendaId . '/pdf', ENT_QUOTES, 'UTF-8'); ?>" class="btn-pdf" target="_blank" download="comprovante_venda_<?php echo $vendaId; ?>.pdf">
+                        📄 Baixar PDF
+                    </a>
+                    <button type="button" onclick="fecharComprovante()" class="btn-close" id="btnFecharJanela" title="Fechar comprovante">
+                        ✕ Fechar
+                    </button>
+                </div>
             </div>
-            <div class="thermal-wrapper">
-                <div class="center">
-                    <?php $logoUri = self::getLogoDataUri(); if (!empty($logoUri)): ?>
-                        <img src="<?php echo $logoUri; ?>" alt="Logo" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; margin: 0 auto 6px auto; display: block; border: 1px solid #e2e8f0;">
+
+            <div class="print-container">
+                <div class="thermal-wrapper">
+                    <div class="center">
+                        <?php $logoUri = self::getLogoDataUri(); if (!empty($logoUri)): ?>
+                            <img src="<?php echo $logoUri; ?>" alt="Logo" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; margin: 0 auto 5px auto; display: block; border: 1px solid #e2e8f0;">
+                        <?php endif; ?>
+                        <div class="title">COLÉGIO MONTEIRO LOBATO</div>
+                        <div class="sub">Cantina Escolar • Valores para o Futuro!</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="info-line"><strong>Comprovante de Venda #<?php echo $vendaId; ?></strong></div>
+                    <div class="info-line">Data/Hora: <?php echo htmlspecialchars($dataHora, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="info-line">Atendente: <?php echo htmlspecialchars($operador, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="info-line">Sessão Caixa: #<?php echo (int)($venda['sessao_caixa_id'] ?? 0); ?> (<?php echo htmlspecialchars(ucfirst($venda['sessao_turno'] ?? 'turno'), ENT_QUOTES, 'UTF-8'); ?>)</div>
+
+                    <?php if (!empty($venda['colaborador_nome'])): ?>
+                        <div class="divider"></div>
+                        <div class="info-line"><strong>CLIENTE: COLABORADOR</strong></div>
+                        <div class="info-line">Nome: <?php echo htmlspecialchars($venda['colaborador_nome'], ENT_QUOTES, 'UTF-8'); ?></div>
+                        <div class="info-line">Matrícula: <?php echo htmlspecialchars($venda['colaborador_matricula'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+                        <div class="info-line">Cargo: <?php echo htmlspecialchars($venda['colaborador_cargo'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+                    <?php elseif (!empty($venda['aluno_nome'])): ?>
+                        <div class="divider"></div>
+                        <div class="info-line"><strong>CLIENTE: ALUNO</strong></div>
+                        <div class="info-line">Nome: <?php echo htmlspecialchars($venda['aluno_nome'], ENT_QUOTES, 'UTF-8'); ?></div>
+                        <div class="info-line">Turma: <?php echo htmlspecialchars($venda['aluno_turma'] ?? 'Geral', ENT_QUOTES, 'UTF-8'); ?></div>
+                    <?php else: ?>
+                        <div class="divider"></div>
+                        <div class="info-line">Cliente: Consumidor Final (Venda Balcão)</div>
                     <?php endif; ?>
-                    <div class="title">COLÉGIO MONTEIRO LOBATO</div>
-                    <div class="sub">Cantina Escolar • Valores para o Futuro!</div>
-                </div>
-                <div class="divider"></div>
-                <div class="info-line"><strong>Comprovante de Venda #<?php echo $vendaId; ?></strong></div>
-                <div class="info-line">Data/Hora: <?php echo htmlspecialchars($dataHora, ENT_QUOTES, 'UTF-8'); ?></div>
-                <div class="info-line">Atendente: <?php echo htmlspecialchars($operador, ENT_QUOTES, 'UTF-8'); ?></div>
-                <div class="info-line">Sessão Caixa: #<?php echo (int)($venda['sessao_caixa_id'] ?? 0); ?> (<?php echo htmlspecialchars(ucfirst($venda['sessao_turno'] ?? 'turno'), ENT_QUOTES, 'UTF-8'); ?>)</div>
 
-                <?php if (!empty($venda['colaborador_nome'])): ?>
                     <div class="divider"></div>
-                    <div class="info-line"><strong>CLIENTE: COLABORADOR</strong></div>
-                    <div class="info-line">Nome: <?php echo htmlspecialchars($venda['colaborador_nome'], ENT_QUOTES, 'UTF-8'); ?></div>
-                    <div class="info-line">Matrícula: <?php echo htmlspecialchars($venda['colaborador_matricula'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
-                    <div class="info-line">Cargo: <?php echo htmlspecialchars($venda['colaborador_cargo'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
-                <?php elseif (!empty($venda['aluno_nome'])): ?>
-                    <div class="divider"></div>
-                    <div class="info-line"><strong>CLIENTE: ALUNO</strong></div>
-                    <div class="info-line">Nome: <?php echo htmlspecialchars($venda['aluno_nome'], ENT_QUOTES, 'UTF-8'); ?></div>
-                    <div class="info-line">Turma: <?php echo htmlspecialchars($venda['aluno_turma'] ?? 'Geral', ENT_QUOTES, 'UTF-8'); ?></div>
-                <?php else: ?>
-                    <div class="divider"></div>
-                    <div class="info-line">Cliente: Consumidor Final (Venda Balcão)</div>
-                <?php endif; ?>
-
-                <div class="divider"></div>
-                <table class="items-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 15%;">Qtd</th>
-                            <th style="width: 50%;">Item</th>
-                            <th style="width: 35%;" class="text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($itens as $it): ?>
+                    <table class="items-table">
+                        <thead>
                             <tr>
-                                <td><?php echo (int)($it['quantidade'] ?? 1); ?>x</td>
-                                <td><?php echo htmlspecialchars($it['produto_descricao'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
-                                <td class="text-right">R$ <?php echo number_format((float)($it['subtotal'] ?? 0.0), 2, ',', '.'); ?></td>
+                                <th style="width: 15%;">Qtd</th>
+                                <th style="width: 50%;">Item</th>
+                                <th style="width: 35%;" class="text-right">Total</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <div class="divider"></div>
-                <div class="total-box text-right">
-                    TOTAL: R$ <?php echo number_format($valorTotal, 2, ',', '.'); ?>
-                </div>
-                <div class="info-line text-right">Forma: <?php echo htmlspecialchars($rotuloPagamento, ENT_QUOTES, 'UTF-8'); ?></div>
-                <?php if ($formaPagamento === 'dinheiro' && $valorRecebido > 0): ?>
-                    <div class="info-line text-right">Recebido: R$ <?php echo number_format($valorRecebido, 2, ',', '.'); ?></div>
-                    <div class="info-line text-right"><strong>Troco: R$ <?php echo number_format($troco, 2, ',', '.'); ?></strong></div>
-                <?php endif; ?>
-                <div class="divider"></div>
-                <div class="footer">
-                    Agradecemos a sua preferência!<br>
-                    Colégio Monteiro Lobato
+                        </thead>
+                        <tbody>
+                            <?php foreach ($itens as $it): ?>
+                                <tr>
+                                    <td><?php echo (int)($it['quantidade'] ?? 1); ?>x</td>
+                                    <td><?php echo htmlspecialchars($it['produto_descricao'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td class="text-right">R$ <?php echo number_format((float)($it['subtotal'] ?? 0.0), 2, ',', '.'); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <div class="divider"></div>
+                    <div class="total-box text-right">
+                        TOTAL: R$ <?php echo number_format($valorTotal, 2, ',', '.'); ?>
+                    </div>
+                    <div class="info-line text-right">Forma: <?php echo htmlspecialchars($rotuloPagamento, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <?php if ($formaPagamento === 'dinheiro' && $valorRecebido > 0): ?>
+                        <div class="info-line text-right">Recebido: R$ <?php echo number_format($valorRecebido, 2, ',', '.'); ?></div>
+                        <div class="info-line text-right"><strong>Troco: R$ <?php echo number_format($troco, 2, ',', '.'); ?></strong></div>
+                    <?php endif; ?>
+                    <div class="divider"></div>
+                    <div class="footer">
+                        Agradecemos a sua preferência!<br>
+                        Colégio Monteiro Lobato
+                    </div>
                 </div>
             </div>
+
+            <script>
+                // Função segura de fechar com fallback para Caixa
+                function fecharComprovante() {
+                    window.close();
+                    setTimeout(function() {
+                        if (window.history.length > 1) {
+                            window.history.back();
+                        } else {
+                            window.location.href = '<?php echo $baseUrl; ?>/operacional/caixa';
+                        }
+                    }, 100);
+                }
+
+                // Disparo de impressão automática para iframes e chamadas rápidas
+                window.addEventListener('load', function() {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('autoprint') === '1') {
+                        setTimeout(function() {
+                            window.print();
+                        }, 50);
+                    }
+                });
+
+                // Tecla ESC fecha a janela de comprovante
+                window.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        fecharComprovante();
+                    }
+                });
+            </script>
         </body>
         </html>
         <?php
@@ -1537,6 +1846,8 @@ class PdfService
         $abertoEm = !empty($sessao['aberto_em']) ? date('d/m/Y H:i', strtotime($sessao['aberto_em'])) : '-';
         $fechadoEm = !empty($sessao['fechado_em']) ? date('d/m/Y H:i', strtotime($sessao['fechado_em'])) : 'Em aberto';
         $emissao = date('d/m/Y H:i:s');
+        $turnoRaw = strtolower($sessao['turno'] ?? 'matutino');
+        $baseUrl = defined('BASE_URL') ? BASE_URL : '';
 
         $fundo = (float)($sessao['fundo_troco_inicial'] ?? 0.0);
         $avulso = (float)($sessao['total_dinheiro_avulso'] ?? 0.0);
@@ -1665,12 +1976,48 @@ class PdfService
                 .no-print {
                     background: #f8fafc;
                     border: 1px solid #cbd5e1;
-                    padding: 12px 16px;
+                    padding: 10px 16px;
                     border-radius: 8px;
                     margin-bottom: 20px;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
+                    gap: 12px;
+                    flex-wrap: wrap;
+                }
+                .btn-action {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 7px 14px;
+                    font-size: 12.5px;
+                    font-weight: 600;
+                    text-decoration: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: all 0.15s ease;
+                    font-family: inherit;
+                    line-height: 1.2;
+                }
+                .btn-secondary {
+                    background: #ffffff;
+                    color: #0f172a;
+                    border: 1px solid #cbd5e1;
+                }
+                .btn-secondary:hover {
+                    background: #f1f5f9;
+                    border-color: #94a3b8;
+                    color: #0f172a;
+                }
+                .btn-primary {
+                    background: #1d4ed8;
+                    color: #ffffff;
+                    border: 1px solid #1d4ed8;
+                }
+                .btn-primary:hover {
+                    background: #1e40af;
+                    border-color: #1e40af;
+                    color: #ffffff;
                 }
                 @media print {
                     .no-print { display: none !important; }
@@ -1681,13 +2028,23 @@ class PdfService
         <body>
             <div class="sheet">
                 <div class="no-print">
-                    <div>
-                        <strong>Espelho de Fechamento de Caixa #<?php echo $id; ?></strong>
-                        <span style="color: #64748b; font-size: 12px; margin-left: 8px;">Pronto para impressão / arquivamento</span>
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>" class="btn-action btn-secondary" id="btnVoltarCaixa" title="Retornar à tela de Caixa">
+                            ← Voltar ao Caixa
+                        </a>
+                        <div>
+                            <strong style="color: #0f172a; font-size: 13px;">Espelho de Fechamento de Caixa #<?php echo $id; ?></strong>
+                            <span style="color: #64748b; font-size: 12px; margin-left: 6px;">Pronto para impressão / arquivamento</span>
+                        </div>
                     </div>
-                    <button type="button" onclick="window.print()" style="padding: 6px 14px; font-weight: 600; cursor: pointer; background: #1d4ed8; color: #fff; border: none; border-radius: 4px;">
-                        Imprimir Documento
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $id; ?>/pdf" target="_blank" download="fechamento_caixa_<?php echo $id; ?>.pdf" class="btn-action btn-secondary" id="btnBaixarEspelhoPdf">
+                            📄 Baixar PDF
+                        </a>
+                        <button type="button" onclick="window.print()" class="btn-action btn-primary" id="btnImprimirEspelho">
+                            🖨️ Imprimir Documento
+                        </button>
+                    </div>
                 </div>
 
                 <table class="header-table">
@@ -1809,6 +2166,15 @@ class PdfService
                     </tr>
                 </table>
             </div>
+
+            <script>
+                // Tecla ESC retorna ao Caixa
+                window.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        window.location.href = '<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>';
+                    }
+                });
+            </script>
         </body>
         </html>
         <?php
@@ -2194,104 +2560,259 @@ class PdfService
         $saldoAnterior = (float)($dados['saldo_anterior'] ?? 0.0);
         $saldoResultante = (float)($dados['saldo_resultante'] ?? 0.0);
         $dependentes = $dados['dependentes'] ?? [];
+        $baseUrl = defined('BASE_URL') ? BASE_URL : '';
         ?>
         <!DOCTYPE html>
         <html lang="pt-BR">
         <head>
             <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Comprovante de Recarga #<?php echo $transacaoId; ?> — Cantina Web</title>
             <style>
-                @page { size: 80mm auto; margin: 0; }
-                body {
-                    margin: 0;
-                    padding: 6mm 4mm;
-                    font-family: 'Courier New', Courier, monospace, sans-serif;
-                    font-size: 11px;
-                    color: #000;
-                    background: #fff;
-                    line-height: 1.35;
+                @page {
+                    size: auto;
+                    margin: 0 auto;
                 }
-                .thermal-wrapper { width: 72mm; margin: 0 auto; }
+                * {
+                    box-sizing: border-box;
+                    margin: 0;
+                    padding: 0;
+                }
+                body {
+                    font-family: 'Courier New', Courier, monospace, monospace;
+                    font-size: 12.5px;
+                    color: #000;
+                    line-height: 1.35;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                .print-container {
+                    display: flex;
+                    justify-content: center;
+                    width: 100%;
+                }
+                .thermal-wrapper {
+                    width: 76mm;
+                    margin: 0 auto;
+                }
                 .center { text-align: center; }
                 .bold { font-weight: bold; }
-                .title { font-size: 13px; font-weight: bold; margin-bottom: 2px; }
-                .sub { font-size: 10px; color: #333; margin-bottom: 6px; }
-                .divider { border-top: 1px dashed #444; margin: 6px 0; }
-                .info-line { font-size: 10px; margin: 2px 0; }
+                .title { font-size: 14px; font-weight: 800; margin-bottom: 2px; }
+                .sub { font-size: 11px; color: #111; margin-bottom: 5px; }
+                .divider { border-top: 1px dashed #000; margin: 6px 0; }
+                .info-line { font-size: 12px; margin: 2.5px 0; }
                 .text-right { text-align: right; }
-                .total-box { font-size: 14px; font-weight: bold; margin: 8px 0; text-align: center; background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px; }
-                .footer { margin-top: 10px; font-size: 9px; text-align: center; color: #555; }
-                @media screen {
-                    body { background: #f1f5f9; padding: 20px; }
+                .total-box { font-size: 14px; font-weight: 900; margin: 6px 0; text-align: center; background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px; }
+                .footer { margin-top: 10px; font-size: 11px; text-align: center; color: #222; }
+
+                @media print {
+                    html, body {
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: #fff !important;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                    .print-container {
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: flex-start !important;
+                        width: 100% !important;
+                        margin: 0 auto !important;
+                        padding: 0 !important;
+                    }
                     .thermal-wrapper {
-                        background: #fff;
-                        padding: 16px;
+                        width: 76mm !important;
+                        max-width: 76mm !important;
+                        margin: 0 auto !important;
+                        padding: 2mm 1mm !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                        page-break-inside: avoid !important;
+                        color: #000 !important;
+                        font-size: 13px !important;
+                        line-height: 1.35 !important;
+                    }
+                    .title { font-size: 15px !important; font-weight: 900 !important; }
+                    .sub { font-size: 11.5px !important; }
+                    .info-line { font-size: 12.5px !important; margin: 3px 0 !important; }
+                    .total-box { font-size: 15px !important; font-weight: 900 !important; background: #fff !important; border: 1px solid #000 !important; }
+                    .footer { font-size: 11px !important; margin-top: 10px !important; }
+                    .divider { border-top: 1px dashed #000 !important; margin: 6px 0 !important; }
+                }
+
+                @media screen {
+                    body {
+                        background: #f1f5f9;
+                        padding: 24px 12px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                    }
+                    .no-print {
+                        width: 76mm;
+                        margin-bottom: 14px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                    }
+                    .action-buttons {
+                        display: flex;
+                        gap: 8px;
+                        justify-content: center;
+                    }
+                    .btn-print {
+                        background: #2563eb;
+                        color: #ffffff;
+                        border: 1px solid #1d4ed8;
+                        padding: 8px 14px;
+                        border-radius: 4px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                        font-size: 12px;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        transition: background 0.15s ease;
+                    }
+                    .btn-print:hover { background: #1d4ed8; }
+                    .btn-pdf {
+                        background: #ffffff;
+                        color: #0f172a;
+                        border: 1px solid #cbd5e1;
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        text-decoration: none;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                        font-size: 12px;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        transition: background 0.15s ease;
+                    }
+                    .btn-pdf:hover { background: #f8fafc; }
+                    .btn-close {
+                        background: #ffffff;
+                        color: #475569;
+                        border: 1px solid #cbd5e1;
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                        font-size: 12px;
+                        font-weight: 600;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        transition: all 0.15s ease;
+                    }
+                    .btn-close:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+                    .thermal-wrapper {
+                        background: #ffffff;
+                        padding: 16px 14px;
                         border: 1px dashed #cbd5e1;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-                    }
-                    .no-print { display: flex; justify-content: center; margin-bottom: 16px; gap: 8px; }
-                    .btn-print {
-                        background: #1d4ed8; color: #fff; border: none; padding: 8px 16px;
-                        border-radius: 4px; font-weight: 600; cursor: pointer; font-family: sans-serif;
                     }
                 }
             </style>
         </head>
         <body>
             <div class="no-print">
-                <button onclick="window.print()" class="btn-print">Imprimir Comprovante (80mm)</button>
+                <div class="action-buttons">
+                    <button type="button" onclick="window.print()" class="btn-print" id="btnImprimir">
+                        🖨️ Imprimir (80mm)
+                    </button>
+                    <a href="<?php echo htmlspecialchars($baseUrl . '/operacional/caixa/comprovante-recarga/' . $transacaoId . '/pdf', ENT_QUOTES, 'UTF-8'); ?>" class="btn-pdf" target="_blank" download="comprovante_recarga_<?php echo $transacaoId; ?>.pdf">
+                        📄 Baixar PDF
+                    </a>
+                    <button type="button" onclick="fecharComprovante()" class="btn-close" id="btnFecharJanela" title="Fechar comprovante">
+                        ✕ Fechar
+                    </button>
+                </div>
             </div>
-            <div class="thermal-wrapper">
-                <div class="center">
-                    <?php $logoUri = self::getLogoDataUri(); if (!empty($logoUri)): ?>
-                        <img src="<?php echo $logoUri; ?>" alt="Logo" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; margin: 0 auto 6px auto; display: block; border: 1px solid #e2e8f0;">
+
+            <div class="print-container">
+                <div class="thermal-wrapper">
+                    <div class="center">
+                        <?php $logoUri = self::getLogoDataUri(); if (!empty($logoUri)): ?>
+                            <img src="<?php echo $logoUri; ?>" alt="Logo" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; margin: 0 auto 5px auto; display: block; border: 1px solid #e2e8f0;">
+                        <?php endif; ?>
+                        <div class="title">COLÉGIO MONTEIRO LOBATO</div>
+                        <div class="sub">Cantina Escolar • Valores para o Futuro!</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="center bold" style="font-size: 12px; margin: 3px 0;">COMPROVANTE DE RECARGA</div>
+                    <div class="center" style="font-size: 10px; color: #222;">PAGAMENTO EM DINHEIRO FÍSICO</div>
+                    <div class="divider"></div>
+                    <div class="info-line">Transação: #<?php echo $transacaoId; ?></div>
+                    <div class="info-line">Sessão Caixa: #<?php echo $sessaoId; ?></div>
+                    <div class="info-line">Data/Hora: <?php echo htmlspecialchars($dataHora, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="info-line">Atendente: <?php echo htmlspecialchars($operador, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="divider"></div>
+                    <div class="info-line"><strong>TITULAR DA CARTEIRA:</strong></div>
+                    <div class="info-line">Nome: <?php echo htmlspecialchars($responsavel, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="info-line">CPF: <?php echo htmlspecialchars($cpfMascarado, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <?php if (!empty($dependentes)): ?>
+                        <div class="info-line" style="color: #222; font-size: 10.5px;">Dependentes: <?php 
+                            $nomesAlunos = array_map(fn($a) => $a['nome'] . (!empty($a['nome_turma']) ? ' (' . $a['nome_turma'] . ')' : ''), $dependentes);
+                            echo htmlspecialchars(implode(', ', $nomesAlunos), ENT_QUOTES, 'UTF-8'); 
+                        ?></div>
                     <?php endif; ?>
-                    <div class="title">COLÉGIO MONTEIRO LOBATO</div>
-                    <div class="sub">Cantina Escolar • Valores para o Futuro!</div>
-                </div>
-                <div class="divider"></div>
-                <div class="center bold" style="font-size: 12px; margin: 4px 0;">COMPROVANTE DE RECARGA</div>
-                <div class="center" style="font-size: 10px; color: #333;">PAGAMENTO EM DINHEIRO FÍSICO</div>
-                <div class="divider"></div>
-                <div class="info-line">Transação: #<?php echo $transacaoId; ?></div>
-                <div class="info-line">Sessão Caixa: #<?php echo $sessaoId; ?></div>
-                <div class="info-line">Data/Hora: <?php echo htmlspecialchars($dataHora, ENT_QUOTES, 'UTF-8'); ?></div>
-                <div class="info-line">Atendente: <?php echo htmlspecialchars($operador, ENT_QUOTES, 'UTF-8'); ?></div>
-                <div class="divider"></div>
-                <div class="info-line"><strong>TITULAR DA CARTEIRA:</strong></div>
-                <div class="info-line">Nome: <?php echo htmlspecialchars($responsavel, ENT_QUOTES, 'UTF-8'); ?></div>
-                <div class="info-line">CPF: <?php echo htmlspecialchars($cpfMascarado, ENT_QUOTES, 'UTF-8'); ?></div>
-                <?php if (!empty($dependentes)): ?>
-                    <div class="info-line" style="color: #444; font-size: 9px;">Dependentes: <?php 
-                        $nomesAlunos = array_map(fn($a) => $a['nome'] . (!empty($a['nome_turma']) ? ' (' . $a['nome_turma'] . ')' : ''), $dependentes);
-                        echo htmlspecialchars(implode(', ', $nomesAlunos), ENT_QUOTES, 'UTF-8'); 
-                    ?></div>
-                <?php endif; ?>
-                <div class="divider"></div>
-                <div class="total-box">
-                    VALOR RECEBIDO: R$ <?php echo number_format($valor, 2, ',', '.'); ?>
-                </div>
-                <table style="width: 100%; font-size: 10px; margin-top: 4px;">
-                    <tr>
-                        <td>Saldo Anterior:</td>
-                        <td class="text-right">R$ <?php echo number_format($saldoAnterior, 2, ',', '.'); ?></td>
-                    </tr>
-                    <tr style="font-weight: bold; font-size: 11px;">
-                        <td>NOVO SALDO DISPONÍVEL:</td>
-                        <td class="text-right">R$ <?php echo number_format($saldoResultante, 2, ',', '.'); ?></td>
-                    </tr>
-                </table>
-                <div class="divider"></div>
-                <div class="footer">
-                    Crédito disponibilizado instantaneamente.<br>
-                    Consulte o extrato em tempo real no Portal da Família.<br>
-                    Obrigado pela confiança!
+                    <div class="divider"></div>
+                    <div class="total-box">
+                        VALOR RECEBIDO: R$ <?php echo number_format($valor, 2, ',', '.'); ?>
+                    </div>
+                    <table style="width: 100%; font-size: 12px; margin-top: 4px;">
+                        <tr>
+                            <td>Saldo Anterior:</td>
+                            <td class="text-right">R$ <?php echo number_format($saldoAnterior, 2, ',', '.'); ?></td>
+                        </tr>
+                        <tr style="font-weight: bold; font-size: 12.5px;">
+                            <td>NOVO SALDO DISPONÍVEL:</td>
+                            <td class="text-right">R$ <?php echo number_format($saldoResultante, 2, ',', '.'); ?></td>
+                        </tr>
+                    </table>
+                    <div class="divider"></div>
+                    <div class="footer">
+                        Crédito disponibilizado instantaneamente.<br>
+                        Consulte o extrato em tempo real no Portal da Família.<br>
+                        Obrigado pela confiança!
+                    </div>
                 </div>
             </div>
+
             <script>
+                // Função segura de fechar com fallback para Caixa
+                function fecharComprovante() {
+                    window.close();
+                    setTimeout(function() {
+                        if (window.history.length > 1) {
+                            window.history.back();
+                        } else {
+                            window.location.href = '<?php echo $baseUrl; ?>/operacional/caixa';
+                        }
+                    }, 100);
+                }
+
+                // Disparo de impressão automática para iframes e chamadas rápidas
                 window.addEventListener('load', function() {
-                    if (window.location.search.includes('autoprint=1')) {
-                        setTimeout(function() { window.print(); }, 400);
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('autoprint') === '1') {
+                        setTimeout(function() {
+                            window.print();
+                        }, 50);
+                    }
+                });
+
+                // Tecla ESC fecha a janela de comprovante
+                window.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        fecharComprovante();
                     }
                 });
             </script>

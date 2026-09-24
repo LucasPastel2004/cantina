@@ -79,6 +79,26 @@ class Aluno extends Model
     }
 
     /**
+     * Alias para busca rápida de alunos com turma e responsável (utilizado pelo PDV)
+     *
+     * @param array $filtros
+     * @param int $limite
+     * @return array
+     */
+    public static function listarComTurma(array $filtros = [], int $limite = 10): array
+    {
+        if (isset($filtros['status']) && $filtros['status'] === 'ativo') {
+            $filtros['status'] = 'ativos';
+        }
+        $resultado = self::listarTodos($filtros);
+        if ($limite > 0 && count($resultado) > $limite) {
+            return array_slice($resultado, 0, $limite);
+        }
+        return $resultado;
+    }
+
+
+    /**
      * Busca um aluno pelo ID trazendo dados completos
      */
     public static function buscarPorId(int $id, bool $incluirInativos = true): ?array

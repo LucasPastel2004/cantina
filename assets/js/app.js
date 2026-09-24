@@ -17,15 +17,18 @@ document.addEventListener('DOMContentLoaded', function () {
   const moneyInputs = document.querySelectorAll('.input-money');
   moneyInputs.forEach(function (input) {
     input.addEventListener('input', function (e) {
-      let value = e.target.value.replace(/\D/g, '');
-      if (value === '') {
+      let digits = e.target.value.replace(/\D/g, '');
+      if (digits === '') {
         e.target.value = '';
-        return;
+      } else {
+        let value = (parseInt(digits, 10) / 100).toFixed(2) + '';
+        value = value.replace('.', ',');
+        value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+        e.target.value = value;
       }
-      value = (parseInt(value, 10) / 100).toFixed(2) + '';
-      value = value.replace('.', ',');
-      value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-      e.target.value = value;
+      // Notifica listeners que o valor foi formatado
+      input.dispatchEvent(new CustomEvent('moneychange', { bubbles: true }));
+      input.dispatchEvent(new CustomEvent('moneyinput', { bubbles: true }));
     });
   });
 
@@ -175,6 +178,38 @@ function formatarMoeda(valor) {
     currency: 'BRL'
   }).format(valor || 0);
 }
+
+/**
+ * Converte com segurança uma string monetária (formatada ou bruta com dígitos) para float
+ * Compatível com centavos mascarados ("200,00", "20,000", "1.250,50", "200")
+ * @param {string|number} valor 
+ * @returns {number}
+ */
+function converterMoedaParaFloat(valor) {
+  if (typeof valor === 'number') return isNaN(valor) ? 0 : valor;
+  if (!valor) return 0;
+  const str = String(valor).trim();
+  if (!str) return 0;
+
+  if (str.indexOf(',') !== -1) {
+    const partes = str.split(',');
+    if (partes.length === 2 && partes[1].length <= 2) {
+      const num = parseFloat(partes[0].replace(/\./g, '') + '.' + partes[1]);
+      return isNaN(num) ? 0 : num;
+    }
+    const digits = str.replace(/\D/g, '');
+    return digits ? (parseInt(digits, 10) / 100) : 0;
+  }
+
+  if (/^\d+(\.\d{1,2})$/.test(str)) {
+    return parseFloat(str) || 0;
+  }
+
+  const digits = str.replace(/\D/g, '');
+  if (!digits) return 0;
+  return parseInt(digits, 10) / 100;
+}
+
 
 /**
  * Alterna visibilidade da barra lateral (Sidebar) em dispositivos móveis

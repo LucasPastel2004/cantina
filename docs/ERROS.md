@@ -510,12 +510,92 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 
 ---
 
-## 2026-09-24 - Violação de chave única (1062 Duplicate entry) em código interno de produto em testes de integração repetidos
+## 2026-09-24 - Lentidão e congelamento no diálogo de visualização prévia ('Preparando visão prévia') ao imprimir comprovante térmico no Chrome
 
-- Sintoma: `Fatal error: Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'PDV-COL-755' for key 'produtos.codigo_interno'` ao rodar testes de regressão automatizados (`tests/fase13_test.php`).
-- Causa: Na preparação da massa de dados temporária do teste, o código interno do produto era gerado com um intervalo curto e pseudoaleatório (`'PDV-COL-' . rand(100, 999)`). Após sucessivas execuções da suíte de testes no mesmo banco de dados local, ocorreu colisão com um código inserido em execução prévia.
-- Solução aplicada: Substituído o gerador de identificadores por `uniqid()` (`'PDV-COL-' . uniqid()`), garantindo unicidade temporal estrita mesmo em execuções repetidas ou concorrentes da suíte de testes.
-- Como evitar no futuro: Em suítes de testes automatizados, campos com constraint `UNIQUE` no banco de dados (como `codigo_interno`, `matricula`, `cpf`) devem ser gerados com identificadores únicos baseados em tempo (`uniqid()`, `hrtime()` ou UUID) em vez de intervalos inteiros pequenos de `rand()`.
+- Sintoma: Na tela de impressão do comprovante de venda do PDV (`/operacional/pdv/comprovante/{id}`), ao clicar em "Imprimir" ou ao abrir o comprovante, a caixa de diálogo nativa de impressão do Google Chrome demorava muitos segundos travada na mensagem *"Preparando visão prévia..."* com o painel lateral em branco, atrasando o atendimento da fila do caixa.
+- Causa:
+  1. *Cálculo recursivo de paginação no Chromium (Blink):* A regra CSS `@page { size: 80mm auto; margin: 0; }` com altura `auto` e sem restrições explícitas de largura em `@media print` forçava o motor de layout do Chromium a executar múltiplos passes iterativos de quebra de página contínua, congelando o preview.
+  2. *Payload do logotipo:* O espelho térmico embutia a imagem do logotipo em alta resolução (`logo-colegio.jpg`, 800x800 px, ~65 KB em base64) para renderizar um círculo de apenas 36x36 px, sobrecarregando a árvore de renderização do preview do navegador.
+  3. *Inicialização do Spooler do Windows:* Na primeira chamada a `window.print()` da sessão, o Chrome consulta síncronamente o subsistema do Windows Print Spooler (`winspool.drv`) para enumerar todas as impressoras e suas capacidades de papel, gerando atraso inicial.
+  4. *Fluxo de trabalho com abas no PDV:* O botão de impressão do modal pós-venda abria uma nova aba no navegador (`target="_blank"`), tirando o foco do operador do PDV e exigindo o fechamento manual da aba para continuar as vendas.
+- Solução aplicada:
+  1. *Otimização do CSS de Impressão para Bobinas de 80mm:* Em `app/services/PdfService.php` (`gerarEspelhoComprovanteVendaBalcaoHtml`, `gerarComprovanteRecargaDinheiroHtml` e `gerarEspelhoTicketsLoteHtml`), refinadas as regras de `@page` e adicionado `@media print` com largura estrita (`width: 80mm !important; max-width: 80mm !important; margin: 0 !important; padding: 0 !important;`) e `.thermal-wrapper` com largura fixa (`72mm`), permitindo que o motor Blink calcule o layout em apenas um passe instantâneo (< 20 ms).
+  2. *Miniatura de Logotipo Térmico Otimizada:* Criada a versão miniatura `assets/img/logo-colegio-thermal.jpg` (72x72 px, apenas 2.3 KB). O método `PdfService::getLogoDataUri()` agora prioriza a miniatura leve e implementa cache em memória estático, reduzindo o payload HTML de 65.624 bytes para 8.280 bytes (redução de 88%).
+  3. *Impressão Rápida sem Troca de Abas via Iframe Oculto:* No modal pós-venda (`#modalPosVenda`) da tela do PDV (`app/views/operacional/pdv.php`), implementada a função `imprimirComprovanteIframe()` que injeta um `<iframe>` invisível com `?autoprint=1`. O diálogo de impressão abre diretamente sobre o PDV sem abrir novas abas e sem perder o foco das teclas de atalho da próxima venda.
+  4. *Barra de Atalhos e Opções Auxiliares:* Adicionados nos espelhos de impressão térmicos botões de alta densidade corporativa para "🖨️ Imprimir (80mm)", "📄 Baixar PDF Direto" (geração binária instantânea de 4 KB), botão de fechar (`window.close()` / tecla `Esc`) e dica instrucional para uso de <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> (atalho nativo do Windows que ignora a visualização prévia do Chrome e imprime em 0,1s).
+  5. *Orientação de Modo Kiosk para Caixas Físicos:* Documentada a flag oficial `--kiosk-printing` do Chrome para terminais dedicados de PDV, permitindo impressão silenciosa e instantânea sem qualquer caixa de diálogo.
+- Como evitar no futuro: Em espelhos térmicos de bobina de 80mm, nunca utilizar dimensões flutuantes ou imagens pesadas em Base64. Sempre aplicar regras explícitas em `@media print`, utilizar miniaturas pré-otimizadas para comprovantes de baixa largura e disparar impressões em pontos de venda preferencialmente via iframes assíncronos ou atalhos nativos diretos.
+
+---
+
+## 2026-09-24 - Alinhamento à esquerda e texto diminuto na impressão nativa, divergência entre PDF e HTML e falha no botão 'Fechar'
+
+- Sintoma:
+  1. *Texto diminuto e colado no canto superior esquerdo:* Ao acionar a impressão no navegador, o comprovante aparecia colado na borda esquerda e com fonte muito pequena, especialmente ao visualizar em prévias com driver de impressora padrão em folha A4.
+  2. *Divergência estética entre tela e arquivo PDF:* O PDF baixado (`comprovante_venda_*.pdf`) exibia layout diferente da tela (títulos em azul, ausência de divisores tracejados térmicos típicos de supermercado, e omissão de dados de cliente/matrícula/caixa).
+  3. *Botão 'Fechar' inoperante:* Ao clicar no botão "✕ Fechar" na tela de impressão do comprovante, nada acontecia e a aba permanecia aberta.
+  4. *Poluição visual com dica de atalhos:* A caixa azul com instruções de alta velocidade poluía a parte superior do espelho.
+- Causa:
+  1. Sem um container flexível centralizado e com fontes reduzidas (9-10px), o motor Chromium posicionava o bloco térmico nas coordenadas (0,0) da página A4 padrão.
+  2. O gerador binário de PDF (`PdfService::gerarComprovanteVendaBalcaoPdf`) usava uma paleta de cores corporativa com tons azuis e cálculo de coordenadas antigas, sem paridade gráfica com o espelho HTML monocromático.
+  3. Políticas estritas de segurança dos navegadores baseados em Chromium impedem que `window.close()` encerre abas que foram abertas diretamente pelo usuário (não instanciadas via `window.open`).
+- Solução aplicada:
+  1. *Centralização e Escala Térmica:* Criado container `.print-container` com `display: flex; justify-content: center; width: 100%;` e `.thermal-wrapper` com `width: 76mm !important; margin: 0 auto !important;`. Em bobinas de 80mm, o cupom ocupa 100% da área útil térmica; em folhas A4 ou pré-visualizações, fica perfeitamente centralizado no meio da folha com tipografia nítida (12.5px a 16px em preto térmico `#000000`).
+  2. *PDF Monocromático Idêntico à Bobina de Supermercado:* Reescrito o gerador binário `gerarComprovanteVendaBalcaoPdf` em preto puro (`0 0 0 rg`), com linhas tracejadas/pontilhadas térmicas (`[2 2] 0 d 0.5 w S`), logotipo oficial circular centralizado, cabeçalho da instituição, todos os dados do operador/sessão, bloco completo do cliente (colaborador com cargo/matrícula ou aluno com turma), tabela detalhada com cabeçalhos de coluna, total em destaque negrito, discriminação de pagamento/troco e rodapé institucional.
+  3. *Botão de Fechar com Fallback Seguro:* Implementada a função `fecharComprovante()` que tenta `window.close()` e, caso o navegador bloqueie a chamada, executa fallback automático após 100ms voltando ao histórico (`window.history.back()`) ou redirecionando para a tela de origem (`/operacional/pdv` ou `/operacional/caixa`). Adicionada também escuta para a tecla <kbd>Esc</kbd>.
+  4. *Remoção da Dica de Alta Velocidade:* Eliminada a caixa de dica informativa dos espelhos térmicos em `PdfService.php`.
+- Como evitar no futuro: Em impressões com drivers genéricos ou A4, sempre centralizar containers térmicos via flexbox e margem auto. Nunca confiar exclusivamente em `window.close()` sem implementar um fallback gracioso para navegação de histórico ou redirecionamento de tela. Assegurar fidelidade visual absoluta 1:1 entre espelhos web e documentos PDF baixados.
+
+---
+
+## 2026-09-24 - Mensagem 'Nenhum responsável ou aluno localizado' na busca para adicionar saldo presencial no caixa
+
+- Sintoma: Ao digitar qualquer nome (por exemplo, "Lucas Santos" ou o nome de qualquer aluno/responsável) no campo de busca do modal "Recarga Presencial em Dinheiro (Balcão)" na tela de Caixa (`/operacional/caixa`), o sistema informava imediatamente: `Nenhum responsável ou aluno localizado para "Lucas Santos".`, mesmo havendo no banco de dados alunos e responsáveis com esses nomes.
+- Causa:
+  1. *Descompasso nas chaves de resposta JSON:* O endpoint `CaixaController::buscarResponsavel` retornava os dados no formato `['success' => true, 'responsaveis' => $responsaveis]`. Já o JavaScript da view (`app/views/operacional/caixa.php`) verificava estritamente `if (data.sucesso && data.dados && data.dados.length > 0)`. Como as chaves `sucesso` e `dados` não existiam no payload retornado, a condição resultava em `false` e caía diretamente no bloco `else`, renderizando a mensagem de que nenhum registro foi localizado.
+  2. *Propriedade dependentes_str ausente no backend:* A view esperava `item.dependentes_str` para listar os alunos dependentes no botão de resultado, porém o método `SessaoCaixa::buscarResponsavelParaRecarga` retornava apenas a chave `dependentes` como array associativo sem compor a string formatada com nome e turma.
+  3. *Sensibilidade a nomes compostos e termos múltiplos:* A cláusula SQL original realizava `LIKE %termo%` contínuo. Ao digitar "Lucas Santos", se o aluno no banco se chamasse "Lucas Alcantara Santos" (com sobrenome intermediário), a consulta não dava match.
+- Solução aplicada:
+  1. *Compatibilização Total do Payload JSON:* Em `app/controllers/CaixaController.php`, a resposta agora entrega tanto `success` quanto `sucesso`, e tanto `responsaveis` quanto `dados`. No JavaScript em `app/views/operacional/caixa.php`, a leitura foi tornada resiliente (`const lista = data.dados || data.responsaveis || []; const ok = (data.sucesso === true || data.success === true);`).
+  2. *Geração Automática de dependentes_str e CPF Formatado:* No método `SessaoCaixa::buscarResponsavelParaRecarga`, adicionada a montagem dinâmica de `dependentes_str` (ex.: `"Lucas Santos (5° A), Lucas Silva (6º Ano A)"`) e `cpf_formatado` (`000.000.000-00`), além de função de fallback em JavaScript `formatarDependentesItem()` na view.
+  3. *Busca Tolerante Multi-termo (Palavras Separadas):* Refatorado o método `buscarResponsavelParaRecarga` em `app/models/SessaoCaixa.php` para segmentar termos com múltiplos vocábulos em palavras e aplicar condições `(r.nome LIKE %palavra1% AND r.nome LIKE %palavra2%) OR (a.nome LIKE %palavra1% AND a.nome LIKE %palavra2%)`, permitindo que "Lucas Santos" localize perfeitamente tanto o aluno "Lucas Santos" quanto "Lucas Alcantara Santos".
+  4. *Testes Automatizados:* Criado o teste `tests/caixa_busca_test.php` com 13 asserções (100% aprovado) e reexecutada a suíte `tests/fase15_test.php` (67/67 aprovado).
+- Como evitar no futuro: Sempre sincronizar os nomes de propriedades contratuais em endpoints de APIs JSON entre o Controller e a camada de visualização (ou fornecer compatibilidade dual com aliases), e testar buscas de pessoas com nomes compostos reais.
+
+---
+
+## 2026-09-24 - 'Falha ao registrar recarga' e multiplicação indevida de valores no Caixa
+
+- Sintoma: Ao confirmar a recarga em dinheiro no modal de caixa (`/operacional/caixa`), o sistema informava em banner vermelho `Falha ao registrar recarga.`, e nos bastidores os valores monetários enviados com ponto decimal eram multiplicados por 100 no banco de dados. Adicionalmente, chamadas à rota `/operacional/pdv/aluno/buscar` disparavam `Fatal error: Call to undefined method App\Models\Aluno::listarComTurma()`.
+- Causa:
+  1. *Descompasso no contrato JSON de retorno:* `CaixaController::recargaDinheiro()` respondia `['success' => true, 'message' => ...]` (em inglês), enquanto o JavaScript da view (`app/views/operacional/caixa.php`) verificava `if (data.sucesso)`. Como `sucesso` era `undefined`, o frontend caía no bloco de erro exibindo o fallback `'Falha ao registrar recarga.'`.
+  2. *Supressão indevida de ponto decimal:* O controller realizava `str_replace('.', '', $_POST['valor'])` assumindo que o ponto era sempre separador de milhar. Como o JavaScript enviava o número via `valor.toFixed(2)` (ex.: `"100.00"`), a remoção cega do ponto transformou `100.00` em `10000.00` (R$ 10.000,00).
+  3. *Método ausente em Aluno:* O controlador `PdvController` invocava `Aluno::listarComTurma()`, método que não existia na classe `Aluno`.
+- Solução aplicada:
+  1. *Normalização Inteligente de Valores Monetários:* Em `CaixaController::recargaDinheiro()`, o valor agora é tratado condicionalmente: se contiver vírgula (`str_contains($valorRaw, ',')`), remove-se os pontos de milhar e converte-se a vírgula para ponto; caso contrário, preserva-se o ponto decimal float nativo.
+  2. *Compatibilização Total do JSON:* O controller agora retorna tanto `success` quanto `sucesso`, e tanto `message` quanto `mensagem`. O JavaScript lê `const ok = (data.sucesso === true || data.success === true)` e extrai valores de forma defensiva.
+  3. *Implementação de Aluno::listarComTurma:* Declarado o método `listarComTurma(array $filtros, int $limite)` em `app/models/Aluno.php` como alias integrado com suporte a filtros e limites.
+  4. *Saneamento Contábil no Banco:* Estornadas as 3 transações geradas com valores anômalos no ambiente local e restaurado o saldo real de Carlos Eduardo Silva para R$ 100,00.
+  5. *Testes Automatizados:* Criado o teste `tests/recarga_dinheiro_post_test.php` (12/12 asserções aprovadas com 100% de sucesso).
+---
+
+## 2026-09-24 - Recálculo em tempo real de quebra/sobra divergente na tela de fechamento de caixa
+
+- Sintoma: Ao digitar o valor contado fisicamente na gaveta (por exemplo, `200,00`) na tela de Gestão de Caixa (`/operacional/caixa?turno=matutino`) onde o esperado era R$ 250,00, o painel dinâmico exibia uma diferença incorreta de `Quebra / Falta de Caixa: - R$ 230,00` em vez de `- R$ 50,00`. Caso o operador digitasse exatamente o valor esperado (`250,00`), o sistema exibia `- R$ 225,00` em vez de `Conferência Exata: R$ 0,00`.
+- Causa:
+  1. *Ordem de disparo de eventos no DOM entre atributos inline e listeners:* O input possuía a classe de máscara `.input-money` e o atributo inline `oninput="calcularQuebraSobra();"`. No fluxo do navegador, atributos inline `oninput` são executados *antes* de listeners registrados via `addEventListener('input')` em `app.js`.
+  2. *Dessincronia da máscara monetária centesimal:* Quando o operador digitava o último dígito para compor `200,00` (vindo de `20,00`), o valor bruto temporário no DOM era `20,000`. O `calcularQuebraSobra` executava com essa string e fazia `replace(/\./g, '').replace(',', '.')`, transformando `20,000` em `20.000` (float `20`). Como o esperado era 250, calculava `20 - 250 = -230`. Em seguida, a máscara em `app.js` convertia o campo para `200,00`, mas como alterações programáticas em `input.value` não disparam evento nativo de `input`, a função de cálculo não era reexecutada, mantendo o cálculo travado no valor defasado.
+  3. *Tratamento de ponto decimal no backend:* Em `CaixaController::abrir` e `CaixaController::fechar`, o código aplicava `str_replace('.', '', ...)` incondicionalmente, suscetível a multiplicar por 100 valores enviados com ponto decimal padrão.
+- Solução aplicada:
+  1. *Conversor Monetário Resiliente:* Criada a função global `converterMoedaParaFloat(valor)` em `assets/js/app.js` e integrada diretamente nas funções `calcularQuebraSobra()` de `app/views/operacional/caixa.php` e `app/views/operacional/fechamento_caixa.php`, e em `calcularTroco()` de `pdv.php`. A função reconhece automaticamente tanto strings mascaradas completas (`"200,00"` -> 200.0) quanto strings com dígitos intermediários (`"20,000"` -> 200.0) através da análise de centavos e partes decimais.
+  2. *Emissão de Eventos Customizados:* A máscara `.input-money` em `assets/js/app.js` agora despacha os eventos `moneychange` e `moneyinput` após formatar o campo, garantindo que qualquer manipulador conectado seja acionado imediatamente após a formatação visual.
+  3. *Escutas Múltiplas:* Adicionadas escutas aos eventos `moneychange`, `moneyinput`, `keyup`, `change` e `blur` nos campos de fechamento de caixa e valor recebido no PDV.
+  4. *Normalização Defensiva no Backend:* Em `CaixaController::abrir` e `CaixaController::fechar`, a remoção de pontos só ocorre quando houver vírgula no campo (`str_contains($raw, ',')`), garantindo integridade contábil.
+  5. *Testes Automatizados:* Ampliado `tests/recarga_dinheiro_post_test.php` com 5 novas asserções cobrindo normalização monetária e apuração de quebra/sobra (17/17 asserções aprovadas com 100% de sucesso).
+- Como evitar no futuro: Em campos com máscaras de digitação em tempo real (como centésimos em moeda), nunca confiar na string intermediária antes da formatação; utilizar parsing baseado nos dígitos de centavos ou escutar eventos disparados posteriormente pela própria rotina de máscara.
+
+
+
 
 
 

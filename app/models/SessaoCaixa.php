@@ -502,24 +502,54 @@ class SessaoCaixa extends Model
         $termoLike = '%' . $termoLimpo . '%';
         $cpfLike = !empty($cpfNumerico) ? '%' . $cpfNumerico . '%' : $termoLike;
 
+        $palavras = preg_split('/\s+/', $termoLimpo, -1, PREG_SPLIT_NO_EMPTY);
         $pdo = self::getPdo();
-        $stmt = $pdo->prepare("
+
+        $params = [
+            'cpf' => $cpfLike,
+            'termo_exato_resp' => $termoLike,
+            'termo_exato_aluno' => $termoLike,
+            'matricula' => $termoLike,
+        ];
+
+        $whereClauses = [
+            'r.cpf LIKE :cpf',
+            'r.nome LIKE :termo_exato_resp',
+            'a.nome LIKE :termo_exato_aluno',
+            'a.matricula LIKE :matricula'
+        ];
+
+        // Se houver mais de uma palavra (ex: "Lucas Santos"), adiciona busca cruzada tolerante
+        if (count($palavras) > 1 && count($palavras) <= 5) {
+            $respWordClauses = [];
+            $alunoWordClauses = [];
+            foreach ($palavras as $idx => $p) {
+                $pLike = '%' . $p . '%';
+                $keyResp = 'r_w_' . $idx;
+                $keyAluno = 'a_w_' . $idx;
+                $respWordClauses[] = "r.nome LIKE :{$keyResp}";
+                $alunoWordClauses[] = "a.nome LIKE :{$keyAluno}";
+                $params[$keyResp] = $pLike;
+                $params[$keyAluno] = $pLike;
+            }
+            $whereClauses[] = '(' . implode(' AND ', $respWordClauses) . ')';
+            $whereClauses[] = '(' . implode(' AND ', $alunoWordClauses) . ')';
+        }
+
+        $sqlWhere = implode(' OR ', $whereClauses);
+
+        $sql = "
             SELECT DISTINCT r.id, r.cpf, r.nome, r.whatsapp, r.saldo_atual, r.bloqueado_med
             FROM responsaveis r
             LEFT JOIN alunos a ON a.responsavel_id = r.id AND a.deleted_at IS NULL
-            WHERE r.cpf LIKE :cpf
-               OR r.nome LIKE :nome
-               OR a.nome LIKE :aluno_nome
-               OR a.matricula LIKE :matricula
+            WHERE {$sqlWhere}
             ORDER BY r.nome ASC
-            LIMIT :limite
-        ");
+            LIMIT " . (int)$limite;
 
-        $stmt->bindValue(':cpf', $cpfLike, \PDO::PARAM_STR);
-        $stmt->bindValue(':nome', $termoLike, \PDO::PARAM_STR);
-        $stmt->bindValue(':aluno_nome', $termoLike, \PDO::PARAM_STR);
-        $stmt->bindValue(':matricula', $termoLike, \PDO::PARAM_STR);
-        $stmt->bindValue(':limite', $limite, \PDO::PARAM_INT);
+        $stmt = $pdo->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue(':' . $k, $v, \PDO::PARAM_STR);
+        }
         $stmt->execute();
 
         $responsaveis = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -535,6 +565,18 @@ class SessaoCaixa extends Model
             ");
             $stmtAlunos->execute(['resp_id' => $resp['id']]);
             $resp['dependentes'] = $stmtAlunos->fetchAll(\PDO::FETCH_ASSOC);
+
+            // Gera string amigável de dependentes para exibição rápida
+            $nomesAlunos = array_map(function($a) {
+                return $a['nome'] . (!empty($a['nome_turma']) ? ' (' . $a['nome_turma'] . ')' : '');
+            }, $resp['dependentes']);
+            $resp['dependentes_str'] = !empty($nomesAlunos) ? implode(', ', $nomesAlunos) : 'Nenhum aluno vinculado';
+
+            // Formatação padrão de CPF
+            $cpfLimpo = preg_replace('/\D/', '', (string)($resp['cpf'] ?? ''));
+            $resp['cpf_formatado'] = (strlen($cpfLimpo) === 11) 
+                ? substr($cpfLimpo, 0, 3) . '.' . substr($cpfLimpo, 3, 3) . '.' . substr($cpfLimpo, 6, 3) . '-' . substr($cpfLimpo, 9, 2)
+                : $resp['cpf'];
         }
 
         return $responsaveis;

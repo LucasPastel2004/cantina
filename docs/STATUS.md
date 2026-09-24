@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
 * **Status da Fase 15:** Concluída com Sucesso [x]
 * **Próxima Fase:** Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
-* **Última Atualização:** 2026-09-24 07:35:00 (Fase 15 concluída com ciclo completo de abertura/fechamento por turno, recarga presencial em dinheiro com busca rápida e emissão de comprovante 80mm/PDF, apuração assistida de quebra/sobra, extrato analítico da sessão e espelho A4 timbrado com assinaturas)
+* **Última Atualização:** 2026-09-24 09:35:00 (Inclusão de botões de navegação e atalhos na barra superior de espelhos de impressão: botão '← Voltar ao Caixa' e 'Baixar PDF' com tecla Esc em PdfService::gerarEspelhoFechamentoCaixaHtml, e botão '← Voltar ao Corte' em PdfService::gerarHtmlRelatorioCorte)
 
 ---
 
