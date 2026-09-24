@@ -658,6 +658,28 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. *Estabilidade e Visibilidade da Sidebar (`app.js` e `custom.css`):* Removido o colapso automático forçado para resoluções `<= 1400px`. A barra lateral permanece expandida e visível por padrão no desktop e notebook (240px), e o botão `.btn-sidebar-toggle` da topbar fica permanentemente visível e operável para alternar livremente entre expandido e recolhido conforme a vontade do usuário.
 - Como evitar no futuro: Em templates PHP sob strict error reporting (`E_ALL`), sempre utilizar operadores de coalescência nula (`??`) ao ler propriedades de arrays retornados por consultas ao banco. No `ErrorHandler`, sempre drenar os buffers de saída (`ob_get_level()`) antes de emitir a resposta de erro 500.
 
+---
+
+## 2026-09-24 - Barra lateral sumindo ao rolar a página verticalmente (fundo cortado e sem borda)
+
+- Sintoma: Ao rolar páginas compridas para baixo (como o painel de Contestações MED com histórico longo), a barra lateral (`.app-sidebar`) rolava para cima junto com a página até acabar, deixando um vão cinza sem fundo e sem borda abaixo da identificação de usuário ("Administrador Geral"), e a barra superior também saía da tela.
+- Causa:
+  1. *Quebra do `position: sticky; top: 0;`:* O elemento ancestral `.app-admin-wrapper` possuía `overflow-x: hidden;`. De acordo com as especificações da W3C para CSS, qualquer valor de `overflow` diferente de `visible` em um ancestral anula o comportamento de `position: sticky;` dos elementos filhos em relação à rolagem da janela (`window`).
+  2. *Sidebar com altura relativa ao viewport:* Como o sticky estava inativo, a sidebar se comportava como elemento de fluxo estático com `height: 100vh;`. Quando o usuário rolava a página além dos 100vh do monitor, a sidebar terminava no meio do caminho, revelando o fundo cinza da página por baixo.
+- Solução aplicada:
+  1. *Substituição de `overflow-x: hidden` por `overflow-x: clip` em `.app-admin-wrapper`:* O valor `clip` impede transbordamento horizontal de elementos animados ou colapsados sem criar um container de rolagem (BFC), preservando o contexto de viewport.
+  2. *Fixação Absoluta da Barra Lateral no Desktop (`assets/css/custom.css`):*
+     - Definido `.app-sidebar` no desktop (`@media (min-width: 992px)`) com `position: fixed; top: 0; bottom: 0; left: 0; height: 100vh; z-index: 1020;`.
+     - A barra lateral agora é 100% ancorada na janela do navegador e nunca é deslocada ou cortada pela rolagem da página.
+     - `.app-main-area` configurada com `margin-left: 240px; width: calc(100% - 240px);` e transição sincronizada.
+     - Suporte transparente ao colapso (`.sidebar-collapsed`) com `transform: translateX(-240px)` e expansão de `.app-main-area` para `margin-left: 0; width: 100%`.
+     - Modo flutuante (`.sidebar-floating-open`) com `transform: translateX(0)` e sombra corporativa limpa.
+  3. *Scrollbar Fina e Elegante no Menu Interno:* Aplicado `scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;` em `.sidebar-nav`, permitindo navegação limpa sem barra de rolagem rústica nativa.
+  4. *Invalidação de Cache:* Versão dos assets incrementada para `v=5.7.2` em `app/core/Controller.php`.
+  5. *Testes Automatizados:* Baterias `tests/fase5_test.php` (74/74), `tests/sidebar_visibility_test.php` (7/7) e `tests/fase16_test.php` (60/60) executadas e 100% aprovadas.
+- Como evitar no futuro: Em layouts administrativos com barra lateral e barra superior que devam permanecer sempre visíveis durante a navegação em páginas longas, utilizar `position: fixed` para a sidebar desktop ancorada de `top: 0` a `bottom: 0`, associada à margem esquerda dinâmica no contêiner principal, evitando o uso de `overflow: hidden` em elementos pais que possam neutralizar o posicionamento fixo/sticky.
+
+
 
 
 

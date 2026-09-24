@@ -601,8 +601,8 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Suítes de regressão (Fases 9, 10, 13, 14 e 15) reexecutadas e 100% aprovadas;
   * Correção de acesso defensivo a colunas (`saldo_atual` e `whatsapp`) no modal de lançamento manual em `app/views/admin/contestacoes.php`, eliminando interrupção de renderização por erro 500;
   * Integração nativa de data-attributes Bootstrap 5 (`data-bs-toggle="modal"`) e funções globais para os modais de contestação e quitação;
-  * Drenagem e limpeza preventiva de buffers de saída em `ErrorHandler::respondToClient`;
-  * Estabilização da barra lateral de navegação: remoção de auto-colapso forçado em notebooks/1366px, sidebar expandida e visível por padrão (240px) e botão `.btn-sidebar-toggle` da topbar permanentemente visível.
+  * Estabilização da barra lateral de navegação: remoção de auto-colapso forçado em notebooks/1366px, sidebar expandida e visível por padrão (240px) e botão `.btn-sidebar-toggle` da topbar permanentemente visível;
+  * Resolução do corte de fundo da barra lateral ao rolar a página verticalmente: aplicação de `position: fixed; top: 0; bottom: 0; left: 0; height: 100vh;` no desktop, transição suave sincronizada com `.app-main-area` (`margin-left: 240px`), scrollbar fina corporativa no menu e substituição de `overflow-x: hidden` por `overflow-x: clip` no wrapper. Asset version atualizado para `5.7.2`.
 
 ---
 
