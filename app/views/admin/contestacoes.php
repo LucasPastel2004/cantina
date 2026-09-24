@@ -43,7 +43,11 @@ $totalPaginas = $totalPaginas ?? 1;
             </svg>
             Exportar PDF
         </a>
-        <button type="button" class="btn btn-enterprise btn-primary" onclick="abrirModalContestacaoManual()">
+        <button type="button" 
+                class="btn btn-enterprise btn-primary" 
+                data-bs-toggle="modal" 
+                data-bs-target="#modalContestacaoManual" 
+                onclick="abrirModalContestacaoManual()">
             + Lançar Contestação Manual
         </button>
     </div>
@@ -188,9 +192,10 @@ $totalPaginas = $totalPaginas ?? 1;
                     <tbody>
                         <?php foreach ($negativados as $fam): ?>
                             <?php 
-                            $saldo = (float)($fam['saldo'] ?? 0);
+                            $saldo = (float)($fam['saldo_atual'] ?? $fam['saldo'] ?? 0);
                             $isBloqueado = !empty($fam['bloqueado_med']);
                             $dependentes = $fam['dependentes'] ?? [];
+                            $contatoFam = $fam['whatsapp'] ?? $fam['telefone'] ?? '';
                             ?>
                             <tr>
                                 <td class="cell-left">
@@ -199,8 +204,8 @@ $totalPaginas = $totalPaginas ?? 1;
                                     </div>
                                     <div class="text-secondary text-microcopy">
                                         <?php echo htmlspecialchars($fam['email'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
-                                        <?php if (!empty($fam['telefone'])): ?>
-                                            &bull; <?php echo htmlspecialchars($fam['telefone'], ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php if (!empty($contatoFam)): ?>
+                                            &bull; <?php echo htmlspecialchars($contatoFam, ENT_QUOTES, 'UTF-8'); ?>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -239,7 +244,10 @@ $totalPaginas = $totalPaginas ?? 1;
                                 </td>
 
                                 <td class="cell-center font-tabular text-secondary" style="font-size: 11px;">
-                                    <?php echo !empty($fam['data_estorno']) ? date('d/m/Y H:i', strtotime($fam['data_estorno'])) : '—'; ?>
+                                    <?php 
+                                    $dataEstorno = $fam['data_ultimo_estorno_med'] ?? $fam['data_estorno'] ?? null;
+                                    echo !empty($dataEstorno) ? date('d/m/Y H:i', strtotime($dataEstorno)) : '—'; 
+                                    ?>
                                 </td>
 
                                 <td class="cell-right">
@@ -249,7 +257,7 @@ $totalPaginas = $totalPaginas ?? 1;
                                                 onclick='abrirModalQuitacao(<?php echo json_encode([
                                                     "id" => $fam["id"],
                                                     "nome" => $fam["nome"],
-                                                    "saldo" => $fam["saldo"]
+                                                    "saldo" => (float)($fam["saldo_atual"] ?? $fam["saldo"] ?? 0)
                                                 ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>)'
                                                 title="Lançar quitação e regularizar carteira">
                                             Quitar Débito
@@ -416,8 +424,11 @@ $totalPaginas = $totalPaginas ?? 1;
                             <?php foreach ($todosResponsaveis as $resp): ?>
                                 <option value="<?php echo (int)$resp['id']; ?>">
                                     <?php echo htmlspecialchars($resp['nome'], ENT_QUOTES, 'UTF-8'); ?> 
-                                    (Saldo atual: R$ <?php echo number_format((float)$resp['saldo'], 2, ',', '.'); ?>)
-                                    <?php echo !empty($resp['telefone']) ? ' - ' . htmlspecialchars($resp['telefone'], ENT_QUOTES, 'UTF-8') : ''; ?>
+                                    (Saldo atual: R$ <?php echo number_format((float)($resp['saldo_atual'] ?? $resp['saldo'] ?? 0), 2, ',', '.'); ?>)
+                                    <?php 
+                                    $contatoResp = $resp['whatsapp'] ?? $resp['telefone'] ?? '';
+                                    echo !empty($contatoResp) ? ' - ' . htmlspecialchars($contatoResp, ENT_QUOTES, 'UTF-8') : ''; 
+                                    ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -537,38 +548,40 @@ $totalPaginas = $totalPaginas ?? 1;
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Funções de abertura de modais corporativos
-    window.abrirModalContestacaoManual = function () {
-        var modalEl = document.getElementById('modalContestacaoManual');
-        if (modalEl) {
-            var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            modal.show();
-        }
-    };
+// Funções globais de abertura e controle dos modais corporativos
+window.abrirModalContestacaoManual = function () {
+    var modalEl = document.getElementById('modalContestacaoManual');
+    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+        var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+};
 
-    window.abrirModalQuitacao = function (dados) {
-        if (!dados || !dados.id) return;
+window.abrirModalQuitacao = function (dados) {
+    if (!dados || !dados.id) return;
 
-        document.getElementById('quitacao_responsavel_id').value = dados.id;
-        document.getElementById('quitacao_nome_titular').textContent = dados.nome || 'Responsável';
+    var elId = document.getElementById('quitacao_responsavel_id');
+    var elTitular = document.getElementById('quitacao_nome_titular');
+    var elValor = document.getElementById('quitacao_valor');
+    var elSaldo = document.getElementById('quitacao_saldo_atual');
 
-        var saldoNum = parseFloat(dados.saldo) || 0;
-        var saldoFormatado = 'R$ ' + Math.abs(saldoNum).toFixed(2).replace('.', ',');
-        if (saldoNum < 0) {
-            saldoFormatado = '-' + saldoFormatado;
-            // Sugere o valor da quitação igual ao valor do débito absoluto
-            document.getElementById('quitacao_valor').value = Math.abs(saldoNum).toFixed(2);
-        } else {
-            document.getElementById('quitacao_valor').value = '';
-        }
-        document.getElementById('quitacao_saldo_atual').textContent = saldoFormatado;
+    if (elId) elId.value = dados.id;
+    if (elTitular) elTitular.textContent = dados.nome || 'Responsável';
 
-        var modalEl = document.getElementById('modalQuitacaoMed');
-        if (modalEl) {
-            var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            modal.show();
-        }
-    };
-});
+    var saldoNum = parseFloat(dados.saldo) || 0;
+    var saldoFormatado = 'R$ ' + Math.abs(saldoNum).toFixed(2).replace('.', ',');
+    if (saldoNum < 0) {
+        saldoFormatado = '-' + saldoFormatado;
+        if (elValor) elValor.value = Math.abs(saldoNum).toFixed(2);
+    } else {
+        if (elValor) elValor.value = '';
+    }
+    if (elSaldo) elSaldo.textContent = saldoFormatado;
+
+    var modalEl = document.getElementById('modalQuitacaoMed');
+    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+        var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+};
 </script>

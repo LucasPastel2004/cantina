@@ -1284,18 +1284,16 @@ textarea.form-control {
     box-shadow: 2px 0 8px rgba(15, 23, 42, 0.05);
   }
 
-  /* No desktop, se a sidebar NÃO estiver colapsada, oculta o botão toggle da topbar */
-  .app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle {
-    display: none !important;
-  }
-
-  /* Quando colapsada e NÃO expandida por hover, exibe o botão na topbar com a seta para reabertura */
-  .app-admin-wrapper.sidebar-collapsed:not(.sidebar-floating-open) .btn-sidebar-toggle {
+  /* Botão toggle da topbar sempre disponível no desktop e notebook para alternar a navegação */
+  .btn-sidebar-toggle {
     display: inline-flex !important;
   }
 
-  /* Enquanto expandida pelo hover, o botão da topbar se recolhe para dar lugar ao botão da sidebar */
-  .app-admin-wrapper.sidebar-collapsed.sidebar-floating-open .btn-sidebar-toggle {
+  .app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle .icon-toggle-bars {
+    display: inline-block !important;
+  }
+
+  .app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle .icon-toggle-arrow {
     display: none !important;
   }
 

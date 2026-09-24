@@ -187,6 +187,11 @@ class ErrorHandler
             exit;
         }
 
+        // Limpa quaisquer buffers de saída pendentes para evitar concatenação de HTML quebrado
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
         // Renderização HTML da tela de erro 500
         $viewFile = __DIR__ . '/../views/errors/500.php';
         if (file_exists($viewFile)) {

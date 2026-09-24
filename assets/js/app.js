@@ -263,19 +263,16 @@ function initSidebarAutoHide() {
   const wrapper = document.querySelector('.app-admin-wrapper');
   if (!wrapper) return;
 
-  // 1. Restaurar preferência ou aplicar auto-colapso inteligente para telas pequenas (<= 1400px)
+  // 1. Restaurar preferência do usuário (padrão desktop e notebook: visível e fixada)
   try {
     const pref = localStorage.getItem('cantina_sidebar_preference');
     const legacy = localStorage.getItem('cantina_sidebar_collapsed');
     
     if (window.innerWidth >= 992) {
-      if (pref === 'pinned_collapsed' || legacy === 'true') {
+      if (pref === 'pinned_collapsed' || (pref === null && legacy === 'true')) {
         wrapper.classList.add('sidebar-collapsed');
-      } else if (pref === 'pinned_open' || legacy === 'false') {
+      } else {
         wrapper.classList.remove('sidebar-collapsed');
-      } else if (window.innerWidth <= 1400) {
-        // Padrão automático: telas de notebooks/cantina (<= 1400px) nascem colapsadas para máximo espaço
-        wrapper.classList.add('sidebar-collapsed');
       }
     }
   } catch (e) {}

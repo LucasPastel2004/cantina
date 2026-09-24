@@ -596,9 +596,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Registro de item "Contestações MED" na barra lateral de navegação (`app/views/layouts/sidebar.php`);
   * Rotas `/webhook/pix/devolucao` e `/webhook/pix/med` registradas no Front Controller `index.php`;
   * Rotas administrativas `/admin/contestacoes*` protegidas estritamente por RBAC para administradores.
-* [x] **Homologação Automatizada:**
+* [x] **Homologação Automatizada e Correção de Layout/Modais:**
   * Suíte de testes dedicada `tests/fase16_test.php` executada e aprovada com 100% de sucesso (60/60 asserções);
-  * Suítes de regressão (Fases 9, 10, 13, 14 e 15) reexecutadas e 100% aprovadas.
+  * Suítes de regressão (Fases 9, 10, 13, 14 e 15) reexecutadas e 100% aprovadas;
+  * Correção de acesso defensivo a colunas (`saldo_atual` e `whatsapp`) no modal de lançamento manual em `app/views/admin/contestacoes.php`, eliminando interrupção de renderização por erro 500;
+  * Integração nativa de data-attributes Bootstrap 5 (`data-bs-toggle="modal"`) e funções globais para os modais de contestação e quitação;
+  * Drenagem e limpeza preventiva de buffers de saída em `ErrorHandler::respondToClient`;
+  * Estabilização da barra lateral de navegação: remoção de auto-colapso forçado em notebooks/1366px, sidebar expandida e visível por padrão (240px) e botão `.btn-sidebar-toggle` da topbar permanentemente visível.
 
 ---
 

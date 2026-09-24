@@ -642,6 +642,22 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Suíte de testes `tests/fase16_test.php` executada com 100% de sucesso (60/60 asserções aprovadas).
 - Como evitar no futuro: Em integrações de webhooks bancários e padrões de mensageria externa com especificações que variam entre versões de APIs, sempre inspecionar se campos de data/hora podem vir estruturados como arrays associativos antes de tentar conversão para string simples.
 
+---
+
+## 2026-09-24 - Erro de chave inexistente "saldo" no modal de contestações quebrando renderização do layout e barra lateral
+
+- Sintoma: Ao acessar o painel `/admin/contestacoes`, a tela aparecia "fora do sistema" (sem a barra superior topbar, sem a barra lateral sidebar e sem rodapé), os botões "+ Lançar Contestação Manual" e "Quitar Débito" não abriam os modais e a aba do navegador exibia o título *"Falha Operacional Interceptada"*.
+- Causa:
+  1. *Undefined array key:* No dropdown de seleção de responsáveis do modal de lançamento manual em `app/views/admin/contestacoes.php` (linha 419), o template acessava `$resp['saldo']` e `$resp['telefone']`, enquanto o método `Responsavel::listarParaSelecao()` retorna estritamente as colunas `id`, `cpf`, `nome`, `whatsapp` e `saldo_atual`.
+  2. *Interrupção de Renderização do Layout Mestre:* O `ErrorHandler` converteu o aviso de chave inexistente em `ErrorException`. Como a view estava sendo renderizada dentro de um buffer de saída (`ob_start()`) em `Controller::render()`, a execução foi abortada antes da chamada de `require $layoutPath;`. O `ErrorHandler` enviou a view de erro 500 concatenada ao HTML parcial da página sem limpar o buffer pendente, resultando em uma página truncada sem os componentes do layout (sidebar, topbar, Bootstrap JS e app.js).
+  3. *Auto-recolhimento indesejado da barra lateral:* Em `assets/js/app.js`, telas com largura `<= 1400px` (como telas convencionais de notebooks de 1366x768) estavam aplicando forçadamente a classe `.sidebar-collapsed`, ocultando a barra lateral à esquerda a cada carregamento caso o usuário não tivesse uma preferência salva, enquanto o botão `.btn-sidebar-toggle` da topbar ficava com `display: none !important;` quando a sidebar estava expandida.
+- Solução aplicada:
+  1. *Acesso Defensivo em `app/views/admin/contestacoes.php`:* Ajustado o acesso a saldos e contatos em todo o template para usar null-coalescing defensivo: `($resp['saldo_atual'] ?? $resp['saldo'] ?? 0)` e `($resp['whatsapp'] ?? $resp['telefone'] ?? '')`.
+  2. *Atributos Nativos do Bootstrap 5:* Adicionados atributos `data-bs-toggle="modal"` e `data-bs-target="#modalContestacaoManual"` no botão de lançamento manual e funções globais defensivas no `window` para quitação e abertura.
+  3. *Limpeza Preventiva de Buffers no `ErrorHandler`:* Inserido `while (ob_get_level() > 0) { ob_end_clean(); }` antes da renderização da view de erro 500, garantindo que qualquer HTML quebrado pendente seja descartado caso ocorra uma falha não capturada.
+  4. *Estabilidade e Visibilidade da Sidebar (`app.js` e `custom.css`):* Removido o colapso automático forçado para resoluções `<= 1400px`. A barra lateral permanece expandida e visível por padrão no desktop e notebook (240px), e o botão `.btn-sidebar-toggle` da topbar fica permanentemente visível e operável para alternar livremente entre expandido e recolhido conforme a vontade do usuário.
+- Como evitar no futuro: Em templates PHP sob strict error reporting (`E_ALL`), sempre utilizar operadores de coalescência nula (`??`) ao ler propriedades de arrays retornados por consultas ao banco. No `ErrorHandler`, sempre drenar os buffers de saída (`ob_get_level()`) antes de emitir a resposta de erro 500.
+
 
 
 
