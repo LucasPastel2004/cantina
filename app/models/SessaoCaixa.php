@@ -320,9 +320,10 @@ class SessaoCaixa extends Model
      * @param string|null $dataInicio
      * @param string|null $dataFim
      * @param int $limite
+     * @param int|null $offset
      * @return array
      */
-    public static function listarHistorico(?string $turno = null, ?string $dataInicio = null, ?string $dataFim = null, int $limite = 20): array
+    public static function listarHistorico(?string $turno = null, ?string $dataInicio = null, ?string $dataFim = null, int $limite = 20, ?int $offset = null): array
     {
         $sql = "
             SELECT sc.*, u.nome AS operador_nome, u.usuario AS operador_login
@@ -348,8 +349,47 @@ class SessaoCaixa extends Model
         }
 
         $sql .= " ORDER BY sc.id DESC LIMIT " . (int)$limite;
+        if ($offset !== null && $offset >= 0) {
+            $sql .= " OFFSET " . (int)$offset;
+        }
 
         return self::fetchAll($sql, $params);
+    }
+
+    /**
+     * Retorna o total de sessões de caixa no histórico para os filtros informados
+     * 
+     * @param string|null $turno
+     * @param string|null $dataInicio
+     * @param string|null $dataFim
+     * @return int
+     */
+    public static function contarHistorico(?string $turno = null, ?string $dataInicio = null, ?string $dataFim = null): int
+    {
+        $sql = "
+            SELECT COUNT(*) AS total
+            FROM sessoes_caixa sc
+            WHERE 1=1
+        ";
+        $params = [];
+
+        if (!empty($turno) && in_array($turno, [self::TURNO_MATUTINO, self::TURNO_VESPERTINO], true)) {
+            $sql .= " AND sc.turno = :turno";
+            $params['turno'] = $turno;
+        }
+
+        if (!empty($dataInicio)) {
+            $sql .= " AND DATE(sc.aberto_em) >= :data_inicio";
+            $params['data_inicio'] = $dataInicio;
+        }
+
+        if (!empty($dataFim)) {
+            $sql .= " AND DATE(sc.aberto_em) <= :data_fim";
+            $params['data_fim'] = $dataFim;
+        }
+
+        $res = self::fetchOne($sql, $params);
+        return (int)($res['total'] ?? 0);
     }
 
     /**

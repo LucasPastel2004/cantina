@@ -97,7 +97,7 @@ class NotaFiscal extends Model
     /**
      * Lista notas fiscais importadas com filtros opcionais por fornecedor, período ou busca
      */
-    public static function listarTodas(array $filtros = []): array
+    public static function listarTodas(array $filtros = [], ?int $limit = null, ?int $offset = null): array
     {
         $sql = "SELECT nf.*, 
                        u.nome AS operador_nome,
@@ -131,11 +131,49 @@ class NotaFiscal extends Model
 
         $sql .= " GROUP BY nf.id ORDER BY nf.created_at DESC";
 
-        if (!empty($filtros['limite'])) {
-            $sql .= " LIMIT " . (int)$filtros['limite'];
+        $limiteEfetivo = $limit ?? (!empty($filtros['limite']) ? (int)$filtros['limite'] : null);
+        if ($limiteEfetivo !== null && $limiteEfetivo > 0) {
+            $sql .= " LIMIT " . (int)$limiteEfetivo;
+            if ($offset !== null && $offset >= 0) {
+                $sql .= " OFFSET " . (int)$offset;
+            }
         }
 
         return self::fetchAll($sql, $params);
+    }
+
+    /**
+     * Retorna o total de notas fiscais importadas para os filtros
+     */
+    public static function contarTodas(array $filtros = []): int
+    {
+        $sql = "SELECT COUNT(*) AS total
+                FROM notas_fiscais_xml nf
+                WHERE 1=1";
+
+        $params = [];
+
+        if (!empty($filtros['busca'])) {
+            $termo = '%' . trim($filtros['busca']) . '%';
+            $sql .= " AND (nf.numero_nota LIKE :b1 OR nf.razao_social_emitente LIKE :b2 OR nf.cnpj_emitente LIKE :b3 OR nf.chave_nfe LIKE :b4)";
+            $params['b1'] = $termo;
+            $params['b2'] = $termo;
+            $params['b3'] = $termo;
+            $params['b4'] = $termo;
+        }
+
+        if (!empty($filtros['data_inicio'])) {
+            $sql .= " AND DATE(nf.data_emissao) >= :data_inicio";
+            $params['data_inicio'] = $filtros['data_inicio'];
+        }
+
+        if (!empty($filtros['data_fim'])) {
+            $sql .= " AND DATE(nf.data_emissao) <= :data_fim";
+            $params['data_fim'] = $filtros['data_fim'];
+        }
+
+        $res = self::fetchOne($sql, $params);
+        return (int)($res['total'] ?? 0);
     }
 
     /**

@@ -87,7 +87,12 @@ $filtros      = $filtros ?? ['busca' => '', 'turma_id' => 0, 'turno' => '', 'sta
 <div class="card-enterprise">
     <div class="card-enterprise-header d-flex justify-content-between align-items-center">
         <h2 class="h6 font-weight-bold text-dark mb-0">Estudantes Matriculados</h2>
-        <span class="text-microcopy text-muted font-tabular"><?php echo count($alunos); ?> aluno(s) localizado(s)</span>
+        <span class="text-microcopy text-muted font-tabular">
+            Exibindo <?php echo count($alunos); ?> de <?php echo $totalRegistros ?? count($alunos); ?> aluno(s)
+            <?php if (!empty($totalPaginas) && $totalPaginas > 1): ?>
+                (Pág. <?php echo $paginaAtual; ?> de <?php echo $totalPaginas; ?>)
+            <?php endif; ?>
+        </span>
     </div>
     <div class="card-enterprise-body p-0">
         <?php if (empty($alunos)): ?>
@@ -179,6 +184,8 @@ $filtros      = $filtros ?? ['busca' => '', 'turma_id' => 0, 'turno' => '', 'sta
                     </tbody>
                 </table>
             </div>
+            <!-- Paginação Dinâmica Conforme Configuração Oficial -->
+            <?php require __DIR__ . '/../partials/pagination.php'; ?>
         <?php endif; ?>
     </div>
 </div>

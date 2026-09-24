@@ -45,15 +45,15 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 8px 16px;
-    gap: 16px;
+    padding: 6px 12px;
+    gap: 8px 12px;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .pdv-wrapper .stat-strip-item {
     display: flex;
     flex-direction: column;
-    padding-right: 16px;
+    padding-right: 12px;
     border-right: 1px solid #f1f5f9;
 }
 
@@ -64,16 +64,16 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 }
 
 .pdv-wrapper .stat-strip-label {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: #64748b;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
 }
 
 .pdv-wrapper .stat-strip-value {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 700;
     color: #0f172a;
 }
@@ -81,16 +81,16 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 /* Grid de 2 Colunas (Terminal POS) */
 .pdv-grid {
     display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 16px;
+    grid-template-columns: 1fr minmax(330px, 360px);
+    gap: 12px;
     align-items: start;
     width: 100%;
 }
 
 @media (min-width: 1440px) {
     .pdv-grid {
-        grid-template-columns: 1fr 440px;
-        gap: 20px;
+        grid-template-columns: 1fr 400px;
+        gap: 16px;
     }
 }
 
@@ -518,64 +518,64 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     <!-- Stat-Strip Executiva & Status do Caixa -->
     <div class="stat-strip mb-3">
         <div class="stat-strip-item">
-            <span class="stat-strip-label">Status da Sessão</span>
-            <span class="stat-strip-value">
+            <span class="stat-strip-label">Sessão</span>
+            <span class="stat-strip-value" style="font-size: 11.5px;">
                 <?php if ($caixaAberto): ?>
-                    <span class="status-indicator status-active"><span class="bullet">●</span> Caixa Aberto (Turno <?php echo ucfirst($sessaoAberta['turno']); ?> #<?php echo (int)$sessaoAberta['id']; ?>)</span>
+                    <span class="status-indicator status-active"><span class="bullet">●</span> Aberto (<?php echo ($sessaoAberta['turno'] === 'matutino') ? 'Manhã' : 'Tarde'; ?> #<?php echo (int)$sessaoAberta['id']; ?>)</span>
                 <?php else: ?>
-                    <span class="status-indicator status-inactive"><span class="bullet">●</span> Caixa Fechado (Turno <?php echo ucfirst($turnoAtual); ?>)</span>
+                    <span class="status-indicator status-inactive"><span class="bullet">●</span> Fechado (<?php echo ($turnoAtual === 'matutino') ? 'Manhã' : 'Tarde'; ?>)</span>
                 <?php endif; ?>
             </span>
         </div>
         <div class="stat-strip-item">
-            <span class="stat-strip-label">Fundo Inicial</span>
+            <span class="stat-strip-label">Fundo</span>
             <span class="stat-strip-value font-tabular">
                 R$ <?php echo number_format((float)($sessaoAberta['fundo_troco_inicial'] ?? 0.0), 2, ',', '.'); ?>
             </span>
         </div>
         <div class="stat-strip-item">
-            <span class="stat-strip-label">Vendas Hoje</span>
+            <span class="stat-strip-label">Vendas</span>
             <span class="stat-strip-value font-tabular">
                 <?php echo (int)$metricas['total_vendas']; ?> ped. (R$ <?php echo number_format((float)$metricas['total_faturado'], 2, ',', '.'); ?>)
             </span>
         </div>
         <div class="stat-strip-item">
-            <span class="stat-strip-label">Em Espécie (Balcão)</span>
+            <span class="stat-strip-label">Dinheiro</span>
             <span class="stat-strip-value font-tabular text-success">
                 R$ <?php echo number_format((float)$metricas['total_dinheiro'], 2, ',', '.'); ?>
             </span>
         </div>
         <div class="stat-strip-item">
-            <span class="stat-strip-label">Pix Balcão</span>
+            <span class="stat-strip-label">Pix</span>
             <span class="stat-strip-value font-tabular text-primary">
                 R$ <?php echo number_format((float)$metricas['total_pix'], 2, ',', '.'); ?>
             </span>
         </div>
         <div class="stat-strip-item">
-            <span class="stat-strip-label">Desconto em Folha</span>
+            <span class="stat-strip-label">Folha</span>
             <span class="stat-strip-value font-tabular text-muted">
                 R$ <?php echo number_format((float)$metricas['total_folha'], 2, ',', '.'); ?>
             </span>
         </div>
-        <div class="stat-strip-item d-flex align-items-center gap-2">
+        <div class="stat-strip-item d-flex flex-row align-items-center gap-1">
             <!-- Alternador de Turno -->
             <div class="btn-group btn-group-sm me-1" role="group" aria-label="Seletor de Turno PDV">
-                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=matutino" class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-secondary'; ?>" style="font-size: 11px; padding: 4px 8px;">Manhã</a>
-                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=vespertino" class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-secondary'; ?>" style="font-size: 11px; padding: 4px 8px;">Tarde</a>
+                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=matutino" class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-secondary'; ?>" style="font-size: 10.5px; padding: 3px 6px;">Manhã</a>
+                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=vespertino" class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-secondary'; ?>" style="font-size: 10.5px; padding: 3px 6px;">Tarde</a>
             </div>
             <?php if (!$caixaAberto): ?>
-                <button type="button" class="btn btn-enterprise btn-primary btn-sm" onclick="abrirModal('modalAbrirCaixa')">
-                    Abrir Caixa <?php echo ucfirst($turnoAtual); ?>
+                <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModal('modalAbrirCaixa')">
+                    Abrir Caixa
                 </button>
             <?php endif; ?>
-            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-secondary btn-sm" title="Gestão e Fechamento de Caixa [F7]">
-                Caixa <span class="pdv-shortcut-tag">F7</span>
+            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-secondary btn-sm px-2 py-1" style="font-size: 11px;" title="Gestão e Fechamento de Caixa [F7]">
+                Caixa <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F7</span>
             </a>
-            <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="abrirModal('modalEstornoBalcao')" title="Estorno de Ticket [F8]">
-                Estorno <span class="pdv-shortcut-tag">F8</span>
+            <button type="button" class="btn btn-enterprise btn-secondary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModal('modalEstornoBalcao')" title="Estorno de Ticket [F8]">
+                Estorno <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F8</span>
             </button>
-            <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="abrirModalSobras()" title="Aproveitamento de Sobras do Recreio [F9]">
-                Sobras <span class="pdv-shortcut-tag">F9</span>
+            <button type="button" class="btn btn-enterprise btn-secondary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModalSobras()" title="Aproveitamento de Sobras do Recreio [F9]">
+                Sobras <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F9</span>
             </button>
         </div>
     </div>

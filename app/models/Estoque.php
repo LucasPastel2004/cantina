@@ -49,7 +49,7 @@ class Estoque extends Model
     /**
      * Retorna a listagem analítica dos saldos físicos e disponibilidade de cada produto
      */
-    public static function listarSaldos(array $filtros = []): array
+    public static function listarSaldos(array $filtros = [], ?int $limit = null, ?int $offset = null): array
     {
         $sql = "SELECT p.id,
                        p.codigo_interno,
@@ -104,7 +104,57 @@ class Estoque extends Model
 
         $sql .= " ORDER BY em_alerta_minimo DESC, c.ordem_exibicao ASC, p.descricao ASC";
 
+        if ($limit !== null && $limit > 0) {
+            $sql .= " LIMIT " . (int)$limit;
+            if ($offset !== null && $offset >= 0) {
+                $sql .= " OFFSET " . (int)$offset;
+            }
+        }
+
         return self::fetchAll($sql, $params);
+    }
+
+    /**
+     * Retorna o total de produtos cadastrados considerando os filtros de saldo
+     */
+    public static function contarSaldos(array $filtros = []): int
+    {
+        $sql = "SELECT COUNT(*) AS total
+                FROM produtos p
+                INNER JOIN categorias c ON c.id = p.categoria_id AND c.deleted_at IS NULL
+                WHERE p.deleted_at IS NULL";
+
+        $params = [];
+
+        if (!empty($filtros['categoria_id'])) {
+            $sql .= " AND p.categoria_id = :categoria_id";
+            $params['categoria_id'] = (int)$filtros['categoria_id'];
+        }
+
+        if (!empty($filtros['tipo'])) {
+            $sql .= " AND p.tipo = :tipo";
+            $params['tipo'] = $filtros['tipo'];
+        }
+
+        if (!empty($filtros['status_pausa'])) {
+            $sql .= " AND p.status_pausa = :status_pausa";
+            $params['status_pausa'] = $filtros['status_pausa'];
+        }
+
+        if (isset($filtros['apenas_alerta']) && $filtros['apenas_alerta'] === true) {
+            $sql .= " AND p.tipo = 'industrializado_continuo' AND (p.estoque_atual - p.estoque_reservado) <= p.estoque_minimo";
+        }
+
+        if (!empty($filtros['busca'])) {
+            $termo = '%' . trim($filtros['busca']) . '%';
+            $sql .= " AND (p.codigo_interno LIKE :b1 OR p.descricao LIKE :b2 OR c.nome LIKE :b3)";
+            $params['b1'] = $termo;
+            $params['b2'] = $termo;
+            $params['b3'] = $termo;
+        }
+
+        $res = self::fetchOne($sql, $params);
+        return (int)($res['total'] ?? 0);
     }
 
     /**
@@ -360,7 +410,7 @@ class Estoque extends Model
     /**
      * Lista o extrato cronológico de movimentações com filtros analíticos
      */
-    public static function listarMovimentacoes(array $filtros = []): array
+    public static function listarMovimentacoes(array $filtros = [], ?int $limit = null, ?int $offset = null): array
     {
         $sql = "SELECT em.*,
                        p.codigo_interno AS produto_codigo,
@@ -415,11 +465,68 @@ class Estoque extends Model
 
         $sql .= " ORDER BY em.created_at DESC";
 
-        if (!empty($filtros['limite'])) {
-            $sql .= " LIMIT " . (int)$filtros['limite'];
+        $limiteEfetivo = $limit ?? (!empty($filtros['limite']) ? (int)$filtros['limite'] : null);
+        if ($limiteEfetivo !== null && $limiteEfetivo > 0) {
+            $sql .= " LIMIT " . (int)$limiteEfetivo;
+            if ($offset !== null && $offset >= 0) {
+                $sql .= " OFFSET " . (int)$offset;
+            }
         }
 
         return self::fetchAll($sql, $params);
+    }
+
+    /**
+     * Retorna o total de movimentações de estoque para os filtros aplicados
+     */
+    public static function contarMovimentacoes(array $filtros = []): int
+    {
+        $sql = "SELECT COUNT(*) AS total
+                FROM estoque_movimentacoes em
+                INNER JOIN produtos p ON p.id = em.produto_id
+                INNER JOIN categorias c ON c.id = p.categoria_id
+                INNER JOIN usuarios u ON u.id = em.operador_id
+                LEFT JOIN notas_fiscais_xml nf ON nf.id = em.nota_fiscal_id
+                WHERE 1=1";
+
+        $params = [];
+
+        if (!empty($filtros['produto_id'])) {
+            $sql .= " AND em.produto_id = :prod_id";
+            $params['prod_id'] = (int)$filtros['produto_id'];
+        }
+
+        if (!empty($filtros['tipo_movimentacao'])) {
+            $sql .= " AND em.tipo_movimentacao = :tipo_mov";
+            $params['tipo_mov'] = $filtros['tipo_movimentacao'];
+        }
+
+        if (!empty($filtros['motivo_perda'])) {
+            $sql .= " AND em.motivo_perda = :motivo_perda";
+            $params['motivo_perda'] = $filtros['motivo_perda'];
+        }
+
+        if (!empty($filtros['data_inicio'])) {
+            $sql .= " AND DATE(em.created_at) >= :data_inicio";
+            $params['data_inicio'] = $filtros['data_inicio'];
+        }
+
+        if (!empty($filtros['data_fim'])) {
+            $sql .= " AND DATE(em.created_at) <= :data_fim";
+            $params['data_fim'] = $filtros['data_fim'];
+        }
+
+        if (!empty($filtros['busca'])) {
+            $termo = '%' . trim($filtros['busca']) . '%';
+            $sql .= " AND (p.codigo_interno LIKE :b1 OR p.descricao LIKE :b2 OR em.justificativa LIKE :b3 OR nf.numero_nota LIKE :b4)";
+            $params['b1'] = $termo;
+            $params['b2'] = $termo;
+            $params['b3'] = $termo;
+            $params['b4'] = $termo;
+        }
+
+        $res = self::fetchOne($sql, $params);
+        return (int)($res['total'] ?? 0);
     }
 
     /**

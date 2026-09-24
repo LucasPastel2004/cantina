@@ -96,7 +96,10 @@ $csrfToken = $csrf_token ?? '';
     <div class="card-enterprise-header">
         <div class="d-flex align-items-center gap-2">
             <span>Itens do Cardápio</span>
-            <span class="badge-count"><?php echo count($produtos); ?> <?php echo count($produtos) === 1 ? 'item' : 'itens'; ?></span>
+            <span class="badge-count font-tabular"><?php echo count($produtos); ?> de <?php echo $totalRegistros ?? count($produtos); ?> itens</span>
+            <?php if (!empty($totalPaginas) && $totalPaginas > 1): ?>
+                <span class="text-muted small ms-1">(Pág. <span class="font-tabular"><?php echo $paginaAtual; ?></span> de <span class="font-tabular"><?php echo $totalPaginas; ?></span>)</span>
+            <?php endif; ?>
         </div>
         <div class="text-secondary font-microcopy d-none d-sm-block">
             Clique no status para pausar ou liberar um item instantaneamente
@@ -236,6 +239,8 @@ $csrfToken = $csrf_token ?? '';
                     </tbody>
                 </table>
             </div>
+            <!-- Paginação Dinâmica Conforme Configuração Oficial -->
+            <?php require __DIR__ . '/../partials/pagination.php'; ?>
         <?php endif; ?>
     </div>
 </div>

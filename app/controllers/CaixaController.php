@@ -11,6 +11,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Session;
 use App\Core\Auth;
+use App\Models\Configuracao;
 use App\Models\SessaoCaixa;
 use App\Models\Responsavel;
 use App\Services\PdfService;
@@ -37,8 +38,17 @@ class CaixaController extends Controller
         $ultimaSessao = SessaoCaixa::obterUltimaSessao($turno);
         $totais = $sessaoAberta ? SessaoCaixa::obterTotaisEsperados($sessaoAberta) : null;
         
-        // Histórico filtrado
-        $historico = SessaoCaixa::listarHistorico($filtroTurno, $dataInicio, $dataFim, 25);
+        // Paginação do Histórico com base na configuração global
+        $paginaAtual    = max(1, (int)($_GET['pagina'] ?? 1));
+        $itensPorPagina = Configuracao::getItensPorPagina();
+        $totalHistorico = SessaoCaixa::contarHistorico($filtroTurno, $dataInicio, $dataFim);
+        $totalPaginas   = max(1, (int)ceil($totalHistorico / $itensPorPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
+        }
+        $offset = ($paginaAtual - 1) * $itensPorPagina;
+
+        $historico = SessaoCaixa::listarHistorico($filtroTurno, $dataInicio, $dataFim, $itensPorPagina, $offset);
 
         $outroTurno = ($turno === SessaoCaixa::TURNO_MATUTINO) ? SessaoCaixa::TURNO_VESPERTINO : SessaoCaixa::TURNO_MATUTINO;
         $sessaoOutroTurno = SessaoCaixa::obterSessaoAberta($outroTurno);
@@ -58,6 +68,10 @@ class CaixaController extends Controller
             'ultimaSessao'          => $ultimaSessao,
             'totais'                => $totais,
             'historico'             => $historico,
+            'paginaAtual'           => $paginaAtual,
+            'totalPaginas'          => $totalPaginas,
+            'totalRegistros'        => $totalHistorico,
+            'itensPorPagina'        => $itensPorPagina,
             'sessaoOutroTurno'      => $sessaoOutroTurno,
             'outroTurnoNome'        => ucfirst($outroTurno),
             'avisoAtrasoFechamento' => $avisoAtrasoFechamento,

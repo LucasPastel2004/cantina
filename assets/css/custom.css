@@ -475,6 +475,36 @@ textarea.form-control {
 .cell-right { text-align: right; }
 .cell-left { text-align: left; }
 
+/* Densidade Otimizada para Telas Corporativas (1366x768 e Laptops) */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-enterprise.table-sm th,
+.table-enterprise.table-sm td,
+.table-data-grid.table-sm th,
+.table-data-grid.table-sm td {
+  padding: 5px 8px;
+  height: auto;
+  line-height: 1.35;
+}
+
+.table-enterprise.table-dense th,
+.table-enterprise.table-dense td {
+  padding: 4px 6px;
+  font-size: 11.5px;
+  height: auto;
+  line-height: 1.3;
+}
+
+.table-enterprise .font-tabular,
+.table-enterprise .btn-action-group,
+.table-enterprise .btn-group {
+  white-space: nowrap;
+}
+
 /* Cards e Contêineres Corporativos (Anti-Monotonia: Opção 1 + Opção 4) */
 .card-enterprise {
   background-color: var(--surface-card);

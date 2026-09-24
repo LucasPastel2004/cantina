@@ -13,6 +13,7 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 use App\Core\Controller;
 use App\Core\Session;
 use App\Core\Auth;
+use App\Models\Configuracao;
 use App\Models\Estoque;
 use App\Models\Produto;
 use App\Models\Categoria;
@@ -41,17 +42,30 @@ class EstoqueController extends Controller
             'busca'        => $busca
         ];
 
-        $produtos   = Estoque::listarSaldos($filtros);
+        $paginaAtual    = max(1, (int)($_GET['pagina'] ?? 1));
+        $itensPorPagina = Configuracao::getItensPorPagina();
+        $totalProdutos  = Estoque::contarSaldos($filtros);
+        $totalPaginas   = max(1, (int)ceil($totalProdutos / $itensPorPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
+        }
+        $offset = ($paginaAtual - 1) * $itensPorPagina;
+
+        $produtos   = Estoque::listarSaldos($filtros, $itensPorPagina, $offset);
         $metricas   = Estoque::obterMetricasGerais();
         $categorias = Categoria::listarTodas();
 
         $this->render('estoque/index', [
-            'produtos'   => $produtos,
-            'metricas'   => $metricas,
-            'categorias' => $categorias,
-            'filtros'    => $filtros,
-            'activeMenu' => 'estoque',
-            'title'      => 'Controle de Estoque & Saldos'
+            'produtos'       => $produtos,
+            'metricas'       => $metricas,
+            'categorias'     => $categorias,
+            'filtros'        => $filtros,
+            'paginaAtual'    => $paginaAtual,
+            'totalPaginas'   => $totalPaginas,
+            'totalRegistros' => $totalProdutos,
+            'itensPorPagina' => $itensPorPagina,
+            'activeMenu'     => 'estoque',
+            'title'          => 'Controle de Estoque & Saldos'
         ], 'admin');
     }
 
@@ -73,21 +87,33 @@ class EstoqueController extends Controller
             'motivo_perda'      => $motivo,
             'data_inicio'       => $dataIni,
             'data_fim'          => $dataFim,
-            'busca'             => $busca,
-            'limite'            => 100
+            'busca'             => $busca
         ];
 
-        $movimentacoes = Estoque::listarMovimentacoes($filtros);
+        $paginaAtual    = max(1, (int)($_GET['pagina'] ?? 1));
+        $itensPorPagina = Configuracao::getItensPorPagina();
+        $totalMov       = Estoque::contarMovimentacoes($filtros);
+        $totalPaginas   = max(1, (int)ceil($totalMov / $itensPorPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
+        }
+        $offset = ($paginaAtual - 1) * $itensPorPagina;
+
+        $movimentacoes = Estoque::listarMovimentacoes($filtros, $itensPorPagina, $offset);
         $produtos      = Produto::listarTodos();
 
         $this->render('estoque/movimentacoes', [
-            'movimentacoes' => $movimentacoes,
-            'produtos'      => $produtos,
-            'filtros'       => $filtros,
-            'tiposMov'      => Estoque::TIPOS_MOVIMENTACAO,
-            'motivosPerda'  => Estoque::MOTIVOS_PERDA,
-            'activeMenu'    => 'estoque',
-            'title'         => 'Extrato de Movimentações de Estoque'
+            'movimentacoes'  => $movimentacoes,
+            'produtos'       => $produtos,
+            'filtros'        => $filtros,
+            'tiposMov'       => Estoque::TIPOS_MOVIMENTACAO,
+            'motivosPerda'   => Estoque::MOTIVOS_PERDA,
+            'paginaAtual'    => $paginaAtual,
+            'totalPaginas'   => $totalPaginas,
+            'totalRegistros' => $totalMov,
+            'itensPorPagina' => $itensPorPagina,
+            'activeMenu'     => 'estoque',
+            'title'          => 'Extrato de Movimentações de Estoque'
         ], 'admin');
     }
 
@@ -428,19 +454,31 @@ class EstoqueController extends Controller
         $filtros = [
             'busca'       => $busca,
             'data_inicio' => $dataInicio,
-            'data_fim'    => $dataFim,
-            'limite'      => 50
+            'data_fim'    => $dataFim
         ];
 
-        $notas    = NotaFiscal::listarTodas($filtros);
+        $paginaAtual    = max(1, (int)($_GET['pagina'] ?? 1));
+        $itensPorPagina = Configuracao::getItensPorPagina();
+        $totalNotas     = NotaFiscal::contarTodas($filtros);
+        $totalPaginas   = max(1, (int)ceil($totalNotas / $itensPorPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
+        }
+        $offset = ($paginaAtual - 1) * $itensPorPagina;
+
+        $notas    = NotaFiscal::listarTodas($filtros, $itensPorPagina, $offset);
         $metricas = NotaFiscal::obterMetricas();
 
         $this->render('estoque/notas_fiscais', [
-            'notas'      => $notas,
-            'metricas'   => $metricas,
-            'filtros'    => $filtros,
-            'activeMenu' => 'xml',
-            'title'      => 'Notas Fiscais de Entrada (NF-e)'
+            'notas'          => $notas,
+            'metricas'       => $metricas,
+            'filtros'        => $filtros,
+            'paginaAtual'    => $paginaAtual,
+            'totalPaginas'   => $totalPaginas,
+            'totalRegistros' => $totalNotas,
+            'itensPorPagina' => $itensPorPagina,
+            'activeMenu'     => 'xml',
+            'title'          => 'Notas Fiscais de Entrada (NF-e)'
         ], 'admin');
     }
 

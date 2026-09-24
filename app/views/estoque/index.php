@@ -116,22 +116,27 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
     <div class="card-enterprise">
         <div class="card-enterprise-header d-flex justify-content-between align-items-center">
             <span class="card-enterprise-title">Grade de Produtos & Inventário Físico</span>
-            <span class="text-muted small">Exibindo <?php echo count($produtos); ?> produtos cadastrados</span>
+            <span class="text-muted small">
+                Exibindo <span class="font-tabular fw-semibold"><?php echo count($produtos); ?></span> de <span class="font-tabular fw-semibold"><?php echo $totalRegistros ?? count($produtos); ?></span> produtos
+                <?php if (!empty($totalPaginas) && $totalPaginas > 1): ?>
+                    (Pág. <span class="font-tabular"><?php echo $paginaAtual; ?></span> de <span class="font-tabular"><?php echo $totalPaginas; ?></span>)
+                <?php endif; ?>
+            </span>
         </div>
         <div class="table-responsive">
-            <table class="table table-enterprise table-hover align-middle mb-0">
+            <table class="table table-enterprise table-hover align-middle mb-0" style="font-size: 12px;">
                 <thead>
                     <tr>
-                        <th style="width: 100px;">Código</th>
+                        <th style="width: 75px;">Código</th>
                         <th>Descrição do Produto</th>
-                        <th style="width: 150px;">Categoria</th>
-                        <th style="width: 120px;" class="text-center">Tipo</th>
-                        <th style="width: 90px;" class="text-end">Físico</th>
-                        <th style="width: 90px;" class="text-end">Reserva</th>
-                        <th style="width: 100px;" class="text-end">Disponível</th>
-                        <th style="width: 90px;" class="text-end">Mínimo</th>
-                        <th style="width: 110px;" class="text-center">Pausa Rápida</th>
-                        <th style="width: 100px;" class="text-end">Ações</th>
+                        <th style="width: 115px;">Categoria</th>
+                        <th style="width: 95px;" class="text-center">Tipo</th>
+                        <th style="width: 65px;" class="text-end">Físico</th>
+                        <th style="width: 65px;" class="text-end">Reserva</th>
+                        <th style="width: 75px;" class="text-end">Disponível</th>
+                        <th style="width: 65px;" class="text-end">Mínimo</th>
+                        <th style="width: 90px;" class="text-center">Pausa</th>
+                        <th style="width: 105px;" class="text-end">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -150,27 +155,27 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
                             ?>
                             <tr class="<?php echo $isAlerta ? 'bg-amber-soft' : ''; ?>">
                                 <td>
-                                    <code class="code-tag"><?php echo htmlspecialchars($p['codigo_interno'], ENT_QUOTES, 'UTF-8'); ?></code>
+                                    <code class="code-tag" style="font-size: 11px; padding: 1px 4px;"><?php echo htmlspecialchars($p['codigo_interno'], ENT_QUOTES, 'UTF-8'); ?></code>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         <?php if (!empty($p['foto_url'])): ?>
-                                            <img src="<?php echo $baseUrl . '/' . htmlspecialchars($p['foto_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="" class="rounded" style="width: 26px; height: 26px; object-fit: cover;">
+                                            <img src="<?php echo $baseUrl . '/' . htmlspecialchars($p['foto_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="" class="rounded" style="width: 24px; height: 24px; object-fit: cover;">
                                         <?php endif; ?>
-                                        <div>
-                                            <span class="fw-semibold text-slate-900"><?php echo htmlspecialchars($p['descricao'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <div style="min-width: 0;">
+                                            <span class="fw-semibold text-slate-900 text-truncate d-inline-block" style="max-width: 260px;"><?php echo htmlspecialchars($p['descricao'], ENT_QUOTES, 'UTF-8'); ?></span>
                                             <?php if ($isAlerta): ?>
-                                                <span class="tag-alergeno ms-1" style="font-size: 10px; padding: 1px 6px;">Estoque Baixo</span>
+                                                <span class="tag-alergeno ms-1" style="font-size: 9.5px; padding: 1px 5px;">Baixo</span>
                                             <?php endif; ?>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="text-secondary small"><?php echo htmlspecialchars($p['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="text-secondary small text-truncate d-inline-block" style="max-width: 110px;"><?php echo htmlspecialchars($p['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="text-muted small">
-                                        <?php echo $isIndustrializado ? 'Industrializado' : 'Salgado Diário'; ?>
+                                    <span class="badge bg-light text-secondary border" style="font-size: 10.5px; font-weight: normal;">
+                                        <?php echo $isIndustrializado ? 'Indust.' : 'Diário'; ?>
                                     </span>
                                 </td>
                                 <td class="text-end font-tabular fw-semibold">
@@ -189,7 +194,8 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
                                     <button type="button" 
                                             class="btn-status-toggle <?php echo ($p['status_pausa'] === 'ativo') ? 'active' : 'paused'; ?>" 
                                             onclick="togglePausaProduto(<?php echo $p['id']; ?>, this)"
-                                            title="Clique para alternar pausa instantânea do produto">
+                                            title="Clique para alternar pausa instantânea do produto"
+                                            style="padding: 2px 6px; font-size: 10.5px;">
                                         <span class="status-bullet">●</span>
                                         <span class="status-text"><?php echo ($p['status_pausa'] === 'ativo') ? 'Ativo' : 'Pausado'; ?></span>
                                     </button>
@@ -197,16 +203,16 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
                                 <td class="text-end">
                                     <div class="d-inline-flex gap-1">
                                         <a href="<?php echo $baseUrl; ?>/estoque/perdas?produto_id=<?php echo $p['id']; ?>" 
-                                           class="btn btn-enterprise btn-secondary btn-sm" 
-                                           title="Lançar perda deste produto">
+                                            class="btn btn-enterprise btn-secondary btn-sm px-2 py-1" 
+                                            title="Lançar perda deste produto" style="font-size: 11px;">
                                             Perda
                                         </a>
                                         <?php if ($isAdmin && $isIndustrializado): ?>
                                             <button type="button" 
-                                                    class="btn btn-enterprise btn-secondary btn-sm" 
+                                                    class="btn btn-enterprise btn-secondary btn-sm px-2 py-1" 
                                                     onclick="abrirModalMinimo(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['descricao'], ENT_QUOTES, 'UTF-8'); ?>', <?php echo (int)$p['estoque_minimo']; ?>)"
-                                                    title="Alterar ponto de estoque mínimo">
-                                                Mínimo
+                                                    title="Alterar ponto de estoque mínimo" style="font-size: 11px;">
+                                                Mín.
                                             </button>
                                         <?php endif; ?>
                                     </div>
@@ -217,6 +223,8 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
                 </tbody>
             </table>
         </div>
+        <!-- Paginação Dinâmica Conforme Configuração Oficial -->
+        <?php require __DIR__ . '/../partials/pagination.php'; ?>
     </div>
 </div>
 

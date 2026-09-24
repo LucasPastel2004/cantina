@@ -594,6 +594,31 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. *Testes Automatizados:* Ampliado `tests/recarga_dinheiro_post_test.php` com 5 novas asserções cobrindo normalização monetária e apuração de quebra/sobra (17/17 asserções aprovadas com 100% de sucesso).
 - Como evitar no futuro: Em campos com máscaras de digitação em tempo real (como centésimos em moeda), nunca confiar na string intermediária antes da formatação; utilizar parsing baseado nos dígitos de centavos ou escutar eventos disparados posteriormente pela própria rotina de máscara.
 
+---
+
+## 2026-09-24 - Ausência de paginação dinâmica (tabelas com centenas de itens) e transbordamento/corte horizontal em telas de 1366x768
+
+- Sintoma:
+  1. *Falta de paginação:* O parâmetro configurado em `/admin/configuracoes` (*"Itens por página nas tabelas"*, padrão 20) era ignorado pelos controladores e modelos. Listagens de estoque (167 itens), movimentações, notas fiscais, sessões de caixa, produtos e alunos eram renderizadas em uma única página gigantesca de rolagem vertical exaustiva.
+  2. *Corte horizontal em 1366x768 com barra lateral aberta:* Na tela de Estoque (`/estoque`), a coluna de "Ações" transbordava na margem direita. No PDV (`/operacional/pdv`), a stat-strip e o grid de produtos ultrapassavam a largura do contêiner.
+  3. *Corte horizontal crítico no Caixa até com barra lateral colapsada:* Na tela de Gestão de Caixa (`/operacional/caixa`), a tabela de histórico de sessões com 13 colunas cortava as colunas "Diferença", "Status" e "Ações" mesmo com a sidebar colapsada em resoluções de 1366px.
+- Causa:
+  1. *Consultas SQL sem LIMIT/OFFSET dinâmico:* Os métodos `Estoque::listarSaldos`, `Estoque::listarMovimentacoes`, `NotaFiscal::listarTodas`, `SessaoCaixa::listarHistorico`, `Produto::listarTodos` e `Aluno::listarTodos` não aplicavam `LIMIT` e `OFFSET` atrelados à query string `$_GET['pagina']`, nem existia método para buscar a configuração global `itens_por_pagina`.
+  2. *Dimensionamento rígido em telas de alta densidade (1366px):* Telas de 1366px com sidebar aberta (240px) e paddings possuem ~1070px de área útil. A tabela de histórico de sessões de caixa possuía 13 colunas com padding amplo (14px cada), cabeçalhos extensos e botões soltos de ação, exigindo mais de 1250px. No PDV, a barra superior de métricas (`stat-strip`) e o grid com 5 botões de ação e 6 métricas em linha única sem `flex-wrap` forçavam 1170px de largura mínima.
+- Solução aplicada:
+  1. *Método Configuracao::getItensPorPagina():* Criado método estático em `app/models/Configuracao.php` que recupera o limite salvo em `configuracoes_globais.itens_por_pagina` (com validação defensiva entre 5 e 100, fallback 20).
+  2. *Componente Reutilizável de Paginação Anti-Slop (`app/views/partials/pagination.php`):* Desenvolvido componente visual corporativo com contador analítico (*"Mostrando X a Y de Z registros"*), botões de navegação (*"Anterior"*, números de páginas com raio dinâmico, *"Próxima"*), links neutros `.btn-enterprise.btn-secondary`, tipografia tabular e preservação transparente de parâmetros `$_GET` de filtros.
+  3. *Paginação no Backend e Contadores SQL:*
+     - Em `Estoque`, `NotaFiscal`, `SessaoCaixa`, `Produto` e `Aluno`, adicionados suporte a `$limit` e `$offset` e métodos de contagem correspondentes (`contarSaldos`, `contarMovimentacoes`, `contarTodas`, `contarHistorico`, `contarTodos`).
+     - Nos controllers `EstoqueController`, `CaixaController` e `AdminController`, calculada a página atual, offset, total de páginas e injeção do array de paginação para as views.
+  4. *Otimização de Densidade e Resolução de Cortes em 1366px:*
+     - *Caixa (`app/views/operacional/caixa.php`):* Cabeçalhos abreviados e compactos (`Fundo`, `PDV Din.`, `Recargas`, `Pix`, `Gaveta`, `Diferença`), datas compactas `dd/mm HH:MM` com tooltip detalhado, operador com `text-truncate`, agrupamento de ações em `.btn-group.btn-group-sm` (`Extrato`, `Espelho`, `PDF`) e classe `.table-dense` com padding de `4px 6px`. A largura total da tabela caiu de >1250px para ~920px, cabendo com mais de 150px de folga com a barra lateral aberta e mais de 300px com a barra colapsada.
+     - *Estoque (`app/views/estoque/index.php`):* Larguras percentuais calibradas nas colunas, truncamento de nomes longos com tooltip e padding compacto.
+     - *PDV (`app/views/operacional/pdv.php`):* Adicionado `flex-wrap: wrap; gap: 8px 12px;` na `stat-strip` e `.pdv-grid` ajustado para `grid-template-columns: 1fr minmax(330px, 360px); gap: 12px;`, eliminando o transbordamento horizontal.
+     - *CSS Global (`assets/css/custom.css`):* Classes `.table-sm` e `.table-dense` com paddings calibrados e versão de assets incrementada para `v=5.4.0`.
+  5. *Testes Automatizados:* Suítes `tests/fase14_test.php` (45/45) e `tests/fase15_test.php` (67/67) reexecutadas e 100% aprovadas.
+- Como evitar no futuro: Em tabelas com mais de 8 a 10 colunas, utilizar cabeçalhos sintéticos, agrupar ações em `.btn-group` e sempre validar a renderização na resolução corporativa de 1366x768 tanto com a barra lateral expandida quanto colapsada. Toda listagem corporativa deve obrigatoriamente herdar a configuração institucional de paginação.
+
 
 
 

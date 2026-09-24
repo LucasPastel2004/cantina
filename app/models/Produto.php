@@ -23,9 +23,11 @@ class Produto extends Model
      * Retorna todos os produtos ativos (não excluídos), com suporte a filtros e dados da categoria
      * 
      * @param array $filtros Filtros opcionais (categoria_id, tipo, turno, status_pausa, busca)
+     * @param int|null $limit
+     * @param int|null $offset
      * @return array
      */
-    public static function listarTodos(array $filtros = []): array
+    public static function listarTodos(array $filtros = [], ?int $limit = null, ?int $offset = null): array
     {
         $sql = "SELECT p.*, 
                        c.nome AS categoria_nome,
@@ -68,7 +70,56 @@ class Produto extends Model
 
         $sql .= " GROUP BY p.id ORDER BY c.ordem_exibicao ASC, p.descricao ASC";
 
+        if ($limit !== null && $limit > 0) {
+            $sql .= " LIMIT " . (int)$limit;
+            if ($offset !== null && $offset >= 0) {
+                $sql .= " OFFSET " . (int)$offset;
+            }
+        }
+
         return self::fetchAll($sql, $params);
+    }
+
+    /**
+     * Retorna o total de produtos cadastrados considerando os filtros aplicados
+     */
+    public static function contarTodos(array $filtros = []): int
+    {
+        $sql = "SELECT COUNT(*) AS total
+                FROM produtos p
+                WHERE p.deleted_at IS NULL";
+
+        $params = [];
+
+        if (!empty($filtros['categoria_id'])) {
+            $sql .= " AND p.categoria_id = :categoria_id";
+            $params['categoria_id'] = (int)$filtros['categoria_id'];
+        }
+
+        if (!empty($filtros['tipo'])) {
+            $sql .= " AND p.tipo = :tipo";
+            $params['tipo'] = $filtros['tipo'];
+        }
+
+        if (!empty($filtros['turno']) && $filtros['turno'] !== 'todos') {
+            $sql .= " AND (p.turno_disponibilidade = :turno OR p.turno_disponibilidade = 'ambos')";
+            $params['turno'] = $filtros['turno'];
+        }
+
+        if (!empty($filtros['status_pausa'])) {
+            $sql .= " AND p.status_pausa = :status_pausa";
+            $params['status_pausa'] = $filtros['status_pausa'];
+        }
+
+        if (!empty($filtros['busca'])) {
+            $termoBusca = '%' . trim($filtros['busca']) . '%';
+            $sql .= " AND (p.codigo_interno LIKE :busca_cod OR p.descricao LIKE :busca_desc)";
+            $params['busca_cod'] = $termoBusca;
+            $params['busca_desc'] = $termoBusca;
+        }
+
+        $res = self::fetchOne($sql, $params);
+        return (int)($res['total'] ?? 0);
     }
 
     /**

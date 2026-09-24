@@ -160,5 +160,7 @@ $baseUrl = $baseUrl ?? '';
                 </tbody>
             </table>
         </div>
+        <!-- Paginação Dinâmica Conforme Configuração Oficial -->
+        <?php require __DIR__ . '/../partials/pagination.php'; ?>
     </div>
 </div>

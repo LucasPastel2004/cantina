@@ -235,21 +235,34 @@ class AdminController extends Controller
             'busca'        => $this->input('busca')
         ];
 
-        $produtos = Produto::listarTodos($filtros);
+        $paginaAtual    = max(1, (int)$this->input('pagina', 1));
+        $itensPorPagina = Configuracao::getItensPorPagina();
+        $totalProdutos  = Produto::contarTodos($filtros);
+        $totalPaginas   = max(1, (int)ceil($totalProdutos / $itensPorPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
+        }
+        $offset = ($paginaAtual - 1) * $itensPorPagina;
+
+        $produtos   = Produto::listarTodos($filtros, $itensPorPagina, $offset);
         $categorias = Categoria::listarTodas(true);
-        $alergenos = RestricaoAlimentar::listarTodas();
-        $usuario = Auth::user();
+        $alergenos  = RestricaoAlimentar::listarTodas();
+        $usuario    = Auth::user();
 
         $this->render('admin/produtos', [
-            'pageTitle'   => 'Cardápio e Produtos',
-            'pageHeading' => 'Gestão de Cardápio e Produtos',
-            'activeMenu'  => 'produtos',
-            'produtos'    => $produtos,
-            'categorias'  => $categorias,
-            'alergenos'   => $alergenos,
-            'filtros'     => $filtros,
-            'usuario'     => $usuario,
-            'user'        => $usuario
+            'pageTitle'      => 'Cardápio e Produtos',
+            'pageHeading'    => 'Gestão de Cardápio e Produtos',
+            'activeMenu'     => 'produtos',
+            'produtos'       => $produtos,
+            'categorias'     => $categorias,
+            'alergenos'      => $alergenos,
+            'filtros'        => $filtros,
+            'paginaAtual'    => $paginaAtual,
+            'totalPaginas'   => $totalPaginas,
+            'totalRegistros' => $totalProdutos,
+            'itensPorPagina' => $itensPorPagina,
+            'usuario'        => $usuario,
+            'user'           => $usuario
         ], 'admin');
     }
 
@@ -811,23 +824,36 @@ class AdminController extends Controller
             'status'   => in_array($status, ['ativos', 'inativos', 'todos']) ? $status : 'ativos'
         ];
 
-        $alunos       = Aluno::listarTodos($filtros);
+        $paginaAtual    = max(1, (int)$this->input('pagina', 1));
+        $itensPorPagina = Configuracao::getItensPorPagina();
+        $totalAlunos    = Aluno::contarTodos($filtros);
+        $totalPaginas   = max(1, (int)ceil($totalAlunos / $itensPorPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
+        }
+        $offset = ($paginaAtual - 1) * $itensPorPagina;
+
+        $alunos       = Aluno::listarTodos($filtros, $itensPorPagina, $offset);
         $turmas       = Turma::listarTodas();
         $responsaveis = Responsavel::listarParaSelecao();
         $alergenos    = RestricaoAlimentar::listarTodas();
         $usuario      = Auth::user();
 
         $this->render('admin/alunos', [
-            'pageTitle'    => 'Alunos e Matrículas',
-            'pageHeading'  => 'Gestão de Alunos e Matrículas',
-            'activeMenu'   => 'alunos',
-            'usuario'      => $usuario,
-            'user'         => $usuario,
-            'alunos'       => $alunos,
-            'turmas'       => $turmas,
-            'responsaveis' => $responsaveis,
-            'alergenos'    => $alergenos,
-            'filtros'      => $filtros
+            'pageTitle'      => 'Alunos e Matrículas',
+            'pageHeading'    => 'Gestão de Alunos e Matrículas',
+            'activeMenu'     => 'alunos',
+            'usuario'        => $usuario,
+            'user'           => $usuario,
+            'alunos'         => $alunos,
+            'turmas'         => $turmas,
+            'responsaveis'   => $responsaveis,
+            'alergenos'      => $alergenos,
+            'filtros'        => $filtros,
+            'paginaAtual'    => $paginaAtual,
+            'totalPaginas'   => $totalPaginas,
+            'totalRegistros' => $totalAlunos,
+            'itensPorPagina' => $itensPorPagina
         ], 'admin');
     }
 

@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
 * **Status da Fase 15:** Concluída com Sucesso [x]
 * **Próxima Fase:** Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
-* **Última Atualização:** 2026-09-24 10:10:00 (Refatoração de design Anti-Slop das telas de Estoque e NF-e: correção de stat-strip em estoque/index e estoque/notas_fiscais, grid e metadados com chave de 44 dígitos formatada em nota_fiscal_detalhes, criação dos arquivos XML físicos em storage/uploads/private e novo visualizador interativo de XML em modal e rota dedicada)
+* **Última Atualização:** 2026-09-24 10:35:00 (Implementação da paginação dinâmica universal baseada no parâmetro institucional itens_por_pagina e otimização de layout de alta densidade para 1366x768: histórico de sessões do caixa reduzido para ~920px com botões agrupados, ajuste de stat-strip e grid do PDV, compactação do estoque e inclusão do partial corporativo de paginação com links neutros anti-slop)
 
 ---
 
@@ -544,9 +544,15 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Discriminação linha a linha de todas as vendas avulsas no balcão com itens e horários;
   * Discriminação de todas as recargas presenciais em dinheiro com dados dos responsáveis e operadores;
   * Totalizadores de entradas digitais em Pix balcão creditadas na conta bancária.
-* [x] **Histórico de Caixas com Filtros Multi-critério:**
+* [x] **Histórico de Caixas com Filtros Multi-critério e Paginação Dinâmica:**
   * Formulário de filtros por turno (`matutino`, `vespertino`), data de início e data de término;
+  * Paginação de banco de dados (`LIMIT`/`OFFSET`) respeitando estritamente o valor configurado em `configuracoes_globais.itens_por_pagina` através de `Configuracao::getItensPorPagina()`;
   * Data-grid corporativo com ações rápidas para visualização de extrato analítico, espelho de impressão e download em PDF.
+* [x] **Paginação Dinâmica Universal e Calibragem de Alta Densidade (1366x768):**
+  * Criação do componente visual unificado `app/views/partials/pagination.php` com contador analítico (*"Mostrando X a Y de Z registros"*), botões de navegação (*"Anterior"*, números com raio dinâmico, *"Próxima"*), botões corporativos neutros sem cores berrantes (`.btn-enterprise.btn-secondary`), tipografia tabular e suporte transparente a filtros `$_GET`;
+  * Implementação de paginação real com contadores SQL em Estoque (`/estoque`, `/estoque/movimentacoes`, `/estoque/notas-fiscais`), Caixa (`/operacional/caixa`), Produtos (`/admin/produtos`) e Alunos (`/admin/alunos`);
+  * Otimização da tabela do histórico de caixa para caber perfeitamente em telas de laptop e cantina (1366x768) com a barra lateral aberta (largura reduzida de >1250px para ~920px através de cabeçalhos concisos, datas compactadas, `.btn-group.btn-group-sm` de ações e classe `.table-dense` com padding calibrado);
+  * Otimização da tela de PDV (`app/views/operacional/pdv.php`) com `flex-wrap` na `stat-strip` e ajuste no grid para prevenir qualquer corte lateral em resoluções de 1366px.
 * [x] **Roteamento e Permissões RBAC:**
   * 12 rotas protegidas sob `/operacional/caixa*` no Front Controller `index.php` autorizadas exclusivamente para `ROLE_OPERADOR` e `ROLE_ADMINISTRADOR`.
 * [x] **Homologação Automatizada:**

@@ -56,6 +56,16 @@ class Configuracao extends Model
     }
 
     /**
+     * Retorna a quantidade configurada de itens por página para tabelas do sistema
+     */
+    public static function getItensPorPagina(): int
+    {
+        $config = self::obter();
+        $itens = (int)($config['itens_por_pagina'] ?? 20);
+        return ($itens >= 5 && $itens <= 100) ? $itens : 20;
+    }
+
+    /**
      * Atualiza os parâmetros globais da instituição
      */
     public static function salvar(array $dados): bool

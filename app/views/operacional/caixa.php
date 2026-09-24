@@ -385,27 +385,35 @@ if ($caixaAberto) {
 
 <div class="card-enterprise mb-4">
     <div class="card-enterprise-header d-flex justify-content-between align-items-center">
-        <span class="font-weight-bold text-dark">Histórico de Sessões de Caixa</span>
-        <span class="text-microcopy">Registros e conciliações de gaveta</span>
+        <div>
+            <span class="font-weight-bold text-dark">Histórico de Sessões de Caixa</span>
+            <span class="text-microcopy ms-2">Registros e conciliações de gaveta</span>
+        </div>
+        <span class="text-muted small">
+            Exibindo <span class="font-tabular fw-semibold"><?php echo count($historico); ?></span> de <span class="font-tabular fw-semibold"><?php echo $totalRegistros ?? count($historico); ?></span> sessões
+            <?php if (!empty($totalPaginas) && $totalPaginas > 1): ?>
+                (Pág. <span class="font-tabular"><?php echo $paginaAtual; ?></span> de <span class="font-tabular"><?php echo $totalPaginas; ?></span>)
+            <?php endif; ?>
+        </span>
     </div>
     <div class="card-enterprise-body p-0">
-        <div class="table-responsive">
-            <table class="table table-enterprise table-sm mb-0">
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="table table-enterprise table-sm mb-0 align-middle" style="font-size: 11.5px; white-space: nowrap;">
                 <thead>
                     <tr>
-                        <th style="width: 70px;">Sessão</th>
-                        <th>Turno</th>
-                        <th>Operador</th>
-                        <th>Abertura</th>
-                        <th>Fechamento</th>
-                        <th class="text-end">Fundo Inicial</th>
-                        <th class="text-end">Dinheiro PDV</th>
-                        <th class="text-end">Recargas Dinheiro</th>
-                        <th class="text-end">Pix Balcão</th>
-                        <th class="text-end">Gaveta Informada</th>
-                        <th class="text-end">Diferença</th>
-                        <th class="text-center">Status</th>
-                        <th class="text-end" style="width: 190px;">Ações</th>
+                        <th style="width: 50px;">Sessão</th>
+                        <th style="width: 65px;">Turno</th>
+                        <th style="width: 90px;">Operador</th>
+                        <th style="width: 75px;">Abertura</th>
+                        <th style="width: 75px;">Fechamento</th>
+                        <th class="text-end" style="width: 65px;">Fundo</th>
+                        <th class="text-end" style="width: 70px;">PDV Din.</th>
+                        <th class="text-end" style="width: 70px;">Recargas</th>
+                        <th class="text-end" style="width: 60px;">Pix</th>
+                        <th class="text-end" style="width: 70px;">Gaveta</th>
+                        <th class="text-end" style="width: 70px;">Diferença</th>
+                        <th class="text-center" style="width: 70px;">Status</th>
+                        <th class="text-end" style="width: 120px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -421,18 +429,30 @@ if ($caixaAberto) {
                                 $dif = ($s['diferenca_quebra_sobra'] !== null) ? (float)$s['diferenca_quebra_sobra'] : null;
                                 $isFechado = ($s['status'] === 'fechado');
                                 $recargasSessao = (float)($s['total_dinheiro_recargas'] ?? 0.0);
+                                $abertoStr = date('d/m/Y H:i', strtotime($s['aberto_em']));
+                                $abertoCurto = date('d/m H:i', strtotime($s['aberto_em']));
+                                $fechadoStr = !empty($s['fechado_em']) ? date('d/m/Y H:i', strtotime($s['fechado_em'])) : null;
+                                $fechadoCurto = !empty($s['fechado_em']) ? date('d/m H:i', strtotime($s['fechado_em'])) : null;
                             ?>
                             <tr>
                                 <td class="font-tabular font-semibold">#<?php echo $s['id']; ?></td>
                                 <td>
-                                    <span class="badge bg-white text-dark border" style="font-size: 11px;">
-                                        <?php echo ucfirst($s['turno']); ?>
+                                    <span class="badge bg-white text-dark border px-1" style="font-size: 10px;">
+                                        <?php echo ($s['turno'] === 'matutino') ? 'Manhã' : 'Tarde'; ?>
                                     </span>
                                 </td>
-                                <td class="font-12"><?php echo htmlspecialchars($s['operador_nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?></td>
-                                <td class="font-tabular font-11 text-secondary"><?php echo date('d/m/Y H:i', strtotime($s['aberto_em'])); ?></td>
-                                <td class="font-tabular font-11 text-secondary">
-                                    <?php echo !empty($s['fechado_em']) ? date('d/m/Y H:i', strtotime($s['fechado_em'])) : '<span class="text-muted">—</span>'; ?>
+                                <td>
+                                    <span class="d-inline-block text-truncate" style="max-width: 90px;" title="<?php echo htmlspecialchars($s['operador_nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?>">
+                                        <?php echo htmlspecialchars($s['operador_nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?>
+                                    </span>
+                                </td>
+                                <td class="font-tabular text-secondary" title="<?php echo $abertoStr; ?>"><?php echo $abertoCurto; ?></td>
+                                <td class="font-tabular text-secondary">
+                                    <?php if ($fechadoCurto): ?>
+                                        <span title="<?php echo $fechadoStr; ?>"><?php echo $fechadoCurto; ?></span>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="text-end font-tabular">R$ <?php echo number_format((float)$s['fundo_troco_inicial'], 2, ',', '.'); ?></td>
                                 <td class="text-end font-tabular">R$ <?php echo number_format((float)$s['total_dinheiro_avulso'], 2, ',', '.'); ?></td>
@@ -447,30 +467,30 @@ if ($caixaAberto) {
                                     <?php elseif ($dif == 0.0): ?>
                                         <span class="text-success font-semibold">R$ 0,00</span>
                                     <?php elseif ($dif > 0): ?>
-                                        <span class="text-success font-semibold">+ R$ <?php echo number_format($dif, 2, ',', '.'); ?></span>
+                                        <span class="text-success font-semibold">+<?php echo number_format($dif, 2, ',', '.'); ?></span>
                                     <?php else: ?>
-                                        <span class="text-danger font-semibold">- R$ <?php echo number_format(abs($dif), 2, ',', '.'); ?></span>
+                                        <span class="text-danger font-semibold">-<?php echo number_format(abs($dif), 2, ',', '.'); ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
                                     <?php if ($isFechado): ?>
-                                        <span class="status-indicator status-inactive"><span class="bullet">●</span> Fechado</span>
+                                        <span class="status-indicator status-inactive" style="font-size: 11px;"><span class="bullet">●</span> Fechado</span>
                                     <?php else: ?>
-                                        <span class="status-indicator status-active"><span class="bullet">●</span> Aberto</span>
+                                        <span class="status-indicator status-active" style="font-size: 11px;"><span class="bullet">●</span> Aberto</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end">
-                                    <div class="d-flex justify-content-end gap-1">
+                                    <div class="btn-group btn-group-sm" role="group">
                                         <a href="<?php echo $baseUrl; ?>/operacional/caixa/detalhes/<?php echo $s['id']; ?>" 
-                                           class="btn btn-enterprise btn-secondary btn-sm" title="Extrato Analítico Detalhado">
+                                           class="btn btn-enterprise btn-secondary px-2 py-0" style="font-size: 11px;" title="Extrato Analítico Detalhado">
                                             Extrato
                                         </a>
                                         <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $s['id']; ?>" 
-                                           class="btn btn-enterprise btn-secondary btn-sm" target="_blank" title="Visualizar Espelho A4">
+                                           class="btn btn-enterprise btn-secondary px-2 py-0" target="_blank" style="font-size: 11px;" title="Visualizar Espelho A4">
                                             Espelho
                                         </a>
                                         <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $s['id']; ?>/pdf" 
-                                           class="btn btn-enterprise btn-secondary btn-sm" title="Baixar PDF A4">
+                                           class="btn btn-enterprise btn-secondary px-2 py-0" style="font-size: 11px;" title="Baixar PDF A4">
                                             PDF
                                         </a>
                                     </div>
@@ -481,6 +501,8 @@ if ($caixaAberto) {
                 </tbody>
             </table>
         </div>
+        <!-- Paginação Dinâmica Conforme Configuração Oficial -->
+        <?php require __DIR__ . '/../partials/pagination.php'; ?>
     </div>
 </div>
 

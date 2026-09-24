@@ -23,9 +23,11 @@ class Aluno extends Model
      * Lista alunos com paginação/filtros, dados de turma, responsável e alérgenos
      * 
      * @param array $filtros Filtros de busca: 'busca', 'turma_id', 'turno', 'status' ('ativos', 'inativos', 'todos')
+     * @param int|null $limit
+     * @param int|null $offset
      * @return array
      */
-    public static function listarTodos(array $filtros = []): array
+    public static function listarTodos(array $filtros = [], ?int $limit = null, ?int $offset = null): array
     {
         $sql = "SELECT a.*,
                        t.serie, t.nome_turma, t.turno AS turno_turma,
@@ -75,7 +77,57 @@ class Aluno extends Model
 
         $sql .= " ORDER BY t.ordem_impressao ASC, t.nome_turma ASC, a.nome ASC";
 
+        if ($limit !== null && $limit > 0) {
+            $sql .= " LIMIT " . (int)$limit;
+            if ($offset !== null && $offset >= 0) {
+                $sql .= " OFFSET " . (int)$offset;
+            }
+        }
+
         return self::fetchAll($sql, $params);
+    }
+
+    /**
+     * Retorna o total de alunos encontrados com os filtros
+     */
+    public static function contarTodos(array $filtros = []): int
+    {
+        $sql = "SELECT COUNT(*) AS total
+                FROM alunos a
+                INNER JOIN turmas t ON t.id = a.turma_id
+                INNER JOIN responsaveis r ON r.id = a.responsavel_id
+                WHERE 1=1";
+
+        $params = [];
+
+        $status = $filtros['status'] ?? 'ativos';
+        if ($status === 'ativos') {
+            $sql .= " AND a.ativo = 1 AND a.deleted_at IS NULL";
+        } elseif ($status === 'inativos') {
+            $sql .= " AND (a.ativo = 0 OR a.deleted_at IS NOT NULL)";
+        }
+
+        if (!empty($filtros['turma_id']) && (int)$filtros['turma_id'] > 0) {
+            $sql .= " AND a.turma_id = :turma_id";
+            $params['turma_id'] = (int)$filtros['turma_id'];
+        }
+
+        if (!empty($filtros['turno']) && in_array($filtros['turno'], ['matutino', 'vespertino'])) {
+            $sql .= " AND a.turno = :turno";
+            $params['turno'] = $filtros['turno'];
+        }
+
+        if (!empty($filtros['busca'])) {
+            $termo = '%' . trim($filtros['busca']) . '%';
+            $sql .= " AND (a.nome LIKE :busca_nome OR a.matricula LIKE :busca_mat OR r.nome LIKE :busca_resp OR r.cpf LIKE :busca_cpf)";
+            $params['busca_nome'] = $termo;
+            $params['busca_mat']  = $termo;
+            $params['busca_resp'] = $termo;
+            $params['busca_cpf']  = $termo;
+        }
+
+        $res = self::fetchOne($sql, $params);
+        return (int)($res['total'] ?? 0);
     }
 
     /**
