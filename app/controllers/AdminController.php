@@ -416,17 +416,31 @@ class AdminController extends Controller
     public function colaboradores(): void
     {
         $busca = (string)$this->input('busca', '');
-        $colaboradores = Colaborador::listarTodos(false, $busca);
-        $usuario = Auth::user();
+
+        $paginaAtual    = max(1, (int)$this->input('pagina', 1));
+        $itensPorPagina = Configuracao::getItensPorPagina();
+        $totalColabs    = Colaborador::contarTodos(false, $busca);
+        $totalPaginas   = max(1, (int)ceil($totalColabs / $itensPorPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
+        }
+        $offset = ($paginaAtual - 1) * $itensPorPagina;
+
+        $colaboradores = Colaborador::listarTodos(false, $busca, $itensPorPagina, $offset);
+        $usuario       = Auth::user();
 
         $this->render('admin/colaboradores', [
-            'pageTitle'     => 'Colaboradores Escolares',
-            'pageHeading'   => 'Colaboradores e Professores',
-            'activeMenu'    => 'colaboradores',
-            'colaboradores' => $colaboradores,
-            'busca'         => $busca,
-            'usuario'       => $usuario,
-            'user'          => $usuario
+            'pageTitle'      => 'Colaboradores Escolares',
+            'pageHeading'    => 'Colaboradores e Professores',
+            'activeMenu'     => 'colaboradores',
+            'colaboradores'  => $colaboradores,
+            'busca'          => $busca,
+            'paginaAtual'    => $paginaAtual,
+            'totalPaginas'   => $totalPaginas,
+            'totalRegistros' => $totalColabs,
+            'itensPorPagina' => $itensPorPagina,
+            'usuario'        => $usuario,
+            'user'           => $usuario
         ], 'admin');
     }
 
@@ -548,18 +562,31 @@ class AdminController extends Controller
         $turno = (string)$this->input('turno', '');
         $busca = (string)$this->input('busca', '');
 
-        $turmas = Turma::listarTodas($turno, $busca);
+        $paginaAtual    = max(1, (int)$this->input('pagina', 1));
+        $itensPorPagina = Configuracao::getItensPorPagina();
+        $totalTurmas    = Turma::contarTodas($turno, $busca);
+        $totalPaginas   = max(1, (int)ceil($totalTurmas / $itensPorPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
+        }
+        $offset = ($paginaAtual - 1) * $itensPorPagina;
+
+        $turmas  = Turma::listarTodas($turno, $busca, $itensPorPagina, $offset);
         $usuario = Auth::user();
 
         $this->render('admin/turmas', [
-            'pageTitle'   => 'Turmas Escolares',
-            'pageHeading' => 'Turmas e Agrupamentos Escolares',
-            'activeMenu'  => 'turmas',
-            'turmas'      => $turmas,
-            'turno'       => $turno,
-            'busca'       => $busca,
-            'usuario'     => $usuario,
-            'user'        => $usuario
+            'pageTitle'      => 'Turmas Escolares',
+            'pageHeading'    => 'Turmas e Agrupamentos Escolares',
+            'activeMenu'     => 'turmas',
+            'turmas'         => $turmas,
+            'turno'          => $turno,
+            'busca'          => $busca,
+            'paginaAtual'    => $paginaAtual,
+            'totalPaginas'   => $totalPaginas,
+            'totalRegistros' => $totalTurmas,
+            'itensPorPagina' => $itensPorPagina,
+            'usuario'        => $usuario,
+            'user'           => $usuario
         ], 'admin');
     }
 

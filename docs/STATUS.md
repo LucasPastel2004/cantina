@@ -242,6 +242,12 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] Suíte de testes de visibilidade da sidebar `tests/sidebar_visibility_test.php` aprovada com 7/7 asserções com 100% de sucesso.
 * [x] Suíte de testes de máscaras automáticas `tests/mask_test.php` aprovada com 14/14 asserções com 100% de sucesso.
 * [x] Suítes de regressão (Fases 2, 3, 4, 5, 6 e simulação web) reexecutadas e 100% aprovadas.
+* [x] **Paginação Institucional Integrada em Turmas e Colaboradores:**
+  * Métodos `Turma::listarTodas` e `Colaborador::listarTodos` com suporte a `$limit` e `$offset` e métodos de contagem `Turma::contarTodas` e `Colaborador::contarTodos`;
+  * Integração com `Configuracao::getItensPorPagina()` (padrão 20) nos controladores `turmas()` e `colaboradores()`;
+  * Componente `app/views/partials/pagination.php` integrado nas views `admin/turmas.php` e `admin/colaboradores.php`;
+  * Suíte `tests/turmas_pagination_test.php` criada e homologada com 10/10 asserções aprovadas.
+
 
 ---
 

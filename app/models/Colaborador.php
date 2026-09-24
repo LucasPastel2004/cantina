@@ -20,9 +20,9 @@ class Colaborador extends Model
     protected bool $softDelete = true;
 
     /**
-     * Lista todos os colaboradores ativos na exclusão lógica
+     * Lista todos os colaboradores com suporte a filtros e paginação opcional
      */
-    public static function listarTodos(bool $apenasAtivos = false, string $busca = ''): array
+    public static function listarTodos(bool $apenasAtivos = false, string $busca = '', ?int $limit = null, int $offset = 0): array
     {
         $sql = "SELECT * FROM colaboradores WHERE deleted_at IS NULL";
         $params = [];
@@ -41,8 +41,38 @@ class Colaborador extends Model
 
         $sql .= " ORDER BY nome ASC";
 
+        if ($limit !== null && $limit > 0) {
+            $offset = max(0, $offset);
+            $sql .= " LIMIT {$limit} OFFSET {$offset}";
+        }
+
         return self::fetchAll($sql, $params);
     }
+
+    /**
+     * Conta o total de colaboradores com suporte aos mesmos filtros
+     */
+    public static function contarTodos(bool $apenasAtivos = false, string $busca = ''): int
+    {
+        $sql = "SELECT COUNT(*) as total FROM colaboradores WHERE deleted_at IS NULL";
+        $params = [];
+
+        if ($apenasAtivos) {
+            $sql .= " AND ativo = 1";
+        }
+
+        if (!empty($busca)) {
+            $termoBusca = '%' . trim($busca) . '%';
+            $sql .= " AND (nome LIKE :busca_nome OR matricula_funcional LIKE :busca_mat OR cargo LIKE :busca_cargo)";
+            $params['busca_nome'] = $termoBusca;
+            $params['busca_mat'] = $termoBusca;
+            $params['busca_cargo'] = $termoBusca;
+        }
+
+        $row = self::fetchOne($sql, $params);
+        return (int)($row['total'] ?? 0);
+    }
+
 
     /**
      * Busca colaborador por ID

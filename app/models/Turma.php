@@ -20,9 +20,9 @@ class Turma extends Model
     protected bool $softDelete = true;
 
     /**
-     * Lista todas as turmas ativas com suporte a filtros e contagem de alunos
+     * Lista turmas ativas com suporte a filtros, contagem de alunos e paginação opcional
      */
-    public static function listarTodas(string $turno = '', string $busca = ''): array
+    public static function listarTodas(string $turno = '', string $busca = '', ?int $limit = null, int $offset = 0): array
     {
         $sql = "SELECT t.*, 
                        (SELECT COUNT(*) FROM alunos a WHERE a.turma_id = t.id AND a.deleted_at IS NULL) as total_alunos
@@ -44,8 +44,38 @@ class Turma extends Model
 
         $sql .= " ORDER BY t.turno ASC, t.ordem_impressao ASC, t.nome_turma ASC";
 
+        if ($limit !== null && $limit > 0) {
+            $offset = max(0, $offset);
+            $sql .= " LIMIT {$limit} OFFSET {$offset}";
+        }
+
         return self::fetchAll($sql, $params);
     }
+
+    /**
+     * Conta o total de turmas com suporte aos mesmos filtros
+     */
+    public static function contarTodas(string $turno = '', string $busca = ''): int
+    {
+        $sql = "SELECT COUNT(*) as total FROM turmas t WHERE t.deleted_at IS NULL";
+        $params = [];
+
+        if (!empty($turno) && $turno !== 'todos') {
+            $sql .= " AND t.turno = :turno";
+            $params['turno'] = $turno;
+        }
+
+        if (!empty($busca)) {
+            $termoBusca = '%' . trim($busca) . '%';
+            $sql .= " AND (t.nome_turma LIKE :busca_nome OR t.serie LIKE :busca_serie)";
+            $params['busca_nome'] = $termoBusca;
+            $params['busca_serie'] = $termoBusca;
+        }
+
+        $row = self::fetchOne($sql, $params);
+        return (int)($row['total'] ?? 0);
+    }
+
 
     /**
      * Busca turma por ID

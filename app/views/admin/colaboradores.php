@@ -135,7 +135,9 @@ $csrfField = $csrf_field ?? '';
                     </tbody>
                 </table>
             </div>
+            <?php require __DIR__ . '/../partials/pagination.php'; ?>
         <?php endif; ?>
+
     </div>
 </div>
 

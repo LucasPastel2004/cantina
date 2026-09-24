@@ -701,6 +701,28 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - Criada e aprovada a suíte `tests/desbloqueio_med_modal_test.php` (11/11 asserções 100% aprovadas) e reexecutada a suíte `tests/fase16_test.php` (60/60 asserções 100% aprovadas).
 - Como evitar no futuro: Toda ação administrativa que exija justificativa para auditoria deve dispor de um modal corporativo com campo de texto e validação client-side e server-side, nunca dependendo de diálogos de confirmação nativos binários (`confirm()`). Sempre assegurar que os nomes dos marcadores nomeados em consultas preparadas coincidam exatamente com as chaves do array de parâmetros.
 
+---
+
+## 2026-09-24 - Telas de Turmas e Colaboradores sem paginação institucional violando o limite de 20 itens por página
+
+- Sintoma: Ao acessar a tela de Turmas Escolares (`/admin/turmas`), todas as 59 turmas cadastradas eram renderizadas simultaneamente em uma lista vertical única e contínua, sem botões de paginação e sem respeitar o limite padrão de 20 itens configurado em `/admin/configuracoes`. O mesmo ocorria na tela de Colaboradores (`/admin/colaboradores`) para todos os 25 colaboradores.
+- Causa:
+  1. *Falta de paginação nos métodos dos modelos:* `Turma::listarTodas` e `Colaborador::listarTodos` não aceitavam parâmetros de paginação (`$limit` e `$offset`) e não possuíam métodos de contagem (`contarTodas` / `contarTodos`).
+  2. *Ausência de cálculo no controlador:* Os métodos `AdminController::turmas` e `AdminController::colaboradores` executavam consultas completas no banco sem considerar a página atual (`$_GET['pagina']`) nem o limite institucional obtido por `Configuracao::getItensPorPagina()`.
+  3. *Ausência do componente de paginação nas views:* Os templates `app/views/admin/turmas.php` e `app/views/admin/colaboradores.php` não incluíam o componente parcial `app/views/partials/pagination.php`.
+- Solução aplicada:
+  1. *Evolução dos Modelos (`app/models/Turma.php` e `app/models/Colaborador.php`):*
+     - Adicionados parâmetros opcionais `?int $limit = null, int $offset = 0` aos métodos `listarTodas` e `listarTodos`, preservando retrocompatibilidade total com selects e rotinas existentes.
+     - Implementados os métodos `Turma::contarTodas($turno, $busca)` e `Colaborador::contarTodos($apenasAtivos, $busca)` utilizando consultas `COUNT(*)`.
+  2. *Paginação no Controlador (`app/controllers/AdminController.php`):*
+     - Em `turmas()` e `colaboradores()`, obtido o limite institucional com `Configuracao::getItensPorPagina()`, calculadas a página atual, offset, total de registros e total de páginas, injetando as variáveis padronizadas para as views.
+  3. *Inclusão do Componente Parcial (`app/views/partials/pagination.php`):*
+     - Incluído o componente unificado de paginação de alta densidade no rodapé dos cartões de tabela de `turmas.php` e `colaboradores.php`, exibindo contador analítico ("Mostrando 1 a 20 de 59 registros"), botões de navegação e preservação transparente dos filtros de busca e turno via `$_GET`.
+  4. *Testes Automatizados:*
+     - Criada e aprovada a suíte `tests/turmas_pagination_test.php` (10/10 asserções 100% aprovadas) e reexecutadas as baterias de regressão `tests/fase7_test.php` (68/68) e `tests/fase8_test.php` (57/57).
+- Como evitar no futuro: Toda e qualquer listagem ou tabela de dados administrativos que possa conter mais do que 10 a 20 registros deve nascer obrigatoriamente integrada com `Configuracao::getItensPorPagina()` e o componente parcial `pagination.php`, com os respectivos métodos de contagem (`contar*`) nos modelos.
+
+
 
 
 
