@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 14 — Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas
 * **Status da Fase 14:** Concluída com Sucesso [x]
 * **Próxima Fase:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
-* **Última Atualização:** 2026-09-23 09:35:00 (Fase 14 finalizada, testada e validada)
+* **Última Atualização:** 2026-09-23 16:05:00 (Abertura defensiva e autônoma do modal pós-venda no PDV, blindagem contra cache com v=5.3.2 e validação no Chrome Headless via CDP)
 
 ---
 
@@ -503,6 +503,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] Suíte de testes de rotas web, controllers e RBAC em `tests/estoque_web_test.php` aprovada com 100% de sucesso (53/53 asserções).
 * [x] Validação e aprovação de todas as suítes de regressão anteriores:
   * `tests/fase13_test.php` (PDV e Operação de Balcão) — 52/52 asserções (100%);
+  * `tests/pdv_modal_test.php` (Modais do PDV e Prevenção do erro querySelector) — 18/18 asserções (100%);
   * `tests/fase12_test.php` (Tickets Térmicos 80mm) — 65/65 asserções (100%);
   * `tests/fase11_test.php` (Corte Operacional e Encomendas) — 72/72 asserções (100%);
   * `tests/caixa_test.php` (Gestão de Caixa de Turno) — 38/38 asserções (100%);

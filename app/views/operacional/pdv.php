@@ -1011,7 +1011,13 @@ let baseUrl = "<?php echo $baseUrl; ?>";
 document.addEventListener('keydown', function(e) {
     if (e.key === 'F2') {
         e.preventDefault();
+        fecharModal('modalPosVenda');
         limparCarrinho();
+        const inp = document.getElementById('pdvBuscaInput');
+        if (inp) {
+            inp.focus();
+            inp.select();
+        }
     } else if (e.key === 'F3') {
         e.preventDefault();
         const inp = document.getElementById('pdvBuscaInput');
@@ -1039,6 +1045,33 @@ document.addEventListener('keydown', function(e) {
 function fecharTodosModais() {
     document.querySelectorAll('.modal-backdrop-custom').forEach(m => m.classList.add('d-none'));
 }
+
+function fecharModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    if (modal.classList.contains('modal-backdrop-custom') || !modal.classList.contains('modal')) {
+        modal.classList.add('d-none');
+        return;
+    }
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        const m = bootstrap.Modal.getInstance(modal);
+        if (m) m.hide();
+    }
+}
+window.fecharModal = fecharModal;
+
+function abrirModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    if (modal.classList.contains('modal-backdrop-custom') || !modal.classList.contains('modal')) {
+        modal.classList.remove('d-none');
+        return;
+    }
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        bootstrap.Modal.getOrCreateInstance(modal).show();
+    }
+}
+window.abrirModal = abrirModal;
 
 function filtrarCategoria(catId, btn) {
     document.querySelectorAll('.pdv-cat-btn').forEach(b => b.classList.remove('active'));
@@ -1180,6 +1213,9 @@ function renderizarCarrinho() {
 
 function trocarTipoCliente(tipo) {
     clienteTipoAtual = tipo;
+    const rad = document.getElementById('tipo' + tipo.charAt(0).toUpperCase() + tipo.slice(1));
+    if (rad) rad.checked = true;
+
     document.getElementById('boxClienteAluno').classList.toggle('d-none', tipo !== 'aluno');
     document.getElementById('boxClienteColaborador').classList.toggle('d-none', tipo !== 'colaborador');
 
@@ -1476,30 +1512,44 @@ function submeterVendaServidor(valorRecebido) {
             return;
         }
 
-        // Exibe modal pós-venda
-        document.getElementById('posVendaId').innerText = `#${data.venda_id}`;
-        document.getElementById('posVendaTotal').innerText = `R$ ${parseFloat(data.total).toFixed(2).replace('.', ',')}`;
+        // Exibe modal pós-venda com segurança defensiva total
+        const elPosId = document.getElementById('posVendaId');
+        if (elPosId) elPosId.innerText = `#${data.venda_id}`;
+
+        const elPosTotal = document.getElementById('posVendaTotal');
+        if (elPosTotal) elPosTotal.innerText = `R$ ${parseFloat(data.total).toFixed(2).replace('.', ',')}`;
 
         const trocoBox = document.getElementById('posVendaTrocoBox');
-        if (formaPagamentoAtual === 'dinheiro' && parseFloat(data.troco) > 0) {
-            document.getElementById('posVendaTroco').innerText = `R$ ${parseFloat(data.troco).toFixed(2).replace('.', ',')}`;
-            trocoBox.classList.remove('d-none');
-        } else {
-            trocoBox.classList.add('d-none');
+        if (trocoBox) {
+            if (formaPagamentoAtual === 'dinheiro' && parseFloat(data.troco) > 0) {
+                const elTroco = document.getElementById('posVendaTroco');
+                if (elTroco) elTroco.innerText = `R$ ${parseFloat(data.troco).toFixed(2).replace('.', ',')}`;
+                trocoBox.classList.remove('d-none');
+            } else {
+                trocoBox.classList.add('d-none');
+            }
         }
 
-        document.getElementById('btnImprimirComprovante').href = `${baseUrl}/operacional/pdv/comprovante/${data.venda_id}`;
+        const elBtnComp = document.getElementById('btnImprimirComprovante');
+        if (elBtnComp) {
+            elBtnComp.href = `${baseUrl}/operacional/pdv/comprovante/${data.venda_id}`;
+        }
         
         limparCarrinho();
         limparSelecaoColaborador();
         limparSelecaoAluno();
         trocarTipoCliente('anonimo');
 
-        abrirModal('modalPosVenda');
+        // Abre o modal diretamente pela classe d-none sem risco de dependências externas
+        const modalPos = document.getElementById('modalPosVenda');
+        if (modalPos) {
+            modalPos.classList.remove('d-none');
+        }
     })
     .catch(err => {
         btn.disabled = false;
         btn.innerText = 'Concluir Venda (F4)';
+        console.error('Falha na venda:', err);
         alert('Falha na comunicação com o servidor: ' + err.message);
     });
 }

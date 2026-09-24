@@ -215,7 +215,7 @@ class Fase13Test
         $dinheiroAntes = (float)$sessao['total_dinheiro_avulso'];
 
         // Cria produto com 20 unidades em estoque
-        $cod = 'PDV-DIN-' . rand(100, 999);
+        $cod = 'PDV-DIN-' . uniqid();
         $this->pdo->exec("INSERT INTO produtos (codigo_interno, descricao, categoria_id, tipo, preco_venda, estoque_atual, estoque_minimo, status_pausa, created_at) VALUES ('{$cod}', 'Pão de Queijo PDV', {$catId}, 'industrializado_continuo', 6.50, 20, 2, 'ativo', NOW())");
         $prodId = (int)$this->pdo->lastInsertId();
 

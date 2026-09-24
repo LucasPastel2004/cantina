@@ -1011,4 +1011,30 @@ class AdminController extends Controller
         $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
         return strtolower($requestedWith) === 'xmlhttprequest' || str_contains($accept, 'application/json');
     }
+
+    /**
+     * Visualização do Calendário Escolar
+     */
+    public function calendario(): void
+    {
+        $diasSemana = \App\Models\CalendarioEscolar::obterDiasSemanaLetiva(date('Y-m-d'));
+        
+        $this->render('admin/calendario', [
+            'pageTitle'  => 'Calendário Escolar & Dias Letivos',
+            'activeMenu' => 'calendario',
+            'diasSemana' => $diasSemana,
+            'hoje'       => date('Y-m-d')
+        ], 'admin');
+    }
+
+    /**
+     * Central de Relatórios Gerenciais
+     */
+    public function relatorios(): void
+    {
+        $this->render('admin/relatorios', [
+            'pageTitle'  => 'Relatórios Gerenciais',
+            'activeMenu' => 'relatorios'
+        ], 'admin');
+    }
 }

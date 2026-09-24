@@ -229,7 +229,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
                     <!-- QR Code Centralizado -->
                     <div class="text-center my-3">
-                        <div id="pix-qrcode-container" class="d-inline-block p-2 border rounded bg-white" style="box-shadow: 0 1px 3px rgba(0,0,0,0.05); max-width: 220px;">
+                        <div id="pix-qrcode-container" class="border rounded bg-white shadow-sm" style="width: 210px; height: 210px; padding: 10px; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto; box-sizing: border-box;">
                             <!-- SVG do QR Code injetado via JS -->
                         </div>
                         <div class="text-muted mt-2" style="font-size: 11px;">

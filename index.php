@@ -131,6 +131,15 @@ $router->get('/portal/recarga/status/{txid}', [\App\Controllers\CarteiraControll
 $router->post('/portal/recarga/simular/{txid}', [\App\Controllers\CarteiraController::class, 'simularPagamento'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
 ]);
+$router->get('/portal/extrato', [\App\Controllers\CarteiraController::class, 'index'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->get('/portal/perfil', [\App\Controllers\PortalController::class, 'perfil'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->post('/portal/perfil/senha', [\App\Controllers\PortalController::class, 'alterarSenha'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
 
 // 2. Painel Operacional: Acesso permitido para 'operador' e 'administrador'
 $router->get('/admin', [\App\Controllers\AdminController::class, 'index'], [
@@ -361,6 +370,16 @@ $router->post('/admin/alunos/inativar', [\App\Controllers\AdminController::class
 ]);
 $router->post('/admin/alunos/reativar', [\App\Controllers\AdminController::class, 'alunosReativar'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
+// 3.8. Calendário Escolar
+$router->get('/admin/calendario', [\App\Controllers\AdminController::class, 'calendario'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+
+// 4. Central de Relatórios Gerenciais
+$router->get('/relatorios', [\App\Controllers\AdminController::class, 'relatorios'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
 
 // 9. Despacha a requisição HTTP atual

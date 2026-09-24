@@ -419,3 +419,95 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Adicionada a guarda de retorno defensiva `if (!$this->validateCsrf(...)) { return; }` em todas as actions correspondentes de `app/controllers/EstoqueController.php`.
   3. Expandida a suíte de testes `tests/estoque_web_test.php` com o método `testarFluxoRegistroPerdaWeb()`, validando a rejeição segura de token CSRF inválido e o processamento com sucesso de perda com token CSRF válido e baixa de estoque no MySQL (56/56 asserções aprovadas).
 - Como evitar no futuro: Qualquer método auxiliar de controle invocado através de `$this->...` deve obrigatoriamente estar declarado na classe base `Controller` ou como método privado/protegido do próprio controller. Sempre incluir nas suítes web testes que executem a action de gravação de ponta a ponta simulando `$_POST` com token CSRF.
+
+---
+
+## 2026-09-23 - Descompasso de cache de assets nos layouts e links órfãos gerando erro HTTP 404
+
+- Sintoma: Percepção de "telas bugadas visualmente" ou renderizadas em estilo padrão do navegador em algumas páginas, além de erro HTTP 404 ao clicar nos links "Calendário Escolar" e "Relatórios Gerenciais" no menu lateral da cantina, ou em "Ver Extrato" e "Meus Dados" no Portal da Família.
+- Causa:
+  1. Cada layout mestre mantinha versões manuais e divergentes nos links de `custom.css` e `app.js` (`?v=5.0.8`, `?v=5.0.9`, `?v=5.2.0`), fazendo com que o navegador do usuário retivesse folhas de estilo antigas em cache, impedindo a aplicação das novas classes de layout e modais.
+  2. Os links do menu lateral (`/admin/calendario` e `/relatorios`) e do portal familiar (`/portal/extrato` e `/portal/perfil`) não possuíam ações ou rotas registradas no Front Controller `index.php`.
+- Solução aplicada:
+  1. Injetada a variável global `$data['assetVersion'] = '5.3.0'` no método `Controller::render()`, e padronizados todos os layouts mestres (`header.php`, `admin.php`, `portal.php`, `auth.php`, `home/index.php`, `footer.php`) para utilizarem a versão unificada (`?v=5.3.0`), forçando o navegador a baixar imediatamente as regras de estilo e scripts mais recentes.
+  2. Implementados os métodos `calendario()` e `relatorios()` em `AdminController.php` e suas respectivas views (`admin/calendario.php` e `admin/relatorios.php`).
+  3. Implementado o método `perfil()` em `PortalController.php` e sua respectiva view (`portal/perfil.php`), e registrado o redirecionamento seguro de `/portal/extrato` para `/portal/carteira`.
+  4. Registradas as 4 rotas com RBAC apropriado em `index.php`.
+  5. Criado teste automatizado `tests/novas_rotas_test.php` aprovado com 100% de sucesso via cURL.
+  6. Padronizadas as credenciais de teste manual em `tests/seed_test_accounts.php` para simplificar a validação pelo usuário.
+- Como evitar no futuro: Nunca permitir links estáticos na interface apontando para rotas não registradas, e utilizar versionamento dinâmico e centralizado de assets no controlador base MVC para prevenir problemas de cache no navegador cliente.
+
+---
+
+## 2026-09-23 - Transbordamento visual (overflow) do QR Code Pix para fora do container na Carteira Familiar
+
+- Sintoma: O QR Code SVG do Pix transbordava os limites do card quadrado branco (`#pix-qrcode-container`), invadindo a borda inferior e cobrindo parcialmente a legenda "Aponte a câmera do aplicativo do seu banco...".
+- Causa:
+  1. O método `QrCodeService::svg()` gerava a tag `<svg>` com atributos fixos `width="260" height="260"` sem estilo inline de contenção responsiva (`max-width: 100%`).
+  2. Na view `app/views/portal/carteira.php`, o container possuía `max-width: 220px;` com `d-inline-block` e sem `overflow: hidden`, permitindo que o SVG de 260px nativo desenhasse fora da caixa branca.
+  3. Ausência de regras dedicadas para `#pix-qrcode-container svg` em `assets/css/custom.css`.
+- Solução aplicada:
+  1. No arquivo `app/services/QrCodeService.php`, adicionado `style="max-width: 100%; height: auto; display: block;"` diretamente na tag `<svg>` gerada, assegurando responsividade intrínseca em qualquer contexto.
+  2. Na view `app/views/portal/carteira.php`, fixado o `#pix-qrcode-container` como quadrado simétrico (`width: 210px; height: 210px; padding: 10px; display: inline-flex; align-items: center; justify-content: center; overflow: hidden;`), garantindo que o SVG fique centralizado com margem respirável uniforme de 10px em todos os lados.
+  3. No arquivo `assets/css/custom.css`, adicionadas regras de alta especificidade para `#pix-qrcode-container svg` (`max-width: 190px; max-height: 190px; width: 100%; height: 100%; object-fit: contain;`).
+  4. Incrementada a versão global de assets para `?v=5.3.1` em `app/core/Controller.php` para forçar atualização imediata no navegador do cliente.
+- Como evitar no futuro: Todo elemento `<svg>` vetorial injetado dinamicamente via JavaScript deve possuir estilos defensivos (`max-width: 100%; height: auto; display: block;`) tanto no gerador de markup quanto nas classes CSS do container receptor, prevenindo transbordamento visual em caixas com dimensões menores que o `viewBox`.
+
+---
+
+## 2026-09-23 - Transbordamento de texto ("6 PEÇAS") para fora da borda do box de Total Geral no PDF A4 de Corte
+
+- Sintoma: No documento PDF de corte de turno gerado (`pedido_fornecedor_*.pdf`), o texto do total geral de salgados ("6 PEÇAS") ultrapassava a margem e a borda direita do box destacado, com as letras "ÇAS" desenhadas na área em branco fora do contorno da tabela.
+- Causa:
+  1. No arquivo `app/services/PdfService.php`, o comando de posicionamento do total utilizava uma coordenada fixa baseada no cabeçalho da coluna (`$col4 - 38`). Para a fonte Helvetica-Bold tamanho 12 (`/F2 12 Tf`), o texto `"6 PEÇAS"` (largura ~56 pt) iniciava na posição X=507.28 e terminava em X=563.28, enquanto a borda direita do retângulo (`re`) terminava em X=555.28 (`PAGE_WIDTH - 40`), causando um estouro de 8 a 15 pontos para fora do box.
+  2. O cabeçalho `"QUANTIDADE"` também utilizava um offset rígido (`$col4 - 40`) que tangenciava/vazava a margem útil direita.
+- Solução aplicada:
+  1. Em `app/services/PdfService.php`, instituído alinhamento à direita rigoroso baseado no cálculo dinâmico da largura dos caracteres com recuo interno uniforme de 12 pt (`$targetRight = $right - 12.0;`).
+  2. O total geral agora calcula `$totalX = $targetRight - (strlen($totalPecasStr) * 8.2);`, posicionando o texto a partir de X=477.68 e encerrando em X=534.68 (garantindo folga de mais de 20 pt antes da borda externa).
+  3. No cabeçalho da tabela, `"QUANTIDADE"` agora calcula `$quantX = $targetRight - (strlen($quantHeader) * 5.5);`, permanecendo perfeitamente alinhado com a margem interna.
+  4. Na view `app/views/operacional/corte.php`, atualizado o rótulo do botão para `Exportar PDF (A4)` para eliminar ambiguidade com a ação de `Imprimir A4`.
+  5. No espelho HTML de impressão (`corte/imprimir`), adicionado feedback visual imediato (`"Preparando Impressão..."`) no botão azul de impressão para sinalizar o processamento enquanto o spooler de impressão do sistema operacional inicializa os drivers de impressora.
+- Como evitar no futuro: Em geradores puros de streams PDF, nunca utilizar offsets estáticos calculados para tamanhos de fonte menores em textos de destaque maiores. Qualquer texto alinhado à direita deve ter sua posição X calculada dinamicamente subtraindo a largura estimada dos caracteres a partir da margem direita interna (`$targetRight - $textWidth`).
+
+---
+
+## 2026-09-23 - Cantos pretos quadrados ao redor do logotipo circular nos documentos PDF
+
+- Sintoma: Nos documentos PDF gerados (como `pedido_fornecedor_*.pdf`), o logotipo do Colégio Monteiro Lobato aparecia com um quadrado preto ao redor do emblema circular (os 4 cantos da imagem JPEG eram renderizados em preto sólido), enquanto na tela de impressão HTML o logotipo aparecia perfeitamente circular e limpo.
+- Causa:
+  1. O arquivo original `assets/img/logo-colegio.jpg` possuía pixels pretos sólidos (`RGB 0,0,0`) nos 4 cantos externos fora do raio do círculo emblemático (por ser formato JPEG que não possui canal de transparência alfa).
+  2. Nas páginas e espelhos de impressão HTML, a propriedade CSS `border-radius: 50%; object-fit: cover;` mascarava os cantos pretos recortando-os visualmente em círculo.
+  3. No entanto, nos streams de desenho do PDF (`PdfService.php`), o XObject de imagem `/Im1` era desenhado cruamente (`/Im1 Do`) dentro de uma matriz retangular simples, revelando integralmente os cantos pretos da imagem contra a folha e a faixa institucional.
+- Solução aplicada:
+  1. Em `app/services/PdfService.php`, implementado o método centralizador `desenharLogoCircular(float $x, float $y, float $size): string`, que constrói um caminho Bézier fechado de 4 curvas cúbicas aproximando o círculo com precisão geométrica ($k = r \times 0.55228475$) e aplica o operador nativo de recorte vetorial do PDF (`W n`). O comando `/Im1 Do` é executado dentro desse clipping path, descartando 100% de qualquer pixel fora do perímetro circular.
+  2. Aplicado `desenharLogoCircular()` em todos os 5 relatórios PDF da aplicação: Relatório de Corte A4, Fechamento de Caixa A4, Comprovante de Venda de Balcão 80mm, Bobina Contínua de Tickets 80mm e Ticket Individual 80mm.
+  3. Processado o arquivo `assets/img/logo-colegio.jpg` substituindo os pixels pretos dos 4 cantos externos por branco puro (`#ffffff`), garantindo que até mesmo softwares externos e leitores de imagem sem suporte a clipping vetorial exibam o logo sem bordas pretas.
+  4. Auditadas todas as views do sistema (login, sidebar, portal, cabeçalho, erros 404/500, configurações e espelhos de impressão), confirmando que todas utilizam `border-radius: 50%; object-fit: cover;`.
+  5. Expandida a suíte `tests/logo_pdf_test.php` com asserções estritas validando a presença do operador de recorte circular `W n` e execução do logo (33/33 asserções aprovadas).
+- Como evitar no futuro: Nunca embutir imagens quadradas com fundo escuro em documentos PDF sem aplicar previamente uma máscara alfa ou traçar um clipping path vetorial circular (`W n`) ao redor do objeto gráfico. Assegurar que imagens de logotipos institucionais circulares possuam bordas limpas e transparentes ou brancas na própria mídia fonte.
+
+---
+
+## 2026-09-23 - Falha na conclusão de venda no PDV: 'querySelector' called on an object that does not implement interface Element
+
+- Sintoma: Ao clicar no botão "Concluir Venda (F4)" na tela do PDV (`/operacional/pdv`), a venda era registrada com sucesso no banco de dados e o servidor respondia JSON com sucesso, porém o usuário recebia um alerta em popup: `Falha na comunicação com o servidor: 'querySelector' called on an object that does not implement interface Element.` e o modal com o comprovante pós-venda não era exibido.
+- Causa:
+  1. No arquivo `app/views/operacional/pdv.php`, o modal de pós-venda (`#modalPosVenda`) e os demais modais do PDV utilizam a estrutura customizada `.modal-backdrop-custom` e alternância da classe `.d-none` (não utilizando a classe `.modal` e `.modal-dialog` padrão do Bootstrap).
+  2. A função genérica `abrirModal('modalPosVenda')` em `assets/js/app.js` tentava invocar indiscriminadamente `bootstrap.Modal.getOrCreateInstance(modalEl).show()`.
+  3. No Bootstrap 5, o construtor da classe `Modal` procura o elemento de diálogo via `z.findOne('.modal-dialog', this._element)`. Como `#modalPosVenda` é um modal customizado, `this._dialog` resultava em `null`.
+  4. Ao executar `modal.show()`, o Bootstrap chamava `z.findOne('.modal-body', this._dialog)`.
+  5. O helper `findOne` do Bootstrap está implementado como `(t, e = document.documentElement) => Element.prototype.querySelector.call(e, t)`. Como o argumento `e` foi passado explicitamente como `null` (`this._dialog`), a chamada executou `Element.prototype.querySelector.call(null, '.modal-body')`, lançando a exceção nativa do DOM: `TypeError: 'querySelector' called on an object that does not implement interface Element.`.
+  6. Essa exceção no manipulador `.then(...)` da Promise foi capturada pelo `.catch(err => alert('Falha na comunicação com o servidor: ' + err.message))`.
+  7. Além disso, a função utilitária `fecharModal(modalId)` chamada pelos botões de fechar e cancelar (`fecharModal('modalPosVenda')`) não estava definida globalmente em `assets/js/app.js`.
+- Solução aplicada:
+  1. Em `assets/js/app.js`, aprimorada a função `abrirModal(modalId)` para verificar se o elemento possui a classe `.modal-backdrop-custom` ou se não é um modal do Bootstrap (`!modalEl.classList.contains('modal')`). Se for modal customizado, remove diretamente a classe `.d-none` e direciona o foco para o primeiro botão/campo sem acionar indevidamente o Bootstrap. Caso seja um modal do Bootstrap, prossegue com segurança com `bootstrap.Modal.getOrCreateInstance(modalEl).show()`.
+  2. Em `assets/js/app.js`, implementada a função global `fecharModal(modalId)` com suporte bidirecional: para modais customizados adiciona a classe `.d-none`, e para modais do Bootstrap invoca `bootstrap.Modal.getInstance(modalEl)?.hide()`.
+  3. Em `app/views/operacional/pdv.php`, declaradas cópias locais de segurança de `abrirModal` e `fecharModal`, atualizado o atalho de teclado `F2` para fechar o `#modalPosVenda` e limpar o carrinho para nova venda imediata, e sincronizado o estado dos botões de rádio do cliente em `trocarTipoCliente()`.
+  4. Em `app/views/operacional/pdv.php`, na finalização da venda (`submeterVendaServidor`), o modal pós-venda `#modalPosVenda` agora é exibido diretamente via manipulação nativa de classe (`classList.remove('d-none')`) e validação defensiva de cada elemento do DOM (`posVendaId`, `posVendaTotal`, `posVendaTrocoBox`, `btnImprimirComprovante`), eliminando qualquer dependência de bibliotecas externas ou de cache de scripts antigos no navegador.
+  5. Incrementada a versão global de assets para `?v=5.3.2` em `app/core/Controller.php` e no layout `app/views/layouts/admin.php` para forçar o recarregamento do novo script em todos os navegadores.
+  6. Validado o fluxo completo com Chrome Headless real via Chrome DevTools Protocol (CDP) e criado o teste automatizado `tests/pdv_modal_test.php` aprovado com 100% de sucesso (18/18 asserções).
+- Como evitar no futuro: Nunca acionar componentes JavaScript de bibliotecas externas (como `bootstrap.Modal`) sobre elementos que não implementam a sua estrutura de classes esperada (`.modal`, `.modal-dialog`). Em telas críticas como o PDV, a exibição de modais e recibos deve operar de forma autônoma e defensiva, sem depender de scripts externos que possam estar desatualizados no cache do navegador cliente.
+
+
+
+

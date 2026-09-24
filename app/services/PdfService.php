@@ -69,6 +69,39 @@ class PdfService
     }
 
     /**
+     * Renderiza o logotipo institucional recortado estritamente em círculo no stream PDF,
+     * eliminando os cantos da imagem quadrada original via clipping path vetorial Bézier.
+     *
+     * @param float $x Posição horizontal inferior esquerda
+     * @param float $y Posição vertical inferior esquerda
+     * @param float $size Diâmetro / largura e altura do logotipo em pontos
+     * @return string Comandos de desenho e clipping vetorial PDF
+     */
+    public static function desenharLogoCircular(float $x, float $y, float $size): string
+    {
+        $r = $size / 2.0;
+        $cx = $x + $r;
+        $cy = $y + $r;
+        $k = $r * 0.55228474983;
+
+        $out = "q\n";
+        // Traça caminho do círculo perfeito para recorte (clipping path)
+        $out .= sprintf("%.2f %.2f m\n", $cx + $r, $cy);
+        $out .= sprintf("%.2f %.2f %.2f %.2f %.2f %.2f c\n", $cx + $r, $cy + $k, $cx + $k, $cy + $r, $cx, $cy + $r);
+        $out .= sprintf("%.2f %.2f %.2f %.2f %.2f %.2f c\n", $cx - $k, $cy + $r, $cx - $r, $cy + $k, $cx - $r, $cy);
+        $out .= sprintf("%.2f %.2f %.2f %.2f %.2f %.2f c\n", $cx - $r, $cy - $k, $cx - $k, $cy - $r, $cx, $cy - $r);
+        $out .= sprintf("%.2f %.2f %.2f %.2f %.2f %.2f c\n", $cx + $k, $cy - $r, $cx + $r, $cy - $k, $cx + $r, $cy);
+        $out .= "h\n";
+        $out .= "W n\n"; // Aplica o recorte (clip) sem preencher nem traçar
+        // Desenha a imagem dentro da área recortada
+        $out .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", $size, $size, $x, $y);
+        $out .= "/Im1 Do\n";
+        $out .= "Q\n";
+
+        return $out;
+    }
+
+    /**
      * Gera o relatório consolidado de compras para o fornecedor em formato binário PDF 1.4
      * 
      * @param array $dadosCorte Estrutura retornada por Pedido::consolidarCorte
@@ -110,10 +143,7 @@ class PdfService
         $logoSize = 42.0;
         $logoX = $left + 12.0;
         $logoY = $y - 40.0;
-        $stream .= "q\n";
-        $stream .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", $logoSize, $logoSize, $logoX, $logoY);
-        $stream .= "/Im1 Do\n";
-        $stream .= "Q\n";
+        $stream .= self::desenharLogoCircular($logoX, $logoY, $logoSize);
 
         $textX = $logoX + $logoSize + 12.0;
 
@@ -220,11 +250,14 @@ class PdfService
         $stream .= "ET\n";
 
         // Qtd cabeçalho à direita
+        $targetRight = $right - 12.0;
+        $quantHeader = "QUANTIDADE";
+        $quantX = $targetRight - (strlen($quantHeader) * 5.5);
         $stream .= "BT\n";
         $stream .= "/F2 8 Tf\n";
         $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.28, 0.33, 0.41);
-        $stream .= sprintf("%.2f %.2f Td\n", $col4 - 40, $y - 10);
-        $stream .= sprintf("(%s) Tj\n", self::escapeText("QUANTIDADE"));
+        $stream .= sprintf("%.2f %.2f Td\n", $quantX, $y - 10);
+        $stream .= sprintf("(%s) Tj\n", self::escapeText($quantHeader));
         $stream .= "ET\n";
 
         $y -= $rowHeight;
@@ -244,8 +277,8 @@ class PdfService
             $y -= 10;
         } else {
             foreach ($itens as $idx => $item) {
-                $codigo = $item['codigo_interno'] ?? ('PROD-' . $item['produto_id']);
-                $descricao = $item['descricao'] ?? 'Salgado';
+                $codigo = $item['codigo_interno'] ?? $item['produto_codigo'] ?? ('PROD-' . ($item['produto_id'] ?? ($idx + 1)));
+                $descricao = $item['descricao'] ?? $item['produto_nome'] ?? 'Salgado';
                 $categoria = $item['categoria_nome'] ?? 'Salgados';
                 $qtd = (int)($item['quantidade_total'] ?? 0);
 
@@ -282,12 +315,13 @@ class PdfService
                 $stream .= sprintf("(%s) Tj\n", self::escapeText($categoria));
                 $stream .= "ET\n";
 
-                // Quantidade (destaque bold à direita)
+                // Quantidade (destaque bold alinhado à direita com margem interna de 12pt)
                 $qtdStr = $qtd . " un";
+                $qtdX = $targetRight - (strlen($qtdStr) * 6.5);
                 $stream .= "BT\n";
                 $stream .= "/F2 10 Tf\n"; // Bold
                 $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.06, 0.09, 0.16);
-                $stream .= sprintf("%.2f %.2f Td\n", $col4 - 25, $y - 8);
+                $stream .= sprintf("%.2f %.2f Td\n", $qtdX, $y - 8);
                 $stream .= sprintf("(%s) Tj\n", self::escapeText($qtdStr));
                 $stream .= "ET\n";
 
@@ -315,15 +349,17 @@ class PdfService
         $stream .= "BT\n";
         $stream .= "/F2 10 Tf\n";
         $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.06, 0.09, 0.16);
-        $stream .= sprintf("%.2f %.2f Td\n", $col1, $y - 6);
+        $stream .= sprintf("%.2f %.2f Td\n", $left + 10, $y - 6);
         $stream .= sprintf("(%s) Tj\n", self::escapeText("TOTAL GERAL DE PEÇAS A ENTREGAR:"));
         $stream .= "ET\n";
 
+        $totalPecasStr = $totalPecas . " PEÇAS";
+        $totalX = $targetRight - (strlen($totalPecasStr) * 8.2);
         $stream .= "BT\n";
         $stream .= "/F2 12 Tf\n";
         $stream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85); // #1d4ed8
-        $stream .= sprintf("%.2f %.2f Td\n", $col4 - 38, $y - 6);
-        $stream .= sprintf("(%s) Tj\n", self::escapeText($totalPecas . " PEÇAS"));
+        $stream .= sprintf("%.2f %.2f Td\n", $totalX, $y - 6);
+        $stream .= sprintf("(%s) Tj\n", self::escapeText($totalPecasStr));
         $stream .= "ET\n";
 
         // Bloco de Assinaturas e Conferência Física de Recebimento
@@ -600,7 +636,7 @@ class PdfService
         </head>
         <body>
             <div class="no-print" style="justify-content: flex-end;">
-                <button onclick="window.print()" class="btn-print">Imprimir Relatório</button>
+                <button onclick="this.innerHTML='Preparando Impressão...'; const b=this; setTimeout(function(){ window.print(); b.innerHTML='Imprimir Relatório'; }, 50);" class="btn-print">Imprimir Relatório</button>
             </div>
             <div class="print-header">
                 <div style="display: flex; align-items: center; gap: 14px;">
@@ -715,10 +751,7 @@ class PdfService
             $y = 120.0;
 
             // Logotipo institucional
-            $stream .= "q\n";
-            $stream .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", 22.0, 22.0, $left, $y - 14);
-            $stream .= "/Im1 Do\n";
-            $stream .= "Q\n";
+            $stream .= self::desenharLogoCircular($left, $y - 14, 22.0);
 
             $stream .= "BT\n/F2 10 Tf\n0.11 0.31 0.85 rg\n" . sprintf("%.2f %.2f Td\n", $left + 28, $y) . sprintf("(%s) Tj\nET\n", self::escapeText("COLÉGIO MONTEIRO LOBATO"));
             $y -= 14;
@@ -791,10 +824,7 @@ class PdfService
             $stream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $ticketH, $width, $ticketH);
 
             // Cabeçalho institucional do ticket com logotipo oficial
-            $stream .= "q\n";
-            $stream .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", 18.0, 18.0, $left + 6, $y - 22);
-            $stream .= "/Im1 Do\n";
-            $stream .= "Q\n";
+            $stream .= self::desenharLogoCircular($left + 6, $y - 22, 18.0);
 
             $stream .= "BT\n";
             $stream .= "/F2 8.5 Tf\n";
@@ -1284,10 +1314,7 @@ class PdfService
         // Logotipo oficial centralizado no topo da bobina (34x34 pt)
         $logoSize = 34.0;
         $logoX = ($pageWidth - $logoSize) / 2.0;
-        $stream .= "q\n";
-        $stream .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", $logoSize, $logoSize, $logoX, $y - $logoSize);
-        $stream .= "/Im1 Do\n";
-        $stream .= "Q\n";
+        $stream .= self::desenharLogoCircular($logoX, $y - $logoSize, $logoSize);
         $y -= ($logoSize + 8.0);
 
         // Cabeçalho
@@ -1516,8 +1543,8 @@ class PdfService
         $recargas = (float)($sessao['total_dinheiro_recargas'] ?? 0.0);
         $pix = (float)($sessao['total_pix_balcao'] ?? 0.0);
         $esperado = round($fundo + $avulso + $recargas, 2);
-        $informado = ($sessao['total_informado_gaveta'] !== null) ? (float)$sessao['total_informado_gaveta'] : $esperado;
-        $diferenca = ($sessao['diferenca_quebra_sobra'] !== null) ? (float)$sessao['diferenca_quebra_sobra'] : round($informado - $esperado, 2);
+        $informado = (isset($sessao['total_informado_gaveta']) && $sessao['total_informado_gaveta'] !== null) ? (float)$sessao['total_informado_gaveta'] : $esperado;
+        $diferenca = (isset($sessao['diferenca_quebra_sobra']) && $sessao['diferenca_quebra_sobra'] !== null) ? (float)$sessao['diferenca_quebra_sobra'] : round($informado - $esperado, 2);
         $obs = htmlspecialchars($sessao['observacoes'] ?? '', ENT_QUOTES, 'UTF-8');
 
         ob_start();
@@ -1827,10 +1854,7 @@ class PdfService
         $logoSize = 42.0;
         $logoX = $left;
         $logoY = $y - 42.0;
-        $stream .= "q\n";
-        $stream .= sprintf("%.2f 0 0 %.2f %.2f %.2f cm\n", $logoSize, $logoSize, $logoX, $logoY);
-        $stream .= "/Im1 Do\n";
-        $stream .= "Q\n";
+        $stream .= self::desenharLogoCircular($logoX, $logoY, $logoSize);
 
         $textX = $left + $logoSize + 12.0;
 

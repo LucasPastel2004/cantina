@@ -543,4 +543,95 @@ class PortalController extends Controller
             $this->redirect("/portal/pedidos/editar/{$id}");
         }
     }
+
+    /**
+     * Tela de perfil e dados cadastrais do responsável familiar
+     */
+    public function perfil(): void
+    {
+        $usuario = Auth::user();
+        $respId  = (int)$usuario['id'];
+        $respModel = new Responsavel();
+        $respDb = $respModel->find($respId);
+        $dependentes = $respModel->getDependentes($respId);
+
+        $saldoAtual = (float)($respDb['saldo_atual'] ?? $usuario['saldo'] ?? 0.00);
+        Session::set('_auth_saldo', $saldoAtual);
+        $csrfToken = Session::generateCsrfToken();
+
+        $this->render('portal/perfil', [
+            'pageTitle'       => 'Meus Dados — Portal da Família',
+            'activeMenu'      => 'inicio',
+            'responsavel'     => $respDb,
+            'responsavelNome' => $respDb['nome'] ?? $usuario['nome'] ?? 'Responsável',
+            'saldoAtual'      => $saldoAtual,
+            'dependentes'     => $dependentes,
+            'csrfToken'       => $csrfToken
+        ], 'portal');
+    }
+
+    /**
+     * Processa a alteração de senha do responsável autenticado no portal
+     */
+    public function alterarSenha(): void
+    {
+        $dados = $this->all();
+
+        if (!Session::validateCsrfToken($dados['csrf_token'] ?? '')) {
+            Session::setFlash('danger', 'Validação de segurança expirada. Tente novamente.');
+            $this->redirect('/portal/perfil');
+            return;
+        }
+
+        $senhaAtual     = $dados['senha_atual'] ?? '';
+        $novaSenha      = $dados['nova_senha'] ?? '';
+        $confirmarSenha = $dados['confirmar_senha'] ?? '';
+
+        if (empty($senhaAtual) || empty($novaSenha) || empty($confirmarSenha)) {
+            Session::setFlash('warning', 'Todos os campos de senha são de preenchimento obrigatório.');
+            $this->redirect('/portal/perfil');
+            return;
+        }
+
+        if (strlen($novaSenha) < 6) {
+            Session::setFlash('warning', 'A nova senha deve possuir no mínimo 6 caracteres.');
+            $this->redirect('/portal/perfil');
+            return;
+        }
+
+        if ($novaSenha !== $confirmarSenha) {
+            Session::setFlash('warning', 'A confirmação não coincide com a nova senha informada.');
+            $this->redirect('/portal/perfil');
+            return;
+        }
+
+        $usuario = Auth::user();
+        $respId  = (int)$usuario['id'];
+        $respModel = new Responsavel();
+        $respDb = $respModel->find($respId);
+
+        if (!$respDb || !password_verify($senhaAtual, $respDb['senha_hash'])) {
+            Session::setFlash('danger', 'A senha atual informada está incorreta.');
+            $this->redirect('/portal/perfil');
+            return;
+        }
+
+        if (password_verify($novaSenha, $respDb['senha_hash'])) {
+            Session::setFlash('warning', 'A nova senha não pode ser idêntica à senha atual.');
+            $this->redirect('/portal/perfil');
+            return;
+        }
+
+        // Atualiza a senha no banco de dados com Bcrypt
+        $respModel->updatePassword($respId, $novaSenha);
+
+        // Registro de auditoria técnica de segurança
+        Auth::logSecurityEvent('senha_alterada_portal', $respDb['cpf'], [
+            'responsavel_id' => $respId,
+            'ip'             => Auth::getClientIp()
+        ]);
+
+        Session::setFlash('success', 'Sua senha de acesso foi alterada com sucesso!');
+        $this->redirect('/portal/perfil');
+    }
 }

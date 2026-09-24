@@ -234,14 +234,46 @@ function toggleNavSection(sectionId) {
 }
 
 /**
- * Abre um modal do Bootstrap pelo ID
+ * Abre um modal pelo ID (suporta modais Bootstrap ou modais customizados .modal-backdrop-custom)
  * @param {string} modalId 
  */
 function abrirModal(modalId) {
   const modalEl = document.getElementById(modalId);
-  if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+  if (!modalEl) return;
+
+  // Se for modal customizado (classe .modal-backdrop-custom ou não possuir a classe .modal do Bootstrap)
+  if (modalEl.classList.contains('modal-backdrop-custom') || !modalEl.classList.contains('modal')) {
+    modalEl.classList.remove('d-none');
+    return;
+  }
+
+  // Se for modal padrão do Bootstrap
+  if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
+  }
+}
+
+/**
+ * Fecha um modal pelo ID (suporta modais Bootstrap ou modais customizados .modal-backdrop-custom)
+ * @param {string} modalId 
+ */
+function fecharModal(modalId) {
+  const modalEl = document.getElementById(modalId);
+  if (!modalEl) return;
+
+  // Se for modal customizado
+  if (modalEl.classList.contains('modal-backdrop-custom') || !modalEl.classList.contains('modal')) {
+    modalEl.classList.add('d-none');
+    return;
+  }
+
+  // Se for modal padrão do Bootstrap
+  if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) {
+      modal.hide();
+    }
   }
 }
 

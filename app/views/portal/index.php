@@ -58,7 +58,7 @@ $bloqueadoMed = $bloqueadoMed ?? false;
                     <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary flex-fill text-center">
                         Recarregar Saldo
                     </a>
-                    <a href="<?php echo $baseUrl; ?>/portal/extrato" class="btn btn-enterprise btn-secondary flex-fill text-center">
+                    <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary flex-fill text-center">
                         Ver Extrato
                     </a>
                 </div>

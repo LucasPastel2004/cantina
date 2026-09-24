@@ -2170,5 +2170,38 @@ input[type=number].no-spinners {
   background-color: #f8fafc;
 }
 
+/* ==========================================================================
+   Renderização e Container de QR Code Pix (Anti-Overflow)
+   ========================================================================== */
+#pix-qrcode-container,
+.pix-qrcode-container {
+  width: 210px !important;
+  height: 210px !important;
+  padding: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  background-color: #ffffff !important;
+  border: 1px solid var(--border-default, #e2e8f0) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+  box-sizing: border-box !important;
+  margin: 0 auto !important;
+}
+
+#pix-qrcode-container svg,
+.pix-qrcode-container svg,
+.pix-qrcode-svg {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 190px !important;
+  max-height: 190px !important;
+  margin: 0 auto !important;
+  object-fit: contain !important;
+}
+
+
 
 

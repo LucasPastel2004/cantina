@@ -56,7 +56,7 @@ class QrCodeService
         }
 
         $svg = sprintf(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="%d" height="%d" class="pix-qrcode-svg">' . "\n",
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="%d" height="%d" class="pix-qrcode-svg" style="max-width: 100%%; height: auto; display: block;">' . "\n",
             $size,
             $size,
             $size,
