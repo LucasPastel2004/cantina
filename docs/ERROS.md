@@ -777,3 +777,27 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 
 
 
+
+---
+
+## 2026-09-24 - Botão redundante na topbar com sidebar aberta, ausência de hover na borda esquerda e controle de trava por setinhas
+
+- Sintoma:
+  1. Ao expandir a barra lateral, a topbar exibia um botão extra e desnecessário com ícone hambúrguer (`.btn-sidebar-toggle`) ao lado do título, duplicando a função da setinha `<` existente no cabeçalho da própria sidebar.
+  2. Ao encostar o mouse na borda esquerda com a barra lateral colapsada/fechada, o menu lateral não se abria por aproximação (hover).
+  3. A alternância da barra lateral precisava operar com comportamento explícito de trava fixa (pin/unpin) pelas setinhas: quando fechada, clicar na setinha da topbar trava a barra aberta permanentemente; quando aberta, clicar na setinha da sidebar trava a barra fechada.
+- Causa:
+  1. *Regra CSS de exibição forçada na topbar:* A folha de estilo `custom.css` definia `.btn-sidebar-toggle { display: inline-flex !important; }` e `.app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle .icon-toggle-bars { display: inline-block !important; }`, mantendo o botão hambúrguer visível na topbar mesmo quando a barra lateral já estava expandida ao lado.
+  2. *Desativação do trigger de borda:* O elemento `.sidebar-edge-trigger` e os ouvintes de `mouseenter`/`mouseleave` haviam sido suprimidos na rodada anterior para resolver um conflito de layout com gavetas flutuantes, impedindo o acionamento por hover na extrema esquerda da tela.
+- Solução aplicada:
+  1. *Remoção do Botão Excessivo na Topbar:* Configurada a regra `.app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle { display: none !important; }` no desktop/notebook (>= 768px). Quando a barra está expandida, a topbar não exibe nenhum botão de toggle, ficando limpa e sem redundância.
+  2. *Gatilho de Borda e Modo Hover Peek:*
+     - Adicionado `<div class="sidebar-edge-trigger" id="sidebarEdgeTrigger" aria-hidden="true"></div>` em `app/views/layouts/sidebar.php`.
+     - Estilizada a faixa invisível de 20px na extrema esquerda da tela (`.app-admin-wrapper.sidebar-collapsed .sidebar-edge-trigger`), ativa exclusivamente quando a barra estiver no estado travada fechada.
+     - Implementado o modo hover temporário (`.app-admin-wrapper.sidebar-collapsed.sidebar-peek-open .app-sidebar`) que translada suavemente a barra para `translateX(0)` com sombra pronunciada (`box-shadow: 4px 0 24px rgba(15, 23, 42, 0.18)`), fechando automaticamente com delay suave de 250ms ao retirar o cursor de cima da sidebar ou do trigger.
+  3. *Mecanismo de Trava Determinístico (Pin/Unpin):*
+     - Quando a barra está travada fechada: a setinha `>` fica visível na topbar; ao clicar nela, trava a barra aberta (`pinned_open` no `localStorage`), expande a barra e contrai o conteúdo principal (`calc(100% - 240px)`).
+     - Quando a barra está travada aberta: a setinha `<` fica disponível no topo da sidebar; ao clicar nela, trava a barra fechada (`pinned_collapsed` no `localStorage`), recolhe a barra (`translateX(-240px)`), estica o conteúdo principal para 100% e ativa o gatilho de hover na borda esquerda.
+  4. *Invalidação Forçada de Cache:* Atualizado `$data['assetVersion']` para `5.7.4` em `app/core/Controller.php` e `app/views/layouts/admin.php`.
+  5. *Testes Automatizados:* Suíte `tests/sidebar_responsive_test.php` expandida para 18 asserções cobrindo todos os cenários com 100% de sucesso.
+- Como evitar no futuro: Em layouts de alta densidade corporativa com painel colapsável, segregar estritamente a camada de navegação temporária (hover/peek com delay e overlay defensivo) da camada de fixação de layout (trava/pin com contração do grid principal). Botões de expansão na topbar devem ser ocultados automaticamente quando o painel expandido já fornecer controles de recolhimento locais.

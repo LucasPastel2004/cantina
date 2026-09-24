@@ -1264,10 +1264,10 @@ textarea.form-control {
   overflow: visible !important;
 }
 
-/* Gatilho e Overlay de Auto-Hide desativados (elimina gaveta flutuante sobreposta) */
+/* Gatilho e Overlay de Auto-Hide da Barra Lateral */
 .sidebar-edge-trigger,
 .sidebar-floating-overlay {
-  display: none !important;
+  display: none;
 }
 
 /* Colapso e Expansão Sólida da Barra Lateral no Desktop e Notebooks (>= 768px) */
@@ -1294,6 +1294,11 @@ textarea.form-control {
     transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Quando a barra lateral está expandida: esconder o botão da topbar para eliminar botão excessivo (Anexo 3) */
+  .app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle {
+    display: none !important;
+  }
+
   /* Ao colapsar a barra lateral: a barra se esconde e a parte principal se estica para preencher a tela */
   .app-admin-wrapper.sidebar-collapsed .app-sidebar {
     transform: translateX(-240px);
@@ -1304,17 +1309,9 @@ textarea.form-control {
     width: 100%;
   }
 
-  /* Botão toggle da topbar sempre disponível no desktop e notebook para alternar a navegação */
-  .btn-sidebar-toggle {
+  /* Quando colapsada: botão da topbar exibe a setinha '>' para travar a barra aberta */
+  .app-admin-wrapper.sidebar-collapsed .btn-sidebar-toggle {
     display: inline-flex !important;
-  }
-
-  .app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle .icon-toggle-bars {
-    display: inline-block !important;
-  }
-
-  .app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle .icon-toggle-arrow {
-    display: none !important;
   }
 
   .app-admin-wrapper.sidebar-collapsed .btn-sidebar-toggle .icon-toggle-bars {
@@ -1323,6 +1320,31 @@ textarea.form-control {
 
   .app-admin-wrapper.sidebar-collapsed .btn-sidebar-toggle .icon-toggle-arrow {
     display: inline-block !important;
+  }
+
+  /* Faixa de borda na extrema esquerda: ativa apenas quando a barra lateral estiver colapsada (Anexo 2) */
+  .app-admin-wrapper.sidebar-collapsed .sidebar-edge-trigger {
+    display: block !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 20px;
+    z-index: 1030;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .app-admin-wrapper.sidebar-collapsed .sidebar-edge-trigger:hover {
+    background-color: rgba(37, 99, 235, 0.08);
+  }
+
+  /* Quando a barra lateral colapsada é aberta temporariamente por hover (Peek Open) */
+  .app-admin-wrapper.sidebar-collapsed.sidebar-peek-open .app-sidebar {
+    transform: translateX(0) !important;
+    z-index: 1045 !important;
+    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.18) !important;
   }
 }
 

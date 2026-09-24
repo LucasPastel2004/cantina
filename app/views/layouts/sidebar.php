@@ -20,6 +20,9 @@ $userRole = $user['role'] ?? $user['perfil'] ?? '';
 $isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
 ?>
 
+<!-- Gatilho de Borda Esquerda para Abertura por Hover quando Colapsada (Desktop/Notebook) -->
+<div class="sidebar-edge-trigger" id="sidebarEdgeTrigger" aria-hidden="true" title="Aproxime o mouse para visualizar a barra lateral"></div>
+
 <!-- Backdrop para Mobile (Offcanvas estrito < 768px) -->
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 
@@ -34,7 +37,7 @@ $isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
             </div>
         </a>
         <div class="d-flex align-items-center gap-1">
-            <button type="button" class="btn-sidebar-collapse d-none d-md-inline-flex" onclick="toggleSidebarCollapse()" title="Recolher barra lateral" aria-label="Recolher barra lateral">
+            <button type="button" class="btn-sidebar-collapse d-none d-md-inline-flex" onclick="toggleSidebarCollapse()" title="Travar barra lateral recolhida" aria-label="Travar barra lateral recolhida">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
                     <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
                 </svg>

@@ -221,13 +221,51 @@ function toggleSidebar() {
   }
 }
 
+let sidebarPeekTimeout = null;
+
+/**
+ * Abre a barra lateral temporariamente por hover (Peek) quando estiver colapsada no Desktop/Notebook
+ */
+function abrirSidebarPeek() {
+  if (window.innerWidth < 768) return;
+  const wrapper = document.querySelector('.app-admin-wrapper');
+  if (!wrapper || !wrapper.classList.contains('sidebar-collapsed')) return;
+  clearTimeout(sidebarPeekTimeout);
+  wrapper.classList.add('sidebar-peek-open');
+}
+
+/**
+ * Agenda o fechamento suave da barra lateral temporária após o mouse sair
+ */
+function fecharSidebarPeekComDelay() {
+  const wrapper = document.querySelector('.app-admin-wrapper');
+  if (!wrapper || !wrapper.classList.contains('sidebar-peek-open')) return;
+  clearTimeout(sidebarPeekTimeout);
+  sidebarPeekTimeout = setTimeout(function () {
+    wrapper.classList.remove('sidebar-peek-open');
+  }, 250);
+}
+
+/**
+ * Fecha imediatamente a barra lateral temporária
+ */
+function fecharSidebarPeek() {
+  clearTimeout(sidebarPeekTimeout);
+  const wrapper = document.querySelector('.app-admin-wrapper');
+  if (wrapper) {
+    wrapper.classList.remove('sidebar-peek-open');
+  }
+}
+
 /**
  * Inicializa o estado da barra lateral (expandida ou colapsada) a partir das preferências do usuário
+ * e configura os ouvintes de abertura por hover (borda esquerda) e fechamento ao sair
  */
 function initSidebarAutoHide() {
   const wrapper = document.querySelector('.app-admin-wrapper');
   if (!wrapper) return;
 
+  // 1. Restaura preferência salva de fixação da barra lateral
   try {
     const pref = localStorage.getItem('cantina_sidebar_preference');
     const legacy = localStorage.getItem('cantina_sidebar_collapsed');
@@ -241,17 +279,56 @@ function initSidebarAutoHide() {
       }
     }
   } catch (e) {}
+
+  // 2. Ouvintes da faixa invisível na borda esquerda (Edge Trigger) para abertura por hover
+  const edgeTrigger = document.getElementById('sidebarEdgeTrigger');
+  if (edgeTrigger) {
+    edgeTrigger.addEventListener('mouseenter', abrirSidebarPeek);
+    edgeTrigger.addEventListener('mouseleave', fecharSidebarPeekComDelay);
+  }
+
+  // 3. Ouvintes na própria barra lateral para mantê-la aberta durante navegação e fechar ao sair
+  const sidebar = document.getElementById('appSidebar');
+  if (sidebar) {
+    sidebar.addEventListener('mouseenter', function () {
+      clearTimeout(sidebarPeekTimeout);
+    });
+    sidebar.addEventListener('mouseleave', function () {
+      fecharSidebarPeekComDelay();
+    });
+  }
+
+  // 4. Tecla Escape ou clique fora fecha o hover temporário
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && wrapper.classList.contains('sidebar-peek-open')) {
+      fecharSidebarPeek();
+    }
+  });
+
+  document.addEventListener('click', function (e) {
+    if (wrapper.classList.contains('sidebar-peek-open')) {
+      const sidebarEl = document.getElementById('appSidebar');
+      const triggerEl = document.getElementById('sidebarEdgeTrigger');
+      if (sidebarEl && !sidebarEl.contains(e.target) && triggerEl && !triggerEl.contains(e.target)) {
+        fecharSidebarPeek();
+      }
+    }
+  });
 }
 
 /**
- * Alterna a expansão/colapso da barra lateral no Desktop e Notebooks (>= 768px).
- * Ao expandir: a parte principal (.app-main-area) se contrai para caber tudo certinho lado a lado.
- * Ao colapsar: a barra se esconde e a parte principal se estica para preencher a tela inteira.
+ * Alterna e trava a barra lateral (Pin / Unpin) no Desktop e Notebooks (>= 768px).
+ * - Quando travada fechada: ao clicar na setinha, trava a barra lateral aberta (contrai a área principal e esconde o botão da topbar).
+ * - Quando travada aberta: ao clicar na setinha, trava a barra lateral fechada (estica a área principal e exibe o botão da topbar com a setinha '>').
  */
 function toggleSidebarCollapse() {
   const wrapper = document.querySelector('.app-admin-wrapper');
   if (!wrapper) return;
   
+  // Cancela qualquer estado de hover temporário
+  fecharSidebarPeek();
+  
+  // Alterna o estado de trava
   const isNowCollapsed = wrapper.classList.toggle('sidebar-collapsed');
   
   try {
