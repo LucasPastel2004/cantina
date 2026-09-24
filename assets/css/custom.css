@@ -858,6 +858,7 @@ textarea.form-control {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  overflow-x: hidden;
 }
 
 /* Sidebar Operacional 240px de Alta Densidade */
@@ -1254,7 +1255,7 @@ textarea.form-control {
   }
 
   /* Faixa de borda invisível na extrema esquerda para acionar hover */
-  .app-admin-wrapper.sidebar-collapsed .sidebar-edge-trigger {
+  .app-admin-wrapper.sidebar-collapsed:not(.sidebar-floating-open) .sidebar-edge-trigger {
     display: block;
     position: fixed;
     top: 0;
@@ -1271,24 +1272,16 @@ textarea.form-control {
     background: linear-gradient(to right, rgba(37, 99, 235, 0.18), transparent);
   }
 
-  /* Modo Flutuante Automático (Hover Drawer sobreposto sem empurrar a tela) */
+  /* Quando expandido temporariamente por hover (Auto-Reveal):
+     A barra lateral desliza para margin-left: 0 no fluxo normal do Flexbox (position: sticky),
+     reajustando o conteúdo da página para o lado de forma ultra suave, 
+     sem cobrir/comer qualquer parte do título, dos filtros ou das tabelas! */
   .app-admin-wrapper.sidebar-collapsed.sidebar-floating-open .app-sidebar {
     margin-left: 0 !important;
-    position: fixed !important;
+    position: sticky !important;
     top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1060;
-    box-shadow: 6px 0 28px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.08);
-  }
-
-  /* Overlay transparente para clique-fora fechar a sidebar flutuante */
-  .app-admin-wrapper.sidebar-collapsed.sidebar-floating-open .sidebar-floating-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 1055;
-    background-color: transparent;
+    z-index: 1020;
+    box-shadow: 2px 0 8px rgba(15, 23, 42, 0.05);
   }
 
   /* No desktop, se a sidebar NÃO estiver colapsada, oculta o botão toggle da topbar */
@@ -1296,9 +1289,14 @@ textarea.form-control {
     display: none !important;
   }
 
-  /* Quando colapsada no desktop, exibe o botão na topbar com a seta para reabertura */
-  .app-admin-wrapper.sidebar-collapsed .btn-sidebar-toggle {
+  /* Quando colapsada e NÃO expandida por hover, exibe o botão na topbar com a seta para reabertura */
+  .app-admin-wrapper.sidebar-collapsed:not(.sidebar-floating-open) .btn-sidebar-toggle {
     display: inline-flex !important;
+  }
+
+  /* Enquanto expandida pelo hover, o botão da topbar se recolhe para dar lugar ao botão da sidebar */
+  .app-admin-wrapper.sidebar-collapsed.sidebar-floating-open .btn-sidebar-toggle {
+    display: none !important;
   }
 
   .app-admin-wrapper.sidebar-collapsed .btn-sidebar-toggle .icon-toggle-bars {

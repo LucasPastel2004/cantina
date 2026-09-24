@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
 * **Status da Fase 15:** Concluída com Sucesso [x]
 * **Próxima Fase:** Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
-* **Última Atualização:** 2026-09-24 10:48:00 (Implementação de Auto-Hide inteligente e Gaveta Flutuante / Hover Drawer da Barra Lateral: em telas <= 1400px a barra lateral colapsa automaticamente liberando 100% da largura da tela para tabelas e PDV; ao aproximar o mouse da borda esquerda ou do botão toggle da topbar, a barra desliza suavemente sobreposta sem empurrar o layout; ao afastar o mouse, ela recolhe automaticamente; suporte a fixação manual via clique e persistência em localStorage)
+* **Última Atualização:** 2026-09-24 10:55:00 (Ajuste do comportamento de expansão da Barra Lateral: ao expandir automaticamente por hover, o conteúdo da tela se reajusta suavemente para o lado através do fluxo Flexbox normal, impedindo que a barra cubra ou 'coma' qualquer informação da tela; ao recolher, a tela volta a ocupar 100% da largura, com assetVersion 5.7.0)
 
 ---
 
