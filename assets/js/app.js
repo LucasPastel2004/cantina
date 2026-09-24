@@ -265,14 +265,13 @@ function initSidebarAutoHide() {
   const wrapper = document.querySelector('.app-admin-wrapper');
   if (!wrapper) return;
 
-  // 1. Restaura preferência salva de fixação da barra lateral
+  // 1. Restaura preferência salva de fixação da barra lateral (Padrão: ABERTA / EXPANDIDA)
   try {
     const pref = localStorage.getItem('cantina_sidebar_preference');
-    const legacy = localStorage.getItem('cantina_sidebar_collapsed');
     
     // No Desktop / Notebooks (>= 768px): respeita a preferência salva
     if (window.innerWidth >= 768) {
-      if (pref === 'pinned_collapsed' || (pref === null && legacy === 'true')) {
+      if (pref === 'pinned_collapsed') {
         wrapper.classList.add('sidebar-collapsed');
       } else {
         wrapper.classList.remove('sidebar-collapsed');
@@ -325,11 +324,17 @@ function toggleSidebarCollapse() {
   const wrapper = document.querySelector('.app-admin-wrapper');
   if (!wrapper) return;
   
-  // Cancela qualquer estado de hover temporário
+  // Se estava em modo hover peek, o usuário clicou na setinha para travar aberta!
+  const estavaEmPeek = wrapper.classList.contains('sidebar-peek-open');
   fecharSidebarPeek();
   
-  // Alterna o estado de trava
-  const isNowCollapsed = wrapper.classList.toggle('sidebar-collapsed');
+  let isNowCollapsed;
+  if (estavaEmPeek) {
+    wrapper.classList.remove('sidebar-collapsed');
+    isNowCollapsed = false;
+  } else {
+    isNowCollapsed = wrapper.classList.toggle('sidebar-collapsed');
+  }
   
   try {
     localStorage.setItem('cantina_sidebar_preference', isNowCollapsed ? 'pinned_collapsed' : 'pinned_open');

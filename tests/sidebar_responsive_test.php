@@ -37,9 +37,9 @@ $assertCustom(str_contains($viewContestacoes, 'top: calc(100% + 4px);'), "Dropdo
 
 // 2. Validação da Sidebar no Desktop e Notebooks (Breakpoint >= 768px)
 $assertCustom(str_contains($css, '@media (min-width: 768px)'), "Breakpoint da sidebar configurado para 768px (suporte a notebooks com scaling)");
-$assertCustom(str_contains($css, 'margin-left: 240px;') && str_contains($css, 'width: calc(100% - 240px);'), "Ao expandir a sidebar: área principal contrai com margin-left: 240px e width: calc(100% - 240px)");
+$assertCustom(str_contains($css, 'margin-left: 240px !important;') && str_contains($css, 'width: calc(100% - 240px) !important;'), "Ao expandir a sidebar: área principal contrai com margin-left: 240px e width: calc(100% - 240px)");
 $assertCustom(str_contains($css, '.app-admin-wrapper.sidebar-collapsed .app-sidebar') && str_contains($css, 'transform: translateX(-240px);'), "Ao colapsar a sidebar: barra se esconde com transform: translateX(-240px)");
-$assertCustom(str_contains($css, '.app-admin-wrapper.sidebar-collapsed .app-main-area') && str_contains($css, 'margin-left: 0;') && str_contains($css, 'width: 100%;'), "Ao colapsar a sidebar: área principal se estica para 100% da tela");
+$assertCustom(str_contains($css, '.app-admin-wrapper.sidebar-collapsed .app-main-area') && str_contains($css, 'margin-left: 0 !important;') && str_contains($css, 'width: 100% !important;'), "Ao colapsar a sidebar: área principal se estica para 100% da tela");
 
 // 3. Validação de remoção do botão excessivo na topbar quando expandida (Anexo 3)
 $assertCustom(str_contains($css, '.app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle') && str_contains($css, 'display: none !important;'), "Topbar oculta botão excessivo btn-sidebar-toggle quando sidebar está expandida (Anexo 3)");
@@ -50,6 +50,7 @@ $assertCustom(str_contains($css, '.app-admin-wrapper.sidebar-collapsed .btn-side
 $assertCustom(str_contains($viewSidebar, 'id="sidebarEdgeTrigger"'), "sidebar.php contém gatilho de borda #sidebarEdgeTrigger na extrema esquerda");
 $assertCustom(str_contains($css, '.app-admin-wrapper.sidebar-collapsed .sidebar-edge-trigger') && str_contains($css, 'width: 20px;'), "custom.css ativa faixa invisível de 20px na extrema esquerda apenas quando colapsada");
 $assertCustom(str_contains($css, '.app-admin-wrapper.sidebar-collapsed.sidebar-peek-open .app-sidebar') && str_contains($css, 'transform: translateX(0) !important;'), "custom.css translada barra lateral suavemente no hover peek (.sidebar-peek-open)");
+$assertCustom(str_contains($css, '.app-admin-wrapper.sidebar-collapsed.sidebar-peek-open .app-main-area') && str_contains($css, 'margin-left: 240px !important;'), "CRÍTICO: No hover peek, a área principal contrai com margin-left: 240px para JAMAIS comer o conteúdo da tela");
 
 // 5. Validação da Lógica JavaScript de Trava (Pin/Unpin) e Hover no app.js
 $assertCustom(str_contains($js, 'function abrirSidebarPeek()'), "app.js possui função abrirSidebarPeek para hover na borda esquerda");
@@ -57,6 +58,7 @@ $assertCustom(str_contains($js, 'function fecharSidebarPeekComDelay()'), "app.js
 $assertCustom(str_contains($js, "localStorage.setItem('cantina_sidebar_preference'"), "app.js persiste preferência de trava (pinned_open vs pinned_collapsed)");
 $assertCustom(str_contains($js, 'sidebarEdgeTrigger'), "app.js conecta ouvintes mouseenter/mouseleave no gatilho de borda");
 $assertCustom(str_contains($viewSidebar, 'title="Travar barra lateral recolhida"'), "sidebar.php botão da setinha configurado com título semântico de trava");
+$assertCustom(str_contains($js, 'estavaEmPeek'), "app.js detecta clique na setinha durante hover peek para travar aberta com segurança");
 
 echo "\n=======================================================\n";
 echo " RESULTADO: {$passou} / {$total} testes passaram!\n";

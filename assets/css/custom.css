@@ -1289,14 +1289,25 @@ textarea.form-control {
 
   /* Ao expandir a barra lateral: a parte principal se contrai para caber tudo perfeitamente lado a lado */
   .app-main-area {
-    margin-left: 240px;
-    width: calc(100% - 240px);
-    transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-left: 240px !important;
+    width: calc(100% - 240px) !important;
+    max-width: calc(100% - 240px) !important;
+    transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Quando a barra lateral está expandida: esconder o botão da topbar para eliminar botão excessivo (Anexo 3) */
   .app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle {
     display: none !important;
+  }
+
+  .app-admin-wrapper:not(.sidebar-collapsed) .app-sidebar {
+    transform: translateX(0) !important;
+  }
+
+  .app-admin-wrapper:not(.sidebar-collapsed) .app-main-area {
+    margin-left: 240px !important;
+    width: calc(100% - 240px) !important;
+    max-width: calc(100% - 240px) !important;
   }
 
   /* Ao colapsar a barra lateral: a barra se esconde e a parte principal se estica para preencher a tela */
@@ -1305,8 +1316,9 @@ textarea.form-control {
   }
 
   .app-admin-wrapper.sidebar-collapsed .app-main-area {
-    margin-left: 0;
-    width: 100%;
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   /* Quando colapsada: botão da topbar exibe a setinha '>' para travar a barra aberta */
@@ -1343,8 +1355,18 @@ textarea.form-control {
   /* Quando a barra lateral colapsada é aberta temporariamente por hover (Peek Open) */
   .app-admin-wrapper.sidebar-collapsed.sidebar-peek-open .app-sidebar {
     transform: translateX(0) !important;
-    z-index: 1045 !important;
-    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.18) !important;
+    z-index: 1020 !important;
+  }
+
+  /* CRÍTICO: No hover peek, a área principal se contrai sincronizada para JAMAIS cobrir o conteúdo */
+  .app-admin-wrapper.sidebar-collapsed.sidebar-peek-open .app-main-area {
+    margin-left: 240px !important;
+    width: calc(100% - 240px) !important;
+    max-width: calc(100% - 240px) !important;
+  }
+
+  .app-admin-wrapper.sidebar-collapsed.sidebar-peek-open .btn-sidebar-toggle {
+    display: none !important;
   }
 }
 
