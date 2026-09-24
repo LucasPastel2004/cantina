@@ -679,6 +679,29 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. *Testes Automatizados:* Baterias `tests/fase5_test.php` (74/74), `tests/sidebar_visibility_test.php` (7/7) e `tests/fase16_test.php` (60/60) executadas e 100% aprovadas.
 - Como evitar no futuro: Em layouts administrativos com barra lateral e barra superior que devam permanecer sempre visíveis durante a navegação em páginas longas, utilizar `position: fixed` para a sidebar desktop ancorada de `top: 0` a `bottom: 0`, associada à margem esquerda dinâmica no contêiner principal, evitando o uso de `overflow: hidden` em elementos pais que possam neutralizar o posicionamento fixo/sticky.
 
+---
+
+## 2026-09-24 - Ação de Desbloqueio MED disparando confirm() sem campo para preenchimento de justificativa obrigatória
+
+- Sintoma: Ao clicar no botão "Desbloquear" no painel de contestações MED (`/admin/contestacoes`), o navegador exibia apenas uma caixa nativa de diálogo `confirm()` com as opções "OK" e "Cancelar". Ao clicar em "OK", a requisição falhava e o sistema retornava a mensagem de erro flash: *"Atenção: A justificativa de desbloqueio é de preenchimento obrigatório."*, impedindo a conclusão do desbloqueio da família.
+- Causa:
+  1. *Falta de modal de entrada para justificativa:* O botão "Desbloquear" estava implementado como um formulário POST direto com evento inline `onsubmit="return confirm(...)"` contendo apenas o `responsavel_id` em um campo oculto. Não havia campo de texto para que o operador inserisse a justificativa exigida pelo backend.
+  2. *Validação rígida no backend:* O endpoint `AdminController::desbloquearContaMed` exige obrigatoriamente uma justificativa não vazia para garantir rastreabilidade, auditoria escolar e conformidade regulamentar.
+  3. *Inconsistência de placeholder em `logs_auditoria`:* Nos métodos `Responsavel::desbloquearMed`, `Responsavel::bloquearMed` e `TransacaoCarteira::processarEstornoMed`, a instrução SQL utilizava o marcador `:tabela`, enquanto o array associativo de parâmetros fornecia `'tabela_afetada'`, o que geraria falha silenciosa no `INSERT` da trilha de auditoria sob strict PDO.
+- Solução aplicada:
+  1. *Criação do Modal Corporativo `#modalDesbloqueioMed`:*
+     - Desenvolvido modal acessível em `app/views/admin/contestacoes.php` com identificação do titular, status do saldo familiar em fonte tabular, aviso contextual alertando se a família ainda possui saldo devedor, campo `<textarea>` obrigatório com validação `minlength="5"` para justificativa formal e switch para envio de notificação via WhatsApp.
+  2. *Abertura Dinâmica via JavaScript:*
+     - Criada a função `window.abrirModalDesbloqueio(dados)` vinculada ao botão `.btn-enterprise.btn-secondary` "Desbloquear", eliminando o `confirm()` nativo do navegador.
+  3. *Disparo Opcional de WhatsApp no Backend:*
+     - Atualizado `AdminController::desbloquearContaMed` para capturar a flag `notificar_whatsapp` e acionar `WhatsAppService::sendNotificacaoDesbloqueioMed`.
+  4. *Correção de Binding em `logs_auditoria`:*
+     - Corrigido o placeholder para `:tabela_afetada` em `Responsavel::bloquearMed`, `Responsavel::desbloquearMed` e `TransacaoCarteira::processarEstornoMed`.
+  5. *Testes Automatizados:*
+     - Criada e aprovada a suíte `tests/desbloqueio_med_modal_test.php` (11/11 asserções 100% aprovadas) e reexecutada a suíte `tests/fase16_test.php` (60/60 asserções 100% aprovadas).
+- Como evitar no futuro: Toda ação administrativa que exija justificativa para auditoria deve dispor de um modal corporativo com campo de texto e validação client-side e server-side, nunca dependendo de diálogos de confirmação nativos binários (`confirm()`). Sempre assegurar que os nomes dos marcadores nomeados em consultas preparadas coincidam exatamente com as chaves do array de parâmetros.
+
+
 
 
 

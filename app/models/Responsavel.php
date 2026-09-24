@@ -291,7 +291,7 @@ class Responsavel extends Model
                 $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
                 self::execute(
                     "INSERT INTO logs_auditoria (operador_id, acao, tabela_afetada, registro_id, justificativa, ip_origem, created_at)
-                     VALUES (:operador_id, :acao, :tabela, :registro_id, :justificativa, :ip, NOW())",
+                     VALUES (:operador_id, :acao, :tabela_afetada, :registro_id, :justificativa, :ip, NOW())",
                     [
                         'operador_id'   => $operadorId,
                         'acao'          => 'bloqueio_med',
@@ -326,7 +326,7 @@ class Responsavel extends Model
             try {
                 self::execute(
                     "INSERT INTO logs_auditoria (operador_id, acao, tabela_afetada, registro_id, justificativa, ip_origem, created_at)
-                     VALUES (:operador_id, :acao, :tabela, :registro_id, :justificativa, :ip, NOW())",
+                     VALUES (:operador_id, :acao, :tabela_afetada, :registro_id, :justificativa, :ip, NOW())",
                     [
                         'operador_id'   => $operadorId,
                         'acao'          => 'desbloqueio_med',

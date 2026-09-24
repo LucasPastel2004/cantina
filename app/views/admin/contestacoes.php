@@ -264,18 +264,16 @@ $totalPaginas = $totalPaginas ?? 1;
                                         </button>
 
                                         <?php if ($isBloqueado): ?>
-                                            <form action="<?php echo $baseUrl; ?>/admin/contestacoes/desbloquear" 
-                                                  method="POST" 
-                                                  class="d-inline m-0" 
-                                                  onsubmit="return confirm('Confirma o desbloqueio manual desta conta familiar?');">
-                                                <?php echo $csrfField; ?>
-                                                <input type="hidden" name="responsavel_id" value="<?php echo (int)$fam['id']; ?>">
-                                                <button type="submit" 
-                                                        class="btn btn-enterprise btn-secondary btn-sm" 
-                                                        title="Liberar agendamento de pedidos">
-                                                    Desbloquear
-                                                </button>
-                                            </form>
+                                            <button type="button" 
+                                                    class="btn btn-enterprise btn-secondary btn-sm" 
+                                                    onclick='abrirModalDesbloqueio(<?php echo json_encode([
+                                                        "id" => $fam["id"],
+                                                        "nome" => $fam["nome"],
+                                                        "saldo" => (float)($fam["saldo_atual"] ?? $fam["saldo"] ?? 0)
+                                                    ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>)'
+                                                    title="Liberar agendamento de pedidos com justificativa formal">
+                                                Desbloquear
+                                            </button>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -547,6 +545,67 @@ $totalPaginas = $totalPaginas ?? 1;
     </div>
 </div>
 
+<!-- Modal: Desbloqueio Manual de Conta Familiar (MED) -->
+<div class="modal fade" id="modalDesbloqueioMed" tabindex="-1" aria-labelledby="modalDesbloqueioMedLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white py-2 px-3">
+                <h5 class="modal-title h6 mb-0 font-weight-bold" id="modalDesbloqueioMedLabel">
+                    Desbloqueio Manual de Conta Familiar (MED)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form action="<?php echo $baseUrl; ?>/admin/contestacoes/desbloquear" method="POST" id="formDesbloqueioMed">
+                <?php echo $csrfField; ?>
+                <input type="hidden" id="desbloqueio_responsavel_id" name="responsavel_id" value="">
+
+                <div class="modal-body p-3">
+                    <div class="p-2 mb-3 bg-light border rounded">
+                        <div class="text-secondary text-microcopy font-weight-semibold text-uppercase">Titular Selecionado:</div>
+                        <div class="font-weight-bold text-dark" id="desbloqueio_nome_titular">—</div>
+                        <div class="mt-1" style="font-size: 12px;">
+                            Situação da carteira: <span id="desbloqueio_saldo_atual" class="font-weight-bold font-tabular">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info py-2 px-3 text-microcopy mb-3" id="desbloqueio_aviso_saldo">
+                        <strong>Nota Operacional:</strong> A liberação manual cancela a suspensão preventiva da conta e permite que a família volte a realizar agendamentos de lanches no portal.
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="desbloqueio_justificativa" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">
+                            Motivo / Justificativa do Desbloqueio <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control form-control-sm" 
+                                  id="desbloqueio_justificativa" 
+                                  name="justificativa" 
+                                  rows="3" 
+                                  placeholder="Informe o motivo formal do desbloqueio (ex: autorização da diretoria escolar, comprovação de pagamento apresentada em análise, acordo presencial, etc.)" 
+                                  required 
+                                  minlength="5"></textarea>
+                    </div>
+
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="desbloqueio_whatsapp" name="notificar_whatsapp" value="1" checked>
+                        <label class="form-check-label text-secondary" for="desbloqueio_whatsapp" style="font-size: 12px;">
+                            Enviar notificação de liberação e confirmação via WhatsApp para o responsável
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-footer p-2 bg-light d-flex justify-content-between">
+                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-enterprise btn-primary btn-sm">
+                        Confirmar Desbloqueio
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 // Funções globais de abertura e controle dos modais corporativos
 window.abrirModalContestacaoManual = function () {
@@ -584,4 +643,48 @@ window.abrirModalQuitacao = function (dados) {
         modal.show();
     }
 };
+
+window.abrirModalDesbloqueio = function (dados) {
+    if (!dados || !dados.id) return;
+
+    var elId = document.getElementById('desbloqueio_responsavel_id');
+    var elTitular = document.getElementById('desbloqueio_nome_titular');
+    var elSaldo = document.getElementById('desbloqueio_saldo_atual');
+    var elJustificativa = document.getElementById('desbloqueio_justificativa');
+    var elAviso = document.getElementById('desbloqueio_aviso_saldo');
+
+    if (elId) elId.value = dados.id;
+    if (elTitular) elTitular.textContent = dados.nome || 'Responsável';
+    if (elJustificativa) elJustificativa.value = '';
+
+    var saldoNum = parseFloat(dados.saldo) || 0;
+    var saldoFormatado = 'R$ ' + Math.abs(saldoNum).toFixed(2).replace('.', ',');
+    if (saldoNum < 0) {
+        saldoFormatado = '-' + saldoFormatado;
+        if (elSaldo) {
+            elSaldo.textContent = saldoFormatado + ' (Saldo Devedor)';
+            elSaldo.className = 'font-weight-bold font-tabular text-danger';
+        }
+        if (elAviso) {
+            elAviso.className = 'alert alert-warning py-2 px-3 text-microcopy mb-3';
+            elAviso.innerHTML = '<strong>Atenção:</strong> Esta conta possui <strong>saldo devedor de ' + saldoFormatado + '</strong>. O desbloqueio manual liberará os agendamentos escolares mesmo sem a quitação integral do débito.';
+        }
+    } else {
+        if (elSaldo) {
+            elSaldo.textContent = saldoFormatado + ' (Regular)';
+            elSaldo.className = 'font-weight-bold font-tabular text-success';
+        }
+        if (elAviso) {
+            elAviso.className = 'alert alert-info py-2 px-3 text-microcopy mb-3';
+            elAviso.innerHTML = '<strong>Nota Operacional:</strong> A liberação manual cancela a suspensão preventiva da conta e permite que a família volte a realizar agendamentos de lanches no portal.';
+        }
+    }
+
+    var modalEl = document.getElementById('modalDesbloqueioMed');
+    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+        var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+};
 </script>
+

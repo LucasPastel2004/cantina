@@ -1280,6 +1280,7 @@ class AdminController extends Controller
 
         $responsavelId = (int)$this->input('responsavel_id', 0);
         $justificativa = trim((string)$this->input('justificativa', ''));
+        $notificarWhatsapp = (bool)$this->input('notificar_whatsapp', false);
 
         if ($responsavelId <= 0 || empty($justificativa)) {
             Session::setFlash('danger', 'A justificativa de desbloqueio é de preenchimento obrigatório.');
@@ -1290,8 +1291,19 @@ class AdminController extends Controller
         $operadorId = Auth::id() ?: 1;
         Responsavel::desbloquearMed($responsavelId, $operadorId, $justificativa);
 
+        if ($notificarWhatsapp) {
+            $resp = Responsavel::buscarPorId($responsavelId);
+            if ($resp && !empty($resp['whatsapp'])) {
+                try {
+                    $ws = new \App\Services\WhatsAppService();
+                    $ws->sendNotificacaoDesbloqueioMed($resp['whatsapp'], (float)$resp['saldo_atual'], $resp['nome'] ?? '');
+                } catch (\Throwable $e) {}
+            }
+        }
+
         Session::setFlash('success', 'Suspensão preventiva MED removida com sucesso para o responsável.');
         $this->redirect('/admin/contestacoes');
+
     }
 
     /**
