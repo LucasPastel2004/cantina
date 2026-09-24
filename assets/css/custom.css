@@ -298,7 +298,8 @@ input[type="number"].text-end {
   box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
 }
 
-.stat-strip-item {
+.stat-strip-item,
+.stat-strip .stat-item {
   flex: 1;
   padding: 10px 16px;
   border-right: 1px solid var(--border-subtle);
@@ -306,11 +307,13 @@ input[type="number"].text-end {
   flex-direction: column;
 }
 
-.stat-strip-item:last-child {
+.stat-strip-item:last-child,
+.stat-strip .stat-item:last-child {
   border-right: none;
 }
 
-.stat-strip-label {
+.stat-strip-label,
+.stat-strip .stat-label {
   font-size: 11px;
   font-weight: 600;
   color: #475569;
@@ -319,7 +322,8 @@ input[type="number"].text-end {
   margin-bottom: 2px;
 }
 
-.stat-strip-value {
+.stat-strip-value,
+.stat-strip .stat-value {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);

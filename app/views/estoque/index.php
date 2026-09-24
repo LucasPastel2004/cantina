@@ -40,33 +40,33 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
 
     <!-- Stat-Strip Executivo -->
     <div class="stat-strip mb-3">
-        <div class="stat-item">
-            <span class="stat-label">Total de Itens</span>
-            <span class="stat-value font-tabular"><?php echo number_format($metricas['total_produtos'], 0, ',', '.'); ?></span>
+        <div class="stat-strip-item">
+            <span class="stat-strip-label">Total de Itens</span>
+            <span class="stat-strip-value font-tabular"><?php echo number_format($metricas['total_produtos'], 0, ',', '.'); ?></span>
         </div>
-        <div class="stat-item">
-            <span class="stat-label">Unidades Físicas</span>
-            <span class="stat-value font-tabular"><?php echo number_format($metricas['total_unidades_fisicas'], 0, ',', '.'); ?> un</span>
+        <div class="stat-strip-item">
+            <span class="stat-strip-label">Unidades Físicas</span>
+            <span class="stat-strip-value font-tabular"><?php echo number_format($metricas['total_unidades_fisicas'], 0, ',', '.'); ?> un</span>
         </div>
-        <div class="stat-item">
-            <span class="stat-label">Reservas Online</span>
-            <span class="stat-value font-tabular text-muted"><?php echo number_format($metricas['total_unidades_reservadas'], 0, ',', '.'); ?> un</span>
+        <div class="stat-strip-item">
+            <span class="stat-strip-label">Reservas Online</span>
+            <span class="stat-strip-value font-tabular text-muted"><?php echo number_format($metricas['total_unidades_reservadas'], 0, ',', '.'); ?> un</span>
         </div>
-        <div class="stat-item">
-            <span class="stat-label">Valor em Venda</span>
-            <span class="stat-value font-tabular">R$ <?php echo number_format($metricas['valor_estoque_venda'], 2, ',', '.'); ?></span>
+        <div class="stat-strip-item">
+            <span class="stat-strip-label">Valor em Venda</span>
+            <span class="stat-strip-value font-tabular">R$ <?php echo number_format($metricas['valor_estoque_venda'], 2, ',', '.'); ?></span>
         </div>
-        <div class="stat-item">
-            <span class="stat-label">Entradas no Mês</span>
-            <span class="stat-value font-tabular text-success">+<?php echo number_format($metricas['entradas_mes'], 0, ',', '.'); ?> un</span>
+        <div class="stat-strip-item">
+            <span class="stat-strip-label">Entradas no Mês</span>
+            <span class="stat-strip-value font-tabular text-success">+<?php echo number_format($metricas['entradas_mes'], 0, ',', '.'); ?> un</span>
         </div>
-        <div class="stat-item">
-            <span class="stat-label">Perdas no Mês</span>
-            <span class="stat-value font-tabular text-danger">-<?php echo number_format($metricas['perdas_mes'], 0, ',', '.'); ?> un</span>
+        <div class="stat-strip-item">
+            <span class="stat-strip-label">Perdas no Mês</span>
+            <span class="stat-strip-value font-tabular text-danger">-<?php echo number_format($metricas['perdas_mes'], 0, ',', '.'); ?> un</span>
         </div>
-        <div class="stat-item">
-            <span class="stat-label">Alerta Mínimo</span>
-            <span class="stat-value font-tabular <?php echo $metricas['total_alertas_minimo'] > 0 ? 'text-warning' : 'text-slate-900'; ?>">
+        <div class="stat-strip-item" style="border-right: none;">
+            <span class="stat-strip-label">Alerta Mínimo</span>
+            <span class="stat-strip-value font-tabular <?php echo $metricas['total_alertas_minimo'] > 0 ? 'text-warning' : 'text-slate-900'; ?>">
                 <?php echo $metricas['total_alertas_minimo']; ?> <?php echo $metricas['total_alertas_minimo'] === 1 ? 'item' : 'itens'; ?>
             </span>
         </div>
@@ -160,7 +160,7 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
                                         <div>
                                             <span class="fw-semibold text-slate-900"><?php echo htmlspecialchars($p['descricao'], ENT_QUOTES, 'UTF-8'); ?></span>
                                             <?php if ($isAlerta): ?>
-                                                <span class="badge bg-warning text-dark ms-1" style="font-size: 10px; font-weight: 600;">Estoque Baixo</span>
+                                                <span class="tag-alergeno ms-1" style="font-size: 10px; padding: 1px 6px;">Estoque Baixo</span>
                                             <?php endif; ?>
                                         </div>
                                     </div>

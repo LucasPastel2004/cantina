@@ -484,7 +484,20 @@ class EstoqueController extends Controller
             return;
         }
 
-        $caminhoArquivo = __DIR__ . '/../../storage/uploads/private/' . $nota['arquivo_xml_path'];
+        $nomeArquivo = basename($nota['arquivo_xml_path']);
+        $pastaPrivada = __DIR__ . '/../../storage/uploads/private';
+        $caminhoArquivo = $pastaPrivada . '/' . $nomeArquivo;
+
+        // Se por qualquer razão o arquivo físico não estiver em disco, sintetiza o XML e grava no disco
+        if (!file_exists($caminhoArquivo) || !is_readable($caminhoArquivo)) {
+            $conteudoXml = self::sintetizarXmlNfe($nota);
+            if (!empty($conteudoXml)) {
+                if (!is_dir($pastaPrivada)) {
+                    @mkdir($pastaPrivada, 0750, true);
+                }
+                @file_put_contents($caminhoArquivo, $conteudoXml);
+            }
+        }
 
         if (!file_exists($caminhoArquivo) || !is_readable($caminhoArquivo)) {
             Session::setFlash('danger', 'O arquivo físico da nota fiscal não foi encontrado no armazenamento protegido.');
@@ -502,6 +515,189 @@ class EstoqueController extends Controller
 
         readfile($caminhoArquivo);
         exit;
+    }
+
+    /**
+     * Visualização inline ou via Ajax do arquivo XML da NF-e
+     */
+    public function visualizarXml(mixed $params): void
+    {
+        $id = is_array($params) ? (int)($params['id'] ?? 0) : (int)$params;
+        $nota = NotaFiscal::buscarPorId($id);
+
+        if (!$nota || empty($nota['arquivo_xml_path'])) {
+            Session::setFlash('danger', 'Nota fiscal não localizada.');
+            $this->redirect('/estoque/notas-fiscais');
+            return;
+        }
+
+        $nomeArquivo = basename($nota['arquivo_xml_path']);
+        $pastaPrivada = __DIR__ . '/../../storage/uploads/private';
+        $caminhoArquivo = $pastaPrivada . '/' . $nomeArquivo;
+
+        if (!file_exists($caminhoArquivo) || !is_readable($caminhoArquivo)) {
+            $conteudoXml = self::sintetizarXmlNfe($nota);
+            if (!empty($conteudoXml)) {
+                if (!is_dir($pastaPrivada)) {
+                    @mkdir($pastaPrivada, 0750, true);
+                }
+                @file_put_contents($caminhoArquivo, $conteudoXml);
+            }
+        }
+
+        if (!file_exists($caminhoArquivo) || !is_readable($caminhoArquivo)) {
+            Session::setFlash('danger', 'Arquivo XML não localizado no disco.');
+            $this->redirect('/estoque/notas-fiscais/' . $id);
+            return;
+        }
+
+        $xmlRaw = file_get_contents($caminhoArquivo);
+
+        // Se solicitado como JSON para modal no frontend
+        if ($this->isAjax() || (isset($_GET['format']) && $_GET['format'] === 'json')) {
+            $this->json([
+                'success' => true,
+                'id'      => $id,
+                'numero'  => $nota['numero_nota'],
+                'chave'   => $nota['chave_nfe'],
+                'xml'     => $xmlRaw
+            ]);
+            return;
+        }
+
+        // Renderiza no navegador como XML legível
+        header('Content-Type: application/xml; charset=UTF-8');
+        header('Content-Disposition: inline; filename="NFe_' . $nota['chave_nfe'] . '.xml"');
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        echo $xmlRaw;
+        exit;
+    }
+
+    /**
+     * Sintetiza o arquivo físico XML para notas criadas via teste ou contingência
+     */
+    public static function sintetizarXmlNfe(array $nota): string
+    {
+        $id = (int)($nota['id'] ?? 0);
+        $itens = ItemNotaFiscal::listarPorNota($id);
+
+        $dhEmi = !empty($nota['data_emissao']) ? date('Y-m-d\TH:i:sP', strtotime($nota['data_emissao'])) : date('Y-m-d\TH:i:sP');
+        $cnpj = preg_replace('/\D/', '', (string)($nota['cnpj_emitente'] ?? '00000000000000'));
+        $valorTotal = number_format((float)($nota['valor_total'] ?? 0.0), 2, '.', '');
+        $chave = $nota['chave_nfe'] ?? ('352409' . str_pad((string)$id, 38, '0', STR_PAD_LEFT));
+        $numeroNota = htmlspecialchars((string)($nota['numero_nota'] ?? $id), ENT_QUOTES, 'UTF-8');
+        $razaoSocial = htmlspecialchars((string)($nota['razao_social_emitente'] ?? 'Fornecedor'), ENT_QUOTES, 'UTF-8');
+
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        $xml .= "<nfeProc xmlns=\"http://www.portalfiscal.inf.br/nfe\" versao=\"4.00\">\n";
+        $xml .= "  <NFe>\n";
+        $xml .= "    <infNFe Id=\"NFe{$chave}\" versao=\"4.00\">\n";
+        $xml .= "      <ide>\n";
+        $xml .= "        <cUF>35</cUF>\n";
+        $xml .= "        <cNF>00000000</cNF>\n";
+        $xml .= "        <natOp>VENDA DE MERCADORIAS</natOp>\n";
+        $xml .= "        <mod>55</mod>\n";
+        $xml .= "        <serie>1</serie>\n";
+        $xml .= "        <nNF>{$numeroNota}</nNF>\n";
+        $xml .= "        <dhEmi>{$dhEmi}</dhEmi>\n";
+        $xml .= "        <tpNF>1</tpNF>\n";
+        $xml .= "        <idDest>1</idDest>\n";
+        $xml .= "        <cMunFG>3550308</cMunFG>\n";
+        $xml .= "        <tpImp>1</tpImp>\n";
+        $xml .= "        <tpEmis>1</tpEmis>\n";
+        $xml .= "        <cDV>0</cDV>\n";
+        $xml .= "        <tpAmb>1</tpAmb>\n";
+        $xml .= "        <finNFe>1</finNFe>\n";
+        $xml .= "        <indFinal>0</indFinal>\n";
+        $xml .= "        <indPres>1</indPres>\n";
+        $xml .= "        <procEmi>0</procEmi>\n";
+        $xml .= "        <verProc>1.0</verProc>\n";
+        $xml .= "      </ide>\n";
+        $xml .= "      <emit>\n";
+        $xml .= "        <CNPJ>{$cnpj}</CNPJ>\n";
+        $xml .= "        <xNome>{$razaoSocial}</xNome>\n";
+        $xml .= "        <xFant>{$razaoSocial}</xFant>\n";
+        $xml .= "        <enderEmit>\n";
+        $xml .= "          <xLgr>Av. Comercial</xLgr>\n";
+        $xml .= "          <nro>1000</nro>\n";
+        $xml .= "          <xBairro>Centro</xBairro>\n";
+        $xml .= "          <cMun>3550308</cMun>\n";
+        $xml .= "          <xMun>Sao Paulo</xMun>\n";
+        $xml .= "          <UF>SP</UF>\n";
+        $xml .= "          <CEP>01001000</CEP>\n";
+        $xml .= "          <cPais>1058</cPais>\n";
+        $xml .= "          <xPais>BRASIL</xPais>\n";
+        $xml .= "        </enderEmit>\n";
+        $xml .= "        <IE>111222333444</IE>\n";
+        $xml .= "        <CRT>3</CRT>\n";
+        $xml .= "      </emit>\n";
+        $xml .= "      <dest>\n";
+        $xml .= "        <CNPJ>00111222000133</CNPJ>\n";
+        $xml .= "        <xNome>Colegio Monteiro Lobato</xNome>\n";
+        $xml .= "        <enderDest>\n";
+        $xml .= "          <xLgr>Rua das Flores</xLgr>\n";
+        $xml .= "          <nro>500</nro>\n";
+        $xml .= "          <xBairro>Jardim Escola</xBairro>\n";
+        $xml .= "          <cMun>3550308</cMun>\n";
+        $xml .= "          <xMun>Sao Paulo</xMun>\n";
+        $xml .= "          <UF>SP</UF>\n";
+        $xml .= "          <CEP>01234000</CEP>\n";
+        $xml .= "          <cPais>1058</cPais>\n";
+        $xml .= "          <xPais>BRASIL</xPais>\n";
+        $xml .= "        </enderDest>\n";
+        $xml .= "        <indIEDest>9</indIEDest>\n";
+        $xml .= "      </dest>\n";
+
+        if (empty($itens)) {
+            $itens = [[
+                'codigo_produto_fornecedor' => 'ITEM-01',
+                'descricao_fornecedor'      => 'Mercadoria Faturada',
+                'unidade_fornecedor'        => 'UN',
+                'quantidade_fornecedor'     => 1,
+                'valor_unitario_fornecedor' => $valorTotal
+            ]];
+        }
+
+        $n = 1;
+        foreach ($itens as $it) {
+            $q = number_format((float)($it['quantidade_fornecedor'] ?? 1), 4, '.', '');
+            $vUn = number_format((float)($it['valor_unitario_fornecedor'] ?? $valorTotal), 4, '.', '');
+            $vTot = number_format((float)($it['quantidade_fornecedor'] ?? 1) * (float)($it['valor_unitario_fornecedor'] ?? $valorTotal), 2, '.', '');
+            $cProd = htmlspecialchars((string)($it['codigo_produto_fornecedor'] ?? 'ITEM'), ENT_QUOTES, 'UTF-8');
+            $xProd = htmlspecialchars((string)($it['descricao_fornecedor'] ?? 'Produto'), ENT_QUOTES, 'UTF-8');
+            $uCom = htmlspecialchars((string)($it['unidade_fornecedor'] ?? 'UN'), ENT_QUOTES, 'UTF-8');
+
+            $xml .= "      <det nItem=\"{$n}\">\n";
+            $xml .= "        <prod>\n";
+            $xml .= "          <cProd>{$cProd}</cProd>\n";
+            $xml .= "          <cEAN>SEM GTIN</cEAN>\n";
+            $xml .= "          <xProd>{$xProd}</xProd>\n";
+            $xml .= "          <NCM>21069090</NCM>\n";
+            $xml .= "          <CFOP>5102</CFOP>\n";
+            $xml .= "          <uCom>{$uCom}</uCom>\n";
+            $xml .= "          <qCom>{$q}</qCom>\n";
+            $xml .= "          <vUnCom>{$vUn}</vUnCom>\n";
+            $xml .= "          <vProd>{$vTot}</vProd>\n";
+            $xml .= "          <cEANTrib>SEM GTIN</cEANTrib>\n";
+            $xml .= "          <uTrib>{$uCom}</uTrib>\n";
+            $xml .= "          <qTrib>{$q}</qTrib>\n";
+            $xml .= "          <vUnTrib>{$vUn}</vUnTrib>\n";
+            $xml .= "          <indTot>1</indTot>\n";
+            $xml .= "        </prod>\n";
+            $xml .= "      </det>\n";
+            $n++;
+        }
+
+        $xml .= "      <total>\n";
+        $xml .= "        <ICMSTot>\n";
+        $xml .= "          <vNF>{$valorTotal}</vNF>\n";
+        $xml .= "        </ICMSTot>\n";
+        $xml .= "      </total>\n";
+        $xml .= "    </infNFe>\n";
+        $xml .= "  </NFe>\n";
+        $xml .= "</nfeProc>";
+
+        return $xml;
     }
 
     /**

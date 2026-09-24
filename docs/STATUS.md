@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
 * **Status da Fase 15:** Concluída com Sucesso [x]
 * **Próxima Fase:** Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
-* **Última Atualização:** 2026-09-24 09:50:00 (Aprimoramento da captura do atalho de teclado ESC nos espelhos e comprovantes: suporte universal a keydown/keyup em capture-phase, detecção abrangente de key/code/keyCode 27, foco imediato no body e fallback seguro entre window.close e redirecionamento para o Caixa)
+* **Última Atualização:** 2026-09-24 10:10:00 (Refatoração de design Anti-Slop das telas de Estoque e NF-e: correção de stat-strip em estoque/index e estoque/notas_fiscais, grid e metadados com chave de 44 dígitos formatada em nota_fiscal_detalhes, criação dos arquivos XML físicos em storage/uploads/private e novo visualizador interativo de XML em modal e rota dedicada)
 
 ---
 

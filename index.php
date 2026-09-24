@@ -302,6 +302,9 @@ $router->get('/estoque/notas-fiscais/{id}', [\App\Controllers\EstoqueController:
 $router->get('/estoque/notas-fiscais/{id}/download', [\App\Controllers\EstoqueController::class, 'downloadXml'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
+$router->get('/estoque/notas-fiscais/{id}/xml', [\App\Controllers\EstoqueController::class, 'visualizarXml'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
 
 // 3. Área Administrativa e Cadastros Mestres (Fases 7 e 8 — FSD Módulos 6, 7 e 9)
 // 3.1. Configurações Globais (Acesso exclusivo para 'administrador')
