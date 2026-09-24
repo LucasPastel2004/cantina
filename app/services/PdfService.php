@@ -2025,7 +2025,7 @@ class PdfService
                 }
             </style>
         </head>
-        <body>
+        <body tabindex="0" style="outline: none;">
             <div class="sheet">
                 <div class="no-print" style="display: flex; flex-direction: column; align-items: stretch; gap: 10px;">
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
@@ -2036,7 +2036,7 @@ class PdfService
                         <span style="font-size: 11px; color: #94a3b8;">Atalho: Pressione <kbd style="background: #e2e8f0; color: #334155; padding: 1px 5px; border-radius: 3px; font-size: 11px;">Esc</kbd> para voltar</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-                        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>" class="btn-action btn-secondary" id="btnVoltarCaixa" title="Retornar à tela de Gestão de Caixa">
+                        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>" onclick="executarRetornoAoCaixa(); return false;" class="btn-action btn-secondary" id="btnVoltarCaixa" title="Retornar à tela de Gestão de Caixa">
                             ← Voltar ao Caixa
                         </a>
                         <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $id; ?>/pdf" target="_blank" download="fechamento_caixa_<?php echo $id; ?>.pdf" class="btn-action btn-secondary" id="btnBaixarEspelhoPdf">
@@ -2168,7 +2168,7 @@ class PdfService
                 </table>
 
                 <div class="no-print" style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-                    <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>" class="btn-action btn-secondary" id="btnVoltarCaixaRodape" title="Retornar à tela de Gestão de Caixa">
+                    <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>" onclick="executarRetornoAoCaixa(); return false;" class="btn-action btn-secondary" id="btnVoltarCaixaRodape" title="Retornar à tela de Gestão de Caixa">
                         ← Voltar ao Caixa
                     </a>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -2183,12 +2183,71 @@ class PdfService
             </div>
 
             <script>
-                // Tecla ESC retorna ao Caixa
-                window.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') {
-                        window.location.href = '<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>';
+                // Função universal e segura de retorno ao Caixa
+                var voltandoAoCaixa = false;
+                function executarRetornoAoCaixa() {
+                    if (voltandoAoCaixa) return;
+                    voltandoAoCaixa = true;
+
+                    var destinoUrl = '<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>';
+
+                    // 1. Tenta fechar caso tenha sido aberta em nova aba/janela por script ou link
+                    try {
+                        if (window.opener && !window.opener.closed) {
+                            window.close();
+                        }
+                    } catch (e) {}
+
+                    try {
+                        window.close();
+                    } catch (e) {}
+
+                    // 2. Se a janela não fechou (bloqueio de script do navegador ou mesma aba), redireciona
+                    setTimeout(function() {
+                        window.location.href = destinoUrl;
+                    }, 40);
+                }
+
+                // Detecta tecla ESC em qualquer variação de navegador, sistema operacional ou teclado
+                function tratarAtalhoEsc(e) {
+                    var isEsc = (
+                        e.key === 'Escape' || 
+                        e.key === 'Esc' || 
+                        e.code === 'Escape' || 
+                        e.keyCode === 27 || 
+                        e.which === 27
+                    );
+
+                    if (isEsc) {
+                        try {
+                            if (e.preventDefault) e.preventDefault();
+                            if (e.stopPropagation) e.stopPropagation();
+                            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                        } catch (err) {}
+
+                        executarRetornoAoCaixa();
+                        return false;
                     }
-                });
+                }
+
+                // Captura a tecla tanto no keydown quanto no keyup (Chromium por padrão pode reter keydown para Stop)
+                window.addEventListener('keydown', tratarAtalhoEsc, true);
+                document.addEventListener('keydown', tratarAtalhoEsc, true);
+                window.addEventListener('keyup', tratarAtalhoEsc, true);
+                document.addEventListener('keyup', tratarAtalhoEsc, true);
+
+                // Garante que o documento receba foco imediato para capturar o teclado
+                function garantirFoco() {
+                    try {
+                        window.focus();
+                        if (document.body) {
+                            document.body.focus();
+                        }
+                    } catch (e) {}
+                }
+                window.addEventListener('load', garantirFoco);
+                document.addEventListener('DOMContentLoaded', garantirFoco);
+                document.addEventListener('click', garantirFoco);
             </script>
         </body>
         </html>
@@ -2803,15 +2862,28 @@ class PdfService
 
             <script>
                 // Função segura de fechar com fallback para Caixa
+                var fechandoComp = false;
                 function fecharComprovante() {
-                    window.close();
+                    if (fechandoComp) return;
+                    fechandoComp = true;
+
+                    try {
+                        if (window.opener && !window.opener.closed) {
+                            window.close();
+                        }
+                    } catch (e) {}
+
+                    try {
+                        window.close();
+                    } catch (e) {}
+
                     setTimeout(function() {
                         if (window.history.length > 1) {
                             window.history.back();
                         } else {
                             window.location.href = '<?php echo $baseUrl; ?>/operacional/caixa';
                         }
-                    }, 100);
+                    }, 80);
                 }
 
                 // Disparo de impressão automática para iframes e chamadas rápidas
@@ -2822,14 +2894,33 @@ class PdfService
                             window.print();
                         }, 50);
                     }
+                    try {
+                        window.focus();
+                        if (document.body) document.body.focus();
+                    } catch(e) {}
                 });
 
-                // Tecla ESC fecha a janela de comprovante
-                window.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') {
+                // Tecla ESC fecha a janela de comprovante em qualquer navegador
+                function tratarEscComp(e) {
+                    var isEsc = (
+                        e.key === 'Escape' || 
+                        e.key === 'Esc' || 
+                        e.code === 'Escape' || 
+                        e.keyCode === 27 || 
+                        e.which === 27
+                    );
+                    if (isEsc) {
+                        try {
+                            if (e.preventDefault) e.preventDefault();
+                            if (e.stopPropagation) e.stopPropagation();
+                        } catch (err) {}
                         fecharComprovante();
                     }
-                });
+                }
+                window.addEventListener('keydown', tratarEscComp, true);
+                document.addEventListener('keydown', tratarEscComp, true);
+                window.addEventListener('keyup', tratarEscComp, true);
+                document.addEventListener('keyup', tratarEscComp, true);
             </script>
         </body>
         </html>

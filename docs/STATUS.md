@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 15 — Controle Financeiro e Fechamento de Caixas por Turno
 * **Status da Fase 15:** Concluída com Sucesso [x]
 * **Próxima Fase:** Fase 16 — Tratamento de Contestações Bancárias e Mecanismo Pix MED
-* **Última Atualização:** 2026-09-24 09:45:00 (Inclusão de botões de navegação no rodapé e na segunda linha da barra de ações do espelho de fechamento: botão '← Voltar ao Caixa', 'Baixar PDF' e 'Imprimir Documento' tanto no cabeçalho quanto no rodapé após as assinaturas em PdfService::gerarEspelhoFechamentoCaixaHtml)
+* **Última Atualização:** 2026-09-24 09:50:00 (Aprimoramento da captura do atalho de teclado ESC nos espelhos e comprovantes: suporte universal a keydown/keyup em capture-phase, detecção abrangente de key/code/keyCode 27, foco imediato no body e fallback seguro entre window.close e redirecionamento para o Caixa)
 
 ---
 
