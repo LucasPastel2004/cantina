@@ -545,6 +545,128 @@ class PdfService
     }
 
     /**
+     * Remove acentos e caracteres diacríticos para compatibilidade com fontes PDF padrão Type1
+     */
+    public static function removerAcentos(string $str): string
+    {
+        $map = [
+            'á'=>'a','à'=>'a','ã'=>'a','â'=>'a','é'=>'e','ê'=>'e','í'=>'i','ó'=>'o','ô'=>'o','õ'=>'o','ú'=>'u','ü'=>'u','ç'=>'c',
+            'Á'=>'A','À'=>'A','Ã'=>'A','Â'=>'A','É'=>'E','Ê'=>'E','Í'=>'I','Ó'=>'O','Ô'=>'O','Õ'=>'O','Ú'=>'U','Ü'=>'U','Ç'=>'C'
+        ];
+        return strtr($str, $map);
+    }
+
+    /**
+     * Monta a estrutura binária oficial de um documento PDF 1.4 multi-páginas com tabela xref e trailer.
+     * Suporta múltiplas páginas com streams de conteúdo independentes e logotipo institucional compartilhado.
+     * 
+     * @param array<int, string> $contentStreams Array de streams de desenho para cada página
+     * @param float $pageWidth
+     * @param float $pageHeight
+     * @param string|null $imagePath
+     * @return string Conteúdo binário puro do PDF
+     */
+    public static function montarPdfMultiPaginas(array $contentStreams, float $pageWidth = self::PAGE_WIDTH, float $pageHeight = self::PAGE_HEIGHT, ?string $imagePath = null): string
+    {
+        $numPages = count($contentStreams);
+        if ($numPages <= 1) {
+            $stream = $contentStreams[0] ?? '';
+            return self::montarPdfEstruturado($stream, $pageWidth, $pageHeight, $imagePath);
+        }
+
+        $imgPath = $imagePath ?? self::getLogoPath();
+        $hasImage = (!empty($imgPath) && file_exists($imgPath));
+        $imgData = $hasImage ? file_get_contents($imgPath) : '';
+        $imgInfo = $hasImage ? @getimagesize($imgPath) : null;
+        $imgWidth = $imgInfo[0] ?? 447;
+        $imgHeight = $imgInfo[1] ?? 447;
+
+        $pdf = "%PDF-1.4\n%\xe2\xe3\xcf\xd3\n";
+        $offsets = [];
+
+        // Objeto 1: Catalog
+        $offsets[1] = strlen($pdf);
+        $pdf .= "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n";
+
+        // Mapeamento dos objetos por página:
+        // Page Object k: id = 3 + (k * 2)
+        // Contents Object k: id = 4 + (k * 2)
+        $f1ObjId = 3 + ($numPages * 2);
+        $f2ObjId = 4 + ($numPages * 2);
+        $imgObjId = 5 + ($numPages * 2);
+
+        $kids = [];
+        for ($k = 0; $k < $numPages; $k++) {
+            $pageObjId = 3 + ($k * 2);
+            $kids[] = "{$pageObjId} 0 R";
+        }
+        $kidsStr = implode(' ', $kids);
+
+        // Objeto 2: Pages
+        $offsets[2] = strlen($pdf);
+        $pdf .= "2 0 obj\n<< /Type /Pages /Kids [{$kidsStr}] /Count {$numPages} >>\nendobj\n";
+
+        // Cria pares de Page e Contents
+        $resXObject = $hasImage ? " /XObject << /Im1 {$imgObjId} 0 R >>" : "";
+        for ($k = 0; $k < $numPages; $k++) {
+            $pageObjId = 3 + ($k * 2);
+            $contentObjId = 4 + ($k * 2);
+            $cStream = $contentStreams[$k];
+
+            $offsets[$pageObjId] = strlen($pdf);
+            $pdf .= sprintf(
+                "%d 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2f %.2f] /Contents %d 0 R /Resources << /Font << /F1 %d 0 R /F2 %d 0 R >>%s >> >>\nendobj\n",
+                $pageObjId,
+                $pageWidth,
+                $pageHeight,
+                $contentObjId,
+                $f1ObjId,
+                $f2ObjId,
+                $resXObject
+            );
+
+            $offsets[$contentObjId] = strlen($pdf);
+            $streamLen = strlen($cStream);
+            $pdf .= "{$contentObjId} 0 obj\n<< /Length {$streamLen} >>\nstream\n{$cStream}\nendstream\nendobj\n";
+        }
+
+        // Objeto F1: Helvetica Regular
+        $offsets[$f1ObjId] = strlen($pdf);
+        $pdf .= "{$f1ObjId} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n";
+
+        // Objeto F2: Helvetica Bold
+        $offsets[$f2ObjId] = strlen($pdf);
+        $pdf .= "{$f2ObjId} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>\nendobj\n";
+
+        // Objeto Im1: Logotipo Oficial
+        if ($hasImage) {
+            $offsets[$imgObjId] = strlen($pdf);
+            $imgLen = strlen($imgData);
+            $pdf .= "{$imgObjId} 0 obj\n<< /Type /XObject /Subtype /Image /Width {$imgWidth} /Height {$imgHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length {$imgLen} >>\nstream\n{$imgData}\nendstream\nendobj\n";
+        }
+
+        $totalObjs = $hasImage ? $imgObjId : $f2ObjId;
+
+        // Tabela XREF
+        $startXref = strlen($pdf);
+        $pdf .= "xref\n";
+        $pdf .= "0 " . ($totalObjs + 1) . "\n";
+        $pdf .= "0000000000 65535 f \n";
+        for ($i = 1; $i <= $totalObjs; $i++) {
+            $pdf .= sprintf("%010d 00000 n \n", $offsets[$i]);
+        }
+
+        // Trailer
+        $pdf .= "trailer\n";
+        $pdf .= "<< /Size " . ($totalObjs + 1) . " /Root 1 0 R >>\n";
+        $pdf .= "startxref\n";
+        $pdf .= $startXref . "\n";
+        $pdf .= "%%EOF\n";
+
+        return $pdf;
+    }
+
+    /**
      * Escapa caracteres especiais e converte caracteres acentuados de UTF-8 para Windows-1252
      */
     protected static function escapeText(string $text): string
@@ -3284,6 +3406,1451 @@ class PdfService
 
         return self::montarPdfEstruturado($stream, self::PAGE_WIDTH, self::PAGE_HEIGHT);
     }
+
+    /**
+     * Gera o Relatório de Extrato de Consumo por Aluno em PDF A4 Timbrado Oficial (FSD Tela 8.1 & Seção 22.1)
+     * 
+     * @param array $dados
+     * @return string Conteúdo binário puro do PDF 1.4
+     */
+    public static function gerarExtratoConsumoAlunoPdf(array $dados): string
+    {
+        $aluno = $dados['aluno'] ?? [];
+        $saldoAtual = (float)($dados['saldo_atual'] ?? 0.0);
+        $dataInicio = $dados['data_inicio'] ?? date('Y-m-01');
+        $dataFim = $dados['data_fim'] ?? date('Y-m-d');
+        $dataIniFmt = date('d/m/Y', strtotime($dataInicio));
+        $dataFimFmt = date('d/m/Y', strtotime($dataFim));
+        $recargas = $dados['recargas'] ?? [];
+        $consumo = $dados['consumo'] ?? [];
+        $operador = $dados['operador'] ?? 'Atendimento da Cantina';
+        $emissao = date('d/m/Y H:i:s');
+
+        $totalRecargas = 0.0;
+        foreach ($recargas as $r) {
+            $totalRecargas += (float)($r['valor'] ?? 0.0);
+        }
+        $totalConsumo = 0.0;
+        foreach ($consumo as $c) {
+            $totalConsumo += (float)($c['subtotal'] ?? 0.0);
+        }
+
+        $left = 36.0;
+        $right = self::PAGE_WIDTH - 36.0;
+        $width = $right - $left;
+
+        $pages = [];
+        $currentStream = "";
+        $y = 800.0;
+
+        // Função interna para iniciar página
+        $iniciarPagina = function(bool $isFirstPage) use (&$currentStream, &$y, $left, $right, $width, $aluno, $operador, $emissao, $dataIniFmt, $dataFimFmt, $saldoAtual, $totalRecargas, $totalConsumo) {
+            $currentStream = "";
+            $y = 800.0;
+
+            if ($isFirstPage) {
+                // Cabeçalho Principal Timbrado A4
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.95, 0.96, 0.98);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 48.0, $width, 58.0);
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85); // #1d4ed8
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 48.0, 4.0, 58.0);
+
+                // Brasão circular vetorial
+                $currentStream .= self::desenharLogoCircular($left + 12.0, $y - 42.0, 42.0);
+
+                $textLeft = $left + 62.0;
+                $currentStream .= "BT\n/F2 13 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 2.0);
+                $currentStream .= sprintf("(COLÉGIO MONTEIRO LOBATO — CANTINA ESCOLAR) Tj\nET\n");
+
+                $currentStream .= "BT\n/F2 10.5 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 17.0);
+                $currentStream .= sprintf("(EXTRATO ANALÍTICO DE CONSUMO DO ALUNO) Tj\nET\n");
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.28 0.33 0.41 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 31.0);
+                $currentStream .= sprintf("(Emitido em: %s | Atendente: %s | Unidade Escolar Única) Tj\nET\n", $emissao, self::escapeText(substr($operador, 0, 30)));
+
+                $y -= 62.0;
+
+                // Box 1: Dados do Aluno e Responsável (altura 48 pt)
+                $boxH = 48.0;
+                $currentStream .= "0.98 0.99 1.00 rg\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $boxH, $width, $boxH);
+                $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $boxH, $width, $boxH);
+
+                $nomeAluno = self::removerAcentos($aluno['nome'] ?? 'Aluno Não Informado');
+                $matAluno  = $aluno['matricula'] ?? '-';
+                $turmaAluno= self::removerAcentos(($aluno['serie'] ?? '') . ' ' . ($aluno['nome_turma'] ?? ''));
+                $turnoAluno= ucfirst($aluno['turno'] ?? '-');
+                $respNome  = self::removerAcentos($aluno['responsavel_nome'] ?? '-');
+                $respWhats = $aluno['responsavel_whatsapp'] ?? '-';
+                $respCpf   = $aluno['responsavel_cpf'] ?? '-';
+
+                // Coluna Esquerda: Aluno
+                $currentStream .= "BT\n/F2 7.5 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.0);
+                $currentStream .= sprintf("(ESTUDANTE BENEFICIÁRIO:) Tj\nET\n");
+
+                $currentStream .= "BT\n/F2 9.5 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 24.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($nomeAluno));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 36.0);
+                $currentStream .= sprintf("(Matrícula: %s  •  Turma: %s  •  Turno: %s) Tj\nET\n", self::escapeText($matAluno), self::escapeText($turmaAluno), self::escapeText($turnoAluno));
+
+                // Coluna Direita: Responsável Titular
+                $colDirX = $left + 290.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $colDirX - 10.0, $y - $boxH, $colDirX - 10.0, $y);
+
+                $currentStream .= "BT\n/F2 7.5 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $colDirX, $y - 12.0);
+                $currentStream .= sprintf("(RESPONSÁVEL FINANCEIRO (CARTEIRA FAMILIAR):) Tj\nET\n");
+
+                $currentStream .= "BT\n/F2 9.0 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $colDirX, $y - 24.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($respNome, 0, 32)));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $colDirX, $y - 36.0);
+                $currentStream .= sprintf("(WhatsApp: %s  •  CPF: %s) Tj\nET\n", self::escapeText($respWhats), self::escapeText($respCpf));
+
+                $y -= ($boxH + 12.0);
+
+                // Box 2: Resumo Financeiro / Stat-Strip (altura 34 pt)
+                $boxH2 = 34.0;
+                $currentStream .= "0.96 0.97 0.99 rg\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $boxH2, $width, $boxH2);
+                $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $boxH2, $width, $boxH2);
+
+                $colW = $width / 4.0;
+
+                // Métrica 1: Saldo da Carteira
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.0);
+                $currentStream .= sprintf("(SALDO ATUAL DA CARTEIRA) Tj\nET\n");
+
+                $saldoStr = "R$ " . number_format($saldoAtual, 2, ',', '.');
+                $saldoColor = ($saldoAtual >= 0) ? "0.08 0.55 0.24" : "0.73 0.15 0.11";
+                $currentStream .= "BT\n/F2 11 Tf\n{$saldoColor} rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 25.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", $saldoStr);
+
+                // Métrica 2: Recargas no período
+                $xM2 = $left + $colW + 10.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + $colW, $y - $boxH2, $left + $colW, $y);
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM2, $y - 12.0);
+                $currentStream .= sprintf("(RECARGAS NO PERÍODO) Tj\nET\n");
+
+                $recStr = "R$ " . number_format($totalRecargas, 2, ',', '.');
+                $currentStream .= "BT\n/F2 11 Tf\n0.08 0.55 0.24 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM2, $y - 25.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", $recStr);
+
+                // Métrica 3: Consumo no período
+                $xM3 = $left + ($colW * 2) + 10.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + ($colW * 2), $y - $boxH2, $left + ($colW * 2), $y);
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM3, $y - 12.0);
+                $currentStream .= sprintf("(CONSUMO NO PERÍODO) Tj\nET\n");
+
+                $conStr = "R$ " . number_format($totalConsumo, 2, ',', '.');
+                $currentStream .= "BT\n/F2 11 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM3, $y - 25.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", $conStr);
+
+                // Métrica 4: Período
+                $xM4 = $left + ($colW * 3) + 10.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + ($colW * 3), $y - $boxH2, $left + ($colW * 3), $y);
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM4, $y - 12.0);
+                $currentStream .= sprintf("(PERÍODO CONSULTADO) Tj\nET\n");
+
+                $currentStream .= "BT\n/F2 8.5 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM4, $y - 25.0);
+                $currentStream .= sprintf("(%s a %s) Tj\nET\n", $dataIniFmt, $dataFimFmt);
+
+                $y -= ($boxH2 + 16.0);
+            } else {
+                // Mini Cabeçalho para Páginas Subsequentes
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.95, 0.96, 0.98);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 32.0, $width, 38.0);
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 32.0, 3.0, 38.0);
+
+                $currentStream .= self::desenharLogoCircular($left + 8.0, $y - 28.0, 28.0);
+
+                $textLeft = $left + 46.0;
+                $currentStream .= "BT\n/F2 10 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 6.0);
+                $currentStream .= sprintf("(COLÉGIO MONTEIRO LOBATO — EXTRATO DE CONSUMO - CONTINUAÇÃO) Tj\nET\n");
+
+                $nomeAluno = self::removerAcentos($aluno['nome'] ?? 'Aluno');
+                $matAluno  = $aluno['matricula'] ?? '-';
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.30 0.35 0.45 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 20.0);
+                $currentStream .= sprintf("(Estudante: %s  •  Matrícula: %s  •  Período: %s a %s) Tj\nET\n", self::escapeText($nomeAluno), self::escapeText($matAluno), $dataIniFmt, $dataFimFmt);
+
+                $y -= 44.0;
+            }
+        };
+
+        // Função interna para fechar página com rodapé oficial
+        $fecharPagina = function() use (&$pages, &$currentStream, $left, $right) {
+            $yRodape = 32.0;
+            $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $yRodape + 10.0, $right, $yRodape + 10.0);
+
+            $currentStream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left, $yRodape);
+            $currentStream .= sprintf("(Cantina Web — Colégio Monteiro Lobato  •  Documento oficial emitido eletronicamente para fins de prestação de contas.) Tj\nET\n");
+
+            $currentStream .= "BT\n/F2 7 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $right - 70.0, $yRodape);
+            $currentStream .= sprintf("(Página %%PAGE_NUM%% de %%PAGE_TOTAL%%) Tj\nET\n");
+
+            $pages[] = $currentStream;
+        };
+
+        // Inicia Página 1
+        $iniciarPagina(true);
+
+        // --- SEÇÃO 1: RECARGAS NO PERÍODO ---
+        $currentStream .= "BT\n/F2 8.5 Tf\n0.11 0.31 0.85 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $left, $y);
+        $currentStream .= sprintf("(1. HISTÓRICO DE RECARGAS NA CARTEIRA FAMILIAR NO PERÍODO) Tj\nET\n");
+        $y -= 14.0;
+
+        // Cabeçalho da Tabela de Recargas
+        $thH = 16.0;
+        $currentStream .= "0.92 0.94 0.97 rg\n";
+        $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $thH, $width, $thH);
+        $currentStream .= "0.80 0.83 0.88 RG\n0.75 w\n";
+        $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $thH, $width, $thH);
+
+        $rc1 = $left + 6.0;   // Data/Hora (100 pt)
+        $rc2 = $left + 110.0; // Forma/Tipo (140 pt)
+        $rc3 = $left + 260.0; // Atendente/Canal (150 pt)
+        $rc4 = $right - 8.0;  // Valor (alinhado à direita)
+
+        $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $rc1, $y - 11.0);
+        $currentStream .= sprintf("(DATA/HORA) Tj\nET\n");
+
+        $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $rc2, $y - 11.0);
+        $currentStream .= sprintf("(FORMA DE PAGAMENTO) Tj\nET\n");
+
+        $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $rc3, $y - 11.0);
+        $currentStream .= sprintf("(ATENDENTE / CANAL) Tj\nET\n");
+
+        $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $rc4 - 38.0, $y - 11.0);
+        $currentStream .= sprintf("(VALOR (R$)) Tj\nET\n");
+
+        $y -= $thH;
+
+        if (empty($recargas)) {
+            $rowH = 18.0;
+            $currentStream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
+            $currentStream .= "BT\n/F1 7.5 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left + 12.0, $y - 12.0);
+            $currentStream .= sprintf("(Nenhuma recarga registrada na carteira durante este período.) Tj\nET\n");
+            $y -= ($rowH + 12.0);
+        } else {
+            $rowH = 16.0;
+            $ri = 0;
+            foreach ($recargas as $rec) {
+                if ($y < 70.0) {
+                    $fecharPagina();
+                    $iniciarPagina(false);
+                }
+
+                $ri++;
+                if ($ri % 2 === 0) {
+                    $currentStream .= "0.98 0.98 0.99 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $rowH, $width, $rowH);
+                }
+                $currentStream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
+
+                $dataR = !empty($rec['created_at']) ? date('d/m/Y H:i', strtotime($rec['created_at'])) : '-';
+                $tipoR = ($rec['tipo_transacao'] === 'recarga_pix') ? 'Recarga Pix Online' : 'Recarga em Dinheiro (Balcão)';
+                $opR   = self::removerAcentos($rec['operador_nome'] ?? 'Sistema / Gateway Pix');
+                $valR  = "R$ " . number_format((float)($rec['valor'] ?? 0.0), 2, ',', '.');
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.15 0.18 0.25 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $rc1, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($dataR));
+
+                $currentStream .= "BT\n/F2 7.5 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $rc2, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tipoR));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.30 0.35 0.45 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $rc3, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($opR, 0, 30)));
+
+                $currentStream .= "BT\n/F2 8 Tf\n0.08 0.55 0.24 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $rc4 - (strlen($valR) * 4.8), $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($valR));
+
+                $y -= $rowH;
+            }
+            $y -= 12.0;
+        }
+
+        // --- SEÇÃO 2: CONSUMO DO ALUNO ---
+        if ($y < 110.0) {
+            $fecharPagina();
+            $iniciarPagina(false);
+        }
+
+        $currentStream .= "BT\n/F2 8.5 Tf\n0.11 0.31 0.85 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $left, $y);
+        $currentStream .= sprintf("(2. HISTÓRICO DE CONSUMO DE LANCHES DO ALUNO NO PERÍODO) Tj\nET\n");
+        $y -= 14.0;
+
+        // Cabeçalho da Tabela de Consumo
+        $thH = 16.0;
+        $currentStream .= "0.92 0.94 0.97 rg\n";
+        $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $thH, $width, $thH);
+        $currentStream .= "0.80 0.83 0.88 RG\n0.75 w\n";
+        $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $thH, $width, $thH);
+
+        $cc1 = $left + 6.0;   // Data (55 pt)
+        $cc2 = $left + 66.0;  // Turno/Canal (75 pt)
+        $cc3 = $left + 146.0; // Descrição (200 pt)
+        $cc4 = $left + 355.0; // Qtd (35 pt)
+        $cc5 = $left + 400.0; // Unit. (50 pt)
+        $cc6 = $right - 8.0;  // Subtotal (alinhado à direita)
+
+        $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $cc1, $y - 11.0);
+        $currentStream .= sprintf("(DATA) Tj\nET\n");
+
+        $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $cc2, $y - 11.0);
+        $currentStream .= sprintf("(TURNO / CANAL) Tj\nET\n");
+
+        $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $cc3, $y - 11.0);
+        $currentStream .= sprintf("(ITEM / PRODUTO) Tj\nET\n");
+
+        $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $cc4, $y - 11.0);
+        $currentStream .= sprintf("(QTD) Tj\nET\n");
+
+        $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $cc5, $y - 11.0);
+        $currentStream .= sprintf("(UNITÁRIO) Tj\nET\n");
+
+        $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+        $currentStream .= sprintf("%.2f %.2f Td\n", $cc6 - 45.0, $y - 11.0);
+        $currentStream .= sprintf("(SUBTOTAL (R$)) Tj\nET\n");
+
+        $y -= $thH;
+
+        if (empty($consumo)) {
+            $rowH = 18.0;
+            $currentStream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
+            $currentStream .= "BT\n/F1 7.5 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left + 12.0, $y - 12.0);
+            $currentStream .= sprintf("(Nenhum consumo de lanches registrado para este aluno no período.) Tj\nET\n");
+            $y -= ($rowH + 12.0);
+        } else {
+            $rowH = 16.0;
+            $ci = 0;
+            foreach ($consumo as $item) {
+                if ($y < 70.0) {
+                    $fecharPagina();
+                    $iniciarPagina(false);
+
+                    // Repete cabeçalho de consumo na nova página
+                    $currentStream .= "0.92 0.94 0.97 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $thH, $width, $thH);
+                    $currentStream .= "0.80 0.83 0.88 RG\n0.75 w\n";
+                    $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $thH, $width, $thH);
+
+                    $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f Td\n", $cc1, $y - 11.0);
+                    $currentStream .= sprintf("(DATA) Tj\nET\n");
+                    $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f Td\n", $cc2, $y - 11.0);
+                    $currentStream .= sprintf("(TURNO / CANAL) Tj\nET\n");
+                    $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f Td\n", $cc3, $y - 11.0);
+                    $currentStream .= sprintf("(ITEM / PRODUTO) Tj\nET\n");
+                    $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f Td\n", $cc4, $y - 11.0);
+                    $currentStream .= sprintf("(QTD) Tj\nET\n");
+                    $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f Td\n", $cc5, $y - 11.0);
+                    $currentStream .= sprintf("(UNITÁRIO) Tj\nET\n");
+                    $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f Td\n", $cc6 - 45.0, $y - 11.0);
+                    $currentStream .= sprintf("(SUBTOTAL (R$)) Tj\nET\n");
+
+                    $y -= $thH;
+                }
+
+                $ci++;
+                if ($ci % 2 === 0) {
+                    $currentStream .= "0.98 0.98 0.99 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $rowH, $width, $rowH);
+                }
+                $currentStream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
+
+                $dataC = !empty($item['data_consumo']) ? date('d/m/Y', strtotime($item['data_consumo'])) : date('d/m/Y', strtotime($item['created_at'] ?? 'now'));
+                $origem = $item['origem'] ?? $item['canal'] ?? 'balcao';
+                $isAgend = ($origem === 'agendamento' || stripos($origem, 'online') !== false || stripos($origem, 'agendamento') !== false);
+                $canalC = $isAgend ? 'Online (' . ucfirst(substr($item['turno'] ?? 'M', 0, 1)) . ')' : 'Balcao (' . ucfirst(substr($item['turno'] ?? 'M', 0, 1)) . ')';
+                $prodC = self::removerAcentos($item['produto_nome'] ?? $item['itens_descricao'] ?? 'Itens avulsos');
+                $qtdC  = (int)($item['quantidade'] ?? $item['total_itens'] ?? 1) . " un";
+                $precoUnit = (float)($item['preco_unitario'] ?? ($item['valor_total'] ?? 0.0));
+                $unitC = "R$ " . number_format($precoUnit, 2, ',', '.');
+                $subtC = "R$ " . number_format((float)($item['subtotal'] ?? $item['valor_total'] ?? 0.0), 2, ',', '.');
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.15 0.18 0.25 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $cc1, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($dataC));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.30 0.35 0.45 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $cc2, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($canalC, 0, 16)));
+
+                $currentStream .= "BT\n/F2 7.5 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $cc3, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($prodC, 0, 36)));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.20 0.25 0.35 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $cc4, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($qtdC));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $cc5, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($unitC));
+
+                $currentStream .= "BT\n/F2 8 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $cc6 - (strlen($subtC) * 4.8), $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($subtC));
+
+                $y -= $rowH;
+            }
+
+            // Linha de Totalização de Consumo
+            $totH = 18.0;
+            $currentStream .= "0.94 0.96 0.98 rg\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $totH, $width, $totH);
+            $currentStream .= "0.80 0.83 0.88 RG\n1 w\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $totH, $width, $totH);
+
+            $currentStream .= "BT\n/F2 8 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.0);
+            $currentStream .= sprintf("(TOTAL CONSOLIDADO DE CONSUMO NO PERÍODO:) Tj\nET\n");
+
+            $totConsumoFmt = "R$ " . number_format($totalConsumo, 2, ',', '.');
+            $currentStream .= "BT\n/F2 9.5 Tf\n0.10 0.12 0.18 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $cc6 - (strlen($totConsumoFmt) * 5.6), $y - 12.5);
+            $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($totConsumoFmt));
+
+            $y -= ($totH + 12.0);
+        }
+
+        // Fecha a última página
+        $fecharPagina();
+
+        // Substituição do contador de páginas (Página X de Y) em todas as páginas
+        $totalPaginas = count($pages);
+        $finalStreams = [];
+        foreach ($pages as $idx => $stream) {
+            $pageNum = $idx + 1;
+            $stream = str_replace(
+                ['%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
+                [(string)$pageNum, (string)$totalPaginas],
+                $stream
+            );
+            $finalStreams[] = $stream;
+        }
+
+        return self::montarPdfMultiPaginas($finalStreams);
+    }
+
+    /**
+     * Gera Espelho HTML limpo e responsivo para Impressão do Extrato do Aluno com @media print
+     * 
+     * @param array $dados
+     * @return string Código HTML completo
+     */
+    public static function gerarEspelhoExtratoConsumoAlunoHtml(array $dados): string
+    {
+        $aluno = $dados['aluno'] ?? [];
+        $saldoAtual = (float)($dados['saldo_atual'] ?? 0.0);
+        $dataInicio = $dados['data_inicio'] ?? date('Y-m-01');
+        $dataFim = $dados['data_fim'] ?? date('Y-m-d');
+        $dataIniFmt = date('d/m/Y', strtotime($dataInicio));
+        $dataFimFmt = date('d/m/Y', strtotime($dataFim));
+        $recargas = $dados['recargas'] ?? [];
+        $consumo = $dados['consumo'] ?? [];
+        $operador = $dados['operador'] ?? 'Atendente da Cantina';
+        $emissao = date('d/m/Y H:i:s');
+        $logoDataUri = self::getLogoDataUri(false);
+
+        $totalRecargas = 0.0;
+        foreach ($recargas as $r) {
+            $totalRecargas += (float)($r['valor'] ?? 0.0);
+        }
+        $totalConsumo = 0.0;
+        foreach ($consumo as $c) {
+            $totalConsumo += (float)($c['subtotal'] ?? 0.0);
+        }
+
+        ob_start();
+        ?>
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Extrato de Consumo — <?php echo htmlspecialchars($aluno['nome'] ?? 'Aluno'); ?></title>
+            <style>
+                @page { size: A4 portrait; margin: 15mm 12mm 15mm 12mm; }
+                * { box-sizing: border-box; }
+                body {
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background-color: #ffffff;
+                    color: #0f172a;
+                    margin: 0;
+                    padding: 20px;
+                    font-size: 12px;
+                    line-height: 1.4;
+                }
+                .font-tabular {
+                    font-variant-numeric: tabular-nums;
+                    font-feature-settings: 'tnum' 1, 'zero' 1;
+                }
+                .actions-bar {
+                    background: #f1f5f9;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    padding: 10px 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                }
+                .btn {
+                    padding: 8px 16px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .btn-primary { background: #1d4ed8; color: #fff; border: 1px solid #1e40af; }
+                .btn-secondary { background: #fff; color: #1e293b; border: 1px solid #cbd5e1; }
+                .header-box {
+                    border-left: 4px solid #1d4ed8;
+                    background: #f8fafc;
+                    border-radius: 4px;
+                    padding: 12px 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    margin-bottom: 16px;
+                }
+                .header-logo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+                .student-box {
+                    border: 1px solid #e2e8f0;
+                    background: #ffffff;
+                    border-radius: 6px;
+                    padding: 12px 16px;
+                    margin-bottom: 16px;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 16px;
+                }
+                .stat-strip {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    border: 1px solid #e2e8f0;
+                    border-radius: 6px;
+                    background: #f8fafc;
+                    margin-bottom: 20px;
+                }
+                .stat-item {
+                    padding: 10px 14px;
+                    border-right: 1px solid #e2e8f0;
+                }
+                .stat-item:last-child { border-right: none; }
+                .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+                .stat-val { font-size: 16px; font-weight: 700; color: #0f172a; }
+                .table-relatorio {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 24px;
+                    font-size: 11.5px;
+                }
+                .table-relatorio th {
+                    background: #f1f5f9;
+                    border-top: 1px solid #cbd5e1;
+                    border-bottom: 1px solid #cbd5e1;
+                    color: #475569;
+                    font-size: 10.5px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    padding: 8px 10px;
+                    text-align: left;
+                }
+                .table-relatorio td {
+                    padding: 7px 10px;
+                    border-bottom: 1px solid #e2e8f0;
+                    color: #0f172a;
+                }
+                .table-relatorio tr:nth-child(even) { background-color: #f8fafc; }
+                .text-end { text-align: right; }
+                .sec-title {
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: #1d4ed8;
+                    margin: 20px 0 8px 0;
+                    text-transform: uppercase;
+                    letter-spacing: 0.02em;
+                }
+                .footer-doc {
+                    border-top: 1px solid #e2e8f0;
+                    padding-top: 10px;
+                    font-size: 10px;
+                    color: #64748b;
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 30px;
+                }
+                @media print {
+                    .actions-bar { display: none !important; }
+                    body { padding: 0; }
+                    .table-relatorio th { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="actions-bar">
+                <div>
+                    <strong>Espelho de Impressão A4</strong> — Extrato Oficial do Aluno
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">← Voltar ao Sistema</button>
+                    <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Imprimir Extrato</button>
+                </div>
+            </div>
+
+            <div class="header-box">
+                <?php if (!empty($logoDataUri)): ?>
+                    <img src="<?php echo $logoDataUri; ?>" alt="Colégio Monteiro Lobato" class="header-logo">
+                <?php endif; ?>
+                <div>
+                    <h1 style="font-size: 16px; margin: 0 0 2px 0; font-weight: 700;">COLÉGIO MONTEIRO LOBATO — CANTINA ESCOLAR</h1>
+                    <div style="font-size: 12px; font-weight: 600; color: #1d4ed8;">EXTRATO ANALÍTICO DE CONSUMO DO ALUNO</div>
+                    <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+                        Emitido em: <?php echo $emissao; ?> • Atendente: <?php echo htmlspecialchars($operador); ?> • Unidade Escolar Única
+                    </div>
+                </div>
+            </div>
+
+            <div class="student-box">
+                <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase;">Estudante Beneficiário</div>
+                    <div style="font-size: 14px; font-weight: 700; margin: 2px 0;"><?php echo htmlspecialchars($aluno['nome'] ?? 'Aluno'); ?></div>
+                    <div style="color: #475569; font-size: 11px;">
+                        Matrícula: <strong><?php echo htmlspecialchars($aluno['matricula'] ?? '-'); ?></strong> • 
+                        Turma: <?php echo htmlspecialchars(($aluno['serie'] ?? '') . ' ' . ($aluno['nome_turma'] ?? '')); ?> (<?php echo ucfirst($aluno['turno'] ?? '-'); ?>)
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase;">Responsável Financeiro (Carteira Familiar)</div>
+                    <div style="font-size: 13px; font-weight: 600; margin: 2px 0;"><?php echo htmlspecialchars($aluno['responsavel_nome'] ?? '-'); ?></div>
+                    <div style="color: #475569; font-size: 11px;">
+                        WhatsApp: <?php echo htmlspecialchars($aluno['responsavel_whatsapp'] ?? '-'); ?> • 
+                        CPF: <?php echo htmlspecialchars($aluno['responsavel_cpf'] ?? '-'); ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-strip">
+                <div class="stat-item">
+                    <div class="stat-label">Saldo Atual Carteira</div>
+                    <div class="stat-val font-tabular" style="color: <?php echo ($saldoAtual >= 0) ? '#16a34a' : '#dc2626'; ?>;">
+                        R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Recargas no Período</div>
+                    <div class="stat-val font-tabular" style="color: #16a34a;">
+                        R$ <?php echo number_format($totalRecargas, 2, ',', '.'); ?>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Consumo no Período</div>
+                    <div class="stat-val font-tabular">
+                        R$ <?php echo number_format($totalConsumo, 2, ',', '.'); ?>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Período Consultado</div>
+                    <div class="stat-val font-tabular" style="font-size: 12.5px; color: #1d4ed8; padding-top: 3px;">
+                        <?php echo $dataIniFmt; ?> a <?php echo $dataFimFmt; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sec-title">1. Histórico de Recargas na Carteira Familiar (No Período)</div>
+            <table class="table-relatorio">
+                <thead>
+                    <tr>
+                        <th style="width: 130px;">Data / Hora</th>
+                        <th>Forma de Pagamento</th>
+                        <th>Atendente / Canal</th>
+                        <th class="text-end" style="width: 120px;">Valor (R$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($recargas)): ?>
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #64748b; padding: 12px;">
+                                Nenhuma recarga registrada na carteira durante este período.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($recargas as $r): ?>
+                            <tr>
+                                <td class="font-tabular"><?php echo date('d/m/Y H:i', strtotime($r['created_at'])); ?></td>
+                                <td>
+                                    <?php echo ($r['tipo_transacao'] === 'recarga_pix') ? 'Recarga Pix Online' : 'Recarga em Dinheiro (Balcão)'; ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($r['operador_nome'] ?? 'Sistema Pix'); ?></td>
+                                <td class="text-end font-tabular" style="font-weight: 600; color: #16a34a;">
+                                    R$ <?php echo number_format((float)($r['valor'] ?? 0.0), 2, ',', '.'); ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+
+            <div class="sec-title">2. Histórico de Consumo de Lanches do Aluno (No Período)</div>
+            <table class="table-relatorio">
+                <thead>
+                    <tr>
+                        <th style="width: 90px;">Data</th>
+                        <th style="width: 140px;">Turno / Canal</th>
+                        <th>Item / Produto</th>
+                        <th class="text-end" style="width: 70px;">Qtd</th>
+                        <th class="text-end" style="width: 90px;">Unitário</th>
+                        <th class="text-end" style="width: 100px;">Subtotal (R$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($consumo)): ?>
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #64748b; padding: 12px;">
+                                Nenhum consumo de lanches registrado para este aluno no período selecionado.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($consumo as $c): ?>
+                            <tr>
+                                <td class="font-tabular">
+                                    <?php echo !empty($c['data_consumo']) ? date('d/m/Y', strtotime($c['data_consumo'])) : date('d/m/Y', strtotime($c['created_at'])); ?>
+                                </td>
+                                <td>
+                                    <?php echo ($c['origem'] === 'agendamento') ? 'Agendamento (' . ucfirst($c['turno'] ?? '-') . ')' : 'Balcão (' . ucfirst($c['turno'] ?? '-') . ')'; ?>
+                                </td>
+                                <td><strong><?php echo htmlspecialchars($c['produto_nome'] ?? '-'); ?></strong></td>
+                                <td class="text-end font-tabular"><?php echo (int)($c['quantidade'] ?? 1); ?> un</td>
+                                <td class="text-end font-tabular">R$ <?php echo number_format((float)($c['preco_unitario'] ?? 0.0), 2, ',', '.'); ?></td>
+                                <td class="text-end font-tabular" style="font-weight: 600;">
+                                    R$ <?php echo number_format((float)($c['subtotal'] ?? 0.0), 2, ',', '.'); ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr style="background: #f1f5f9; font-weight: 700;">
+                            <td colspan="5" class="text-end" style="color: #1d4ed8; text-transform: uppercase;">Total de Consumo no Período:</td>
+                            <td class="text-end font-tabular" style="font-size: 13px; color: #0f172a;">
+                                R$ <?php echo number_format($totalConsumo, 2, ',', '.'); ?>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+
+            <div class="footer-doc">
+                <div>Cantina Web — Colégio Monteiro Lobato • Documento oficial emitido eletronicamente para fins de prestação de contas.</div>
+                <div>Página 1 de 1</div>
+            </div>
+        </body>
+        </html>
+        <?php
+        return (string)ob_get_clean();
+    }
+
+    /**
+     * Gera o Relatório de Vendas por Alimento e Curva ABC em PDF A4 Timbrado Oficial (FSD Tela 8.2 & Seção 22.2)
+     * 
+     * @param array $dados
+     * @return string Conteúdo binário puro do PDF 1.4
+     */
+    public static function gerarRelatorioVendasAlimentoPdf(array $dados): string
+    {
+        $periodo = $dados['periodo'] ?? date('d/m/Y') . ' a ' . date('d/m/Y');
+        $turnoStr = $dados['turno'] ?? 'Todos os Turnos';
+        $categoriaStr = $dados['categoria'] ?? 'Todas as Categorias';
+        $itens = $dados['itens'] ?? [];
+        $totais = $dados['totais'] ?? [];
+        $operador = $dados['operador'] ?? 'Administração Geral';
+        $emissao = date('d/m/Y H:i:s');
+
+        $qtdTotal = (int)($totais['quantidade_total'] ?? 0);
+        $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
+        $ticketMedio = ($qtdTotal > 0) ? ($fatTotal / $qtdTotal) : 0.0;
+        $topItem = $itens[0]['descricao'] ?? 'Nenhum item';
+
+        $left = 36.0;
+        $right = self::PAGE_WIDTH - 36.0;
+        $width = $right - $left;
+
+        $pages = [];
+        $currentStream = "";
+        $y = 800.0;
+
+        $iniciarPagina = function(bool $isFirstPage) use (&$currentStream, &$y, $left, $width, $periodo, $turnoStr, $categoriaStr, $operador, $emissao, $fatTotal, $qtdTotal, $ticketMedio, $topItem) {
+            $currentStream = "";
+            $y = 800.0;
+
+            if ($isFirstPage) {
+                // Cabeçalho Principal A4
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.95, 0.96, 0.98);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 48.0, $width, 58.0);
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85); // #1d4ed8
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 48.0, 4.0, 58.0);
+
+                $currentStream .= self::desenharLogoCircular($left + 12.0, $y - 42.0, 42.0);
+
+                $textLeft = $left + 62.0;
+                $currentStream .= "BT\n/F2 13 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 2.0);
+                $currentStream .= "(COLEGIO MONTEIRO LOBATO - CANTINA ESCOLAR) Tj\nET\n";
+
+                $currentStream .= "BT\n/F2 10.5 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 17.0);
+                $currentStream .= "(RELATORIO DE VENDAS POR ALIMENTO & CURVA ABC) Tj\nET\n";
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.28 0.33 0.41 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 31.0);
+                $currentStream .= sprintf("(Emitido em: %s | Operador: %s | Unidade Escolar Única) Tj\nET\n", $emissao, self::escapeText(substr($operador, 0, 30)));
+
+                $y -= 62.0;
+
+                // Box de Filtros Aplicados
+                $boxH1 = 26.0;
+                $currentStream .= "0.98 0.99 1.00 rg\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $boxH1, $width, $boxH1);
+                $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $boxH1, $width, $boxH1);
+
+                $currentStream .= "BT\n/F2 7.5 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 16.5);
+                $currentStream .= sprintf("(FILTROS:) Tj\nET\n");
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 54.0, $y - 16.5);
+                $currentStream .= sprintf("(Período: %s  •  Turno: %s  •  Categoria: %s) Tj\nET\n", self::escapeText($periodo), self::escapeText($turnoStr), self::escapeText($categoriaStr));
+
+                $y -= ($boxH1 + 10.0);
+
+                // Box de Stat-Strip
+                $boxH2 = 34.0;
+                $currentStream .= "0.96 0.97 0.99 rg\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $boxH2, $width, $boxH2);
+                $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $boxH2, $width, $boxH2);
+
+                $colW = $width / 4.0;
+
+                // Métrica 1: Faturamento Bruto
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.0);
+                $currentStream .= sprintf("(FATURAMENTO BRUTO TOTAL) Tj\nET\n");
+
+                $fatStr = "R$ " . number_format($fatTotal, 2, ',', '.');
+                $currentStream .= "BT\n/F2 11 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 25.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", $fatStr);
+
+                // Métrica 2: Peças Comercializadas
+                $xM2 = $left + $colW + 10.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + $colW, $y - $boxH2, $left + $colW, $y);
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM2, $y - 12.0);
+                $currentStream .= sprintf("(QUANTIDADE COMERCIALIZADA) Tj\nET\n");
+
+                $currentStream .= "BT\n/F2 11 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM2, $y - 25.0);
+                $currentStream .= sprintf("(%d itens) Tj\nET\n", $qtdTotal);
+
+                // Métrica 3: Preço Médio por Peça
+                $xM3 = $left + ($colW * 2) + 10.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + ($colW * 2), $y - $boxH2, $left + ($colW * 2), $y);
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM3, $y - 12.0);
+                $currentStream .= sprintf("(PREÇO MÉDIO POR ITEM) Tj\nET\n");
+
+                $tmStr = "R$ " . number_format($ticketMedio, 2, ',', '.');
+                $currentStream .= "BT\n/F2 11 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM3, $y - 25.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", $tmStr);
+
+                // Métrica 4: Campeão de Vendas
+                $xM4 = $left + ($colW * 3) + 10.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + ($colW * 3), $y - $boxH2, $left + ($colW * 3), $y);
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM4, $y - 12.0);
+                $currentStream .= sprintf("(CAMPEÃO DE VENDAS) Tj\nET\n");
+
+                $currentStream .= "BT\n/F2 9.0 Tf\n0.08 0.55 0.24 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM4, $y - 25.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr(self::removerAcentos($topItem), 0, 18)));
+
+                $y -= ($boxH2 + 14.0);
+            } else {
+                // Mini cabeçalho subsequente
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.95, 0.96, 0.98);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 32.0, $width, 38.0);
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 32.0, 3.0, 38.0);
+
+                $currentStream .= self::desenharLogoCircular($left + 8.0, $y - 28.0, 28.0);
+
+                $textLeft = $left + 46.0;
+                $currentStream .= "BT\n/F2 10 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 6.0);
+                $currentStream .= "(COLEGIO MONTEIRO LOBATO - VENDAS POR ALIMENTO - CONTINUACAO) Tj\nET\n";
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.30 0.35 0.45 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 20.0);
+                $currentStream .= sprintf("(Período: %s  •  Turno: %s  •  Emissão: %s) Tj\nET\n", self::escapeText($periodo), self::escapeText($turnoStr), $emissao);
+
+                $y -= 44.0;
+            }
+        };
+
+        $fecharPagina = function() use (&$pages, &$currentStream, $left, $right) {
+            $yRodape = 32.0;
+            $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $yRodape + 10.0, $right, $yRodape + 10.0);
+
+            $currentStream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left, $yRodape);
+            $currentStream .= sprintf("(Cantina Web — Colégio Monteiro Lobato  •  Relatório Gerencial de Vendas e Curva ABC.) Tj\nET\n");
+
+            $currentStream .= "BT\n/F2 7 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $right - 70.0, $yRodape);
+            $currentStream .= sprintf("(Página %%PAGE_NUM%% de %%PAGE_TOTAL%%) Tj\nET\n");
+
+            $pages[] = $currentStream;
+        };
+
+        $imprimirCabecalhoTabela = function() use (&$currentStream, &$y, $left, $right, $width) {
+            $thH = 17.0;
+            $currentStream .= "0.92 0.94 0.97 rg\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $thH, $width, $thH);
+            $currentStream .= "0.80 0.83 0.88 RG\n0.75 w\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $thH, $width, $thH);
+
+            $c1 = $left + 6.0;   // Código (50 pt)
+            $c2 = $left + 60.0;  // Descrição (165 pt)
+            $c3 = $left + 230.0; // Categoria (85 pt)
+            $c4 = $left + 320.0; // Qtd (45 pt, right)
+            $c5 = $left + 372.0; // Preço Méd (55 pt, right)
+            $c6 = $left + 434.0; // Faturamento (65 pt, right)
+            $c7 = $left + 478.0; // % Part (30 pt, right)
+            $c8 = $right - 8.0;  // ABC (20 pt, center)
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c1, $y - 11.5);
+            $currentStream .= "(CODIGO) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c2, $y - 11.5);
+            $currentStream .= "(ALIMENTO / PRODUTO) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c3, $y - 11.5);
+            $currentStream .= "(CATEGORIA) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c4, $y - 11.5);
+            $currentStream .= "(QTD) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c5, $y - 11.5);
+            $currentStream .= "(PRECO MED.) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c6, $y - 11.5);
+            $currentStream .= "(TOTAL R$) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c7, $y - 11.5);
+            $currentStream .= "(PART.) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c8 - 14.0, $y - 11.5);
+            $currentStream .= "(ABC) Tj\nET\n";
+
+            $y -= $thH;
+        };
+
+        $iniciarPagina(true);
+        $imprimirCabecalhoTabela();
+
+        $c1 = $left + 6.0;
+        $c2 = $left + 60.0;
+        $c3 = $left + 230.0;
+        $c4 = $left + 355.0; // right
+        $c5 = $left + 420.0; // right
+        $c6 = $left + 488.0; // right
+        $c7 = $left + 518.0; // right
+        $c8 = $right - 10.0; // center
+
+        if (empty($itens)) {
+            $rowH = 22.0;
+            $currentStream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
+            $currentStream .= "BT\n/F1 8 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", ($left + $right) / 2.0 - 100.0, $y - 14.0);
+            $currentStream .= sprintf("(Nenhuma venda registrada para os filtros selecionados.) Tj\nET\n");
+            $y -= $rowH;
+        } else {
+            $rowH = 16.5;
+            $idx = 0;
+            foreach ($itens as $item) {
+                if ($y < 70.0) {
+                    $fecharPagina();
+                    $iniciarPagina(false);
+                    $imprimirCabecalhoTabela();
+                }
+
+                $idx++;
+                if ($idx % 2 === 0) {
+                    $currentStream .= "0.98 0.98 0.99 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $rowH, $width, $rowH);
+                }
+                $currentStream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
+
+                $codStr  = $item['codigo_interno'] ?? '-';
+                $descStr = self::removerAcentos($item['descricao'] ?? '-');
+                $catStr  = self::removerAcentos($item['categoria_nome'] ?? '-');
+                $qtdStr  = (int)($item['quantidade_total'] ?? 0) . " un";
+                $medStr  = "R$ " . number_format((float)($item['preco_medio'] ?? 0.0), 2, ',', '.');
+                $totStr  = "R$ " . number_format((float)($item['faturamento_total'] ?? 0.0), 2, ',', '.');
+                $partStr = number_format((float)($item['percentual_participacao'] ?? 0.0), 1, ',', '.') . "%";
+                $abcStr  = $item['classe_abc'] ?? 'A';
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c1, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($codStr));
+
+                $currentStream .= "BT\n/F2 7.5 Tf\n0.08 0.10 0.15 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c2, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($descStr, 0, 32)));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.35 0.40 0.50 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c3, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($catStr, 0, 16)));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c4 - (strlen($qtdStr) * 4.8), $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($qtdStr));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c5 - (strlen($medStr) * 4.8), $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($medStr));
+
+                $currentStream .= "BT\n/F2 8 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c6 - (strlen($totStr) * 5.0), $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($totStr));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c7 - (strlen($partStr) * 4.8), $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($partStr));
+
+                $abcColor = ($abcStr === 'A') ? "0.08 0.55 0.24" : (($abcStr === 'B') ? "0.11 0.31 0.85" : "0.55 0.40 0.10");
+                $currentStream .= "BT\n/F2 8 Tf\n{$abcColor} rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c8 - 6.0, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($abcStr));
+
+                $y -= $rowH;
+            }
+
+            // Linha Totalizadora
+            $totH = 18.0;
+            $currentStream .= "0.94 0.96 0.98 rg\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $totH, $width, $totH);
+            $currentStream .= "0.80 0.83 0.88 RG\n1 w\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $totH, $width, $totH);
+
+            $currentStream .= "BT\n/F2 8 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.0);
+            $currentStream .= "(TOTAIS CONSOLIDADOS NO PERIODO:) Tj\nET\n";
+
+            $tQtdStr = $qtdTotal . " un";
+            $currentStream .= "BT\n/F2 8 Tf\n0.10 0.12 0.18 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c4 - (strlen($tQtdStr) * 5.0), $y - 12.0);
+            $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tQtdStr));
+
+            $tMedStr = "R$ " . number_format($ticketMedio, 2, ',', '.');
+            $currentStream .= "BT\n/F2 8 Tf\n0.10 0.12 0.18 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c5 - (strlen($tMedStr) * 5.0), $y - 12.0);
+            $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tMedStr));
+
+            $tTotStr = "R$ " . number_format($fatTotal, 2, ',', '.');
+            $currentStream .= "BT\n/F2 9 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c6 - (strlen($tTotStr) * 5.6), $y - 12.5);
+            $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tTotStr));
+
+            $currentStream .= "BT\n/F2 8 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c7 - 26.0, $y - 12.0);
+            $currentStream .= sprintf("(100,0%%) Tj\nET\n");
+
+            $y -= ($totH + 12.0);
+        }
+
+        $fecharPagina();
+
+        $totalPaginas = count($pages);
+        $finalStreams = [];
+        foreach ($pages as $idx => $stream) {
+            $pageNum = $idx + 1;
+            $stream = str_replace(
+                ['%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
+                [(string)$pageNum, (string)$totalPaginas],
+                $stream
+            );
+            $finalStreams[] = $stream;
+        }
+
+        return self::montarPdfMultiPaginas($finalStreams);
+    }
+
+    /**
+     * Gera o Relatório de Desconto em Folha para o RH em PDF A4 Timbrado Oficial (FSD Tela 8.3 & Seção 22.4)
+     * 
+     * @param array $dados
+     * @return string Conteúdo binário puro do PDF 1.4
+     */
+    public static function gerarRelatorioDescontoFolhaPdf(array $dados): string
+    {
+        $competencia = $dados['competencia'] ?? date('m/Y');
+        $colaboradores = $dados['colaboradores'] ?? [];
+        $totais = $dados['totais'] ?? [];
+        $operador = $dados['operador'] ?? 'Administração Geral';
+        $emissao = date('d/m/Y H:i:s');
+
+        $totalColabs = (int)($totais['total_colaboradores'] ?? count($colaboradores));
+        $totalLanches = (int)($totais['total_lanches'] ?? 0);
+        $totalDesconto = (float)($totais['valor_total'] ?? 0.0);
+
+        $left = 36.0;
+        $right = self::PAGE_WIDTH - 36.0;
+        $width = $right - $left;
+
+        $pages = [];
+        $currentStream = "";
+        $y = 800.0;
+
+        $iniciarPagina = function(bool $isFirstPage) use (&$currentStream, &$y, $left, $width, $competencia, $operador, $emissao, $totalColabs, $totalLanches, $totalDesconto) {
+            $currentStream = "";
+            $y = 800.0;
+
+            if ($isFirstPage) {
+                // Cabeçalho Principal A4 Timbrado
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.95, 0.96, 0.98);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 48.0, $width, 58.0);
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85); // #1d4ed8
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 48.0, 4.0, 58.0);
+
+                $currentStream .= self::desenharLogoCircular($left + 12.0, $y - 42.0, 42.0);
+
+                $textLeft = $left + 62.0;
+                $currentStream .= "BT\n/F2 13 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 2.0);
+                $currentStream .= sprintf("(COLÉGIO MONTEIRO LOBATO — CANTINA ESCOLAR) Tj\nET\n");
+
+                $currentStream .= "BT\n/F2 10.5 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 17.0);
+                $currentStream .= sprintf("(RELATÓRIO MENSAL DE DESCONTO EM FOLHA — RECURSOS HUMANOS) Tj\nET\n");
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.28 0.33 0.41 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 31.0);
+                $currentStream .= sprintf("(Competência: %s | Emitido em: %s | Responsável: %s) Tj\nET\n", self::escapeText($competencia), $emissao, self::escapeText(substr($operador, 0, 30)));
+
+                $y -= 62.0;
+
+                // Stat-Strip Executivo
+                $boxH = 34.0;
+                $currentStream .= "0.96 0.97 0.99 rg\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $boxH, $width, $boxH);
+                $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $boxH, $width, $boxH);
+
+                $colW = $width / 3.0;
+
+                // Métrica 1: Total Colaboradores
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.0);
+                $currentStream .= sprintf("(COLABORADORES COM CONSUMO) Tj\nET\n");
+
+                $currentStream .= "BT\n/F2 11 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 25.0);
+                $currentStream .= sprintf("(%d colaboradores) Tj\nET\n", $totalColabs);
+
+                // Métrica 2: Lanches Consumidos
+                $xM2 = $left + $colW + 10.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + $colW, $y - $boxH, $left + $colW, $y);
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM2, $y - 12.0);
+                $currentStream .= sprintf("(TOTAL DE LANCHES NO MÊS) Tj\nET\n");
+
+                $currentStream .= "BT\n/F2 11 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM2, $y - 25.0);
+                $currentStream .= sprintf("(%d lanches consumidos) Tj\nET\n", $totalLanches);
+
+                // Métrica 3: Montante Total a Descontar
+                $xM3 = $left + ($colW * 2) + 10.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + ($colW * 2), $y - $boxH, $left + ($colW * 2), $y);
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM3, $y - 12.0);
+                $currentStream .= sprintf("(TOTAL CONSOLIDADO A DESCONTAR) Tj\nET\n");
+
+                $totStr = "R$ " . number_format($totalDesconto, 2, ',', '.');
+                $currentStream .= "BT\n/F2 11 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM3, $y - 25.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", $totStr);
+
+                $y -= ($boxH + 16.0);
+            } else {
+                // Mini Cabeçalho Subsequente
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.95, 0.96, 0.98);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 32.0, $width, 38.0);
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 32.0, 3.0, 38.0);
+
+                $currentStream .= self::desenharLogoCircular($left + 8.0, $y - 28.0, 28.0);
+
+                $textLeft = $left + 46.0;
+                $currentStream .= "BT\n/F2 10 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 6.0);
+                $currentStream .= sprintf("(COLÉGIO MONTEIRO LOBATO — DESCONTO EM FOLHA RH - CONTINUAÇÃO) Tj\nET\n");
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.30 0.35 0.45 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 20.0);
+                $currentStream .= sprintf("(Competência: %s  •  Emissão: %s) Tj\nET\n", self::escapeText($competencia), $emissao);
+
+                $y -= 44.0;
+            }
+        };
+
+        $fecharPagina = function() use (&$pages, &$currentStream, $left, $right) {
+            $yRodape = 32.0;
+            $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $yRodape + 10.0, $right, $yRodape + 10.0);
+
+            $currentStream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left, $yRodape);
+            $currentStream .= sprintf("(Cantina Web — Colégio Monteiro Lobato  •  Documento oficial de prestação de contas para Recursos Humanos.) Tj\nET\n");
+
+            $currentStream .= "BT\n/F2 7 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $right - 70.0, $yRodape);
+            $currentStream .= sprintf("(Página %%PAGE_NUM%% de %%PAGE_TOTAL%%) Tj\nET\n");
+
+            $pages[] = $currentStream;
+        };
+
+        $imprimirCabecalhoTabela = function() use (&$currentStream, &$y, $left, $right, $width) {
+            $thH = 17.0;
+            $currentStream .= "0.92 0.94 0.97 rg\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $thH, $width, $thH);
+            $currentStream .= "0.80 0.83 0.88 RG\n0.75 w\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $thH, $width, $thH);
+
+            $c1 = $left + 6.0;   // Matrícula (80 pt)
+            $c2 = $left + 90.0;  // Nome (190 pt)
+            $c3 = $left + 285.0; // Cargo (120 pt)
+            $c4 = $left + 410.0; // Lanches (50 pt, right)
+            $c5 = $right - 8.0;  // Valor (alinhado à direita)
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c1, $y - 11.5);
+            $currentStream .= "(MATRICULA) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c2, $y - 11.5);
+            $currentStream .= "(NOME COMPLETO DO COLABORADOR) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c3, $y - 11.5);
+            $currentStream .= "(CARGO / FUNCAO) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c4 - 5.0, $y - 11.5);
+            $currentStream .= "(LANCHES) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c5 - 65.0, $y - 11.5);
+            $currentStream .= "(VALOR A DESCONTAR) Tj\nET\n";
+
+            $y -= $thH;
+        };
+
+        $iniciarPagina(true);
+        $imprimirCabecalhoTabela();
+
+        $c1 = $left + 6.0;
+        $c2 = $left + 90.0;
+        $c3 = $left + 285.0;
+        $c4 = $left + 450.0; // right
+        $c5 = $right - 8.0;  // right
+
+        if (empty($colaboradores)) {
+            $rowH = 22.0;
+            $currentStream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
+            $currentStream .= "BT\n/F1 8 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", ($left + $right) / 2.0 - 110.0, $y - 14.0);
+            $currentStream .= sprintf("(Nenhum consumo sob desconto em folha registrado nesta competência.) Tj\nET\n");
+            $y -= $rowH;
+        } else {
+            $rowH = 17.5;
+            $idx = 0;
+            foreach ($colaboradores as $colab) {
+                // Se estiver chegando próximo do final e precisar de espaço para assinaturas (~120pt)
+                if ($y < 130.0) {
+                    $fecharPagina();
+                    $iniciarPagina(false);
+                    $imprimirCabecalhoTabela();
+                }
+
+                $idx++;
+                if ($idx % 2 === 0) {
+                    $currentStream .= "0.98 0.98 0.99 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $rowH, $width, $rowH);
+                }
+                $currentStream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
+
+                $matStr   = $colab['matricula_funcional'] ?? '-';
+                $nomeStr  = self::removerAcentos($colab['colaborador_nome'] ?? $colab['nome'] ?? '-');
+                $cargoStr = self::removerAcentos($colab['cargo'] ?? '-');
+                $lanches  = (int)($colab['total_lanches'] ?? 0) . " un";
+                $valStr   = "R$ " . number_format((float)($colab['total_desconto'] ?? 0.0), 2, ',', '.');
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c1, $y - 12.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($matStr));
+
+                $currentStream .= "BT\n/F2 8 Tf\n0.08 0.10 0.15 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c2, $y - 12.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($nomeStr, 0, 36)));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.35 0.40 0.50 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c3, $y - 12.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($cargoStr, 0, 24)));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c4 - (strlen($lanches) * 4.8), $y - 12.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($lanches));
+
+                $currentStream .= "BT\n/F2 8.5 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c5 - (strlen($valStr) * 5.2), $y - 12.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($valStr));
+
+                $y -= $rowH;
+            }
+
+            // Linha Totalizadora
+            $totH = 19.0;
+            $currentStream .= "0.94 0.96 0.98 rg\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $totH, $width, $totH);
+            $currentStream .= "0.80 0.83 0.88 RG\n1 w\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $totH, $width, $totH);
+
+            $currentStream .= "BT\n/F2 8 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.5);
+            $currentStream .= sprintf("(MONTANTE TOTAL CONSOLIDADO PARA DESCONTO EM FOLHA:) Tj\nET\n");
+
+            $tLanchesStr = $totalLanches . " un";
+            $currentStream .= "BT\n/F2 8.5 Tf\n0.10 0.12 0.18 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c4 - (strlen($tLanchesStr) * 5.2), $y - 12.5);
+            $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tLanchesStr));
+
+            $tDescStr = "R$ " . number_format($totalDesconto, 2, ',', '.');
+            $currentStream .= "BT\n/F2 9.5 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c5 - (strlen($tDescStr) * 5.8), $y - 13.0);
+            $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tDescStr));
+
+            $y -= ($totH + 20.0);
+
+            // Campos para Assinaturas e Carimbos
+            $signBoxW = ($width - 30.0) / 2.0;
+
+            // Assinatura 1: Diretoria / Cantina
+            $xSign1 = $left;
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $xSign1 + 10.0, $y - 25.0, $xSign1 + $signBoxW - 10.0, $y - 25.0);
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.20 0.25 0.35 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $xSign1 + 30.0, $y - 36.0);
+            $currentStream .= "(Diretoria Administrativa / Financeira) Tj\nET\n";
+            $currentStream .= "BT\n/F1 6.5 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $xSign1 + 42.0, $y - 46.0);
+            $currentStream .= "(Visto de Aprovacao da Cantina) Tj\nET\n";
+
+            // Assinatura 2: Recursos Humanos
+            $xSign2 = $left + $signBoxW + 30.0;
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $xSign2 + 10.0, $y - 25.0, $xSign2 + $signBoxW - 10.0, $y - 25.0);
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.20 0.25 0.35 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $xSign2 + 35.0, $y - 36.0);
+            $currentStream .= "(Departamento de Recursos Humanos) Tj\nET\n";
+            $currentStream .= "BT\n/F1 6.5 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $xSign2 + 40.0, $y - 46.0);
+            $currentStream .= "(Recebido para Lancamento em Folha) Tj\nET\n";
+
+            $y -= 60.0;
+        }
+
+        $fecharPagina();
+
+        $totalPaginas = count($pages);
+        $finalStreams = [];
+        foreach ($pages as $idx => $stream) {
+            $pageNum = $idx + 1;
+            $stream = str_replace(
+                ['%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
+                [(string)$pageNum, (string)$totalPaginas],
+                $stream
+            );
+            $finalStreams[] = $stream;
+        }
+
+        return self::montarPdfMultiPaginas($finalStreams);
+    }
 }
-
-

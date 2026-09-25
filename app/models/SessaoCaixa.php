@@ -393,6 +393,60 @@ class SessaoCaixa extends Model
     }
 
     /**
+     * Retorna estatísticas consolidadas das sessões fechadas no período para a Stat-Strip
+     * 
+     * @param string|null $turno
+     * @param string|null $dataInicio
+     * @param string|null $dataFim
+     * @return array
+     */
+    public static function obterEstatisticasPeriodo(?string $turno = null, ?string $dataInicio = null, ?string $dataFim = null): array
+    {
+        $sql = "
+            SELECT 
+                COUNT(*) AS total_sessoes,
+                COALESCE(SUM(sc.total_dinheiro_recargas + sc.total_dinheiro_avulso), 0.00) AS faturamento_dinheiro,
+                COALESCE(SUM(sc.total_pix_balcao), 0.00) AS faturamento_pix,
+                COALESCE(SUM(sc.total_dinheiro_recargas + sc.total_dinheiro_avulso + sc.total_pix_balcao), 0.00) AS faturamento_total,
+                COALESCE(SUM(sc.diferenca_quebra_sobra), 0.00) AS saldo_quebra_sobra,
+                COUNT(CASE WHEN sc.diferenca_quebra_sobra > 0 THEN 1 END) AS total_com_sobra,
+                COUNT(CASE WHEN sc.diferenca_quebra_sobra < 0 THEN 1 END) AS total_com_quebra,
+                COUNT(CASE WHEN sc.status = 'fechado' THEN 1 END) AS sessoes_fechadas
+            FROM sessoes_caixa sc
+            WHERE 1=1
+        ";
+        $params = [];
+
+        if (!empty($turno) && in_array($turno, [self::TURNO_MATUTINO, self::TURNO_VESPERTINO], true)) {
+            $sql .= " AND sc.turno = :turno";
+            $params['turno'] = $turno;
+        }
+
+        if (!empty($dataInicio)) {
+            $sql .= " AND DATE(sc.aberto_em) >= :data_inicio";
+            $params['data_inicio'] = $dataInicio;
+        }
+
+        if (!empty($dataFim)) {
+            $sql .= " AND DATE(sc.aberto_em) <= :data_fim";
+            $params['data_fim'] = $dataFim;
+        }
+
+        $res = self::fetchOne($sql, $params);
+
+        return [
+            'total_sessoes'        => (int)($res['total_sessoes'] ?? 0),
+            'sessoes_fechadas'     => (int)($res['sessoes_fechadas'] ?? 0),
+            'faturamento_dinheiro' => (float)($res['faturamento_dinheiro'] ?? 0.0),
+            'faturamento_pix'      => (float)($res['faturamento_pix'] ?? 0.0),
+            'faturamento_total'    => (float)($res['faturamento_total'] ?? 0.0),
+            'saldo_quebra_sobra'   => (float)($res['saldo_quebra_sobra'] ?? 0.0),
+            'total_com_sobra'      => (int)($res['total_com_sobra'] ?? 0),
+            'total_com_quebra'     => (int)($res['total_com_quebra'] ?? 0)
+        ];
+    }
+
+    /**
      * Busca a última sessão de caixa de um determinado turno/data
      * 
      * @param string $turno

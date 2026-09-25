@@ -31,7 +31,7 @@ class Aluno extends Model
     {
         $sql = "SELECT a.*,
                        t.serie, t.nome_turma, t.turno AS turno_turma,
-                       r.nome AS responsavel_nome, r.cpf AS responsavel_cpf, r.whatsapp AS responsavel_whatsapp,
+                       r.nome AS responsavel_nome, r.cpf AS responsavel_cpf, r.whatsapp AS responsavel_whatsapp, r.saldo_atual,
                        (
                            SELECT GROUP_CONCAT(ra.nome ORDER BY ra.id SEPARATOR ', ')
                            FROM aluno_restricoes ar
@@ -157,7 +157,7 @@ class Aluno extends Model
     {
         $sql = "SELECT a.*,
                        t.serie, t.nome_turma, t.turno AS turno_turma,
-                       r.nome AS responsavel_nome, r.cpf AS responsavel_cpf, r.whatsapp AS responsavel_whatsapp, r.email AS responsavel_email,
+                       r.nome AS responsavel_nome, r.cpf AS responsavel_cpf, r.whatsapp AS responsavel_whatsapp, r.email AS responsavel_email, r.saldo_atual,
                        (
                            SELECT GROUP_CONCAT(ra.nome ORDER BY ra.id SEPARATOR ', ')
                            FROM aluno_restricoes ar

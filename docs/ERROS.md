@@ -836,3 +836,32 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. Implementado o desbloqueio automático de responsável com restrição MED em `TransacaoCarteira::creditar` quando uma recarga eleva o saldo familiar para `>= R$ 0,00`.
   6. Criadas as ferramentas `tests/verification_audit.php`, `tests/click_path_audit.php` e a suíte `tests/enhancements_audit_test.php`, atingindo 100% de sucesso nas 39 suítes de testes.
 - Como evitar no futuro: Executar auditorias estáticas e comportamentais regulares (`verification-loop` e `click-path-audit`) a cada conclusão de fase, garantindo que botões e links de views apontem estritamente para rotas registradas e que stubs de contingência sejam finalizados com suas respectivas migrações.
+---
+
+## 2026-09-25 - Falha de sintaxe em títulos de tabela no PdfService e caracteres acentuados em fontes Standard 14 PDF
+
+- Sintoma: `Parse error: syntax error, unexpected token ";", expecting ")"` em `app/services/PdfService.php` nas linhas de cabeçalho de tabela dos relatórios de vendas de alimento e desconto em folha.
+- Causa: Literais de cabeçalho de coluna foram invocados através de `sprintf("(TITULO) Tj\nET\n";` sem o fechamento do parêntese da função `sprintf`. Adicionalmente, caracteres com acentos gráficos em literais de PDF puro geravam inconsistências de decodificação em fontes Standard 14 Helvetica.
+- Solução aplicada:
+  1. Substituídos os comandos `sprintf` desnecessários por concatenação direta de strings.
+  2. Aplicada a normalização com `PdfService::removerAcentos()` e literais ASCII (`CODIGO`, `PRECO MED.`, `TOTAL R$`, `MATRICULA`, `CARGO / FUNCAO`).
+  3. Validada a integridade de sintaxe do arquivo com `php -l app/services/PdfService.php`.
+- Como evitar no futuro: Não utilizar `sprintf` para interpolação de strings puramente estáticas e sempre verificar fontes Standard 14 do PDF assegurando que caracteres especiais sejam tratados via tabela de codificação ou removidos de acentuação antes de injetar nos streams `Tj`.
+---
+
+## 2026-09-25 - Incompatibilidade de colunas na consulta de estatísticas de período em SessaoCaixa
+
+- Sintoma: `Fatal error: Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'sc.total_dinheiro_informado' in 'field list'` ao executar a suíte de testes `tests/fase17_test.php`.
+- Causa: O método `SessaoCaixa::obterEstatisticasPeriodo` foi implementado assumindo a existência de uma coluna agregadora `total_dinheiro_informado`, quando na verdade a Migration 019 segrega o numerário em `total_dinheiro_recargas` e `total_dinheiro_avulso`, armazena a conferência física em `total_informado_gaveta` e a apuração em `diferenca_quebra_sobra`.
+- Solução aplicada:
+  1. Corrigida a consulta SQL em `SessaoCaixa::obterEstatisticasPeriodo` para somar `(sc.total_dinheiro_recargas + sc.total_dinheiro_avulso)` como faturamento em dinheiro, `sc.total_pix_balcao` como faturamento Pix, e `sc.diferenca_quebra_sobra` para a apuração de quebras e sobras.
+  2. Ajustada a view `app/views/relatorios/fechamento_caixa.php` para utilizar as colunas corretas e exibir o status `fechado` com links oficiais para o espelho PDF.
+- Como evitar no futuro: Sempre inspecionar a definição relacional da tabela na migração de origem (`database/migrations/*`) antes de redigir consultas de relatórios analíticos, garantindo aderência estrita aos campos persistidos.
+---
+
+## 2026-09-25 - Ausência do saldo familiar compartilhado nas consultas de Aluno
+
+- Sintoma: Falha na asserção `isset($alunoObj['saldo_atual'])` no teste de extrato analítico do aluno em `tests/fase17_test.php`.
+- Causa: Conforme regra contábil da instituição (`docs/FSD.md` Seção 1.2), o saldo é familiar compartilhado e reside na tabela `responsaveis.saldo_atual`. As consultas `Aluno::buscarPorId` e `Aluno::listarTodos` faziam o join com a tabela de responsáveis, mas omitiam o campo `r.saldo_atual`.
+- Solução aplicada: Adicionado `r.saldo_atual` aos campos selecionados no join com `responsaveis` em `Aluno::buscarPorId` e `Aluno::listarTodos`, disponibilizando automaticamente o saldo da carteira em qualquer objeto de aluno instanciado.
+- Como evitar no futuro: Em modelos que representem dependentes de uma conta familiar compartilhada, garantir que as projeções de dados tragam os campos contábeis pertinentes do titular para evitar consultas adicionais desnecessárias.

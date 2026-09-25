@@ -89,6 +89,12 @@ $isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
                         <span class="nav-label">Caixa do Turno</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno" class="nav-link <?php echo ($activeMenu === 'extrato_aluno') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Extrato do Aluno</span>
+                    </a>
+                </li>
             </ul>
         </div>
 

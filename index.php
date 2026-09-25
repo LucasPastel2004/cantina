@@ -403,9 +403,57 @@ $router->get('/admin/calendario', [\App\Controllers\AdminController::class, 'cal
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
 
-// 4. Central de Relatórios Gerenciais
-$router->get('/relatorios', [\App\Controllers\AdminController::class, 'relatorios'], [
-    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+// 4. Central de Relatórios Gerenciais, Extratos e Exportações (Fase 17 — FSD Área 6 & Módulo 8)
+// 4.1. Hub e Relatórios Estratégicos (Acesso exclusivo 'administrador')
+$router->get('/relatorios', [\App\Controllers\RelatoriosController::class, 'index'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/vendas-alimento', [\App\Controllers\RelatoriosController::class, 'vendasAlimento'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/vendas-alimento/pdf', [\App\Controllers\RelatoriosController::class, 'vendasAlimentoPdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/desconto-folha', [\App\Controllers\RelatoriosController::class, 'descontoFolha'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/desconto-folha/pdf', [\App\Controllers\RelatoriosController::class, 'descontoFolhaPdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/desconto-folha/csv', [\App\Controllers\RelatoriosController::class, 'descontoFolhaCsv'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/desconto-folha/detalhes-ajax', [\App\Controllers\RelatoriosController::class, 'descontoFolhaDetalhesAjax'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/fechamento-caixa', [\App\Controllers\RelatoriosController::class, 'fechamentoCaixa'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/devedores', [\App\Controllers\RelatoriosController::class, 'devedores'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
+// 4.2. Extrato Analítico do Aluno (Operador de Balcão e Administrador — FSD Tela 8.5 & Seção 8)
+$router->get('/operacional/extrato-aluno', [\App\Controllers\RelatoriosController::class, 'extratoAluno'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/relatorios/extrato-aluno', [\App\Controllers\RelatoriosController::class, 'extratoAluno'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/extrato-aluno/pdf', [\App\Controllers\RelatoriosController::class, 'extratoAlunoPdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/relatorios/extrato-aluno/pdf', [\App\Controllers\RelatoriosController::class, 'extratoAlunoPdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/extrato-aluno/imprimir', [\App\Controllers\RelatoriosController::class, 'extratoAlunoImprimir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/relatorios/extrato-aluno/imprimir', [\App\Controllers\RelatoriosController::class, 'extratoAlunoImprimir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/relatorios/buscar-alunos-ajax', [\App\Controllers\RelatoriosController::class, 'buscarAlunosAjax'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 
 // 5. Gestão de Contestações e Mecanismo Especial de Devolução - MED Pix (Fase 16 — Acesso exclusivo 'administrador')
