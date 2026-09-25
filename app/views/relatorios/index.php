@@ -11,7 +11,7 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 $baseUrl = $baseUrl ?? '';
 ?>
 
-<div class="container-fluid px-0" style="max-width: 1400px; margin: 0 auto;">
+<div class="container-fluid px-2 pb-5" style="max-width: 1400px; margin: 0 auto;">
     <!-- Barra de Subcabeçalho e Contexto da Página -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 pb-2 border-bottom">
         <div>
@@ -70,23 +70,23 @@ $baseUrl = $baseUrl ?? '';
         </div>
     </div>
 
-    <!-- Diretório de Relatórios em Cards Corporativos com Padrão Neutro Anti-Slop -->
+    <!-- Diretório de Relatórios em Cards Corporativos com Padrão Visual Oficial -->
     <div class="row g-3 g-xl-4">
         <!-- Relatório 1: Extrato Analítico do Aluno -->
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card-enterprise h-100 d-flex flex-column justify-content-between p-3.5">
+            <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
                 <div>
-                    <div class="card-enterprise-header d-flex justify-content-between align-items-center mb-2 px-0 pt-0 border-0">
-                        <span class="text-microcopy text-uppercase font-weight-bold text-secondary">Atendimento & Famílias</span>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Atendimento & Famílias</span>
                         <span class="code-tag font-tabular">PDF A4 + Cupom</span>
                     </div>
-                    <h2 class="h6 font-weight-bold text-dark mb-2">Extrato Analítico do Aluno</h2>
-                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.5;">
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Extrato Analítico do Aluno</h2>
+                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
                         Histórico detalhado de recargas (Pix/Dinheiro) e consumo de itens linha a linha, com saldo da carteira, alérgenos e espelho para impressão imediata.
                     </p>
                 </div>
-                <div class="d-flex gap-2 pt-2 border-top">
-                    <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno" class="btn btn-enterprise btn-secondary btn-sm flex-fill text-center">
+                <div class="d-flex gap-2 pt-3 border-top mt-auto">
+                    <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
                         Acessar Extrato
                     </a>
                 </div>
@@ -95,19 +95,19 @@ $baseUrl = $baseUrl ?? '';
 
         <!-- Relatório 2: Vendas por Alimento e Curva ABC -->
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card-enterprise h-100 d-flex flex-column justify-content-between p-3.5">
+            <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
                 <div>
-                    <div class="card-enterprise-header d-flex justify-content-between align-items-center mb-2 px-0 pt-0 border-0">
-                        <span class="text-microcopy text-uppercase font-weight-bold text-secondary">Desempenho Comercial</span>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Desempenho Comercial</span>
                         <span class="code-tag font-tabular">PDF A4 Timbrado</span>
                     </div>
-                    <h2 class="h6 font-weight-bold text-dark mb-2">Vendas por Alimento & Curva ABC</h2>
-                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.5;">
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Vendas por Alimento & Curva ABC</h2>
+                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
                         Totalização de faturamento por produto e categoria, preço médio ponderado, percentual de participação e classificação ABC (Classes A, B e C).
                     </p>
                 </div>
-                <div class="d-flex gap-2 pt-2 border-top">
-                    <a href="<?php echo $baseUrl; ?>/relatorios/vendas-alimento" class="btn btn-enterprise btn-secondary btn-sm flex-fill text-center">
+                <div class="d-flex gap-2 pt-3 border-top mt-auto">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/vendas-alimento" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
                         Abrir Relatório & Curva ABC
                     </a>
                 </div>
@@ -116,19 +116,19 @@ $baseUrl = $baseUrl ?? '';
 
         <!-- Relatório 3: Desconto em Folha para RH -->
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card-enterprise h-100 d-flex flex-column justify-content-between p-3.5">
+            <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
                 <div>
-                    <div class="card-enterprise-header d-flex justify-content-between align-items-center mb-2 px-0 pt-0 border-0">
-                        <span class="text-microcopy text-uppercase font-weight-bold text-secondary">Recursos Humanos</span>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Recursos Humanos</span>
                         <span class="code-tag font-tabular">CSV Folha + PDF A4</span>
                     </div>
-                    <h2 class="h6 font-weight-bold text-dark mb-2">Desconto em Folha para RH</h2>
-                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.5;">
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Desconto em Folha para RH</h2>
+                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
                         Consolidado mensal de compras de professores e colaboradores por matrícula, com exportação CSV para sistemas de folha e relatório PDF com campos para assinaturas.
                     </p>
                 </div>
-                <div class="d-flex gap-2 pt-2 border-top">
-                    <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha" class="btn btn-enterprise btn-secondary btn-sm flex-fill text-center">
+                <div class="d-flex gap-2 pt-3 border-top mt-auto">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
                         Gerenciar Folha RH
                     </a>
                 </div>
@@ -137,19 +137,19 @@ $baseUrl = $baseUrl ?? '';
 
         <!-- Relatório 4: Fechamento de Caixa & Prestação de Contas -->
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card-enterprise h-100 d-flex flex-column justify-content-between p-3.5">
+            <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
                 <div>
-                    <div class="card-enterprise-header d-flex justify-content-between align-items-center mb-2 px-0 pt-0 border-0">
-                        <span class="text-microcopy text-uppercase font-weight-bold text-secondary">Controladoria & Caixa</span>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Controladoria & Caixa</span>
                         <span class="code-tag font-tabular">PDF A4 Timbrado</span>
                     </div>
-                    <h2 class="h6 font-weight-bold text-dark mb-2">Demonstrativo de Fechamento de Caixa</h2>
-                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.5;">
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Demonstrativo de Fechamento de Caixa</h2>
+                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
                         Auditoria de sessões de caixa por turno, conferência física de gaveta, dinheiro, Pix de balcão e apuração de sobras ou quebras com visto de assinatura.
                     </p>
                 </div>
-                <div class="d-flex gap-2 pt-2 border-top">
-                    <a href="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" class="btn btn-enterprise btn-secondary btn-sm flex-fill text-center">
+                <div class="d-flex gap-2 pt-3 border-top mt-auto">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
                         Histórico & Prestação de Contas
                     </a>
                 </div>
@@ -158,19 +158,19 @@ $baseUrl = $baseUrl ?? '';
 
         <!-- Relatório 5: Inadimplência e MED Pix -->
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card-enterprise h-100 d-flex flex-column justify-content-between p-3.5">
+            <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
                 <div>
-                    <div class="card-enterprise-header d-flex justify-content-between align-items-center mb-2 px-0 pt-0 border-0">
-                        <span class="text-microcopy text-uppercase font-weight-bold text-secondary">Contas a Receber</span>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Contas a Receber</span>
                         <span class="code-tag font-tabular">PDF A4 Timbrado</span>
                     </div>
-                    <h2 class="h6 font-weight-bold text-dark mb-2">Inadimplência & Bloqueios MED</h2>
-                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.5;">
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Inadimplência & Bloqueios MED</h2>
+                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
                         Relação nominal de famílias com saldo devedor na carteira ou suspensão preventiva decorrente de contestações bancárias do Mecanismo Especial de Devolução (MED).
                     </p>
                 </div>
-                <div class="d-flex gap-2 pt-2 border-top">
-                    <a href="<?php echo $baseUrl; ?>/relatorios/devedores" class="btn btn-enterprise btn-secondary btn-sm flex-fill text-center">
+                <div class="d-flex gap-2 pt-3 border-top mt-auto">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/devedores" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
                         Relação de Devedores
                     </a>
                 </div>
@@ -179,22 +179,22 @@ $baseUrl = $baseUrl ?? '';
 
         <!-- Relatório 6: Corte do Turno -->
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card-enterprise h-100 d-flex flex-column justify-content-between p-3.5">
+            <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
                 <div>
-                    <div class="card-enterprise-header d-flex justify-content-between align-items-center mb-2 px-0 pt-0 border-0">
-                        <span class="text-microcopy text-uppercase font-weight-bold text-secondary">Operacional Fornecedor</span>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Operacional Fornecedor</span>
                         <span class="code-tag font-tabular">PDF A4 Timbrado</span>
                     </div>
-                    <h2 class="h6 font-weight-bold text-dark mb-2">Relatório Consolidado de Corte</h2>
-                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.5;">
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Relatório Consolidado de Corte</h2>
+                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
                         Totalização analítica de salgados e almoços agendados para compra exata com fornecedores locais, prevenindo sobra e falta de merenda.
                     </p>
                 </div>
-                <div class="d-flex gap-2 pt-2 border-top">
-                    <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-secondary btn-sm flex-fill text-center">
+                <div class="d-flex gap-2 pt-3 border-top mt-auto">
+                    <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
                         Painel de Corte
                     </a>
-                    <a href="<?php echo $baseUrl; ?>/operacional/corte/pdf?data=<?php echo date('Y-m-d'); ?>&turno=matutino" class="btn btn-enterprise btn-secondary btn-sm" target="_blank" title="Baixar PDF A4 de Hoje">
+                    <a href="<?php echo $baseUrl; ?>/operacional/corte/pdf?data=<?php echo date('Y-m-d'); ?>&turno=matutino" class="btn btn-enterprise btn-primary btn-sm text-center fw-medium" target="_blank" title="Baixar PDF A4 de Hoje">
                         PDF Hoje
                     </a>
                 </div>

@@ -11,7 +11,7 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 $baseUrl = $baseUrl ?? '';
 ?>
 
-<div class="container-fluid px-0" style="max-width: 1400px; margin: 0 auto;">
+<div class="container-fluid px-2 pb-5" style="max-width: 1400px; margin: 0 auto;">
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>

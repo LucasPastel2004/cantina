@@ -539,6 +539,34 @@ textarea.form-control {
   background-color: var(--surface-card);
 }
 
+/* Card de Relatório Executivo (Hub de Relatórios) */
+.card-report {
+  background-color: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-report:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
+}
+
+.card-report-title {
+  font-size: 16px;
+  font-weight: 700 !important;
+  color: #0f172a;
+  margin-bottom: 8px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
 /* Indicadores de Status Tipográficos Discretos (Substitui pílulas semáforo) */
 .status-indicator {
   display: inline-flex;

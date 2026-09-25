@@ -675,6 +675,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Eliminação completa de badges coloridos (vermelho, verde e azul) em todas as telas de relatórios, substituindo-os pelo componente corporativo neutro `.code-tag font-tabular` (fundo cinza `#f1f5f9`, borda `#cbd5e1` e texto `#334155`);
   * Conversão de botões de ação e filtros para o padrão corporativo neutro `.btn.btn-enterprise.btn-secondary`, em conformidade com as diretrizes do `AGENTS.md` e do Design System;
   * Invalidação de cache nos navegadores através da atualização da versão de assets para `5.8.0`.
+* [x] **Ajuste de Tipografia, Botões Institucionais Azuis e Espaçamento dos Cards de Relatórios:**
+  * Resolução do texto colado às bordas nos cartões do diretório de relatórios (`app/views/relatorios/index.php`): substituição da classe inexistente `p-3.5` por padding explícito e classe `.card-report` (`padding: 22px 24px;`);
+  * Aplicação de destaque tipográfico evidente com negrito real nos títulos dos cards (`font-weight: 700 !important; font-size: 16px;`), corrigindo a perda de peso causada pela depreciação do Bootstrap 4 `font-weight-bold` em favor do Bootstrap 5 `fw-bold`;
+  * Conversão dos botões de ação dos cards e dos botões primários de exportação para azul royal institucional (`.btn.btn-enterprise.btn-primary`), alinhados à paleta da marca e logotipo do colégio, mantendo todos os badges e chips de status em cinza neutro soberbo (`.code-tag font-tabular`);
+  * Aplicação de respiro inferior amplo nos contêineres de relatórios (`pb-5` / 48px) evitando proximidade ou colisão com o rodapé da página;
+  * Incremento da versão de cache dos assets para `5.8.5` em `app/core/Controller.php` e `app/views/layouts/admin.php`;
+  * Revalidação integral da suíte de testes automatizados (`tests/verification_audit.php`): 40 de 40 suítes aprovadas com 100% de sucesso.
 
 ---
 

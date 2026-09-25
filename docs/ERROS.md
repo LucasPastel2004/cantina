@@ -897,3 +897,20 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. Atualizada a versão dos assets para `5.8.0` em `app/core/Controller.php` e `app/views/layouts/admin.php` para forçar invalidação imediata de cache nos navegadores.
   6. Auditoria global executada via `tests/verification_audit.php` com aprovação de 40 de 40 suítes de testes automatizados (100% de sucesso).
 - Como evitar no futuro: Seguir rigorosamente as diretrizes de Taste Design e `AGENTS.md`: nunca usar badges com fundos coloridos chamativos; usar estritamente `.code-tag` neutro ou indicadores tipográficos discretos; sempre conter páginas corporativas em contêineres confortáveis para evitar estiramento visual em monitores de alta resolução.
+---
+
+## 2026-09-25 - Texto colado às bordas do cartão por classe p-3.5 inexistente, títulos sem negrito efetivo e necessidade de botões azuis institucionais
+
+- Sintoma: No hub de relatórios (`/relatorios`), o conteúdo textual interno dos cartões ("ATENDIMENTO & FAMÍLIAS", título "Extrato Analítico do Aluno", descrição e botões) estava colado diretamente às 4 bordas do cartão branco sem espaçamento lateral ou superior; os títulos dos cartões não apresentavam destaque em negrito suficiente; e os botões de ação estavam apagados em cinza neutro sem incorporar a identidade visual azul da logo do colégio.
+- Causa:
+  1. No template `app/views/relatorios/index.php`, foi aplicada a classe CSS `p-3.5`, que não existe no Bootstrap 5 nem no CSS padrão (Bootstrap possui apenas inteiros de 0 a 5: `p-1` a `p-5`). Consequentemente, o contêiner do cartão ficou com `padding: 0`, e com o header possuindo `px-0 pt-0`, todos os elementos de texto tocaram as bordas do cartão em 0px.
+  2. No Bootstrap 5, a classe legada `font-weight-bold` (do Bootstrap 4) foi descontinuada em favor de `fw-bold` (`font-weight: 700 !important`). Por isso, os títulos `<h2>` herdavam apenas a tipografia padrão de `<h6>` (14px sem peso acentuado).
+  3. A diretriz de botões neutros foi aplicada indiscriminadamente em cartões de navegação, privando os cartões de ação do azul institucional (`#1d4ed8`) característico da logo da cantina.
+- Solução aplicada:
+  1. Criada a classe dedicada `.card-report` em `assets/css/custom.css` com espaçamento interno generoso de 22px vertical e 24px horizontal (`padding: 22px 24px;`), também injetado inline no template para blindagem contra cache.
+  2. Aplicada a classe `.card-report-title` com estilo inline `font-size: 16px; font-weight: 700 !important; color: #0f172a;` e `fw-bold`, conferindo destaque imediato em negrito corporativo em todos os 6 cartões.
+  3. Convertidos todos os botões de ação dos cartões no hub de relatórios e os botões de "Exportar PDF" nos cabeçalhos das telas analíticas para a classe `btn btn-enterprise btn-primary` (azul royal `#1d4ed8` oficial da logo).
+  4. Adicionada classe `pb-5` no contêiner da página para assegurar respiro de 48px entre a última fileira de cartões e o rodapé.
+  5. Versão de assets elevada para `5.8.5` em `app/core/Controller.php` e `app/views/layouts/admin.php`.
+  6. Suíte de 40 testes automatizados reexecutada e aprovada com 100% de sucesso.
+- Como evitar no futuro: Nunca usar classes de espaçamento fracionárias não definidas no framework (como `p-3.5`); em Bootstrap 5, sempre utilizar `fw-bold` ou estilos explícitos `font-weight: 700`; e manter os botões primários de ação (`btn-primary`) alinhados à cor azul da marca institucional da cantina.
