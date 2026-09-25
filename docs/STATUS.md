@@ -681,7 +681,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Conversão dos botões de ação dos cards e dos botões primários de exportação para azul royal institucional (`.btn.btn-enterprise.btn-primary`), alinhados à paleta da marca e logotipo do colégio, mantendo todos os badges e chips de status em cinza neutro soberbo (`.code-tag font-tabular`);
   * Aplicação de respiro inferior amplo nos contêineres de relatórios (`pb-5` / 48px) evitando proximidade ou colisão com o rodapé da página;
   * Incremento da versão de cache dos assets para `5.8.5` em `app/core/Controller.php` e `app/views/layouts/admin.php`;
-  * Revalidação integral da suíte de testes automatizados (`tests/verification_audit.php`): 40 de 40 suítes aprovadas com 100% de sucesso.
+* [x] **Correção de Layout, Alinhamento de Colunas e Encoding do PDF de Vendas por Alimento:**
+  * Eliminação de 100% dos caracteres corrompidos/mojibake em cabeçalho, filtros e stat-strip em `PdfService::gerarRelatorioVendasAlimentoPdf`;
+  * Redesenho da grade matemática da tabela com delimitação de 13 caracteres para código interno e posicionamento da descrição a 70 pt de distância, eliminando sobreposições;
+  * Correção da chave associativa de participação percentual (`participacao_percentual`), exibindo valores calculados reais da Curva ABC em vez de 0,0%;
+  * Alinhamento da Curva ABC e totalizadores dentro da margem útil de 523.28 pt do formato A4;
+  * Higienização idêntica aplicada ao relatório PDF de Desconto em Folha para RH;
+  * Revalidação integral da suíte de 40 testes automatizados com 100% de aprovação.
 
 ---
 

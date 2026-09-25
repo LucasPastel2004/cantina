@@ -914,3 +914,25 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. Versão de assets elevada para `5.8.5` em `app/core/Controller.php` e `app/views/layouts/admin.php`.
   6. Suíte de 40 testes automatizados reexecutada e aprovada com 100% de sucesso.
 - Como evitar no futuro: Nunca usar classes de espaçamento fracionárias não definidas no framework (como `p-3.5`); em Bootstrap 5, sempre utilizar `fw-bold` ou estilos explícitos `font-weight: 700`; e manter os botões primários de ação (`btn-primary`) alinhados à cor azul da marca institucional da cantina.
+---
+
+## 2026-09-25 - Falhas visuais, sobreposição de colunas, Curva ABC zerada e mojibake no PDF de vendas por alimento
+
+- Sintoma: No documento PDF do Relatório de Vendas por Alimento e Curva ABC (`/relatorios/vendas-alimento/pdf`), manifestavam-se 4 defeitos gráficos:
+  1. Mojibake e caracteres corrompidos em cabeçalhos, filtros e stat-strip (`Unidade Escolar Ãšnica`, `PerÃ-odo: ... â€¢ ...`, `PREÃ‡O MÃ‰DIO`, `CAMPEÃƒO DE VENDAS`);
+  2. Colisão e sobreposição física do texto do código sobre a descrição do produto (ex.: `PROD-TEST-F4Esfiha de Carne Assada` e `PDV-DIN-6ab42Pãode Queijo PDV`);
+  3. A coluna de participação percentual "PART. ABC" exibia `0,0%` fixo para todos os itens;
+  4. A coluna da Curva ABC sofria corte ou sobreposição na borda direita por cálculo incorreto de coordenadas X.
+- Causa:
+  1. Fontes PDF Type1 Helvetica operando com WinAnsiEncoding recebiam bytes UTF-8 literais embutidos diretamente no código fonte PHP, gerando caracteres espúrios de múltiplos bytes na renderização do PDF.
+  2. A distância entre a coluna Código ($c1 = 42.0$) e Alimento ($c2 = 96.0$) era de apenas 54 pontos. Códigos com 12 ou mais caracteres ultrapassavam esse espaço e colidiam com o texto da descrição.
+  3. Divergência de chaves associativas: o controller calculava `$item['participacao_percentual']`, enquanto o `PdfService` tentava ler `$item['percentual_participacao']`, avaliando para `0.0`.
+  4. A coordenada $c7$ (Part. %) no corpo da tabela ($554.0$) era maior do que a coordenada $c8$ (ABC: $549.28$), causando cruzamento de colunas na borda direita do papel A4.
+- Solução aplicada:
+  1. Em `PdfService::gerarRelatorioVendasAlimentoPdf`, padronizados todos os rótulos estáticos de cabeçalho, filtros, stat-strip e rodapé para ASCII corporativo limpo, e aplicado `self::removerAcentos()` em todos os textos dinâmicos, eliminando 100% de caracteres corrompidos.
+  2. Redesenhada a grade matemática de 8 colunas dentro da largura útil de 523.28 pt do A4: código limitado a 13 caracteres, descrição iniciando em $X = 112.0$ (espaço seguro de 70 pt), e gaps positivos e confortáveis entre todas as 8 colunas.
+  3. Corrigida a leitura da participação percentual para `$item['participacao_percentual'] ?? $item['percentual_participacao'] ?? 0.0`.
+  4. Alinhada a coluna da Curva ABC em $X = 546.0$, com paleta corporativa elegante (A em verde, B em azul cobalto, C em cinza corporativo).
+  5. Limpeza preventiva de caracteres acentuados também aplicada ao relatório PDF de Desconto em Folha para RH.
+  6. Revalidação integral da suíte de testes automatizados (`tests/verification_audit.php`): 40 de 40 suítes aprovadas com 100% de sucesso.
+- Como evitar no futuro: Em documentos PDF Type1 Helvetica puros, sempre sanitizar textos para ASCII com `removerAcentos()`; dimensionar colunas somando as larguras máximas projetadas para garantir gaps positivos entre vizinhos; e assegurar uniformidade nos nomes de atributos entre o Controller e a camada de renderização PDF.
