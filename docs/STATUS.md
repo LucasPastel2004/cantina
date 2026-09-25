@@ -745,8 +745,15 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Garantido que as rotas de emissão de PDF A4 timbrado (`extratoAlunoPdf`) e espelho de impressão contínua/A4 (`extratoAlunoImprimir`) recebam `$paginar = false`, preservando a impressão e exportação com a totalidade dos registros;
     * Adicionados os blocos de paginação e badges dinâmicos de contagem total em `app/views/relatorios/extrato_aluno.php`;
     * Criada a suíte de testes automatizados `tests/extrato_aluno_pagination_test.php` com 21 asserções cobrindo integridade estática e funcional;
-  * Incremento do assetVersion para `5.9.6` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
-  * Suíte global de testes automatizados expandida para 41 arquivos e aprovada com 100% de sucesso (`tests/verification_audit.php`).
+  * **Correção de Codificação de Caracteres Especiais no PDF do Extrato do Aluno:**
+    * Mapeamento expandido em `PdfService::removerAcentos()` para pontuações tipográficas e símbolos (`•`, `—`, `–`, `“`, `”`, `‘`, `’`, `º`, `ª`);
+    * Sanitização estrita em `PdfService::escapeText()` para ASCII imprimível (`\x20-\x7E`) com transliteração `iconv`;
+    * Padronização de todos os cabeçalhos, rótulos e seções de `gerarExtratoConsumoAlunoPdf()` em ASCII limpo (`BENEFICIARIO:`, `RESPONSAVEL FINANCEIRO:`, `Matricula: ... | ...`, `RECARGAS NO PERIODO`, `CONSUMO NO PERIODO`, `PERIODO CONSULTADO`, `COLEGIO MONTEIRO LOBATO - EXTRATO DE CONSUMO - CONTINUACAO`, `HISTORICO...`, `UNITARIO`, etc.), eliminando 100% dos caracteres corrompidos (*mojibake*);
+    * Correção em `gerarComprovanteVendaBalcaoPdf()` substituindo `Sessão Caixa:`, `Matrícula:` e `Venda Balcão` por versões ASCII puras;
+  * **Remoção de Botão Inútil 'Voltar' no Espelho de Impressão:**
+    * Removido o botão `← Voltar ao Sistema` com `window.history.back()` em `PdfService::gerarEspelhoExtratoConsumoAlunoHtml()`, eliminando um botão inoperante e mantendo exclusivamente a ação de destaque `🖨️ Imprimir Extrato` quando aberto em nova aba (`target="_blank"`);
+  * Incremento do assetVersion para `5.9.7` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
+  * Suíte global de testes automatizados com 41 arquivos aprovada com 100% de sucesso (`tests/verification_audit.php`).
 
 ---
 

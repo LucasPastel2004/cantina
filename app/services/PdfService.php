@@ -551,7 +551,8 @@ class PdfService
     {
         $map = [
             'á'=>'a','à'=>'a','ã'=>'a','â'=>'a','é'=>'e','ê'=>'e','í'=>'i','ó'=>'o','ô'=>'o','õ'=>'o','ú'=>'u','ü'=>'u','ç'=>'c',
-            'Á'=>'A','À'=>'A','Ã'=>'A','Â'=>'A','É'=>'E','Ê'=>'E','Í'=>'I','Ó'=>'O','Ô'=>'O','Õ'=>'O','Ú'=>'U','Ü'=>'U','Ç'=>'C'
+            'Á'=>'A','À'=>'A','Ã'=>'A','Â'=>'A','É'=>'E','Ê'=>'E','Í'=>'I','Ó'=>'O','Ô'=>'O','Õ'=>'O','Ú'=>'U','Ü'=>'U','Ç'=>'C',
+            '•'=>'-','—'=>'-','–'=>'-','“'=>'"','”'=>'"','‘'=>"'",'’'=>"'",'º'=>'o','ª'=>'a'
         ];
         return strtr($str, $map);
     }
@@ -667,24 +668,39 @@ class PdfService
     }
 
     /**
-     * Escapa caracteres especiais e converte caracteres acentuados de UTF-8 para Windows-1252
+     * Escapa caracteres especiais e converte caracteres acentuados para compatibilidade com fontes Type1 padrão
      */
     protected static function escapeText(string $text): string
     {
-        // Converte caracteres acentuados para Windows-1252 / ISO-8859-1 para as fontes Type1 padrão
-        $converted = @iconv('UTF-8', 'windows-1252//TRANSLIT', $text);
+        // 1. Normaliza caracteres tipográficos e especiais comuns para ASCII
+        $replaces = [
+            '•' => '-',
+            '—' => '-',
+            '–' => '-',
+            '“' => '"',
+            '”' => '"',
+            '‘' => "'",
+            '’' => "'",
+            'º' => 'o',
+            'ª' => 'a',
+        ];
+        $text = str_replace(array_keys($replaces), array_values($replaces), $text);
+
+        // 2. Remove acentos e diacríticos para compatibilidade total com fontes Type1
+        $text = self::removerAcentos($text);
+
+        // 3. Converte para ASCII puro
+        $converted = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
         if ($converted === false) {
-            $converted = mb_convert_encoding($text, 'Windows-1252', 'UTF-8');
+            $converted = preg_replace('/[^\x20-\x7E]/', '', $text);
         }
 
-        // Escapa barras invertidas e parênteses
-        $escaped = str_replace(
+        // 4. Escapa barras invertidas e parênteses reservados da sintaxe de strings do PDF
+        return str_replace(
             ['\\', '(', ')'],
             ['\\\\', '\\(', '\\)'],
             $converted
         );
-
-        return $escaped;
     }
 
     /**
@@ -1557,7 +1573,7 @@ class PdfService
         $y -= 10.0;
         $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Atendente: %s) Tj\nET\n", self::escapeText($operador));
         $y -= 10.0;
-        $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Sessão Caixa: #%d (%s)) Tj\nET\n", $sessaoId, self::escapeText($sessaoTurno));
+        $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Sessao Caixa: #%d (%s)) Tj\nET\n", $sessaoId, self::escapeText($sessaoTurno));
         $y -= 9.0;
 
         // Divisória
@@ -1570,7 +1586,7 @@ class PdfService
             $y -= 11.0;
             $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Nome: %s) Tj\nET\n", self::escapeText($venda['colaborador_nome']));
             $y -= 10.0;
-            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Matrícula: %s) Tj\nET\n", self::escapeText($venda['colaborador_matricula'] ?? ''));
+            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Matricula: %s) Tj\nET\n", self::escapeText($venda['colaborador_matricula'] ?? ''));
             $y -= 10.0;
             $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Cargo: %s) Tj\nET\n", self::escapeText($venda['colaborador_cargo'] ?? ''));
             $y -= 9.0;
@@ -1582,7 +1598,7 @@ class PdfService
             $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . sprintf("(Turma: %s) Tj\nET\n", self::escapeText($venda['aluno_turma'] ?? 'Geral'));
             $y -= 9.0;
         } else {
-            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . "(Cliente: Consumidor Final (Venda Balcão)) Tj\nET\n";
+            $stream .= "BT\n/F1 8 Tf\n0 0 0 rg\n" . sprintf("%.2f %.2f Td\n", $left, $y) . "(Cliente: Consumidor Final (Venda Balcao)) Tj\nET\n";
             $y -= 9.0;
         }
 
@@ -3478,7 +3494,7 @@ class PdfService
                 // Coluna Esquerda: Aluno
                 $currentStream .= "BT\n/F2 7.5 Tf\n0.40 0.45 0.55 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.0);
-                $currentStream .= sprintf("(ESTUDANTE BENEFICIÁRIO:) Tj\nET\n");
+                $currentStream .= sprintf("(ESTUDANTE BENEFICIARIO:) Tj\nET\n");
 
                 $currentStream .= "BT\n/F2 9.5 Tf\n0.06 0.09 0.16 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 24.0);
@@ -3486,7 +3502,7 @@ class PdfService
 
                 $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 36.0);
-                $currentStream .= sprintf("(Matrícula: %s  •  Turma: %s  •  Turno: %s) Tj\nET\n", self::escapeText($matAluno), self::escapeText($turmaAluno), self::escapeText($turnoAluno));
+                $currentStream .= sprintf("(Matricula: %s  |  Turma: %s  |  Turno: %s) Tj\nET\n", self::escapeText($matAluno), self::escapeText($turmaAluno), self::escapeText($turnoAluno));
 
                 // Coluna Direita: Responsável Titular
                 $colDirX = $left + 290.0;
@@ -3494,7 +3510,7 @@ class PdfService
 
                 $currentStream .= "BT\n/F2 7.5 Tf\n0.40 0.45 0.55 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $colDirX, $y - 12.0);
-                $currentStream .= sprintf("(RESPONSÁVEL FINANCEIRO (CARTEIRA FAMILIAR):) Tj\nET\n");
+                $currentStream .= sprintf("(RESPONSAVEL FINANCEIRO (CARTEIRA FAMILIAR):) Tj\nET\n");
 
                 $currentStream .= "BT\n/F2 9.0 Tf\n0.06 0.09 0.16 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $colDirX, $y - 24.0);
@@ -3502,7 +3518,7 @@ class PdfService
 
                 $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $colDirX, $y - 36.0);
-                $currentStream .= sprintf("(WhatsApp: %s  •  CPF: %s) Tj\nET\n", self::escapeText($respWhats), self::escapeText($respCpf));
+                $currentStream .= sprintf("(WhatsApp: %s  |  CPF: %s) Tj\nET\n", self::escapeText($respWhats), self::escapeText($respCpf));
 
                 $y -= ($boxH + 12.0);
 
@@ -3531,7 +3547,7 @@ class PdfService
                 $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + $colW, $y - $boxH2, $left + $colW, $y);
                 $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $xM2, $y - 12.0);
-                $currentStream .= sprintf("(RECARGAS NO PERÍODO) Tj\nET\n");
+                $currentStream .= sprintf("(RECARGAS NO PERIODO) Tj\nET\n");
 
                 $recStr = "R$ " . number_format($totalRecargas, 2, ',', '.');
                 $currentStream .= "BT\n/F2 11 Tf\n0.08 0.55 0.24 rg\n";
@@ -3543,7 +3559,7 @@ class PdfService
                 $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + ($colW * 2), $y - $boxH2, $left + ($colW * 2), $y);
                 $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $xM3, $y - 12.0);
-                $currentStream .= sprintf("(CONSUMO NO PERÍODO) Tj\nET\n");
+                $currentStream .= sprintf("(CONSUMO NO PERIODO) Tj\nET\n");
 
                 $conStr = "R$ " . number_format($totalConsumo, 2, ',', '.');
                 $currentStream .= "BT\n/F2 11 Tf\n0.10 0.12 0.18 rg\n";
@@ -3555,7 +3571,7 @@ class PdfService
                 $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + ($colW * 3), $y - $boxH2, $left + ($colW * 3), $y);
                 $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $xM4, $y - 12.0);
-                $currentStream .= sprintf("(PERÍODO CONSULTADO) Tj\nET\n");
+                $currentStream .= sprintf("(PERIODO CONSULTADO) Tj\nET\n");
 
                 $currentStream .= "BT\n/F2 8.5 Tf\n0.11 0.31 0.85 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $xM4, $y - 25.0);
@@ -3574,13 +3590,13 @@ class PdfService
                 $textLeft = $left + 46.0;
                 $currentStream .= "BT\n/F2 10 Tf\n0.06 0.09 0.16 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 6.0);
-                $currentStream .= sprintf("(COLÉGIO MONTEIRO LOBATO — EXTRATO DE CONSUMO - CONTINUAÇÃO) Tj\nET\n");
+                $currentStream .= sprintf("(COLEGIO MONTEIRO LOBATO - EXTRATO DE CONSUMO - CONTINUACAO) Tj\nET\n");
 
                 $nomeAluno = self::removerAcentos($aluno['nome'] ?? 'Aluno');
                 $matAluno  = $aluno['matricula'] ?? '-';
                 $currentStream .= "BT\n/F1 7.5 Tf\n0.30 0.35 0.45 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 20.0);
-                $currentStream .= sprintf("(Estudante: %s  •  Matrícula: %s  •  Período: %s a %s) Tj\nET\n", self::escapeText($nomeAluno), self::escapeText($matAluno), $dataIniFmt, $dataFimFmt);
+                $currentStream .= sprintf("(Estudante: %s  |  Matricula: %s  |  Periodo: %s a %s) Tj\nET\n", self::escapeText($nomeAluno), self::escapeText($matAluno), $dataIniFmt, $dataFimFmt);
 
                 $y -= 44.0;
             }
@@ -3609,7 +3625,7 @@ class PdfService
         // --- SEÇÃO 1: RECARGAS NO PERÍODO ---
         $currentStream .= "BT\n/F2 8.5 Tf\n0.11 0.31 0.85 rg\n";
         $currentStream .= sprintf("%.2f %.2f Td\n", $left, $y);
-        $currentStream .= sprintf("(1. HISTÓRICO DE RECARGAS NA CARTEIRA FAMILIAR NO PERÍODO) Tj\nET\n");
+        $currentStream .= sprintf("(1. HISTORICO DE RECARGAS NA CARTEIRA FAMILIAR NO PERIODO) Tj\nET\n");
         $y -= 14.0;
 
         // Cabeçalho da Tabela de Recargas
@@ -3648,7 +3664,7 @@ class PdfService
             $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
             $currentStream .= "BT\n/F1 7.5 Tf\n0.45 0.50 0.60 rg\n";
             $currentStream .= sprintf("%.2f %.2f Td\n", $left + 12.0, $y - 12.0);
-            $currentStream .= sprintf("(Nenhuma recarga registrada na carteira durante este período.) Tj\nET\n");
+            $currentStream .= sprintf("(Nenhuma recarga registrada na carteira durante este periodo.) Tj\nET\n");
             $y -= ($rowH + 12.0);
         } else {
             $rowH = 16.0;
@@ -3668,7 +3684,7 @@ class PdfService
                 $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
 
                 $dataR = !empty($rec['created_at']) ? date('d/m/Y H:i', strtotime($rec['created_at'])) : '-';
-                $tipoR = ($rec['tipo_transacao'] === 'recarga_pix') ? 'Recarga Pix Online' : 'Recarga em Dinheiro (Balcão)';
+                $tipoR = ($rec['tipo_transacao'] === 'recarga_pix') ? 'Recarga Pix Online' : 'Recarga em Dinheiro (Balcao)';
                 $opR   = self::removerAcentos($rec['operador_nome'] ?? 'Sistema / Gateway Pix');
                 $valR  = "R$ " . number_format((float)($rec['valor'] ?? 0.0), 2, ',', '.');
 
@@ -3701,7 +3717,7 @@ class PdfService
 
         $currentStream .= "BT\n/F2 8.5 Tf\n0.11 0.31 0.85 rg\n";
         $currentStream .= sprintf("%.2f %.2f Td\n", $left, $y);
-        $currentStream .= sprintf("(2. HISTÓRICO DE CONSUMO DE LANCHES DO ALUNO NO PERÍODO) Tj\nET\n");
+        $currentStream .= sprintf("(2. HISTORICO DE CONSUMO DE LANCHES DO ALUNO NO PERIODO) Tj\nET\n");
         $y -= 14.0;
 
         // Cabeçalho da Tabela de Consumo
@@ -3736,7 +3752,7 @@ class PdfService
 
         $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
         $currentStream .= sprintf("%.2f %.2f Td\n", $cc5, $y - 11.0);
-        $currentStream .= sprintf("(UNITÁRIO) Tj\nET\n");
+        $currentStream .= sprintf("(UNITARIO) Tj\nET\n");
 
         $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
         $currentStream .= sprintf("%.2f %.2f Td\n", $cc6 - 45.0, $y - 11.0);
@@ -3750,7 +3766,7 @@ class PdfService
             $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
             $currentStream .= "BT\n/F1 7.5 Tf\n0.45 0.50 0.60 rg\n";
             $currentStream .= sprintf("%.2f %.2f Td\n", $left + 12.0, $y - 12.0);
-            $currentStream .= sprintf("(Nenhum consumo de lanches registrado para este aluno no período.) Tj\nET\n");
+            $currentStream .= sprintf("(Nenhum consumo de lanches registrado para este aluno no periodo.) Tj\nET\n");
             $y -= ($rowH + 12.0);
         } else {
             $rowH = 16.0;
@@ -3780,7 +3796,7 @@ class PdfService
                     $currentStream .= sprintf("(QTD) Tj\nET\n");
                     $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
                     $currentStream .= sprintf("%.2f %.2f Td\n", $cc5, $y - 11.0);
-                    $currentStream .= sprintf("(UNITÁRIO) Tj\nET\n");
+                    $currentStream .= sprintf("(UNITARIO) Tj\nET\n");
                     $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
                     $currentStream .= sprintf("%.2f %.2f Td\n", $cc6 - 45.0, $y - 11.0);
                     $currentStream .= sprintf("(SUBTOTAL (R$)) Tj\nET\n");
@@ -3842,7 +3858,7 @@ class PdfService
 
             $currentStream .= "BT\n/F2 8 Tf\n0.11 0.31 0.85 rg\n";
             $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.0);
-            $currentStream .= sprintf("(TOTAL CONSOLIDADO DE CONSUMO NO PERÍODO:) Tj\nET\n");
+            $currentStream .= sprintf("(TOTAL CONSOLIDADO DE CONSUMO NO PERIODO:) Tj\nET\n");
 
             $totConsumoFmt = "R$ " . number_format($totalConsumo, 2, ',', '.');
             $currentStream .= "BT\n/F2 9.5 Tf\n0.10 0.12 0.18 rg\n";
@@ -4035,8 +4051,7 @@ class PdfService
                 <div>
                     <strong>Espelho de Impressão A4</strong> — Extrato Oficial do Aluno
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">← Voltar ao Sistema</button>
+                <div>
                     <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Imprimir Extrato</button>
                 </div>
             </div>

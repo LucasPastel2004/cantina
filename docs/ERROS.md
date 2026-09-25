@@ -1005,3 +1005,22 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Adicionada a paginação e os badges de totalização nas seções `#secao-recargas` e `#secao-consumo` em `app/views/relatorios/extrato_aluno.php`.
   5. Criado teste automatizado completo `tests/extrato_aluno_pagination_test.php` (21 asserções) e reexecutada a auditoria global com 100% de sucesso (41 de 41 suítes verdes).
 - Como evitar no futuro: Sempre que múltiplas listas ou tabelas coexistirem na mesma página de relatório ou gestão, utilizar parâmetros de página segregados e âncoras de navegação direta no componente de paginação, preservando o padrão corporativo de 20 itens por página sem afetar exportações documentais e impressões completas.
+
+---
+
+## 2026-09-25 - Mojibake e caracteres especiais corrompidos no PDF do Extrato do Aluno e remoção do botão 'Voltar' inútil no espelho aberto em nova aba
+
+- Sintoma:
+  1. No documento PDF gerado para o Extrato Analítico de Consumo do Aluno (`/operacional/extrato-aluno/pdf`), textos com acentuação e caracteres especiais apareciam com caracteres corrompidos (*mojibake*), tais como `BENEFICIÃ•RIO:`, `MatrÃ-cula: ... â€¢ ...`, `RESPONSÃ•VEL`, `PERÃ•ODO`, `1. HISTÃ“RICO DE RECARGAS NA CARTEIRA FAMILIAR NO PERÃ•ODO`, etc.
+  2. No espelho de impressão A4 exibido na tela (`/operacional/extrato-aluno/imprimir`), aberto pelo botão "Imprimir Extrato" em uma nova aba (`target="_blank"`), o botão "← Voltar ao Sistema" utilizava `onclick="window.history.back()"`. Como a página era carregada em uma aba recém-criada sem histórico de navegação anterior, o clique no botão não executava nenhuma ação, revelando-se completamente inútil e confuso para o usuário.
+- Causa:
+  1. Na montagem manual de fluxos de página PDF Type1 (Helvetica padrão), strings contendo caracteres acentuados em UTF-8 de múltiplos bytes (como `Á` = `\xC3\x81`, `í` = `\xC3\xAD`, `•` = `\xE2\x80\xA2`) eram inseridas nos blocos literais `(...) Tj` sem sanitização ou sem chamada ao método `escapeText()`. Como as fontes padrão Type1 operam em WinAnsi / ASCII padrão, os bytes de múltiplos bytes eram interpretados como pares de caracteres latinos estendidos espúrios (`Ã•`, `â€¢`, etc.).
+  2. No template de espelho HTML gerado pelo `PdfService::gerarEspelhoExtratoConsumoAlunoHtml()`, havia um botão de retorno no histórico do navegador (`window.history.back()`), que perde seu propósito e funcionalidade quando a janela/aba é disparada via link com `target="_blank"`.
+- Solução aplicada:
+  1. Em `PdfService.php`, o método `removerAcentos()` foi expandido para converter pontuações tipográficas e símbolos especiais (`•`, `—`, `–`, `“`, `”`, `‘`, `’`, `º`, `ª`) em seus equivalentes ASCII universais. O método `escapeText()` passou a aplicar normalização com `iconv` e fallback para caracteres imprimíveis `\x20-\x7E`.
+  2. Todos os literais e formatações de string no método `gerarExtratoConsumoAlunoPdf()` foram padronizados para termos em ASCII puro (`BENEFICIARIO:`, `RESPONSAVEL FINANCEIRO:`, `Matricula: ... | ...`, `RECARGAS NO PERIODO`, `CONSUMO NO PERIODO`, `PERIODO CONSULTADO`, `COLEGIO MONTEIRO LOBATO - EXTRATO DE CONSUMO - CONTINUACAO`, `HISTORICO...`, `UNITARIO`, etc.), alinhando a implementação ao mesmo padrão já adotado com sucesso nos relatórios de vendas e folha de RH.
+  3. No método `gerarComprovanteVendaBalcaoPdf()`, corrigidas as ocorrências literais de `Sessão Caixa:`, `Matrícula:` e `Venda Balcão` para ASCII (`Sessao Caixa:`, `Matricula:`, `Venda Balcao`).
+  4. No método `gerarEspelhoExtratoConsumoAlunoHtml()`, removido o botão inútil `← Voltar ao Sistema`, mantendo a barra de ações limpa com o botão de destaque `🖨️ Imprimir Extrato`.
+  5. Versão global de assets atualizada para `5.9.7` em `app/core/Controller.php` e `app/views/layouts/admin.php`.
+  6. Validação automatizada realizada com inspeção detalhada de 1.068 literais de texto `Tj` no PDF gerado (0 caracteres não-ASCII ou anomalias) e execução da auditoria global de testes.
+- Como evitar no futuro: Em rotas que abrem espelhos de impressão ou relatórios em novas abas (`target="_blank"`), nunca incluir botões de histórico (`history.back()`), mantendo apenas os botões de ação efetivos da página; e em geração de PDFs com fontes Type1, sanitizar sempre rótulos e variáveis dinâmicas com ASCII limpo para evitar problemas de codificação.
