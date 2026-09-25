@@ -119,9 +119,21 @@ class RelatoriosController extends Controller
         $dataInicio = trim((string)$this->input('data_inicio', date('Y-m-01')));
         $dataFim = trim((string)$this->input('data_fim', date('Y-m-d')));
 
+        $paginaRecargas = max(1, (int)$this->input('pagina_recargas', (int)$this->input('pagina', 1)));
+        $paginaConsumo  = max(1, (int)$this->input('pagina_consumo', 1));
+        $itensPorPagina = 20;
+
         $dadosExtrato = null;
         if ($alunoId > 0) {
-            $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim);
+            $dadosExtrato = $this->obterDadosExtratoAluno(
+                $alunoId,
+                $dataInicio,
+                $dataFim,
+                $paginaRecargas,
+                $paginaConsumo,
+                $itensPorPagina,
+                true
+            );
         }
 
         $this->render('relatorios/extrato_aluno', [
@@ -150,7 +162,7 @@ class RelatoriosController extends Controller
             return;
         }
 
-        $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim);
+        $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim, 1, 1, 20, false);
         if (!$dadosExtrato) {
             Session::setFlash('danger', 'Aluno não localizado.');
             $this->redirect('/relatorios/extrato-aluno');
@@ -189,7 +201,7 @@ class RelatoriosController extends Controller
             return;
         }
 
-        $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim);
+        $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim, 1, 1, 20, false);
         if (!$dadosExtrato) {
             Session::setFlash('danger', 'Aluno não localizado.');
             $this->redirect('/relatorios/extrato-aluno');
@@ -547,9 +559,17 @@ class RelatoriosController extends Controller
     // =========================================================================
 
     /**
-     * Consolida dados completos para o Extrato do Aluno
+     * Consolida dados completos para o Extrato do Aluno com paginação de 20 itens por página
      */
-    private function obterDadosExtratoAluno(int $alunoId, string $dataInicio, string $dataFim): ?array
+    private function obterDadosExtratoAluno(
+        int $alunoId, 
+        string $dataInicio, 
+        string $dataFim, 
+        int $paginaRecargas = 1, 
+        int $paginaConsumo = 1, 
+        int $porPagina = 20, 
+        bool $paginar = true
+    ): ?array
     {
         $aluno = Aluno::buscarPorId($alunoId);
         if (!$aluno) {
@@ -643,6 +663,7 @@ class RelatoriosController extends Controller
             return strcmp($b['created_at'], $a['created_at']);
         });
 
+        // Totais consolidados em todo o período selecionado
         $totalRecargas = 0.0;
         foreach ($recargas as $r) {
             $totalRecargas += (float)$r['valor'];
@@ -655,19 +676,57 @@ class RelatoriosController extends Controller
             $totalLanches += (int)$c['total_itens'];
         }
 
+        $totalRegistrosRecargas = count($recargas);
+        $totalRegistrosConsumo  = count($consumo);
+
+        $totalPaginasRecargas = (int)ceil($totalRegistrosRecargas / $porPagina);
+        if ($totalPaginasRecargas < 1) {
+            $totalPaginasRecargas = 1;
+        }
+
+        $totalPaginasConsumo = (int)ceil($totalRegistrosConsumo / $porPagina);
+        if ($totalPaginasConsumo < 1) {
+            $totalPaginasConsumo = 1;
+        }
+
+        if ($paginaRecargas > $totalPaginasRecargas && $totalRegistrosRecargas > 0) {
+            $paginaRecargas = $totalPaginasRecargas;
+        }
+        if ($paginaConsumo > $totalPaginasConsumo && $totalRegistrosConsumo > 0) {
+            $paginaConsumo = $totalPaginasConsumo;
+        }
+
+        $recargasPaginadas = $recargas;
+        $consumoPaginado   = $consumo;
+
+        if ($paginar) {
+            $offsetRecargas = ($paginaRecargas - 1) * $porPagina;
+            $recargasPaginadas = array_slice($recargas, $offsetRecargas, $porPagina);
+
+            $offsetConsumo = ($paginaConsumo - 1) * $porPagina;
+            $consumoPaginado = array_slice($consumo, $offsetConsumo, $porPagina);
+        }
+
         $periodoFmt = date('d/m/Y', strtotime($dataInicio)) . ' a ' . date('d/m/Y', strtotime($dataFim));
 
         return [
-            'aluno'          => $aluno,
-            'periodo'        => $periodoFmt,
-            'data_inicio'    => $dataInicio,
-            'data_fim'       => $dataFim,
-            'saldo_atual'    => (float)($aluno['saldo_atual'] ?? 0.0),
-            'total_recargas' => $totalRecargas,
-            'total_consumo'  => $totalConsumo,
-            'total_lanches'  => $totalLanches,
-            'recargas'       => $recargas,
-            'consumo'        => $consumo
+            'aluno'                    => $aluno,
+            'periodo'                  => $periodoFmt,
+            'data_inicio'              => $dataInicio,
+            'data_fim'                 => $dataFim,
+            'saldo_atual'              => (float)($aluno['saldo_atual'] ?? 0.0),
+            'total_recargas'           => $totalRecargas,
+            'total_consumo'            => $totalConsumo,
+            'total_lanches'            => $totalLanches,
+            'recargas'                 => $recargasPaginadas,
+            'consumo'                  => $consumoPaginado,
+            'pagina_recargas'          => $paginaRecargas,
+            'pagina_consumo'           => $paginaConsumo,
+            'total_paginas_recargas'   => $totalPaginasRecargas,
+            'total_paginas_consumo'    => $totalPaginasConsumo,
+            'total_registros_recargas' => $totalRegistrosRecargas,
+            'total_registros_consumo'  => $totalRegistrosConsumo,
+            'itens_por_pagina'         => $porPagina
         ];
     }
 

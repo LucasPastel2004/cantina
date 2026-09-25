@@ -132,7 +132,7 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                 R$ <?php echo number_format($dadosExtrato['total_recargas'], 2, ',', '.'); ?>
             </span>
             <span class="text-secondary text-microcopy mt-1 font-tabular">
-                <?php echo count($dadosExtrato['recargas']); ?> recarga(s) efetuada(s)
+                <?php echo (int)($dadosExtrato['total_registros_recargas'] ?? count($dadosExtrato['recargas'])); ?> recarga(s) efetuada(s)
             </span>
         </div>
 
@@ -152,7 +152,7 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                 <?php echo (int)$dadosExtrato['total_lanches']; ?> <small class="text-muted" style="font-size: 13px; font-weight: normal;">un</small>
             </span>
             <span class="text-secondary text-microcopy mt-1 font-tabular">
-                <?php echo count($dadosExtrato['consumo']); ?> atendimento(s) no total
+                <?php echo (int)($dadosExtrato['total_registros_consumo'] ?? count($dadosExtrato['consumo'])); ?> atendimento(s) no total
             </span>
         </div>
 
@@ -168,11 +168,11 @@ $aluno = $dadosExtrato['aluno'] ?? null;
     </div>
 
     <!-- Seção 1: Recargas da Carteira Familiar no Período -->
-    <div class="card-enterprise mb-4">
+    <div class="card-enterprise mb-4" id="secao-recargas">
         <div class="card-enterprise-header d-flex justify-content-between align-items-center">
             <h2 class="h6 font-weight-bold text-dark mb-0">Recargas de Saldo da Carteira Familiar no Período</h2>
             <span class="badge bg-light text-secondary border font-tabular">
-                <?php echo count($dadosExtrato['recargas']); ?> registro(s)
+                <?php echo (int)($dadosExtrato['total_registros_recargas'] ?? count($dadosExtrato['recargas'])); ?> registro(s)
             </span>
         </div>
         <div class="table-responsive">
@@ -223,14 +223,23 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                 </tbody>
             </table>
         </div>
+        <?php 
+            $paginaAtual    = (int)($dadosExtrato['pagina_recargas'] ?? 1);
+            $totalPaginas   = (int)($dadosExtrato['total_paginas_recargas'] ?? 1);
+            $totalRegistros = (int)($dadosExtrato['total_registros_recargas'] ?? count($dadosExtrato['recargas']));
+            $itensPorPagina = (int)($dadosExtrato['itens_por_pagina'] ?? 20);
+            $paramNome      = 'pagina_recargas';
+            $anchor         = 'secao-recargas';
+            require __DIR__ . '/../partials/pagination.php';
+        ?>
     </div>
 
     <!-- Seção 2: Consumo Detalhado Linha a Linha -->
-    <div class="card-enterprise">
+    <div class="card-enterprise" id="secao-consumo">
         <div class="card-enterprise-header d-flex justify-content-between align-items-center">
             <h2 class="h6 font-weight-bold text-dark mb-0">Consumo Individual do Aluno Linha a Linha</h2>
             <span class="badge bg-light text-secondary border font-tabular">
-                <?php echo count($dadosExtrato['consumo']); ?> atendimento(s)
+                <?php echo (int)($dadosExtrato['total_registros_consumo'] ?? count($dadosExtrato['consumo'])); ?> atendimento(s)
             </span>
         </div>
         <div class="table-responsive">
@@ -266,7 +275,7 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                                 <td>
                                     <?php if ($c['canal'] === 'Agendamento Online'): ?>
                                         <span class="code-tag font-tabular">
-                                            Online #PED-<?php echo (int)$c['referencia_id']; ?>
+                                             Online #PED-<?php echo (int)$c['referencia_id']; ?>
                                         </span>
                                     <?php else: ?>
                                         <span class="code-tag font-tabular">
@@ -304,6 +313,15 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                 </tfoot>
             </table>
         </div>
+        <?php 
+            $paginaAtual    = (int)($dadosExtrato['pagina_consumo'] ?? 1);
+            $totalPaginas   = (int)($dadosExtrato['total_paginas_consumo'] ?? 1);
+            $totalRegistros = (int)($dadosExtrato['total_registros_consumo'] ?? count($dadosExtrato['consumo']));
+            $itensPorPagina = (int)($dadosExtrato['itens_por_pagina'] ?? 20);
+            $paramNome      = 'pagina_consumo';
+            $anchor         = 'secao-consumo';
+            require __DIR__ . '/../partials/pagination.php';
+        ?>
     </div>
 
 <?php else: ?>

@@ -26,15 +26,19 @@ if ($totalRegistros === 0) {
 $inicioRegistro = (($paginaAtual - 1) * $itensPorPagina) + 1;
 $fimRegistro    = min($inicioRegistro + $itensPorPagina - 1, $totalRegistros);
 
+$paramNome = $paramNome ?? 'pagina';
+$anchor    = $anchor ?? '';
+
 // Reconstrói a query string preservando filtros existentes
 $params = $_GET;
-unset($params['pagina']);
+unset($params[$paramNome]);
 $queryString = http_build_query($params);
 
-$gerarUrl = function(int $numPagina) use ($queryString): string {
+$gerarUrl = function(int $numPagina) use ($queryString, $paramNome, $anchor): string {
     $sep = !empty($queryString) ? '&' : '';
     $prefix = !empty($queryString) ? '?' . $queryString . $sep : '?';
-    return $prefix . 'pagina=' . $numPagina;
+    $hash = !empty($anchor) ? '#' . ltrim($anchor, '#') : '';
+    return $prefix . $paramNome . '=' . $numPagina . $hash;
 };
 
 // Determina o intervalo de botões numéricos (exibe até 5 páginas ao redor da atual)

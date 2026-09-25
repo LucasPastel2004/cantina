@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 17 — Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança e Entrega
 * **Status da Fase 17:** Concluída com Sucesso [x]
 * **Status Geral do Projeto:** 17 de 17 Fases Concluídas Integralmente (100% do escopo do FSD e DESIGN.md)
-* **Última Atualização:** 2026-09-25 10:20:00 (Conclusão integral da Fase 17: Central de Relatórios Gerenciais, Extrato Analítico do Aluno em PDF A4 e HTML, Relatório de Vendas por Alimento e Curva ABC, Relatório Mensal de Desconto em Folha para RH em PDF A4 e CSV, Demonstrativo de Fechamento de Caixa, Relatório de Inadimplência/MED; Correção global de todos os relatórios PDF eliminando 'Unidade Escolar', ajustando paginação 'Pagina X de Y' e espaçamento de totais; 40 suítes de testes automatizados com 100% de aprovação e auditoria global de segurança)
+* **Última Atualização:** 2026-09-25 15:10:00 (Conclusão integral da Fase 17: Central de Relatórios Gerenciais, Extrato Analítico do Aluno em PDF A4 e HTML, Relatório de Vendas por Alimento e Curva ABC, Relatório Mensal de Desconto em Folha para RH em PDF A4 e CSV, Demonstrativo de Fechamento de Caixa, Relatório de Inadimplência/MED; Paginação corporativa com 20 itens por página nas listas de Recargas e Consumo do Extrato do Aluno com parâmetros segregados e âncoras diretas; 41 suítes de testes automatizados com 100% de aprovação e auditoria global de segurança)
 
 ---
 
@@ -739,8 +739,14 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Adicionada a classe `card-overflow-visible` e `overflow: visible !important;` no card de filtros, card-body e form de `app/views/relatorios/extrato_aluno.php`, eliminando o corte físico do dropdown de sugestões;
     * Posicionado `#autocompleteDropdown` de forma flutuante (`top: calc(100% + 4px); z-index: 1080;`) sobre a página com sombra e bordas arredondadas, exibindo a lista completa de alunos com nome, turma, matrícula e saldo;
     * Adicionada navegação por teclado (`ArrowDown`, `ArrowUp`, `Enter`, `Escape`), feedback de busca imediato e teste automatizado de regressão em `tests/enhancements_audit_test.php`;
-  * Incremento do assetVersion para `5.9.5` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
-  * Suíte global de 40 testes automatizados reexecutada e aprovada com 100% de sucesso (`tests/verification_audit.php`).
+  * **Padronização Global de Paginação com 20 Itens por Página no Extrato do Aluno:**
+    * Atualizado o componente parcial `app/views/partials/pagination.php` para suportar nome de parâmetro customizado (`$paramNome`, ex: `pagina_recargas`, `pagina_consumo`) e âncora de rolagem direta (`$anchor`, ex: `#secao-recargas`, `#secao-consumo`), preservando 100% dos filtros da query string;
+    * Implementada a paginação no controller `RelatoriosController::extratoAluno()` e `obterDadosExtratoAluno()` com fatiamento de 20 itens por página para ambas as seções, mantendo o cálculo consolidado dos totais gerais (R$ total recarregado, R$ total consumido e total de atendimentos) sobre todo o período filtrado;
+    * Garantido que as rotas de emissão de PDF A4 timbrado (`extratoAlunoPdf`) e espelho de impressão contínua/A4 (`extratoAlunoImprimir`) recebam `$paginar = false`, preservando a impressão e exportação com a totalidade dos registros;
+    * Adicionados os blocos de paginação e badges dinâmicos de contagem total em `app/views/relatorios/extrato_aluno.php`;
+    * Criada a suíte de testes automatizados `tests/extrato_aluno_pagination_test.php` com 21 asserções cobrindo integridade estática e funcional;
+  * Incremento do assetVersion para `5.9.6` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
+  * Suíte global de testes automatizados expandida para 41 arquivos e aprovada com 100% de sucesso (`tests/verification_audit.php`).
 
 ---
 
