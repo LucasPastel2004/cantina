@@ -58,11 +58,11 @@ if ($caixaAberto) {
     <div class="d-flex align-items-center gap-2 flex-wrap">
         <div class="btn-group btn-group-sm" role="group" aria-label="Seletor de Turno">
             <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=matutino" 
-               class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-secondary'; ?>">
+               class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-outline-primary'; ?>">
                 Matutino (Manhã)
             </a>
             <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=vespertino" 
-               class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-secondary'; ?>">
+               class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-outline-primary'; ?>">
                 Vespertino (Tarde)
             </a>
         </div>
@@ -75,7 +75,7 @@ if ($caixaAberto) {
                 </svg>
                 Recarga em Dinheiro
             </button>
-            <a href="<?php echo $baseUrl; ?>/operacional/caixa/detalhes/<?php echo $sessaoAberta['id']; ?>" class="btn btn-enterprise btn-secondary btn-sm" title="Extrato Analítico das Operações">
+            <a href="<?php echo $baseUrl; ?>/operacional/caixa/detalhes/<?php echo $sessaoAberta['id']; ?>" class="btn btn-enterprise btn-primary btn-sm" title="Extrato Analítico das Operações">
                 Extrato da Sessão
             </a>
         <?php else: ?>
@@ -84,7 +84,7 @@ if ($caixaAberto) {
             </button>
         <?php endif; ?>
 
-        <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="btn btn-enterprise btn-secondary btn-sm" title="Ir para o Terminal do PDV">
+        <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="btn btn-enterprise btn-primary btn-sm" title="Ir para o Terminal do PDV">
             ← Voltar ao PDV
         </a>
     </div>

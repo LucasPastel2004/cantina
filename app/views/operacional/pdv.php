@@ -707,13 +707,13 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     <span class="font-11 text-uppercase text-secondary font-semibold">Identificação do Cliente</span>
                     <div class="btn-group btn-group-sm" role="group">
                         <input type="radio" class="btn-check" name="clienteTipo" id="tipoAnonimo" value="anonimo" checked onchange="trocarTipoCliente('anonimo')">
-                        <label class="btn btn-outline-secondary py-0 px-2 font-11" for="tipoAnonimo">Anônimo</label>
+                        <label class="btn btn-outline-primary py-0 px-2 font-11" for="tipoAnonimo">Anônimo</label>
 
                         <input type="radio" class="btn-check" name="clienteTipo" id="tipoAluno" value="aluno" onchange="trocarTipoCliente('aluno')">
-                        <label class="btn btn-outline-secondary py-0 px-2 font-11" for="tipoAluno">Aluno</label>
+                        <label class="btn btn-outline-primary py-0 px-2 font-11" for="tipoAluno">Aluno</label>
 
                         <input type="radio" class="btn-check" name="clienteTipo" id="tipoColaborador" value="colaborador" onchange="trocarTipoCliente('colaborador')">
-                        <label class="btn btn-outline-secondary py-0 px-2 font-11" for="tipoColaborador">Colaborador</label>
+                        <label class="btn btn-outline-primary py-0 px-2 font-11" for="tipoColaborador">Colaborador</label>
                     </div>
                 </div>
 
@@ -815,7 +815,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 </div>
 
                 <!-- Botão Principal de Conclusão -->
-                <button type="button" id="btnFinalizarVenda" class="btn btn-enterprise btn-success w-100 py-2 font-14 font-semibold" onclick="processarFinalizacaoVenda()" <?php echo !$caixaAberto ? 'disabled' : ''; ?>>
+                <button type="button" id="btnFinalizarVenda" class="btn btn-enterprise btn-primary w-100 py-2 font-14 font-semibold" onclick="processarFinalizacaoVenda()" <?php echo !$caixaAberto ? 'disabled' : ''; ?>>
                     Concluir Venda <span class="pdv-shortcut-tag">F4</span>
                 </button>
             </div>

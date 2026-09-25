@@ -231,6 +231,25 @@ input[type="number"].text-end {
   color: var(--text-on-primary);
 }
 
+.btn-outline-primary,
+.btn-enterprise.btn-outline-primary {
+  background-color: #ffffff;
+  border: 1px solid var(--primary-blue);
+  color: var(--primary-blue);
+}
+
+.btn-outline-primary:hover,
+.btn-enterprise.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-enterprise.btn-outline-primary:focus,
+.btn-check:checked + .btn-outline-primary,
+.btn-check:checked + .btn.btn-outline-primary,
+.btn-check:active + .btn-outline-primary {
+  background-color: var(--primary-blue) !important;
+  border-color: var(--primary-blue-hover) !important;
+  color: var(--text-on-primary) !important;
+}
+
 .btn-success,
 .btn-enterprise.btn-success {
   background-color: var(--action-success);

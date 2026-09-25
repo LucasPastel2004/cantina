@@ -46,7 +46,7 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
         <a href="<?php echo $baseUrl; ?>/operacional/corte?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
-           class="btn btn-enterprise btn-secondary">
+           class="btn btn-enterprise btn-primary">
             &larr; Painel de Corte
         </a>
     </div>
@@ -127,7 +127,7 @@ if ($jaRecebido) {
                 <span class="text-secondary text-microcopy ms-2">(Total Esperado no Corte: <strong class="font-tabular"><?php echo $totalPecas; ?></strong> peças)</span>
             </div>
             <?php if (!$jaRecebido && !empty($itens)): ?>
-                <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="preencherTudoEsperado()">
+                <button type="button" class="btn btn-enterprise btn-primary btn-sm" onclick="preencherTudoEsperado()">
                     Preencher com Valores Esperados
                 </button>
             <?php endif; ?>
@@ -259,7 +259,7 @@ if ($jaRecebido) {
                     <div class="text-microcopy text-muted">
                         Ao confirmar, o sistema dará baixa na demanda de tickets do turno e disponibilizará eventuais sobras para o balcão.
                     </div>
-                    <button type="submit" class="btn btn-enterprise btn-success" id="btnConfirmarRecebimento">
+                    <button type="submit" class="btn btn-enterprise btn-primary" id="btnConfirmarRecebimento">
                         Confirmar Recebimento e Dar Entrada
                     </button>
                 </div>

@@ -47,7 +47,7 @@ $turnoNome = ($turnoConsumo === 'matutino') ? 'Matutino' : 'Vespertino';
     <div class="d-flex align-items-center gap-2 flex-wrap">
         <a href="<?php echo $baseUrl; ?>/operacional/tickets/lote?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
            target="_blank"
-           class="btn btn-enterprise btn-secondary btn-sm"
+           class="btn btn-enterprise btn-primary btn-sm"
            title="Abrir bobina contínua para impressão direta no navegador">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1">
                 <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
@@ -56,7 +56,7 @@ $turnoNome = ($turnoConsumo === 'matutino') ? 'Matutino' : 'Vespertino';
             Imprimir Bobina do Turno (80mm)
         </a>
         <a href="<?php echo $baseUrl; ?>/operacional/tickets/lote/pdf?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
-           class="btn btn-enterprise btn-secondary btn-sm"
+           class="btn btn-enterprise btn-primary btn-sm"
            title="Baixar bobina contínua em formato binário PDF">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1">
                 <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
@@ -260,12 +260,12 @@ $turnoNome = ($turnoConsumo === 'matutino') ? 'Matutino' : 'Vespertino';
                            placeholder="Buscar por aluno, matrícula ou código..." 
                            value="<?php echo htmlspecialchars($buscaTermo, ENT_QUOTES, 'UTF-8'); ?>"
                            aria-label="Buscar tickets">
-                    <button class="btn btn-enterprise btn-secondary" type="submit">
+                    <button class="btn btn-enterprise btn-primary" type="submit">
                         Buscar
                     </button>
                     <?php if (!empty($buscaTermo)): ?>
                         <a href="<?php echo $baseUrl; ?>/operacional/tickets?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
-                           class="btn btn-enterprise btn-secondary" 
+                           class="btn btn-enterprise btn-primary" 
                            title="Limpar busca">
                             ✕
                         </a>
