@@ -552,7 +552,7 @@ class PdfService
         $map = [
             'á'=>'a','à'=>'a','ã'=>'a','â'=>'a','é'=>'e','ê'=>'e','í'=>'i','ó'=>'o','ô'=>'o','õ'=>'o','ú'=>'u','ü'=>'u','ç'=>'c',
             'Á'=>'A','À'=>'A','Ã'=>'A','Â'=>'A','É'=>'E','Ê'=>'E','Í'=>'I','Ó'=>'O','Ô'=>'O','Õ'=>'O','Ú'=>'U','Ü'=>'U','Ç'=>'C',
-            '•'=>'-','—'=>'-','–'=>'-','“'=>'"','”'=>'"','‘'=>"'",'’'=>"'",'º'=>'o','ª'=>'a'
+            '•'=>'-','—'=>'-','–'=>'-','“'=>'"','”'=>'"','‘'=>"'",'’'=>"'",'º'=>'o','°'=>'o','ª'=>'a'
         ];
         return strtr($str, $map);
     }
@@ -682,6 +682,7 @@ class PdfService
             '‘' => "'",
             '’' => "'",
             'º' => 'o',
+            '°' => 'o',
             'ª' => 'a',
         ];
         $text = str_replace(array_keys($replaces), array_values($replaces), $text);
@@ -3261,7 +3262,7 @@ class PdfService
         $stream .= sprintf("(%d familia%s) Tj\nET\n", $totalFamilias, $totalFamilias > 1 ? 's' : '');
 
         // Métrica 2: Saldo Total Devedor
-        $col2 = $left + 240.0;
+        $col2 = $left + 195.0;
         $stream .= "BT\n/F1 7.5 Tf\n0.40 0.45 0.55 rg\n";
         $stream .= sprintf("%.2f %.2f Td\n", $col2, $y - 13.0);
         $stream .= sprintf("(MONTANTE TOTAL DEVEDOR EM ABERTO) Tj\nET\n");
@@ -3272,7 +3273,7 @@ class PdfService
         $stream .= sprintf("(%s) Tj\nET\n", $totalFmt);
 
         // Métrica 3: Base Regulamentar
-        $col3 = $left + 420.0;
+        $col3 = $left + 375.0;
         $stream .= "BT\n/F1 7.5 Tf\n0.40 0.45 0.55 rg\n";
         $stream .= sprintf("%.2f %.2f Td\n", $col3, $y - 13.0);
         $stream .= sprintf("(DIRETRIZ DE SEGURANCA) Tj\nET\n");
@@ -3291,11 +3292,11 @@ class PdfService
         $stream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $thHeight, $width, $thHeight);
 
         // Larguras das colunas (Total: 523.28 pt)
-        $c1 = $left + 6.0;   // CPF: 80 pt
-        $c2 = $left + 90.0;  // Titular: 135 pt
-        $c3 = $left + 228.0; // WhatsApp: 75 pt
-        $c4 = $left + 305.0; // Dependentes: 105 pt
-        $c5 = $left + 415.0; // Data Estorno: 50 pt
+        $c1 = $left + 8.0;   // CPF: ~66 pt
+        $c2 = $left + 85.0;  // Titular: ~125 pt
+        $c3 = $left + 215.0; // WhatsApp: ~65 pt
+        $c4 = $left + 285.0; // Dependentes: ~105 pt
+        $c5 = $left + 395.0; // Data Estorno: ~40 pt
         $c6 = $right - 8.0;  // Saldo Devedor: 55 pt (alinhado à direita)
 
         $stream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
@@ -3352,9 +3353,9 @@ class PdfService
                 $stream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowHeight, $right, $y - $rowHeight);
 
                 $cpfStr = $fam['cpf_formatado'] ?? preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', str_pad($fam['cpf'] ?? '', 11, '0', STR_PAD_LEFT));
-                $nomeTitular = substr(self::removerAcentos($fam['nome'] ?? ''), 0, 24);
+                $nomeTitular = mb_substr(self::removerAcentos($fam['nome'] ?? ''), 0, 26, 'UTF-8');
                 $whatsStr = $fam['whatsapp'] ?? '-';
-                $depsStr = substr(self::removerAcentos($fam['dependentes_str'] ?? '-'), 0, 20);
+                $depsStr = mb_substr(self::removerAcentos($fam['dependentes_str'] ?? '-'), 0, 26, 'UTF-8');
                 $dataEstorno = !empty($fam['data_ultimo_estorno_med']) ? date('d/m/y', strtotime($fam['data_ultimo_estorno_med'])) : '-';
                 $saldoNum = (float)($fam['saldo_atual'] ?? 0.0);
                 $saldoStr = "- R$ " . number_format(abs($saldoNum), 2, ',', '.');
@@ -4961,6 +4962,10 @@ class PdfService
         $totalLanches = (int)($totais['total_lanches'] ?? 0);
         $totalCompras = (int)($totais['total_compras'] ?? 0);
 
+        $nomeColab = self::removerAcentos($colaborador['nome'] ?? '-');
+        $matColab  = $colaborador['matricula_funcional'] ?? '-';
+        $cargoColab= self::removerAcentos($colaborador['cargo'] ?? '-');
+
         $left = 36.0;
         $right = self::PAGE_WIDTH - 36.0;
         $width = $right - $left;
@@ -4969,7 +4974,7 @@ class PdfService
         $currentStream = "";
         $y = 800.0;
 
-        $iniciarPagina = function(bool $isFirstPage) use (&$currentStream, &$y, $left, $width, $colaborador, $competencia, $operador, $emissao, $totalDesconto, $totalLanches, $totalCompras) {
+        $iniciarPagina = function(bool $isFirstPage) use (&$currentStream, &$y, $left, $width, $colaborador, $nomeColab, $matColab, $cargoColab, $competencia, $operador, $emissao, $totalDesconto, $totalLanches, $totalCompras) {
             $currentStream = "";
             $y = 800.0;
 

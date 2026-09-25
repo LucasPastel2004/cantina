@@ -22,14 +22,18 @@ $competenciaChave = $dadosFolha['competencia_chave'] ?? $competencia;
             Consolidado mensal de consumo de professores e colaboradores para lançamento e conferência em folha de pagamento.
         </p>
     </div>
-    <div class="d-flex align-items-center gap-2">
-        <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/csv?competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Arquivo CSV Formatado para Sistemas de Folha / Excel">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/csv?competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Arquivo CSV Formatado para Sistemas de Folha / Excel">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
             Exportar CSV para Folha
         </a>
-        <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/pdf?competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Relatório Oficial com Vistos de Assinatura em PDF A4 Timbrado">
+        <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/pdf?competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Relação Geral Consolidada em PDF A4 Timbrado para RH">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>
-            Exportar PDF (A4 Timbrado)
+            Relação Geral RH (PDF)
+        </a>
+        <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/lote-pdf?competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Todas as Folhas Individuais em Lote (PDF com 1 relatório por professor)">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/></svg>
+            Baixar Todos os Individuais (Lote PDF)
         </a>
     </div>
 </div>
@@ -103,22 +107,30 @@ $competenciaChave = $dadosFolha['competencia_chave'] ?? $competencia;
 
 <!-- Tabela de Lançamentos de Desconto em Folha -->
 <div class="card-enterprise">
-    <div class="card-enterprise-header d-flex justify-content-between align-items-center">
-        <h2 class="h6 font-weight-bold text-dark mb-0">Relação Nominal para Folha de Pagamento</h2>
-        <span class="badge bg-light text-secondary border font-tabular">
-            <?php echo count($colaboradores); ?> colaborador(es)
-        </span>
+    <div class="card-enterprise-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2 class="h6 font-weight-bold text-dark mb-0">Relação de Professores e Colaboradores</h2>
+            <span class="text-secondary text-microcopy">Selecione o professor para emitir o relatório individual com itens consumidos</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div class="position-relative" style="width: 260px;">
+                <input type="text" id="filtroProfessor" class="form-control form-control-sm" placeholder="Buscar professor por nome ou matrícula..." oninput="filtrarProfessores(this.value)">
+            </div>
+            <span class="badge bg-light text-secondary border font-tabular" id="contadorColaboradores">
+                <?php echo count($colaboradores); ?> colaborador(es)
+            </span>
+        </div>
     </div>
     <div class="table-responsive">
         <table class="table table-enterprise table-hover mb-0">
             <thead>
                 <tr>
-                    <th style="width: 140px;">Matrícula</th>
+                    <th style="width: 130px;">Matrícula</th>
                     <th>Nome Completo do Colaborador</th>
-                    <th style="width: 220px;">Cargo / Função</th>
-                    <th class="text-end" style="width: 130px;">Qtd Lanches</th>
-                    <th class="text-end" style="width: 160px;">Valor a Descontar</th>
-                    <th class="text-center" style="width: 120px;">Ações</th>
+                    <th style="width: 210px;">Cargo / Função</th>
+                    <th class="text-end" style="width: 110px;">Qtd Lanches</th>
+                    <th class="text-end" style="width: 150px;">Valor a Descontar</th>
+                    <th class="text-center" style="width: 220px;">Relatório & Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -130,7 +142,7 @@ $competenciaChave = $dadosFolha['competencia_chave'] ?? $competencia;
                     </tr>
                 <?php else: ?>
                     <?php foreach ($colaboradores as $c): ?>
-                        <tr>
+                        <tr data-nome="<?php echo htmlspecialchars(mb_strtolower($c['colaborador_nome'] ?? '', 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?>" data-mat="<?php echo htmlspecialchars(mb_strtolower($c['matricula_funcional'] ?? '', 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?>">
                             <td class="font-tabular font-weight-bold text-dark">
                                 <?php echo htmlspecialchars($c['matricula_funcional'] ?? '-', ENT_QUOTES, 'UTF-8'); ?>
                             </td>
@@ -156,9 +168,19 @@ $competenciaChave = $dadosFolha['competencia_chave'] ?? $competencia;
                                 R$ <?php echo number_format((float)$c['total_desconto'], 2, ',', '.'); ?>
                             </td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2" onclick="abrirModalDetalhes(<?php echo (int)$c['colaborador_id']; ?>)" title="Ver compras individuais no mês">
-                                    Ver Itens
-                                </button>
+                                <div class="d-flex align-items-center justify-content-center gap-1">
+                                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2" onclick="abrirModalDetalhes(<?php echo (int)$c['colaborador_id']; ?>)" title="Ver compras individuais no mês">
+                                        Ver Itens
+                                    </button>
+                                    <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/individual-pdf?colaborador_id=<?php echo (int)$c['colaborador_id']; ?>&competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2 d-inline-flex align-items-center gap-1" title="Baixar Demonstrativo Individual em PDF A4 Timbrado">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>
+                                        PDF Individual
+                                    </a>
+                                    <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/individual-imprimir?colaborador_id=<?php echo (int)$c['colaborador_id']; ?>&competencia=<?php echo urlencode($competenciaChave); ?>" target="_blank" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2 d-inline-flex align-items-center gap-1" title="Visualizar / Imprimir Demonstrativo Individual">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+                                        Imprimir
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -201,9 +223,19 @@ $competenciaChave = $dadosFolha['competencia_chave'] ?? $competencia;
                     <div>Consultando registros fiscais de compras...</div>
                 </div>
             </div>
-            <div class="modal-footer border-top py-2 d-flex justify-content-between align-items-center">
+            <div class="modal-footer border-top py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="font-tabular font-weight-bold text-dark" id="modalTotalRodape"></div>
-                <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                <div class="d-flex align-items-center gap-2">
+                    <a id="btnModalPdfIndividual" href="#" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Demonstrativo Individual em PDF A4">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>
+                        Baixar PDF Individual
+                    </a>
+                    <a id="btnModalImprimirIndividual" href="#" target="_blank" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Visualizar / Imprimir Demonstrativo Individual">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+                        Imprimir
+                    </a>
+                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -215,7 +247,13 @@ function abrirModalDetalhes(colaboradorId) {
     const subtitulo = document.getElementById('modalSubtitulo');
     const corpo = document.getElementById('modalCorpoDetalhes');
     const totalRodape = document.getElementById('modalTotalRodape');
+    const btnPdf = document.getElementById('btnModalPdfIndividual');
+    const btnImprimir = document.getElementById('btnModalImprimirIndividual');
     const bsModal = new bootstrap.Modal(modalEl);
+
+    // Atualiza links individuais do modal
+    btnPdf.href = '<?php echo $baseUrl; ?>/relatorios/desconto-folha/individual-pdf?colaborador_id=' + colaboradorId + '&competencia=<?php echo urlencode($competenciaChave); ?>';
+    btnImprimir.href = '<?php echo $baseUrl; ?>/relatorios/desconto-folha/individual-imprimir?colaborador_id=' + colaboradorId + '&competencia=<?php echo urlencode($competenciaChave); ?>';
 
     subtitulo.textContent = 'Carregando dados da competência...';
     corpo.innerHTML = `
@@ -285,5 +323,26 @@ function abrirModalDetalhes(colaboradorId) {
         .catch(() => {
             corpo.innerHTML = `<div class="p-4 text-center text-danger">Erro de comunicação com o servidor.</div>`;
         });
+}
+
+function filtrarProfessores(termo) {
+    termo = (termo || '').toLowerCase().trim();
+    const linhas = document.querySelectorAll('tbody tr[data-nome]');
+    let visiveis = 0;
+    linhas.forEach(linha => {
+        const nome = linha.getAttribute('data-nome') || '';
+        const mat = linha.getAttribute('data-mat') || '';
+        if (!termo || nome.includes(termo) || mat.includes(termo)) {
+            linha.style.display = '';
+            visiveis++;
+        } else {
+            linha.style.display = 'none';
+        }
+    });
+
+    const contadorEl = document.getElementById('contadorColaboradores');
+    if (contadorEl) {
+        contadorEl.textContent = termo ? (visiveis + ' de ' + linhas.length + ' colaborador(es)') : (linhas.length + ' colaborador(es)');
+    }
 }
 </script>

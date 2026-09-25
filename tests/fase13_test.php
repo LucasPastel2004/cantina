@@ -303,10 +303,17 @@ class Fase13Test
         $sessao = SessaoCaixa::obterSessaoAberta('matutino');
         $sessaoId = (int)$sessao['id'];
 
-        // Cria colaborador
-        $mat = 'COL-' . bin2hex(random_bytes(4));
-        $this->pdo->exec("INSERT INTO colaboradores (matricula_funcional, nome, cargo, foto_url, ativo, created_at) VALUES ('{$mat}', 'Prof. Carlos Eduardo', 'Professor de Matemática', 'storage/uploads/public/prof_carlos.jpg', 1, NOW())");
-        $colabId = (int)$this->pdo->lastInsertId();
+        // Obtém ou cria colaborador fixo para testes sem duplicidade
+        $stmtColab = $this->pdo->query("SELECT id, matricula_funcional FROM colaboradores WHERE matricula_funcional = 'COL-1002' OR nome = 'Prof. Carlos Eduardo' LIMIT 1");
+        $colabExistente = $stmtColab->fetch(\PDO::FETCH_ASSOC);
+        if ($colabExistente) {
+            $colabId = (int)$colabExistente['id'];
+            $mat = $colabExistente['matricula_funcional'];
+        } else {
+            $mat = 'COL-1002';
+            $this->pdo->exec("INSERT INTO colaboradores (matricula_funcional, nome, cargo, foto_url, ativo, created_at) VALUES ('{$mat}', 'Prof. Carlos Eduardo', 'Professor de Matemática', 'storage/uploads/public/prof_carlos.jpg', 1, NOW())");
+            $colabId = (int)$this->pdo->lastInsertId();
+        }
 
         // Cria produto
         $cod = 'PDV-COL-' . uniqid();
@@ -344,6 +351,12 @@ class Fase13Test
         // Métricas de vendas de hoje
         $metricas = VendaBalcao::obterMetricasHoje($sessaoId);
         $this->assert($metricas['total_folha'] >= 8.50, "Métrica de total em folha apurada com sucesso");
+
+        // Limpeza defensiva da venda e produto de teste para não poluir a base
+        $this->pdo->exec("DELETE FROM itens_venda_balcao WHERE venda_balcao_id = " . (int)$venda['id']);
+        $this->pdo->exec("DELETE FROM vendas_balcao WHERE id = " . (int)$venda['id']);
+        $this->pdo->exec("DELETE FROM estoque_movimentacoes WHERE produto_id = " . (int)$prodId);
+        $this->pdo->exec("DELETE FROM produtos WHERE id = " . (int)$prodId);
     }
 
     private function testarListagemPdvEBuscaColaborador(): void

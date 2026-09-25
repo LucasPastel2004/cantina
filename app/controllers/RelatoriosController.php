@@ -417,7 +417,6 @@ class RelatoriosController extends Controller
             SELECT 
                 vb.id AS venda_id,
                 vb.created_at,
-                vb.valor_total,
                 sc.turno,
                 u.nome AS operador_nome
             FROM vendas_balcao vb
@@ -427,6 +426,7 @@ class RelatoriosController extends Controller
               AND vb.tipo_venda = 'desconto_folha'
               AND YEAR(vb.created_at) = :ano
               AND MONTH(vb.created_at) = :mes
+              AND EXISTS (SELECT 1 FROM itens_venda_balcao ivb WHERE ivb.venda_balcao_id = vb.id)
             ORDER BY vb.created_at DESC
         ";
         $stmtVendas = $pdo->prepare($sqlVendas);
@@ -454,16 +454,17 @@ class RelatoriosController extends Controller
             $itens = $stmtItens->fetchAll(\PDO::FETCH_ASSOC);
 
             $qtdVenda = array_sum(array_column($itens, 'quantidade'));
+            $subtotalVenda = array_sum(array_column($itens, 'subtotal'));
             $totalItens += $qtdVenda;
-            $totalGeral += (float)$v['valor_total'];
+            $totalGeral += $subtotalVenda;
 
             $vendasDetalhadas[] = [
                 'venda_id'        => (int)$v['venda_id'],
                 'data_fmt'        => date('d/m/Y H:i', strtotime($v['created_at'])),
                 'turno'           => ucfirst($v['turno']),
                 'operador'        => $v['operador_nome'],
-                'valor_total'     => (float)$v['valor_total'],
-                'valor_total_fmt' => 'R$ ' . number_format((float)$v['valor_total'], 2, ',', '.'),
+                'valor_total'     => $subtotalVenda,
+                'valor_total_fmt' => 'R$ ' . number_format($subtotalVenda, 2, ',', '.'),
                 'total_itens'     => $qtdVenda,
                 'itens'           => $itens
             ];
@@ -998,7 +999,9 @@ class RelatoriosController extends Controller
 
         $pdo = \App\Core\Model::getPdo();
 
-        // 1. Consulta dos Colaboradores com Compras Faturadas sob Desconto em Folha
+        // Consulta unificada: total de compras, total de lanches e valor total
+        // calculados a partir dos itens reais em itens_venda_balcao (INNER JOIN),
+        // garantindo consistência com o relatório individual por colaborador.
         $sqlColabs = "
             SELECT 
                 c.id AS colaborador_id,
@@ -1007,9 +1010,11 @@ class RelatoriosController extends Controller
                 c.cargo,
                 c.foto_url,
                 COUNT(DISTINCT vb.id) AS total_compras,
-                COALESCE(SUM(vb.valor_total), 0.00) AS total_desconto
+                COALESCE(SUM(ivb.subtotal), 0.00) AS total_desconto,
+                COALESCE(SUM(ivb.quantidade), 0) AS total_lanches
             FROM colaboradores c
             INNER JOIN vendas_balcao vb ON vb.colaborador_id = c.id
+            INNER JOIN itens_venda_balcao ivb ON ivb.venda_balcao_id = vb.id
             WHERE vb.tipo_venda = 'desconto_folha'
               AND YEAR(vb.created_at) = :ano
               AND MONTH(vb.created_at) = :mes
@@ -1020,30 +1025,13 @@ class RelatoriosController extends Controller
         $stmt->execute(['ano' => $ano, 'mes' => $mes]);
         $colaboradores = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        // 2. Consulta da contagem real de lanches/itens por colaborador
-        $sqlLanches = "
-            SELECT 
-                vb.colaborador_id,
-                COALESCE(SUM(ivb.quantidade), 0) AS total_lanches
-            FROM itens_venda_balcao ivb
-            INNER JOIN vendas_balcao vb ON vb.id = ivb.venda_balcao_id
-            WHERE vb.tipo_venda = 'desconto_folha'
-              AND YEAR(vb.created_at) = :ano
-              AND MONTH(vb.created_at) = :mes
-            GROUP BY vb.colaborador_id
-        ";
-        $stmtLanches = $pdo->prepare($sqlLanches);
-        $stmtLanches->execute(['ano' => $ano, 'mes' => $mes]);
-        $lanchesMap = $stmtLanches->fetchAll(\PDO::FETCH_KEY_PAIR);
-
         $totalDescontoGeral = 0.0;
         $totalLanchesGeral = 0;
         $maiorConsumo = 0.0;
         $topColaborador = '-';
 
         foreach ($colaboradores as &$c) {
-            $colabId = (int)$c['colaborador_id'];
-            $c['total_lanches'] = (int)($lanchesMap[$colabId] ?? 0);
+            $c['total_lanches'] = (int)$c['total_lanches'];
 
             $desc = (float)$c['total_desconto'];
             $totalDescontoGeral += $desc;

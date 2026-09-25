@@ -9,7 +9,9 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 17 — Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança e Entrega
 * **Status da Fase 17:** Concluída com Sucesso [x]
 * **Status Geral do Projeto:** 17 de 17 Fases Concluídas Integralmente (100% do escopo do FSD e DESIGN.md)
-* **Última Atualização:** 2026-09-25 15:40:00 (Otimização de alta performance do espelho de impressão do Extrato do Aluno eliminando congelamento de visão prévia no Chromium: miniatura de logotipo 2.3KB, flexbox em vez de CSS grid, layout de tabela fixo O(1) com quebra de página evitada, disparo assíncrono de window.print e botão de download direto de PDF; incremento de assetVersion para 5.9.8; 42/42 suítes de testes automatizados com 100% de aprovação)
+* **Última Atualização:** 2026-09-25 16:08:00 (Correção de inconsistência nos valores do Relatório de Desconto em Folha: a query consolidada somava `vb.valor_total` direto, incluindo vendas órfãs sem itens — alterada para `SUM(ivb.subtotal)` via INNER JOIN com `itens_venda_balcao`, unificando cálculo e contagem de lanches em uma única consulta. Modal AJAX corrigido com filtro `EXISTS` e cálculo por itens. Saneamento executado: 45 vendas órfãs deletadas, 16 colaboradores duplicados removidos (IDs 2-14, 111-113). Testes: 52/52 fase 13 + 36/36 individual = 100% aprovados)
+
+
 
 ---
 
@@ -612,6 +614,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Implementação do modal corporativo `#modalDesbloqueioMed` com validação de justificativa formal obrigatória, exibição contextual de saldo devedor, disparo opcional de notificação via WhatsApp e correção dos placeholders de auditoria em `logs_auditoria`. Suíte `tests/desbloqueio_med_modal_test.php` criada e homologada (11/11);
   * Implementação de autocomplete assíncrono com sugestões dinâmicas de responsáveis e dependentes (`/admin/contestacoes/sugestoes`), suporte a navegação por teclado (setas/Enter/Escape), botão rápido de limpeza, filtragem instantânea client-side nas linhas da tabela durante a digitação e correção rigorosa dos filtros por status e busca textual no backend (`Responsavel::listarNegativadosMed`). Suíte `tests/contestacoes_busca_sugestoes_test.php` criada e aprovada (27/27);
   * Resolução do truncamento do dropdown de sugestões por overflow da card de busca (`.card-overflow-visible` com `overflow: visible !important;` e `top: calc(100% + 4px)`); ajuste do layout responsivo da barra lateral para o breakpoint universal de 768px (notebooks e desktops), garantindo que ao expandir a barra lateral a parte principal se contraia (`margin-left: 240px; width: calc(100% - 240px);`) sem cobrir o conteúdo, e ao colapsar ela se estique para 100% (`margin-left: 0; width: 100%;`), eliminando gaveta flutuante por hover. Suíte `tests/sidebar_responsive_test.php` criada e aprovada (10/10). Asset version atualizado para `5.7.3`;
+  * Correção milimétrica no PDF do Relatório de Negativados MED (`PdfService::gerarRelatorioNegativadosMedPdf`): recalibragem dos offsets do box de métricas superiores (`col2 = $left + 195.0`, `col3 = $left + 375.0`), eliminando o transbordo da frase `Res. BCB no 103 - MED Pix` sobre a borda lateral direita com 38 pt de margem interna segura; ampliação do respiro entre as colunas `ESTORNO` e `SALDO DEVEDOR` (vão de 21 pt); inclusão do símbolo de grau `'°' => 'o'` em `removerAcentos()` e `escapeText()`; e uso de `mb_substr` UTF-8 de 26 caracteres eliminando quebra e corrupção de turmas de dependentes (`Mariana Ribeiro (5o A)`);
 * [x] **Auditoria Global ECC, Hardening e Otimização da Base de Código:**
   * Execução dos protocolos das skills do ECC (`production-audit`, `verification-loop`, `click-path-audit` e `error-handling`);
   * Criação do script de auditoria e verificação `tests/verification_audit.php` validando sintaxe em 181 arquivos PHP, proteção `CANTINA_SISTEMA`, integridade de todas as 128 rotas no `Router` e ausência de SQL injection;
@@ -758,8 +761,30 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Aplicação de `table-layout: fixed !important;` e `thead { display: table-header-group !important; }` na tabela `.table-relatorio`, em conjunto com `break-inside: avoid !important; page-break-inside: avoid !important;` nas linhas `<tr>`, permitindo cálculo O(1) de largura e paginação instantânea;
     * Despacho assíncrono de `window.print()` via `setTimeout(..., 50)` com feedback no botão ("Preparando..."), liberando o event loop do navegador;
     * Inclusão do botão "📄 Baixar PDF Direto" na barra de ações para download imediato do extrato em PDF A4 oficial;
+  * **Padronização Corporativa da Barra de Paginação em Relatórios (FSD & DESIGN.md):**
+    * Substituição da paginação simples anterior de `fechamento_caixa.php` pelo componente corporativo unificado `partials/pagination.php`, exibindo contador analítico com numerais tabulares ("Mostrando 1 a 20 de X registros (20 por pág.)"), botão "‹ Anterior" (com desabilitação semântica quando na primeira página), botões numéricos compactos com microinteração tátil, botão "Próxima ›", reticências e salto direto para a última página;
+    * Padronização idêntica aplicada em `app/views/relatorios/devedores.php` e `app/views/admin/contestacoes.php`;
+    * Defesa contra inconsistências com fallbacks em `pagination.php` para `$pagina` e `$totalHistorico`;
+    * Criação da suíte `tests/fechamento_caixa_pagination_test.php` com 10 asserções automatizadas cobrindo a renderização do novo layout;
+  * **Implementação de Relatórios Individuais de Desconto em Folha por Professor/Colaborador (FSD & Pedido do Usuário):**
+    * Evolução da tela de Desconto em Folha para RH (`/relatorios/desconto-folha`) atendendo ao requisito operacional de individualização de conferência e entrega aos professores e colaboradores;
+    * Criação do método `PdfService::obterStreamsPaginasIndividualColaborador()` gerando folhas multipáginas com cabeçalho oficial timbrado, miniatura circular do logotipo, box de identificação do colaborador (matrícula, nome, cargo, foto), Stat-Strip de totais, tabela discriminada de itens (Data/Hora, Turno, Venda #, Produto/Lanche, Qtd, Preço Unitário e Subtotal), linha totalizadora, termo formal de ciência do colaborador e campos de assinatura para o Professor e Visto da Cantina / Diretoria;
+    * Criação do método `PdfService::gerarRelatorioDescontoFolhaIndividualPdf()` gerando PDF 1.4 binário puro para cada colaborador com numeração de páginas dinâmica resolvida;
+    * Criação do método `PdfService::gerarRelatorioDescontoFolhaIndividualLotePdf()` gerando lote único consolidado contendo as folhas individuais de todos os professores/colaboradores do mês selecionado em páginas segregadas;
+    * Criação do método `PdfService::gerarEspelhoDescontoFolhaIndividualHtml()` gerando espelho responsivo limpo para visualização em navegador com barra de ferramentas flutuante, botão de impressão direta `@media print`, botão para download de PDF e regras de estilo corporativas;
+    * Implementação dos endpoints e rotas protegidas sob `ROLE_ADMINISTRADOR`:
+      * `GET /relatorios/desconto-folha/individual-pdf` (`RelatoriosController::descontoFolhaIndividualPdf`);
+      * `GET /relatorios/desconto-folha/individual-imprimir` (`RelatoriosController::descontoFolhaIndividualImprimir`);
+      * `GET /relatorios/desconto-folha/lote-pdf` (`RelatoriosController::descontoFolhaLotePdf`);
+    * Atualização da view `app/views/relatorios/desconto_folha.php`:
+      * Adicionado campo de busca instantânea `#filtroProfessor` com filtragem ao vivo por nome ou matrícula funcional sem recarregar a tela;
+      * Adicionado botão de topo "Baixar Todos os Individuais (Lote PDF)";
+      * Expansão da coluna de ações da tabela ("Relatório & Ações") com 3 botões dedicados e discretos por colaborador: "Ver Itens" (abre modal AJAX), "PDF Individual" (baixa PDF A4 timbrado) e "Imprimir" (abre espelho HTML em nova aba);
+      * Inclusão dos botões "Baixar PDF Individual" e "Imprimir" dentro do rodapé do modal `#modalDetalhesColaborador`;
+    * Criação da suíte de testes automatizados `tests/desconto_folha_individual_test.php` com 36/36 asserções aprovadas;
   * Incremento do assetVersion para `5.9.8` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
-  * Suíte global de testes automatizados com 42 arquivos aprovada com 100% de sucesso (`tests/verification_audit.php`).
+  * Suíte global de testes automatizados com 43 arquivos aprovada com 100% de sucesso (`tests/verification_audit.php`).
+
 
 ---
 

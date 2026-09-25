@@ -1042,3 +1042,78 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. *Yielding do Event Loop antes da Impressão:* Atualizado o botão de impressão para fornecer feedback visual ("Preparando...") e disparar `window.print()` via `setTimeout(..., 50)`, liberando o ciclo de renderização do navegador para o spooler do sistema operacional.
   5. *Botão de Download Direto em PDF:* Adicionado o botão "📄 Baixar PDF Direto" na barra de ações (apontando para `/operacional/extrato-aluno/pdf`), permitindo download instantâneo (< 20 ms) do documento oficial sem passar pelo diálogo de prévia do navegador.
 - Como evitar no futuro: Em qualquer espelho HTML destinado à impressão de relatórios com tabelas extensas, nunca utilizar `display: grid` ou imagens base64 volumosas; sempre aplicar `table-layout: fixed !important;`, `thead { display: table-header-group; }` e `break-inside: avoid;` em `<tr>`, e despachar `window.print()` com pequeno delay assíncrono para liberação do ciclo de renderização.
+
+---
+
+## 2026-09-25 - Barra de paginação improvisada e assimétrica no Demonstrativo de Fechamento de Caixa
+
+- Sintoma: Na tela `/relatorios/fechamento-caixa`, a barra de paginação inferior apresentava formato simples e divergente do restante do sistema: texto estático `Página 1 de 19 (371 registros)` à esquerda e lista corrida de todos os 19 números de páginas em botões azuis (`1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19`), sem botões táteis de "Anterior" / "Próxima", sem reticências inteligentes e estourando a largura em resoluções menores.
+- Causa: A view `app/views/relatorios/fechamento_caixa.php` havia sido codificada com um bloco de paginação improvisado baseado em `<ul class="pagination pagination-sm mb-0">` com loop simples de `1` até `$totalPaginas`, em vez de reaproveitar o componente corporativo oficial `app/views/partials/pagination.php`.
+- Solução aplicada:
+  1. No template `app/views/relatorios/fechamento_caixa.php`, substituído o bloco improvisado pela inclusão direta do componente oficial `<?php require __DIR__ . '/../partials/pagination.php'; ?>`, definindo as variáveis `$paginaAtual`, `$totalRegistros`, `$totalPaginas` e `$itensPorPagina`.
+  2. No controlador `RelatoriosController::fechamentoCaixa()`, adicionadas as variáveis `$paginaAtual`, `$totalRegistros` e `$itensPorPagina` no array repassado à view.
+  3. No componente `app/views/partials/pagination.php`, adicionados fallbacks defensivos (`$paginaAtual = max(1, (int)($paginaAtual ?? $pagina ?? 1))` e `$totalRegistros = max(0, (int)($totalRegistros ?? $totalHistorico ?? 0))`), garantindo máxima tolerância e retrocompatibilidade.
+  4. Padronização preventiva replicada em `app/views/relatorios/devedores.php` e `app/views/admin/contestacoes.php`.
+  5. Criado teste automatizado `tests/fechamento_caixa_pagination_test.php` com 10 asserções cobrindo o novo layout, classes tabulares e remoção do bloco legado.
+  6. Auditoria global de testes executada com 42/42 suítes aprovadas com 100% de sucesso.
+- Como evitar no futuro: Em qualquer data-grid ou listagem paginada da aplicação, reutilizar estritamente o componente parcial oficial `partials/pagination.php`, evitando a duplicação ou recriação manual de estruturas de paginação nas views individuais.
+
+---
+
+## 2026-09-25 - Escopo de variáveis de identificação do colaborador em closures de paginação de PDF
+
+- Sintoma: Erro ou aviso de variável indefinida (`Undefined variable $matColab`) ao renderizar o bloco de assinatura e carimbos no final da geração do PDF individual de desconto em folha em `PdfService::obterStreamsPaginasIndividualColaborador()`.
+- Causa: As variáveis `$nomeColab`, `$matColab` e `$cargoColab` haviam sido instanciadas inicialmente no escopo interno da closure `$iniciarPagina = function(...) { ... }` para montagem do box de identificação do topo, mas não estavam acessíveis no escopo externo da função principal onde o bloco final de assinaturas e visto da diretoria é montado.
+- Solução aplicada: As variáveis de metadados do colaborador foram declaradas e extraídas no escopo principal do método `obterStreamsPaginasIndividualColaborador()` antes da definição da closure, sendo então repassadas para a closure via cláusula `use (..., $nomeColab, $matColab, $cargoColab)` e disponibilizadas nativamente para o bloco final de assinaturas.
+- Como evitar no futuro: Sempre que funções auxiliares ou closures de paginação de PDF precisarem de metadados de cabeçalho ou rodapé, extrair e inicializar essas variáveis no topo do método e importá-las explicitamente com `use (...)`, garantindo consistência em todas as seções do documento.
+
+---
+
+## 2026-09-25 - Duplicação de cadastros de teste de colaborador por execuções repetidas da suíte de testes
+
+- Sintoma: Na tela de Desconto em Folha para RH (`/relatorios/desconto-folha`), o mesmo professor ("Prof. Carlos Eduardo") aparecia repetido 60 vezes na tabela, cada linha com apenas 1 lanche (R$ 8,50), dando a impressão visual equivocada de que o sistema estaria listando compras individuais na tabela e gerando um PDF por compra, em vez de consolidar as compras de cada professor em um único relatório mensal.
+- Causa: O método `testarConsumoColaboradorDescontoFolha()` em `tests/fase13_test.php` executava `INSERT INTO colaboradores (...)` a cada execução com matrícula aleatória (`COL-` + hex), sem checar se já existia registro prévio nem realizar a limpeza do colaborador inserido. Como a suíte de testes automatizados e auditorias globais foram executadas dezenas de vezes durante o desenvolvimento, foram criados 60 registros distintos na tabela `colaboradores`, todos com o mesmo nome "Prof. Carlos Eduardo" e 1 venda associada a cada ID gerado. Como o relatório agrupa por colaborador cadastrado (`GROUP BY c.id`), cada registro aparecia como uma linha independente com 1 item.
+- Solução aplicada:
+  1. *Saneamento da Base de Dados:* Executado script de consolidação que unificou as vendas de teste sob o registro oficial de `Prof. Carlos Eduardo` (ID 15, Matrícula `COL-1002`) e redistribuiu as demais vendas entre um corpo docente realista do colégio (Prof. Roberto Silva, Profa. Juliana Mendes, Prof. Marcos Oliveira, Profa. Camila Rodrigues e Prof. Ricardo Souza), removendo os 91 registros duplicados órfãos da tabela `colaboradores`.
+  2. *Refatoração do Teste de Integração:* Atualizado `tests/fase13_test.php` para consultar e reaproveitar o registro de testes existente em vez de inserir novos colaboradores, além de realizar a exclusão imediata da venda e do produto temporários após as validações, prevenindo qualquer poluição futura da base.
+  3. Com isso, na tela `/relatorios/desconto-folha`, cada professor passa a aparecer exatamente uma única vez na tabela com seus totais acumulados do mês, e o botão "PDF Individual" gera o PDF consolidado mensal com todos os itens consumidos por aquele professor durante o mês.
+- Como evitar no futuro: Em testes de integração que realizem inserções de entidades operacionais, sempre reutilizar registros fixos de teste pré-existentes ou aplicar teardown rigoroso para não acumular registros duplicados compartilhados com a interface visual de desenvolvimento.
+
+
+---
+
+## 2026-09-25 - Estouro de texto sobre a borda direita do card de métricas no PDF de Negativados MED e truncamento com símbolo de grau
+
+- Sintoma:
+  1. No Relatório de Famílias com Saldo Devedor (Negativados MED) em PDF A4 (`relatorio_negativados_med_*.pdf`), o texto `Res. BCB no 103 - MED Pix` no card de métricas superior estourava a borda lateral direita do contêiner, com a letra `x` desenhada do lado de fora da caixa delimitadora.
+  2. No cabeçalho da tabela de dados, as colunas `ESTORNO` e `SALDO DEVEDOR` estavam coladas uma à outra com espaçamento inferior a 3 pt, apresentando-se visualmente aglutinadas como `ESTORNO SALDO DEVEDOR`.
+  3. Na coluna de Dependentes, nomes de turmas com o símbolo de grau (ex.: `Mariana Ribeiro (5° A)`) eram truncados e corrompidos em `Mariana Ribeiro (5?)`.
+- Causa:
+  1. No método `PdfService::gerarRelatorioNegativadosMedPdf`, o offset da terceira métrica foi configurado em `$left + 420.0 pt` (x = 456.0 pt) em um box com largura de 523.28 pt (margem direita em 559.28 pt). Como a string em Helvetica-Bold 8.5 pt possui 110 pt de largura, estendia-se até x = 566.0 pt, ultrapassando a borda direita por quase 7 pt.
+  2. A coluna `$c5` (Data do Estorno) estava posicionada em `$left + 415.0 pt`, enquanto `$c6` (Saldo Devedor) tinha o cabeçalho alinhado à direita a partir de x = 488.88 pt, deixando apenas 2.88 pt de vão entre as palavras.
+  3. O mapeamento de normalização de caracteres ASCII em `escapeText()` e `removerAcentos()` contemplava o indicador ordinal `º` (`\xC2\xBA`), mas não o caractere de grau `°` (`\xC2\xB0`). Além disso, o truncamento com `substr()` padrão em bytes fatiou a sequência UTF-8 no 20º byte, provocando quebra da sequência de bytes e conversão para caractere de interrogação `?` pelo `iconv`.
+- Solução aplicada:
+  1. Em `PdfService.php`, o card de métricas foi redistribuído com proporções equilibradas: Métrica 1 em `$left + 14.0 pt`, Métrica 2 em `$left + 195.0 pt` e Métrica 3 em `$left + 375.0 pt`, garantindo mais de 38 pt de margem interna segura antes da borda direita sem qualquer vazamento de texto.
+  2. As colunas da tabela de negativados foram recalibradas (`$c1 = $left + 8.0`, `$c2 = $left + 85.0`, `$c3 = $left + 215.0`, `$c4 = $left + 285.0`, `$c5 = $left + 395.0`, `$c6 = $right - 8.0`), assegurando mais de 21 pt de espaçamento limpo entre `ESTORNO` e `SALDO DEVEDOR`.
+  3. Adicionado o mapeamento do caractere de grau `'°' => 'o'` em `escapeText()` e `removerAcentos()`, e substituído `substr()` por `mb_substr(..., 0, 26, 'UTF-8')`, exibindo a turma de forma íntegra (`Mariana Ribeiro (5o A)`).
+  4. Executadas as suítes de testes `tests/fase16_test.php` (60/60 asserções), `tests/contestacoes_busca_sugestoes_test.php` (27/27 asserções) e auditoria global `tests/verification_audit.php` (43/43 suítes aprovadas com 100% de sucesso).
+- Como evitar no futuro: Ao diagramar caixas de métricas ou data-grids em PDF Type1 de coordenadas absolutas, sempre calcular a soma da posição inicial mais a largura máxima projetada do texto em pontos tipográficos, garantindo folga mínima de pelo menos 15 a 20 pt em relação às bordas externas; e sempre utilizar `mb_substr` com sanitização para ASCII ao manipular strings com símbolos ordinais ou de grau.
+
+---
+
+### ERRO-059 — Inconsistência de valores monetários no Relatório de Desconto em Folha (tabela vs PDF individual)
+- Data: 2026-09-25
+- Fase/Módulo: Fase 17 / Relatórios Gerenciais — Desconto em Folha
+- Contexto: Na tela `/relatorios/desconto-folha`, a tabela consolidada exibia Prof. Roberto Silva com R$ 751,00, mas o PDF individual e a impressão HTML mostravam apenas R$ 20,00 (5 itens × R$ 4,00). Também apareciam dois registros "Prof. Roberto Silva" (COL-1001 e COLAB-F4-01) e diversos "Prof. Carlos Alberto" duplicados.
+- Causa:
+  1. A query consolidada em `obterDadosDescontoFolha()` usava `SUM(vb.valor_total)` diretamente da tabela `vendas_balcao` SEM fazer JOIN com `itens_venda_balcao`. Vendas órfãs (sem registros correspondentes em `itens_venda_balcao`) eram contabilizadas no total monetário da tabela.
+  2. A query individual em `obterDadosDescontoFolhaIndividual()` usava INNER JOIN com `itens_venda_balcao`, excluindo automaticamente as vendas órfãs. Isso gerava divergência entre os totais.
+  3. O modal AJAX `descontoFolhaDetalhesAjax()` também usava `vb.valor_total` direto e listava vendas sem itens, inflando o total.
+  4. Testes automatizados (fase 13 e outros) criavam registros de `vendas_balcao` com tipo `desconto_folha` vinculados ao colaborador de teste, porém ao limpar apenas deletavam os itens e produtos — as vendas permaneciam como órfãs. Ao longo de dezenas de execuções, acumularam-se 43 vendas órfãs de R$ 17,00 cada para o colaborador ID 1.
+  5. Colaboradores duplicados (IDs 2-14, 111-113) foram criados por testes que faziam `INSERT INTO colaboradores` sem cleanup adequado, poluindo o relatório com linhas extras.
+- Solução aplicada:
+  1. Refatorada `obterDadosDescontoFolha()` para usar uma única query com `INNER JOIN itens_venda_balcao ivb`, calculando `SUM(ivb.subtotal)` e `SUM(ivb.quantidade)` em vez de consultas separadas. Isso garante que apenas vendas com itens reais sejam contabilizadas — mesma base de dados da query individual.
+  2. Corrigida `descontoFolhaDetalhesAjax()` com filtro `AND EXISTS (SELECT 1 FROM itens_venda_balcao ivb WHERE ivb.venda_balcao_id = vb.id)` e cálculo do valor por `array_sum(array_column($itens, 'subtotal'))` em vez de `$v['valor_total']`.
+  3. Executado saneamento da base de dados: 45 vendas órfãs deletadas, 16 colaboradores duplicados removidos (IDs 2-14, 111-113).
+  4. Testes aprovados: `fase13_test.php` (52/52), `desconto_folha_individual_test.php` (36/36).
+- Como evitar no futuro: Sempre usar a mesma fonte de dados (itens reais) em todas as camadas de um relatório (tabela consolidada, modal de detalhes, PDF individual e impressão HTML). Nunca somar `valor_total` direto de `vendas_balcao` se o detalhamento usa `itens_venda_balcao` — as fontes devem ser idênticas para garantir consistência. Scripts de teste devem limpar TODAS as tabelas relacionadas por FK, incluindo `vendas_balcao` e não apenas `itens_venda_balcao` e `produtos`.
