@@ -23,7 +23,7 @@ $aluno = $dadosExtrato['aluno'] ?? null;
     </div>
     <?php if ($aluno): ?>
         <div class="d-flex align-items-center gap-2">
-            <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno/imprimir?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" target="_blank" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Visualizar espelho para impressão contínua ou A4">
+            <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno/imprimir?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" target="_blank" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Visualizar espelho para impressão contínua ou A4">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
                 Imprimir Extrato
             </a>
@@ -65,7 +65,7 @@ $aluno = $dadosExtrato['aluno'] ?? null;
             </div>
 
             <div class="col-12 col-md-1 d-flex">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100">
                     Filtrar
                 </button>
             </div>

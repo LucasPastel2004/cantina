@@ -77,7 +77,7 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
             </div>
 
             <div class="col-6 col-md-1 d-flex">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100">
                     Filtrar
                 </button>
             </div>

@@ -55,10 +55,10 @@ $familias = $familias ?? [];
             </div>
 
             <div class="col-12 col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-fill">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-fill">
                     Filtrar
                 </button>
-                <a href="<?php echo $baseUrl; ?>/relatorios/devedores" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
+                <a href="<?php echo $baseUrl; ?>/relatorios/devedores" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
                     Limpar
                 </a>
             </div>

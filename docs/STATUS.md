@@ -686,7 +686,17 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Correção definitiva da numeração de páginas em relatórios multi-páginas através do uso de marcadores neutros `__PAG_NUM__` e `__PAG_TOT__` imunes ao escape de `sprintf` e substituição com suporte a variantes no `PdfService`, eliminando o defeito visual de texto truncado `Pagina %PAGE_NUM% de %PA` e exibindo perfeitamente `Pagina X de Y`;
   * Ajuste de espaçamento visual na linha de totais consolidados no relatório de Vendas por Alimento, com Preço Médio ancorado em $X = 415.0$ e Faturamento Total em $X = 496.0$, garantindo mais de 23 pontos de respiro entre os números e impedindo qualquer colisão;
   * Alinhamento estrito e respiro mínimo de 35 pontos nas colunas do relatório contábil de Desconto em Folha para RH;
-  * Auditoria global com 40 de 40 suítes de testes automatizados aprovadas com 100% de sucesso (`tests/verification_audit.php`).
+* [x] **Harmonização de Botões de Ação e Filtro no Azul Institucional Oficial:**
+  * Conversão integral de todos os botões de ação e submissão/filtro das telas operacionais e de relatórios para a classe primária `.btn.btn-enterprise.btn-primary` (azul royal `#1d4ed8` oficial da marca e do logotipo do Colégio Monteiro Lobato):
+    * `app/views/relatorios/vendas_alimento.php`: botão **"Filtrar"**;
+    * `app/views/relatorios/desconto_folha.php`: botões **"Exportar CSV para Folha"** e **"Carregar Mês"**;
+    * `app/views/relatorios/fechamento_caixa.php`: botões **"Operação de Caixa Hoje"**, **"Filtrar"** e **"Limpar"**;
+    * `app/views/relatorios/devedores.php`: botões **"Filtrar"** e **"Limpar"**;
+    * `app/views/operacional/corte.php`: botões **"Exportar PDF (A4)"**, **"Imprimir A4"**, **"Conferir Recebimento &rarr;"** e **"Atualizar Painel"**;
+    * `app/views/relatorios/extrato_aluno.php`: botões **"Imprimir Extrato"** e **"Filtrar"**;
+  * Preservação rigorosa dos chips de status e tags de sistema no padrão neutro sóbrio `.code-tag font-tabular`;
+  * Incremento do assetVersion para `5.9.0` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
+  * Suíte global de 40 testes automatizados reexecutada e aprovada com 100% de sucesso (`tests/verification_audit.php`).
 
 ---
 
