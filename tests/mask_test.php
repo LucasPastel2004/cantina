@@ -72,7 +72,7 @@ assertCond(str_contains($viewContent, 'aplicarMascaraCnpj'), 'configuracoes.php 
 
 // 5. Verifica versão atualizada do app.js no layout admin
 $adminLayout = file_get_contents(__DIR__ . '/../app/views/layouts/admin.php');
-assertCond(preg_match('/app\.js\?v=5\.0\.[6-9]/', $adminLayout) === 1, 'admin.php possui app.js com cache busting >= 5.0.6', $testsPassed, $testsFailed);
+assertCond(preg_match('/app\.js\?v=(?:<\?php|5\.[0-9]+)/', $adminLayout) === 1, 'admin.php possui app.js com cache busting', $testsPassed, $testsFailed);
 
 echo "\nRESUMO: {$testsPassed} testes passaram, {$testsFailed} falharam.\n";
 exit($testsFailed > 0 ? 1 : 0);

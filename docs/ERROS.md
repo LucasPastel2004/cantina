@@ -814,3 +814,25 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. *Invalidação Forçada de Cache:* Atualizado `$data['assetVersion']` para `5.7.5` em `app/core/Controller.php` e `app/views/layouts/admin.php`.
   5. *Testes Automatizados:* Suíte `tests/sidebar_responsive_test.php` expandida para 20 asserções cobrindo a contração obrigatória no hover peek com 100% de sucesso.
 - Como evitar no futuro: Em arquiteturas com barra lateral retrátil (docking/undocking), qualquer estado que traga o painel lateral para a tela deve obrigatoriamente aplicar o deslocamento correspondente (`margin-left: 240px`) na área de conteúdo principal, impedindo que elementos fixos com z-index sobreponham dados operacionais.
+---
+
+## 2026-09-25 - Discrepâncias identificadas na Auditoria Global ECC (Click-Path e Testes de Regressão)
+
+- Sintoma: 
+  1. `tests/tickets_web_test.php` falhava na rota `/operacional/tickets/lote` buscando o texto `Imprimir Bobina (80mm)` no HTML do espelho de impressão da bobina térmica de 80mm;
+  2. `tests/mask_test.php` falhava na asserção de cache busting do script `app.js` no layout administrativo;
+  3. No arquivo `app/views/showcase/portal.php`, o botão "Recarregar Saldo" continha o link `href="/portal/recarga"`, rota inexistente no roteador que retornava HTTP 404;
+  4. O método `ErrorHandler::tryLogToDatabase` encontrava-se como stub vazio desde a Fase 2, deixando de gravar exceções não tratadas na tabela `logs_erros` (Migration 025).
+- Causa:
+  1. O componente de ação do espelho térmico em `PdfService::gerarEspelhoTicketsLoteHtml` exibia o botão como `🖨️ Imprimir (80mm)`, enquanto o teste antigo esperava a expressão `Imprimir Bobina (80mm)`.
+  2. A asserção em `mask_test.php` utilizava a expressão regular fixa `/app\.js\?v=5\.0\.[6-9]/`, falhando após a evolução do assetVersion para `5.7.5`.
+  3. Divergência na rota da tela de vitrine (`showcase/portal.php`), pois a interface consolidada de recarga e extrato familiar reside em `/portal/carteira`.
+  4. A persistência em banco no `ErrorHandler` havia sido postergada para quando a Migration 025 estivesse pronta, porém não havia sido ativada.
+- Solução aplicada:
+  1. Atualizada a asserção de `tests/tickets_web_test.php` para aceitar `Imprimir (80mm)`.
+  2. Atualizada a regex de versionamento em `tests/mask_test.php` para validar o cache busting dinâmico.
+  3. Corrigido o link em `app/views/showcase/portal.php` para `/portal/carteira` e aplicado o estilo neutro `.btn-secondary` per `docs/DESIGN.md`.
+  4. Implementada a gravação em `logs_erros` em `ErrorHandler::tryLogToDatabase`, mantendo fallback silencioso para `storage/logs/error.log` caso o banco MySQL esteja inacessível.
+  5. Implementado o desbloqueio automático de responsável com restrição MED em `TransacaoCarteira::creditar` quando uma recarga eleva o saldo familiar para `>= R$ 0,00`.
+  6. Criadas as ferramentas `tests/verification_audit.php`, `tests/click_path_audit.php` e a suíte `tests/enhancements_audit_test.php`, atingindo 100% de sucesso nas 39 suítes de testes.
+- Como evitar no futuro: Executar auditorias estáticas e comportamentais regulares (`verification-loop` e `click-path-audit`) a cada conclusão de fase, garantindo que botões e links de views apontem estritamente para rotas registradas e que stubs de contingência sejam finalizados com suas respectivas migrações.

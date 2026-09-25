@@ -81,12 +81,33 @@ class TransacaoCarteira extends Model
             $saldoResultante = round($saldoAnterior + $valor, 2);
 
             // 2. Atualiza o saldo do responsável no MySQL
-            // Se o saldo agora for positivo ou zero e estava bloqueado por MED, avalia desbloqueio
             $stmtUp = $pdo->prepare("UPDATE responsaveis SET saldo_atual = :saldo, updated_at = NOW() WHERE id = :id");
             $stmtUp->execute([
                 'saldo' => $saldoResultante,
                 'id'    => $responsavelId
             ]);
+
+            // Se o saldo agora for positivo ou zero e estava bloqueado por MED, efetua desbloqueio automático
+            if ($saldoResultante >= 0 && (int)$resp['bloqueado_med'] === 1) {
+                Responsavel::desbloquearMed(
+                    $responsavelId,
+                    $operadorId,
+                    "Desbloqueio automático por regularização de saldo via recarga ({$tipo}) - Saldo Resultante: R$ " . number_format($saldoResultante, 2, ',', '.')
+                );
+
+                try {
+                    $whats = new \App\Services\WhatsAppService();
+                    if (!empty($resp['whatsapp'])) {
+                        $whats->sendNotificacaoDesbloqueioMed(
+                            $resp['whatsapp'],
+                            $saldoResultante,
+                            $resp['nome'] ?? 'Responsável'
+                        );
+                    }
+                } catch (\Throwable $e) {
+                    error_log('[WHATSAPP_UNBLOCK_ERROR] ' . $e->getMessage());
+                }
+            }
 
             // 3. Grava o lançamento no livro-razão imutável da carteira
             $sqlInsert = "INSERT INTO transacoes_carteira (

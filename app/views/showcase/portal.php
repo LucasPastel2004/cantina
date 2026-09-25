@@ -30,7 +30,7 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
                 </div>
             </div>
             <div class="mt-4 d-flex gap-2">
-                <a href="<?php echo $baseUrl; ?>/portal/recarga" class="btn btn-enterprise btn-primary w-100">
+                <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary w-100">
                     Recarregar Saldo
                 </a>
                 <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary w-100">

@@ -144,12 +144,46 @@ class ErrorHandler
     }
 
     /**
-     * Tenta persistir no banco de dados quando as migrações estiverem ativas
+     * Tenta persistir no banco de dados na tabela logs_erros (Migration 025)
      */
     private static function tryLogToDatabase(string $errorCode, string $level, \Throwable $exception): void
     {
-        // Se a classe Model/Database existir nas fases subsequentes, registra aqui.
-        // Se falhar, é silenciado pois o logToFile já garantiu a contingência.
+        try {
+            if (!class_exists(\App\Core\Model::class)) {
+                return;
+            }
+            $pdo = \App\Core\Model::getPdo();
+            if (!$pdo) {
+                return;
+            }
+
+            $stmt = $pdo->prepare("
+                INSERT INTO logs_erros (nivel, mensagem, arquivo, linha, stack_trace, url_requisicao, usuario_id, ip_origem, created_at)
+                VALUES (:nivel, :mensagem, :arquivo, :linha, :stack_trace, :url_requisicao, :usuario_id, :ip_origem, NOW())
+            ");
+
+            $nivelDb = (strtolower($level) === 'critical') ? 'critical' : 'error';
+            $msg = "[" . $errorCode . "] " . $exception->getMessage();
+            $file = substr($exception->getFile(), 0, 255);
+            $line = $exception->getLine();
+            $trace = $exception->getTraceAsString();
+            $url = substr($_SERVER['REQUEST_URI'] ?? '/', 0, 255);
+            $user = substr(self::getAuthenticatedUser(), 0, 50);
+            $ip = substr(self::getClientIp(), 0, 45);
+
+            $stmt->execute([
+                ':nivel'          => $nivelDb,
+                ':mensagem'       => $msg,
+                ':arquivo'        => $file,
+                ':linha'          => $line,
+                ':stack_trace'    => $trace,
+                ':url_requisicao' => $url,
+                ':usuario_id'     => $user,
+                ':ip_origem'      => $ip,
+            ]);
+        } catch (\Throwable) {
+            // Se falhar o banco de dados, o logToFile já garantiu a contingência no disco
+        }
     }
 
     /**

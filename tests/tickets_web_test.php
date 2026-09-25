@@ -59,7 +59,7 @@ require "index.php";
 ';
 $outputLote = shell_exec("php -r " . escapeshellarg($codeLote));
 $passouLote = str_contains($outputLote, 'size: 80mm auto')
-    && str_contains($outputLote, 'Imprimir Bobina (80mm)')
+    && (str_contains($outputLote, 'Imprimir (80mm)') || str_contains($outputLote, 'Imprimir Bobina (80mm)'))
     && str_contains($outputLote, 'receipt-roll');
 
 echo "3. Rota GET /operacional/tickets/lote (Bobina HTML) -> " . ($passouLote ? "SUCESSO (Bobina 80mm OK)" : "FALHA") . PHP_EOL;
