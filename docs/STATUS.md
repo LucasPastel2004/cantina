@@ -733,7 +733,9 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Botões de cancelamento/fechamento de modais (`data-bs-dismiss="modal"`, "Cancelar", "Fechar", "Voltar") mantidos em padrão neutro;
   * **Eliminação de Duplicidade em Espelhos HTML:**
     * Removida a barra de ações/botões redundante que aparecia no rodapé após as assinaturas no espelho de fechamento de caixa (`/operacional/caixa/espelho/{id}`), centralizando os botões de retorno, download de PDF e impressão exclusivamente na barra de ferramentas do topo;
-  * Incremento do assetVersion para `5.9.2` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
+  * **Correção de Sobreposição em Campos de Busca com Ícone Interno (`.search-input-wrapper`):**
+    * Criada a classe `.search-input-wrapper` em `assets/css/custom.css` com ícone absoluto (`pointer-events: none`) e `padding-left: 32px !important` no input, eliminando o problema em que o texto digitado colidia por cima da lupa no Extrato do Aluno (`/operacional/extrato-aluno`), Devedores/MED, Cardápio/Produtos e PDV;
+  * Incremento do assetVersion para `5.9.3` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
   * Suíte global de 40 testes automatizados reexecutada e aprovada com 100% de sucesso (`tests/verification_audit.php`).
 
 ---

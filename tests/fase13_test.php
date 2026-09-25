@@ -182,7 +182,7 @@ class Fase13Test
         $catId = $this->obterCategoriaId();
 
         // Cria produto de teste
-        $cod = 'PDV-BLOQ-' . rand(100, 999);
+        $cod = 'PDV-BLOQ-' . bin2hex(random_bytes(4));
         $this->pdo->exec("INSERT INTO produtos (codigo_interno, descricao, categoria_id, tipo, preco_venda, estoque_atual, estoque_minimo, status_pausa, created_at) VALUES ('{$cod}', 'Item Teste Bloq', {$catId}, 'industrializado_continuo', 5.00, 10, 2, 'ativo', NOW())");
         $prodId = (int)$this->pdo->lastInsertId();
 
@@ -274,7 +274,7 @@ class Fase13Test
         $sessaoId = (int)$sessao['id'];
         $pixAntes = (float)$sessao['total_pix_balcao'];
 
-        $cod = 'PDV-PIX-' . rand(100, 999);
+        $cod = 'PDV-PIX-' . bin2hex(random_bytes(4));
         $this->pdo->exec("INSERT INTO produtos (codigo_interno, descricao, categoria_id, tipo, preco_venda, estoque_atual, estoque_minimo, status_pausa, created_at) VALUES ('{$cod}', 'Suco Uva PDV', {$catId}, 'industrializado_continuo', 7.00, 15, 2, 'ativo', NOW())");
         $prodId = (int)$this->pdo->lastInsertId();
 
@@ -304,7 +304,7 @@ class Fase13Test
         $sessaoId = (int)$sessao['id'];
 
         // Cria colaborador
-        $mat = 'COL-' . rand(1000, 9999);
+        $mat = 'COL-' . bin2hex(random_bytes(4));
         $this->pdo->exec("INSERT INTO colaboradores (matricula_funcional, nome, cargo, foto_url, ativo, created_at) VALUES ('{$mat}', 'Prof. Carlos Eduardo', 'Professor de Matemática', 'storage/uploads/public/prof_carlos.jpg', 1, NOW())");
         $colabId = (int)$this->pdo->lastInsertId();
 
@@ -371,7 +371,7 @@ class Fase13Test
         $catId = $this->obterCategoriaId();
 
         // Cria responsável com saldo inicial de R$ 20,00
-        $cpf = sprintf('%011d', rand(10000000000, 99999999999));
+        $cpf = sprintf('%011s', substr(str_shuffle('0123456789' . time()), 0, 11));
         $this->pdo->exec("INSERT INTO responsaveis (nome, cpf, email, whatsapp, senha_hash, saldo_atual, created_at) VALUES ('Mãe Teste Estorno', '{$cpf}', 'mae{$cpf}@teste.com', '11988887777', 'hash', 20.00, NOW())");
         $respId = (int)$this->pdo->lastInsertId();
 
@@ -441,7 +441,7 @@ class Fase13Test
         $catId = $this->obterCategoriaId();
 
         // Cria responsável, aluno, produto e ticket
-        $cpf = sprintf('%011d', rand(10000000000, 99999999999));
+        $cpf = sprintf('%011s', substr(str_shuffle('0123456789' . time()), 0, 11));
         $this->pdo->exec("INSERT INTO responsaveis (nome, cpf, email, whatsapp, senha_hash, saldo_atual, created_at) VALUES ('Pai Sobra Teste', '{$cpf}', 'pai{$cpf}@teste.com', '11977776666', 'hash', 50.00, NOW())");
         $respId = (int)$this->pdo->lastInsertId();
 

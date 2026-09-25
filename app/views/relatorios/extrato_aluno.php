@@ -43,11 +43,11 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                 <label for="inputBuscaAluno" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">
                     Localizar Aluno (Nome ou Matrícula)
                 </label>
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white border-end-0">
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="#64748b"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+                <div class="search-input-wrapper">
+                    <span class="search-icon">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
                     </span>
-                    <input type="text" id="inputBuscaAluno" class="form-control form-control-sm border-start-0" placeholder="Digite para buscar aluno..." autocomplete="off" value="<?php echo htmlspecialchars($aluno['nome'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="text" id="inputBuscaAluno" class="form-control form-control-sm" placeholder="Digite para buscar aluno..." autocomplete="off" value="<?php echo htmlspecialchars($aluno['nome'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     <input type="hidden" name="aluno_id" id="hiddenAlunoId" value="<?php echo (int)($alunoId ?? 0); ?>">
                 </div>
                 <!-- Dropdown de Autocomplete -->

@@ -973,3 +973,12 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Causa: Em `app/services/PdfService.php` no método `gerarEspelhoFechamentoCaixaHtml()`, havia dois blocos `.no-print`: um no topo antes do cabeçalho da folha e outro replicado abaixo da tabela de assinaturas com IDs e links idênticos (`btnVoltarCaixaRodape`).
 - Solução aplicada: Removido o bloco duplicado do rodapé, mantendo uma única barra de ferramentas corporativa, limpa e padronizada no topo do documento.
 - Como evitar no futuro: Manter a barra de ações/impressão exclusivamente no topo de espelhos e comprovantes HTML (`.no-print`), evitando redundâncias no final do documento que poluam a pré-visualização ou causem confusão ao usuário.
+
+---
+
+## 2026-09-25 - Sobreposição de texto digitado com o ícone de lupa no campo de busca de aluno e data-grids
+
+- Sintoma: Ao digitar o nome ou matrícula do aluno no campo de busca de `Extrato Analítico do Aluno` (`/operacional/extrato-aluno`), as primeiras letras digitadas (ex: `luca`) colidiam e ficavam renderizadas exatamente por cima do ícone SVG de lupa, além do anel de foco azul romper o alinhamento visual com a caixa.
+- Causa: O formulário utilizava a estrutura Bootstrap `.input-group` com `<span class="input-group-text bg-white border-end-0">` e `<input class="form-control border-start-0">`. Em conjunto com as propriedades de padding e focus do Design System (`padding: 4px 10px`), os navegadores (especialmente o Firefox) colapsavam o início do texto do input a partir da mesma coordenada horizontal do ícone, provocando sobreposição física das letras sobre a lupa.
+- Solução aplicada: Criada a classe corporativa especializada `.search-input-wrapper` em `assets/css/custom.css`, com posicionamento absoluto do ícone (`pointer-events: none`, `z-index: 4`) e recuo fixo obrigatório no input (`padding-left: 32px !important`), garantindo 9px de respiro entre a lupa e a primeira letra digitada em qualquer resolução ou navegador. A solução foi padronizada em `extrato_aluno.php`, `devedores.php`, `produtos.php` e `pdv.php`.
+- Como evitar no futuro: Evitar o uso de `.input-group` com spans de borda zero para ícones internos em campos de busca; sempre utilizar wrappers relativos com ícone absoluto (`pointer-events: none`) e `padding-left` de segurança calibrado no input.

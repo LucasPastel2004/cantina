@@ -40,16 +40,15 @@ $csrfToken = $csrf_token ?? '';
         <form action="<?php echo $baseUrl; ?>/admin/produtos" method="GET" class="row g-2 align-items-end">
             <div class="col-12 col-md-4">
                 <label for="busca" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Buscar Produto</label>
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: #cbd5e1;">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
                     </span>
-                    <input type="text" class="form-control form-control-sm border-start-0" id="busca" name="busca" 
-                           placeholder="Código interno ou descrição..." value="<?php echo htmlspecialchars($filtros['busca'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                           style="border-color: #cbd5e1;">
+                    <input type="text" class="form-control form-control-sm" id="busca" name="busca" 
+                           placeholder="Código interno ou descrição..." value="<?php echo htmlspecialchars($filtros['busca'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
             <div class="col-6 col-md-2">
