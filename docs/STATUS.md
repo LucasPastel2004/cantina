@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 17 — Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança e Entrega
 * **Status da Fase 17:** Concluída com Sucesso [x]
 * **Status Geral do Projeto:** 17 de 17 Fases Concluídas Integralmente (100% do escopo do FSD e DESIGN.md)
-* **Última Atualização:** 2026-09-25 10:15:00 (Conclusão integral da Fase 17: Central de Relatórios Gerenciais, Extrato Analítico do Aluno em PDF A4 e HTML, Relatório de Vendas por Alimento e Curva ABC, Relatório Mensal de Desconto em Folha para RH em PDF A4 e CSV, Demonstrativo de Fechamento de Caixa, Relatório de Inadimplência/MED, 40 suítes de testes automatizados com 100% de aprovação e auditoria global de segurança)
+* **Última Atualização:** 2026-09-25 10:20:00 (Conclusão integral da Fase 17: Central de Relatórios Gerenciais, Extrato Analítico do Aluno em PDF A4 e HTML, Relatório de Vendas por Alimento e Curva ABC, Relatório Mensal de Desconto em Folha para RH em PDF A4 e CSV, Demonstrativo de Fechamento de Caixa, Relatório de Inadimplência/MED; Correção global de todos os relatórios PDF eliminando 'Unidade Escolar', ajustando paginação 'Pagina X de Y' e espaçamento de totais; 40 suítes de testes automatizados com 100% de aprovação e auditoria global de segurança)
 
 ---
 
@@ -681,13 +681,12 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Conversão dos botões de ação dos cards e dos botões primários de exportação para azul royal institucional (`.btn.btn-enterprise.btn-primary`), alinhados à paleta da marca e logotipo do colégio, mantendo todos os badges e chips de status em cinza neutro soberbo (`.code-tag font-tabular`);
   * Aplicação de respiro inferior amplo nos contêineres de relatórios (`pb-5` / 48px) evitando proximidade ou colisão com o rodapé da página;
   * Incremento da versão de cache dos assets para `5.8.5` em `app/core/Controller.php` e `app/views/layouts/admin.php`;
-* [x] **Correção de Layout, Alinhamento de Colunas e Encoding do PDF de Vendas por Alimento:**
-  * Eliminação de 100% dos caracteres corrompidos/mojibake em cabeçalho, filtros e stat-strip em `PdfService::gerarRelatorioVendasAlimentoPdf`;
-  * Redesenho da grade matemática da tabela com delimitação de 13 caracteres para código interno e posicionamento da descrição a 70 pt de distância, eliminando sobreposições;
-  * Correção da chave associativa de participação percentual (`participacao_percentual`), exibindo valores calculados reais da Curva ABC em vez de 0,0%;
-  * Alinhamento da Curva ABC e totalizadores dentro da margem útil de 523.28 pt do formato A4;
-  * Higienização idêntica aplicada ao relatório PDF de Desconto em Folha para RH;
-  * Revalidação integral da suíte de 40 testes automatizados com 100% de aprovação.
+* [x] **Correção Global de Relatórios PDF (Unidade Escolar, Paginação e Totais):**
+  * Remoção definitiva do texto `Unidade Escolar Única` / `Unidade Escolar Unica` de todos os cabeçalhos de relatórios PDF e espelhos HTML do sistema (`gerarRelatorioNegativadosMedPdf`, `gerarExtratoConsumoAlunoPdf`, `gerarEspelhoExtratoConsumoAlunoHtml`, `gerarRelatorioVendasAlimentoPdf`);
+  * Correção definitiva da numeração de páginas em relatórios multi-páginas através do uso de marcadores neutros `__PAG_NUM__` e `__PAG_TOT__` imunes ao escape de `sprintf` e substituição com suporte a variantes no `PdfService`, eliminando o defeito visual de texto truncado `Pagina %PAGE_NUM% de %PA` e exibindo perfeitamente `Pagina X de Y`;
+  * Ajuste de espaçamento visual na linha de totais consolidados no relatório de Vendas por Alimento, com Preço Médio ancorado em $X = 415.0$ e Faturamento Total em $X = 496.0$, garantindo mais de 23 pontos de respiro entre os números e impedindo qualquer colisão;
+  * Alinhamento estrito e respiro mínimo de 35 pontos nas colunas do relatório contábil de Desconto em Folha para RH;
+  * Auditoria global com 40 de 40 suítes de testes automatizados aprovadas com 100% de sucesso (`tests/verification_audit.php`).
 
 ---
 

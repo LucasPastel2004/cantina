@@ -3238,7 +3238,7 @@ class PdfService
 
         $stream .= "BT\n/F1 7.5 Tf\n0.28 0.33 0.41 rg\n";
         $stream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 31.0);
-        $stream .= sprintf("(Emitido em: %s | Operador: %s | Unidade Escolar Unica) Tj\nET\n", $emissao, self::escapeText(substr($operador, 0, 30)));
+        $stream .= sprintf("(Emitido em: %s | Operador: %s) Tj\nET\n", $emissao, self::escapeText(substr($operador, 0, 30)));
 
         $y -= 65.0;
 
@@ -3401,8 +3401,8 @@ class PdfService
         $stream .= sprintf("(COLEGIO MONTEIRO LOBATO - Valores para o Futuro! | Sistema de Gestao de Cantina Escolar) Tj\nET\n");
 
         $stream .= "BT\n/F2 7 Tf\n0.11 0.31 0.85 rg\n";
-        $stream .= sprintf("%.2f %.2f Td\n", $right - 105.0, $yRodape);
-        $stream .= sprintf("(Documento Oficial A4) Tj\nET\n");
+        $stream .= sprintf("%.2f %.2f Td\n", $right - 70.0, $yRodape);
+        $stream .= sprintf("(Pagina 1 de 1) Tj\nET\n");
 
         return self::montarPdfEstruturado($stream, self::PAGE_WIDTH, self::PAGE_HEIGHT);
     }
@@ -3461,15 +3461,16 @@ class PdfService
                 $textLeft = $left + 62.0;
                 $currentStream .= "BT\n/F2 13 Tf\n0.06 0.09 0.16 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 2.0);
-                $currentStream .= sprintf("(COLÉGIO MONTEIRO LOBATO — CANTINA ESCOLAR) Tj\nET\n");
+                $currentStream .= "(COLEGIO MONTEIRO LOBATO - CANTINA ESCOLAR) Tj\nET\n";
 
                 $currentStream .= "BT\n/F2 10.5 Tf\n0.11 0.31 0.85 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 17.0);
-                $currentStream .= sprintf("(EXTRATO ANALÍTICO DE CONSUMO DO ALUNO) Tj\nET\n");
+                $currentStream .= "(EXTRATO ANALITICO DE CONSUMO DO ALUNO) Tj\nET\n";
 
                 $currentStream .= "BT\n/F1 7.5 Tf\n0.28 0.33 0.41 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 31.0);
-                $currentStream .= sprintf("(Emitido em: %s | Atendente: %s | Unidade Escolar Única) Tj\nET\n", $emissao, self::escapeText(substr($operador, 0, 30)));
+                $operadorLimpo = self::removerAcentos($operador);
+                $currentStream .= sprintf("(Emitido em: %s | Atendente: %s) Tj\nET\n", $emissao, self::escapeText(substr($operadorLimpo, 0, 30)));
 
                 $y -= 62.0;
 
@@ -3607,11 +3608,11 @@ class PdfService
 
             $currentStream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n";
             $currentStream .= sprintf("%.2f %.2f Td\n", $left, $yRodape);
-            $currentStream .= sprintf("(Cantina Web — Colégio Monteiro Lobato  •  Documento oficial emitido eletronicamente para fins de prestação de contas.) Tj\nET\n");
+            $currentStream .= sprintf("(Cantina Web - Colegio Monteiro Lobato  |  Documento oficial emitido eletronicamente para fins de prestacao de contas) Tj\nET\n");
 
             $currentStream .= "BT\n/F2 7 Tf\n0.11 0.31 0.85 rg\n";
-            $currentStream .= sprintf("%.2f %.2f Td\n", $right - 70.0, $yRodape);
-            $currentStream .= sprintf("(Página %%PAGE_NUM%% de %%PAGE_TOTAL%%) Tj\nET\n");
+            $currentStream .= sprintf("%.2f %.2f Td\n", $right - 75.0, $yRodape);
+            $currentStream .= "(Pagina __PAG_NUM__ de __PAG_TOT__) Tj\nET\n";
 
             $pages[] = $currentStream;
         };
@@ -3874,8 +3875,8 @@ class PdfService
         foreach ($pages as $idx => $stream) {
             $pageNum = $idx + 1;
             $stream = str_replace(
-                ['%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
-                [(string)$pageNum, (string)$totalPaginas],
+                ['__PAG_NUM__', '__PAG_TOT__', '%PAGE_NUM%', '%PAGE_TOTAL%', '%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
+                [(string)$pageNum, (string)$totalPaginas, (string)$pageNum, (string)$totalPaginas, (string)$pageNum, (string)$totalPaginas],
                 $stream
             );
             $finalStreams[] = $stream;
@@ -4062,7 +4063,7 @@ class PdfService
                     <h1 style="font-size: 16px; margin: 0 0 2px 0; font-weight: 700;">COLÉGIO MONTEIRO LOBATO — CANTINA ESCOLAR</h1>
                     <div style="font-size: 12px; font-weight: 600; color: #1d4ed8;">EXTRATO ANALÍTICO DE CONSUMO DO ALUNO</div>
                     <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
-                        Emitido em: <?php echo $emissao; ?> • Atendente: <?php echo htmlspecialchars($operador); ?> • Unidade Escolar Única
+                        Emitido em: <?php echo $emissao; ?> • Atendente: <?php echo htmlspecialchars($operador); ?>
                     </div>
                 </div>
             </div>
@@ -4262,7 +4263,7 @@ class PdfService
 
                 $currentStream .= "BT\n/F1 7.5 Tf\n0.28 0.33 0.41 rg\n";
                 $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 31.0);
-                $currentStream .= sprintf("(Emitido em: %s | Operador: %s | Unidade Escolar Unica) Tj\nET\n", $emissao, self::escapeText(substr($operadorLimpo, 0, 30)));
+                $currentStream .= sprintf("(Emitido em: %s | Operador: %s) Tj\nET\n", $emissao, self::escapeText(substr($operadorLimpo, 0, 30)));
 
                 $y -= 62.0;
 
@@ -4369,21 +4370,21 @@ class PdfService
             $currentStream .= sprintf("(Cantina Web - Colegio Monteiro Lobato  |  Relatorio Gerencial de Vendas e Curva ABC) Tj\nET\n");
 
             $currentStream .= "BT\n/F2 7 Tf\n0.11 0.31 0.85 rg\n";
-            $currentStream .= sprintf("%.2f %.2f Td\n", $right - 70.0, $yRodape);
-            $currentStream .= sprintf("(Pagina %%PAGE_NUM%% de %%PAGE_TOTAL%%) Tj\nET\n");
+            $currentStream .= sprintf("%.2f %.2f Td\n", $right - 75.0, $yRodape);
+            $currentStream .= "(Pagina __PAG_NUM__ de __PAG_TOT__) Tj\nET\n";
 
             $pages[] = $currentStream;
         };
 
         // Definição precisa das colunas dentro de 523.28 pt de largura (left=36.0, right=559.28)
-        $cCodX   = 42.0;  // Código (max 13 chars, de 42 até ~104)
-        $cDescX  = 112.0; // Alimento / Produto (max 26 chars, de 112 até ~236)
-        $cCatX   = 260.0; // Categoria (max 16 chars, de 260 até ~336)
-        $cQtdR   = 384.0; // Qtd (alinhado à direita em 384)
-        $cMedR   = 438.0; // Preço Médio (alinhado à direita em 438)
-        $cTotR   = 494.0; // Faturamento Total (alinhado à direita em 494)
-        $cPartR  = 534.0; // Part. % (alinhado à direita em 534)
-        $cAbcC   = 546.0; // Curva ABC (centralizado em 546)
+        $cCodX   = 40.0;  // Código (max 13 chars, de 40 até ~102)
+        $cDescX  = 108.0; // Alimento / Produto (max 26 chars, de 108 até ~232)
+        $cCatX   = 246.0; // Categoria (max 16 chars, de 246 até ~320)
+        $cQtdR   = 360.0; // Qtd (alinhado à direita em 360.0)
+        $cMedR   = 415.0; // Preço Médio (alinhado à direita em 415.0)
+        $cTotR   = 496.0; // Faturamento Total (alinhado à direita em 496.0 - 81pt após Preço Médio!)
+        $cPartR  = 536.0; // Part. % (alinhado à direita em 536.0)
+        $cAbcC   = 550.0; // Curva ABC (centralizado em 550.0)
 
         $imprimirCabecalhoTabela = function() use (&$currentStream, &$y, $left, $right, $width, $cCodX, $cDescX, $cCatX, $cQtdR, $cMedR, $cTotR, $cPartR, $cAbcC) {
             $thH = 17.0;
@@ -4405,7 +4406,7 @@ class PdfService
             $currentStream .= "(CATEGORIA) Tj\nET\n";
 
             $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
-            $currentStream .= sprintf("%.2f %.2f Td\n", $cQtdR - 22.0, $y - 11.5);
+            $currentStream .= sprintf("%.2f %.2f Td\n", $cQtdR - 20.0, $y - 11.5);
             $currentStream .= "(QTD) Tj\nET\n";
 
             $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
@@ -4524,17 +4525,17 @@ class PdfService
 
             $tQtdStr = $qtdTotal . " un";
             $currentStream .= "BT\n/F2 8 Tf\n0.10 0.12 0.18 rg\n";
-            $currentStream .= sprintf("%.2f %.2f Td\n", $cQtdR - (strlen($tQtdStr) * 5.0), $y - 12.0);
+            $currentStream .= sprintf("%.2f %.2f Td\n", $cQtdR - (strlen($tQtdStr) * 4.8), $y - 12.0);
             $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tQtdStr));
 
             $tMedStr = "R$ " . number_format($ticketMedio, 2, ',', '.');
             $currentStream .= "BT\n/F2 8 Tf\n0.10 0.12 0.18 rg\n";
-            $currentStream .= sprintf("%.2f %.2f Td\n", $cMedR - (strlen($tMedStr) * 5.0), $y - 12.0);
+            $currentStream .= sprintf("%.2f %.2f Td\n", $cMedR - (strlen($tMedStr) * 4.8), $y - 12.0);
             $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tMedStr));
 
             $tTotStr = "R$ " . number_format($fatTotal, 2, ',', '.');
             $currentStream .= "BT\n/F2 9 Tf\n0.11 0.31 0.85 rg\n";
-            $currentStream .= sprintf("%.2f %.2f Td\n", $cTotR - (strlen($tTotStr) * 5.6), $y - 12.5);
+            $currentStream .= sprintf("%.2f %.2f Td\n", $cTotR - (strlen($tTotStr) * 5.4), $y - 12.5);
             $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tTotStr));
 
             $currentStream .= "BT\n/F2 8 Tf\n0.25 0.30 0.40 rg\n";
@@ -4551,8 +4552,8 @@ class PdfService
         foreach ($pages as $idx => $stream) {
             $pageNum = $idx + 1;
             $stream = str_replace(
-                ['%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
-                [(string)$pageNum, (string)$totalPaginas],
+                ['__PAG_NUM__', '__PAG_TOT__', '%PAGE_NUM%', '%PAGE_TOTAL%', '%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
+                [(string)$pageNum, (string)$totalPaginas, (string)$pageNum, (string)$totalPaginas, (string)$pageNum, (string)$totalPaginas],
                 $stream
             );
             $finalStreams[] = $stream;
@@ -4693,7 +4694,7 @@ class PdfService
 
             $currentStream .= "BT\n/F2 7 Tf\n0.11 0.31 0.85 rg\n";
             $currentStream .= sprintf("%.2f %.2f Td\n", $right - 70.0, $yRodape);
-            $currentStream .= sprintf("(Pagina %%PAGE_NUM%% de %%PAGE_TOTAL%%) Tj\nET\n");
+            $currentStream .= sprintf("(Pagina __PAG_NUM__ de __PAG_TOT__) Tj\nET\n");
 
             $pages[] = $currentStream;
         };
@@ -4705,11 +4706,11 @@ class PdfService
             $currentStream .= "0.80 0.83 0.88 RG\n0.75 w\n";
             $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $thH, $width, $thH);
 
-            $c1 = $left + 6.0;   // Matrícula (80 pt)
-            $c2 = $left + 90.0;  // Nome (190 pt)
-            $c3 = $left + 285.0; // Cargo (120 pt)
-            $c4 = $left + 410.0; // Lanches (50 pt, right)
-            $c5 = $right - 8.0;  // Valor (alinhado à direita)
+            $c1 = $left + 6.0;   // Matrícula (x = 42.0)
+            $c2 = $left + 80.0;  // Nome (x = 116.0)
+            $c3 = $left + 270.0; // Cargo (x = 306.0)
+            $c4 = $left + 420.0; // Lanches (alinhado à direita, x = 456.0)
+            $c5 = $right - 8.0;  // Valor (alinhado à direita, x = 551.28)
 
             $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
             $currentStream .= sprintf("%.2f %.2f Td\n", $c1, $y - 11.5);
@@ -4724,11 +4725,11 @@ class PdfService
             $currentStream .= "(CARGO / FUNCAO) Tj\nET\n";
 
             $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
-            $currentStream .= sprintf("%.2f %.2f Td\n", $c4 - 5.0, $y - 11.5);
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c4 - 38.0, $y - 11.5);
             $currentStream .= "(LANCHES) Tj\nET\n";
 
             $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
-            $currentStream .= sprintf("%.2f %.2f Td\n", $c5 - 65.0, $y - 11.5);
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c5 - 82.0, $y - 11.5);
             $currentStream .= "(VALOR A DESCONTAR) Tj\nET\n";
 
             $y -= $thH;
@@ -4738,9 +4739,9 @@ class PdfService
         $imprimirCabecalhoTabela();
 
         $c1 = $left + 6.0;
-        $c2 = $left + 90.0;
-        $c3 = $left + 285.0;
-        $c4 = $left + 450.0; // right
+        $c2 = $left + 80.0;
+        $c3 = $left + 270.0;
+        $c4 = $left + 420.0; // right
         $c5 = $right - 8.0;  // right
 
         if (empty($colaboradores)) {
@@ -4855,8 +4856,8 @@ class PdfService
         foreach ($pages as $idx => $stream) {
             $pageNum = $idx + 1;
             $stream = str_replace(
-                ['%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
-                [(string)$pageNum, (string)$totalPaginas],
+                ['__PAG_NUM__', '__PAG_TOT__', '%PAGE_NUM%', '%PAGE_TOTAL%', '%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
+                [(string)$pageNum, (string)$totalPaginas, (string)$pageNum, (string)$totalPaginas, (string)$pageNum, (string)$totalPaginas],
                 $stream
             );
             $finalStreams[] = $stream;

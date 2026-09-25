@@ -936,3 +936,22 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. Limpeza preventiva de caracteres acentuados também aplicada ao relatório PDF de Desconto em Folha para RH.
   6. Revalidação integral da suíte de testes automatizados (`tests/verification_audit.php`): 40 de 40 suítes aprovadas com 100% de sucesso.
 - Como evitar no futuro: Em documentos PDF Type1 Helvetica puros, sempre sanitizar textos para ASCII com `removerAcentos()`; dimensionar colunas somando as larguras máximas projetadas para garantir gaps positivos entre vizinhos; e assegurar uniformidade nos nomes de atributos entre o Controller e a camada de renderização PDF.
+---
+
+## 2026-09-25 - Remoção de 'Unidade Escolar Única', correção da paginação multi-páginas e espaçamento nos totais de todos os relatórios PDF
+
+- Sintoma: Nos relatórios gerenciais e operacionais gerados em PDF e espelhos HTML pelo sistema:
+  1. O termo ` | Unidade Escolar Única` / ` | Unidade Escolar Unica` aparecia indevidamente nos cabeçalhos;
+  2. Em documentos com múltiplas páginas (como Vendas por Alimento, Extrato do Aluno e Desconto em Folha), a numeração de páginas quebrava no rodapé exibindo o marcador cru truncado `Pagina %PAGE_NUM% de %PA` em vez do número correto de páginas (`Pagina 1 de 5`);
+  3. Na linha de totais consolidados no período do relatório de Vendas por Alimento, os valores de Preço Médio e Faturamento Total estavam fisicamente colados (`R$ 6,88 R$ 2.332,50`).
+- Causa:
+  1. A expressão estática constava nos cabeçalhos de metadados em `app/services/PdfService.php`.
+  2. As rotinas de fechamento de página utilizavam `sprintf("(Pagina %%PAGE_NUM%% de %%PAGE_TOTAL%%) Tj\nET\n")`, onde o especificador `%%` era convertido internamente pelo `sprintf` para `%`, gravando `%PAGE_NUM%` no stream PDF da página. Na etapa de substituição pós-processamento, o `str_replace` procurava pelo literal `%%PAGE_NUM%%`, não encontrando correspondência e mantendo a tag intacta no PDF. Devido ao tamanho da tag (11 caracteres), o texto excedia a margem direita e era cortado visualmente pelo limite da página.
+  3. A coordenada X de ancoragem da coluna Faturamento Total ($494.0$) em relação à coluna Preço Médio ($438.0$) era insuficiente para acomodar a largura da string monetária em negrito de 9pt, gerando sobreposição gráfica de 5.6 pontos.
+- Solução aplicada:
+  1. Removida a expressão `Unidade Escolar Única` de todos os relatórios PDF e espelhos HTML (`gerarRelatorioNegativadosMedPdf`, `gerarExtratoConsumoAlunoPdf`, `gerarEspelhoExtratoConsumoAlunoHtml`, `gerarRelatorioVendasAlimentoPdf`).
+  2. Adotados marcadores neutros imunes a escape em `sprintf` (`__PAG_NUM__` e `__PAG_TOT__`) e implementada substituição defensiva cobrindo todas as variações (`['__PAG_NUM__', '__PAG_TOT__', '%PAGE_NUM%', '%PAGE_TOTAL%', '%%PAGE_NUM%%', '%%PAGE_TOTAL%%']`) em todos os relatórios multi-páginas, garantindo a renderização impecável de `Pagina X de Y` e `Pagina 1 de 1`.
+  3. Redesenhadas as coordenadas das colunas de totais em `gerarRelatorioVendasAlimentoPdf`: Preço Médio ancorado em $X = 415.0$ e Faturamento Total em $X = 496.0$, assegurando um respiro positivo e confortável de mais de 23 pontos entre os valores.
+  4. Padronizadas as colunas do relatório de Desconto em Folha para RH, garantindo respiro mínimo de 35 pontos entre Lanches e Valor a Descontar.
+  5. Suíte de testes automatizados e auditoria global (`tests/verification_audit.php`) executada com 100% de sucesso (40 de 40 suítes verdes).
+- Como evitar no futuro: Em templates construídos com concatenação e `sprintf`, utilizar delimitadores neutros (como `__TAG__`) que não colidam com os especificadores de formato do interpretador, ou mapear todas as variantes possíveis no `str_replace`; e manter distâncias mínimas de segurança entre colunas numéricas de valores monetários.
