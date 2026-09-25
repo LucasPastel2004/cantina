@@ -47,7 +47,7 @@ $csrfToken = $csrf_token ?? '';
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
                     </span>
-                    <input type="text" class="form-control form-control-sm" id="busca" name="busca" 
+                    <input type="text" class="form-control form-control-sm" style="padding-left: 46px !important;" id="busca" name="busca" 
                            placeholder="Código interno ou descrição..." value="<?php echo htmlspecialchars($filtros['busca'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>

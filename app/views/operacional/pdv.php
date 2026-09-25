@@ -629,7 +629,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                         <span class="search-icon">
                             <svg width="13" height="13" viewBox="0 0 16 16" fill="#64748b"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>
                         </span>
-                        <input type="text" id="pdvBuscaInput" class="form-control form-control-sm" placeholder="Buscar produto... (F3)" autocomplete="off" oninput="filtrarTexto(this.value)">
+                        <input type="text" id="pdvBuscaInput" class="form-control form-control-sm" style="padding-left: 46px !important;" placeholder="Buscar produto... (F3)" autocomplete="off" oninput="filtrarTexto(this.value)">
                     </div>
                 </div>
             </div>

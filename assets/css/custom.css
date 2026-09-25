@@ -446,20 +446,22 @@ textarea.form-control {
 
 .search-input-wrapper .search-icon {
   position: absolute;
-  left: 10px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary, #64748b);
   pointer-events: none;
   z-index: 4;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
 }
 
-.search-input-wrapper .form-control {
-  padding-left: 32px !important;
+.search-input-wrapper .form-control,
+.search-input-wrapper input.form-control,
+.search-input-wrapper .form-control-sm {
+  padding-left: 46px !important;
   width: 100%;
 }
 
