@@ -12,6 +12,8 @@ $baseUrl = $baseUrl ?? '';
 $aluno = $dadosExtrato['aluno'] ?? null;
 ?>
 
+<div class="container-fluid px-0" style="max-width: 1400px; margin: 0 auto;">
+
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h1 class="h5 font-weight-bold text-dark mb-1">Extrato Analítico do Aluno</h1>
@@ -25,7 +27,7 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
                 Imprimir Extrato
             </a>
-            <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno/pdf?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Extrato em PDF A4 Timbrado Oficial">
+            <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno/pdf?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Extrato em PDF A4 Timbrado Oficial">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
                 Exportar PDF (A4)
             </a>
@@ -63,7 +65,7 @@ $aluno = $dadosExtrato['aluno'] ?? null;
             </div>
 
             <div class="col-12 col-md-1 d-flex">
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100">
+                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm w-100">
                     Filtrar
                 </button>
             </div>
@@ -79,17 +81,17 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                 <?php if (!empty($aluno['foto_url'])): ?>
                     <img src="<?php echo htmlspecialchars($aluno['foto_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="Foto do aluno" class="rounded-circle border" style="width: 52px; height: 52px; object-fit: cover;">
                 <?php else: ?>
-                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-primary font-weight-bold font-tabular" style="width: 52px; height: 52px; font-size: 18px;">
+                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-secondary font-weight-bold font-tabular" style="width: 52px; height: 52px; font-size: 18px;">
                         <?php echo htmlspecialchars(strtoupper(substr($aluno['nome'] ?? 'A', 0, 1)), ENT_QUOTES, 'UTF-8'); ?>
                     </div>
                 <?php endif; ?>
                 <div>
                     <div class="d-flex align-items-center gap-2">
                         <h2 class="h6 font-weight-bold text-dark mb-0"><?php echo htmlspecialchars($aluno['nome'], ENT_QUOTES, 'UTF-8'); ?></h2>
-                        <span class="badge bg-light text-secondary border font-tabular" style="font-size: 11px;">
+                        <span class="code-tag font-tabular" style="font-size: 11px;">
                             Matrícula: <?php echo htmlspecialchars($aluno['matricula'], ENT_QUOTES, 'UTF-8'); ?>
                         </span>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 11px;">
+                        <span class="code-tag font-tabular" style="font-size: 11px;">
                             <?php echo htmlspecialchars(($aluno['serie'] ?? '') . ' ' . ($aluno['nome_turma'] ?? ''), ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars(ucfirst($aluno['turno'] ?? 'matutino'), ENT_QUOTES, 'UTF-8'); ?>)
                         </span>
                     </div>
@@ -101,7 +103,7 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                     </div>
                     <?php if (!empty($aluno['alergenos_resumo'])): ?>
                         <div class="mt-1 d-flex align-items-center gap-1.5">
-                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="font-size: 10px;">
+                            <span class="code-tag font-tabular" style="font-size: 10px;">
                                 Restrições / Alérgenos: <?php echo htmlspecialchars($aluno['alergenos_resumo'], ENT_QUOTES, 'UTF-8'); ?>
                             </span>
                         </div>
@@ -111,7 +113,7 @@ $aluno = $dadosExtrato['aluno'] ?? null;
 
             <div class="text-end">
                 <span class="text-microcopy text-uppercase font-weight-bold text-secondary d-block">Saldo Atual da Carteira</span>
-                <span class="font-tabular h5 font-weight-bold <?php echo ($dadosExtrato['saldo_atual'] < 0) ? 'text-danger' : 'text-primary'; ?> mb-0">
+                <span class="font-tabular h5 font-weight-bold <?php echo ($dadosExtrato['saldo_atual'] < 0) ? 'text-danger' : 'text-dark'; ?> mb-0">
                     R$ <?php echo number_format($dadosExtrato['saldo_atual'], 2, ',', '.'); ?>
                 </span>
                 <span class="text-microcopy text-secondary d-block">Compartilhado entre dependentes</span>
@@ -196,11 +198,11 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                                 </td>
                                 <td>
                                     <?php if ($r['tipo_transacao'] === 'recarga_pix'): ?>
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Recarga Pix Dinâmico</span>
+                                        <span class="code-tag font-tabular">Recarga Pix Dinâmico</span>
                                     <?php elseif ($r['tipo_transacao'] === 'recarga_dinheiro'): ?>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Recarga Dinheiro Balcão</span>
+                                        <span class="code-tag font-tabular">Recarga Dinheiro Balcão</span>
                                     <?php else: ?>
-                                        <span class="badge bg-light text-secondary border"><?php echo htmlspecialchars($r['tipo_transacao'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <span class="code-tag font-tabular"><?php echo htmlspecialchars($r['tipo_transacao'], ENT_QUOTES, 'UTF-8'); ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -260,11 +262,11 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                                 </td>
                                 <td>
                                     <?php if ($c['canal'] === 'Agendamento Online'): ?>
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                        <span class="code-tag font-tabular">
                                             Online #PED-<?php echo (int)$c['referencia_id']; ?>
                                         </span>
                                     <?php else: ?>
-                                        <span class="badge bg-light text-dark border">
+                                        <span class="code-tag font-tabular">
                                             Balcão #VND-<?php echo (int)$c['referencia_id']; ?>
                                         </span>
                                     <?php endif; ?>
@@ -289,7 +291,7 @@ $aluno = $dadosExtrato['aluno'] ?? null;
                 </tbody>
                 <tfoot>
                     <tr class="table-active font-weight-bold">
-                        <td colspan="5" class="text-end text-primary text-uppercase font-tabular">
+                        <td colspan="5" class="text-end text-dark text-uppercase font-tabular">
                             Total Consumido no Período:
                         </td>
                         <td class="text-end font-tabular text-dark" style="font-size: 14px;">
@@ -318,6 +320,8 @@ $aluno = $dadosExtrato['aluno'] ?? null;
         </div>
     </div>
 <?php endif; ?>
+
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -353,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <div class="font-weight-bold text-dark" style="font-size: 13px;">${aluno.nome}</div>
                                         <div class="text-secondary text-microcopy font-tabular">Matrícula: ${aluno.matricula} • ${aluno.turma} (${aluno.turno})</div>
                                     </div>
-                                    <span class="badge bg-light text-primary border font-tabular">${aluno.saldo_fmt}</span>
+                                    <span class="code-tag font-tabular">${aluno.saldo_fmt}</span>
                                 `;
                                 item.addEventListener('click', function(e) {
                                     e.preventDefault();

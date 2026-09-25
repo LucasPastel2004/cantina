@@ -301,7 +301,7 @@ input[type="number"].text-end {
 .stat-strip-item,
 .stat-strip .stat-item {
   flex: 1;
-  padding: 10px 16px;
+  padding: 14px 20px;
   border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
@@ -1151,7 +1151,7 @@ textarea.form-control {
 
 .app-topbar {
   height: 54px;
-  padding: 0 20px;
+  padding: 0 32px;
   background-color: #ffffff; /* Revertido para branco puro conforme solicitação */
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
@@ -1237,15 +1237,16 @@ textarea.form-control {
 
 .app-page-content {
   flex: 1;
-  padding: 20px;
+  padding: 24px 32px;
   width: 100%;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 .app-admin-footer {
   border-top: 1px solid var(--border-subtle);
   background-color: #ffffff;
-  padding: 10px 0;
+  padding: 12px 32px;
 }
 
 /* Offcanvas Sidebar Mobile */

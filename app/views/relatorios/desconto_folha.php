@@ -13,6 +13,8 @@ $colaboradores = $dadosFolha['colaboradores'] ?? [];
 $competenciaChave = $dadosFolha['competencia_chave'] ?? $competencia;
 ?>
 
+<div class="container-fluid px-0" style="max-width: 1400px; margin: 0 auto;">
+
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h1 class="h5 font-weight-bold text-dark mb-1">Desconto em Folha para Recursos Humanos</h1>
@@ -21,11 +23,11 @@ $competenciaChave = $dadosFolha['competencia_chave'] ?? $competencia;
         </p>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/csv?competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-enterprise btn-success btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Arquivo CSV Formatado para Sistemas de Folha / Excel">
+        <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/csv?competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Arquivo CSV Formatado para Sistemas de Folha / Excel">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
             Exportar CSV para Folha
         </a>
-        <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/pdf?competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Relatório Oficial com Vistos de Assinatura em PDF A4 Timbrado">
+        <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/pdf?competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Relatório Oficial com Vistos de Assinatura em PDF A4 Timbrado">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>
             Exportar PDF (A4 Timbrado)
         </a>
@@ -44,7 +46,7 @@ $competenciaChave = $dadosFolha['competencia_chave'] ?? $competencia;
             </div>
 
             <div class="col-12 col-md-2 d-flex">
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100">
+                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm w-100">
                     Carregar Mês
                 </button>
             </div>
@@ -164,13 +166,13 @@ $competenciaChave = $dadosFolha['competencia_chave'] ?? $competencia;
             </tbody>
             <tfoot>
                 <tr class="table-active font-weight-bold">
-                    <td colspan="3" class="text-end text-primary text-uppercase font-tabular">
+                    <td colspan="3" class="text-end text-dark text-uppercase font-tabular">
                         Montante Total a Descontar em Folha:
                     </td>
                     <td class="text-end font-tabular text-dark">
                         <?php echo number_format((int)($dadosFolha['total_lanches'] ?? 0), 0, ',', '.'); ?> un
                     </td>
-                    <td class="text-end font-tabular text-primary" style="font-size: 15px;">
+                    <td class="text-end font-tabular text-dark" style="font-size: 15px;">
                         R$ <?php echo number_format((float)($dadosFolha['total_desconto'] ?? 0.0), 2, ',', '.'); ?>
                     </td>
                     <td></td>
@@ -178,6 +180,8 @@ $competenciaChave = $dadosFolha['competencia_chave'] ?? $competencia;
             </tfoot>
         </table>
     </div>
+</div>
+
 </div>
 
 <!-- Modal: Detalhamento Individual de Compras do Colaborador -->
@@ -259,7 +263,7 @@ function abrirModalDetalhes(colaboradorId) {
                 html += `
                     <tr>
                         <td class="font-tabular font-weight-bold text-dark">${v.data_fmt}</td>
-                        <td><span class="badge bg-light text-secondary border font-tabular">${v.turno}</span></td>
+                        <td><span class="code-tag font-tabular">${v.turno}</span></td>
                         <td>
                             <div class="text-dark font-weight-bold" style="font-size: 13px;">${itensStr}</div>
                             <div class="text-secondary text-microcopy font-tabular">Venda PDV #${v.venda_id}</div>

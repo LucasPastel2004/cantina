@@ -669,6 +669,12 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * 143 rotas no `Router` verificadas e vinculadas a métodos válidos;
     * Prepared Statements estritos em 100% das consultas SQL;
     * 40 de 40 suítes de testes automatizados aprovadas com 100% de sucesso.
+* [x] **Refatoração Taste Design & Eliminação de Badges Coloridos (Hub e Telas de Relatórios):**
+  * Envolvimento de todas as 6 views de relatórios (`index.php`, `vendas_alimento.php`, `extrato_aluno.php`, `devedores.php`, `desconto_folha.php`, `fechamento_caixa.php`) em contêineres responsivos com contenção equilibrada (`max-width: 1400px; margin: 0 auto;`), eliminando estiramento visual de ponta a ponta em monitores widescreen com a barra lateral recolhida;
+  * Ampliação do espaçamento e respiro visual em `assets/css/custom.css` (`.app-page-content` para padding `24px 32px`, `.app-topbar` para `0 32px`, `.app-admin-footer` para `12px 32px` e `.stat-strip .stat-item` para `14px 20px`);
+  * Eliminação completa de badges coloridos (vermelho, verde e azul) em todas as telas de relatórios, substituindo-os pelo componente corporativo neutro `.code-tag font-tabular` (fundo cinza `#f1f5f9`, borda `#cbd5e1` e texto `#334155`);
+  * Conversão de botões de ação e filtros para o padrão corporativo neutro `.btn.btn-enterprise.btn-secondary`, em conformidade com as diretrizes do `AGENTS.md` e do Design System;
+  * Invalidação de cache nos navegadores através da atualização da versão de assets para `5.8.0`.
 
 ---
 

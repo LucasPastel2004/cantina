@@ -11,6 +11,8 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 $baseUrl = $baseUrl ?? '';
 ?>
 
+<div class="container-fluid px-0" style="max-width: 1400px; margin: 0 auto;">
+
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h1 class="h5 font-weight-bold text-dark mb-1">Demonstrativo de Fechamento de Caixa</h1>
@@ -50,7 +52,7 @@ $baseUrl = $baseUrl ?? '';
             </div>
 
             <div class="col-12 col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-fill">
+                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-fill">
                     Filtrar
                 </button>
                 <a href="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
@@ -163,7 +165,7 @@ $baseUrl = $baseUrl ?? '';
                             <td class="text-end font-tabular text-dark">
                                 R$ <?php echo number_format((float)($s['total_pix_balcao'] ?? 0.0), 2, ',', '.'); ?>
                             </td>
-                            <td class="text-end font-tabular font-weight-bold text-primary">
+                            <td class="text-end font-tabular font-weight-bold text-dark">
                                 R$ <?php echo number_format((float)(($s['total_dinheiro_recargas'] ?? 0.0) + ($s['total_dinheiro_avulso'] ?? 0.0) + ($s['total_pix_balcao'] ?? 0.0)), 2, ',', '.'); ?>
                             </td>
                             <td class="text-end font-tabular font-weight-bold <?php echo ((float)($s['diferenca_quebra_sobra'] ?? 0.0) < 0) ? 'text-danger' : (((float)($s['diferenca_quebra_sobra'] ?? 0.0) > 0) ? 'text-success' : 'text-secondary'); ?>">
@@ -174,7 +176,7 @@ $baseUrl = $baseUrl ?? '';
                             </td>
                             <td>
                                 <?php if ($s['status'] === 'fechado'): ?>
-                                    <span class="badge bg-light text-secondary border font-tabular">Fechada</span>
+                                    <span class="code-tag font-tabular">Fechada</span>
                                 <?php else: ?>
                                     <span class="status-indicator status-active">
                                         <span class="bullet">●</span> Em Aberto
@@ -214,4 +216,6 @@ $baseUrl = $baseUrl ?? '';
             </ul>
         </div>
     <?php endif; ?>
+</div>
+
 </div>

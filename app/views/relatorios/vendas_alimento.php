@@ -14,6 +14,8 @@ $totais = $dadosRelatorio['totais'] ?? [];
 $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
 ?>
 
+<div class="container-fluid px-0" style="max-width: 1400px; margin: 0 auto;">
+
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h1 class="h5 font-weight-bold text-dark mb-1">Vendas por Alimento & Curva ABC</h1>
@@ -22,7 +24,7 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
         </p>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <a href="<?php echo $baseUrl; ?>/relatorios/vendas-alimento/pdf?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&turno=<?php echo urlencode($turno); ?>&categoria_id=<?php echo (int)$categoriaId; ?>&tipo=<?php echo urlencode($tipo); ?>" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Relatório Oficial em PDF A4 Timbrado">
+        <a href="<?php echo $baseUrl; ?>/relatorios/vendas-alimento/pdf?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&turno=<?php echo urlencode($turno); ?>&categoria_id=<?php echo (int)$categoriaId; ?>&tipo=<?php echo urlencode($tipo); ?>" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Relatório Oficial em PDF A4 Timbrado">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
             Exportar PDF (A4 Timbrado)
         </a>
@@ -75,7 +77,7 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
             </div>
 
             <div class="col-6 col-md-1 d-flex">
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100">
+                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm w-100">
                     Filtrar
                 </button>
             </div>
@@ -127,15 +129,15 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
 </div>
 
 <!-- Legenda da Curva ABC -->
-<div class="d-flex align-items-center gap-3 mb-3 p-2 bg-white border rounded">
-    <span class="text-microcopy text-uppercase font-weight-bold text-secondary">Legenda Curva ABC:</span>
-    <span class="badge bg-success-subtle text-success border border-success-subtle font-tabular" style="font-size: 11px;">
+<div class="d-flex align-items-center gap-2 mb-3 p-2.5 bg-white border rounded flex-wrap">
+    <span class="text-microcopy text-uppercase font-weight-bold text-secondary me-1">Legenda Curva ABC:</span>
+    <span class="code-tag font-tabular" style="font-size: 11px;">
         Classe A: Até 70% da Receita (Alta Rentabilidade)
     </span>
-    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-tabular" style="font-size: 11px;">
+    <span class="code-tag font-tabular" style="font-size: 11px;">
         Classe B: 70% a 90% da Receita (Rentabilidade Intermediária)
     </span>
-    <span class="badge bg-light text-secondary border font-tabular" style="font-size: 11px;">
+    <span class="code-tag font-tabular" style="font-size: 11px;">
         Classe C: 90% a 100% da Receita (Cauda Longa / Complementares)
     </span>
 </div>
@@ -202,13 +204,7 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
                                 <?php echo number_format((float)$item['participacao_percentual'], 1, ',', '.'); ?>%
                             </td>
                             <td class="text-center">
-                                <?php if ($item['classe_abc'] === 'A'): ?>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle font-tabular px-2.5 font-weight-bold">A</span>
-                                <?php elseif ($item['classe_abc'] === 'B'): ?>
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-tabular px-2.5 font-weight-bold">B</span>
-                                <?php else: ?>
-                                    <span class="badge bg-light text-secondary border font-tabular px-2.5">C</span>
-                                <?php endif; ?>
+                                <span class="code-tag font-tabular px-2.5 font-weight-bold"><?php echo htmlspecialchars($item['classe_abc'] ?? 'C', ENT_QUOTES, 'UTF-8'); ?></span>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -216,7 +212,7 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
             </tbody>
             <tfoot>
                 <tr class="table-active font-weight-bold">
-                    <td colspan="4" class="text-end text-primary text-uppercase font-tabular">
+                    <td colspan="4" class="text-end text-dark text-uppercase font-tabular">
                         Totais Consolidados no Período:
                     </td>
                     <td class="text-end font-tabular text-dark">
@@ -225,10 +221,10 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
                     <td class="text-end font-tabular text-secondary">
                         R$ <?php echo number_format((float)($totais['ticket_medio'] ?? 0.0), 2, ',', '.'); ?>
                     </td>
-                    <td class="text-end font-tabular text-primary" style="font-size: 14px;">
+                    <td class="text-end font-tabular text-dark" style="font-size: 14px;">
                         R$ <?php echo number_format((float)($totais['faturamento_total'] ?? 0.0), 2, ',', '.'); ?>
                     </td>
-                    <td class="text-end font-tabular text-primary font-weight-bold">
+                    <td class="text-end font-tabular text-dark font-weight-bold">
                         100,0%
                     </td>
                     <td class="text-center text-secondary text-microcopy font-tabular">
@@ -238,4 +234,6 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
             </tfoot>
         </table>
     </div>
+</div>
+
 </div>

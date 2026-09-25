@@ -12,6 +12,8 @@ $baseUrl = $baseUrl ?? '';
 $familias = $familias ?? [];
 ?>
 
+<div class="container-fluid px-0" style="max-width: 1400px; margin: 0 auto;">
+
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h1 class="h5 font-weight-bold text-dark mb-1">Relatório de Inadimplência & Bloqueios MED</h1>
@@ -20,7 +22,7 @@ $familias = $familias ?? [];
         </p>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <a href="<?php echo $baseUrl; ?>/admin/contestacoes/pdf" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Relatório Executivo em PDF A4 Timbrado">
+        <a href="<?php echo $baseUrl; ?>/admin/contestacoes/pdf" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Relatório Executivo em PDF A4 Timbrado">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
             Exportar PDF (A4 Timbrado)
         </a>
@@ -53,7 +55,7 @@ $familias = $familias ?? [];
             </div>
 
             <div class="col-12 col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-fill">
+                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-fill">
                     Filtrar
                 </button>
                 <a href="<?php echo $baseUrl; ?>/relatorios/devedores" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
@@ -146,20 +148,20 @@ $familias = $familias ?? [];
                                     <?php echo htmlspecialchars($f['dependentes_str'] ?? '-', ENT_QUOTES, 'UTF-8'); ?>
                                 </span>
                             </td>
-                            <td class="text-end font-tabular font-weight-bold <?php echo ((float)$f['saldo_atual'] < 0) ? 'text-danger' : 'text-success'; ?>" style="font-size: 14px;">
+                            <td class="text-end font-tabular font-weight-bold <?php echo ((float)$f['saldo_atual'] < 0) ? 'text-danger' : 'text-dark'; ?>" style="font-size: 14px;">
                                 R$ <?php echo number_format((float)$f['saldo_atual'], 2, ',', '.'); ?>
                             </td>
                             <td>
                                 <?php if (!empty($f['bloqueado_med'])): ?>
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-tabular">
+                                    <span class="code-tag font-tabular">
                                         Bloqueado MED
                                     </span>
                                 <?php elseif ((float)$f['saldo_atual'] < 0): ?>
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-tabular">
+                                    <span class="code-tag font-tabular">
                                         Saldo Negativo
                                     </span>
                                 <?php else: ?>
-                                    <span class="badge bg-light text-secondary border font-tabular">Regular</span>
+                                    <span class="code-tag font-tabular">Regular</span>
                                 <?php endif; ?>
                             </td>
                             <td class="text-center">
@@ -191,4 +193,6 @@ $familias = $familias ?? [];
             </ul>
         </div>
     <?php endif; ?>
+</div>
+
 </div>

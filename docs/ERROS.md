@@ -881,3 +881,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Executados testes ponta a ponta simulando requisições HTTP autênticas no Apache para todas as 8 rotas e exportações de relatórios (`/relatorios`, `/relatorios/vendas-alimento`, `/relatorios/desconto-folha`, `/relatorios/desconto-folha/csv`, `/relatorios/fechamento-caixa`, `/relatorios/devedores`, `/relatorios/extrato-aluno`, `/operacional/extrato-aluno`), validando resposta HTTP 200 OK sem exceções.
   5. Auditoria global executada via `tests/verification_audit.php` com 100% de sucesso nas 40 suítes de testes automatizados.
 - Como evitar no futuro: Sempre verificar as migrations correspondentes antes de compor consultas SQL complexas unindo múltiplas tabelas, e criar scripts de teste de execução real com o banco de dados ativo simulando dados e requisições completas de ponta a ponta.
+---
+
+## 2026-09-25 - Desalinhamento de Taste Design: Badges coloridos semáforo e estiramento de layout colado às bordas
+
+- Sintoma: Em telas de relatórios (`/relatorios`, `/relatorios/vendas-alimento`, etc.), o conteúdo estirava-se de borda a borda em telas widescreen com barra lateral colapsada sem respiro visual adequado, e utilizavam-se badges com fundos coloridos saturados (azul, verde, vermelho), violando a diretriz de design corporativo neutro e taste design.
+- Causa:
+  1. Falta de contêiner delimitador responsivo com `max-width` nas views de relatórios, fazendo com que grids e cartões tocassem os extremos da tela (0 margem útil) em monitores amplos.
+  2. Uso de classes utilitárias de badges semáforo do Bootstrap (`bg-primary`, `bg-success`, `bg-danger`, `bg-warning`) e botões coloridos de chamada de ação em vez do padrão neutro `.code-tag` e `.btn-secondary` estipulado no Design System.
+- Solução aplicada:
+  1. Envolvidas todas as 6 views de relatórios (`index.php`, `vendas_alimento.php`, `extrato_aluno.php`, `devedores.php`, `desconto_folha.php`, `fechamento_caixa.php`) em contêineres com largura máxima controlada (`max-width: 1400px; margin: 0 auto;`).
+  2. Ajustado o espaçamento da área de conteúdo principal em `assets/css/custom.css` (`.app-page-content` para padding generoso `24px 32px`, `.app-topbar` para `0 32px`, `.app-admin-footer` para `12px 32px` e itens de estatística `.stat-strip .stat-item` para padding `14px 20px`).
+  3. Eliminados 100% dos badges coloridos em todas as telas de relatórios, substituindo-os pelo padrão corporativo neutro `.code-tag font-tabular` (fundo cinza suave `#f1f5f9`, borda `#cbd5e1` e texto neutro `#334155`).
+  4. Convertidos botões de ação e filtros nas listagens e cartões para o padrão corporativo neutro `.btn.btn-enterprise.btn-secondary` com texto escuro e borda sutil, em estrita conformidade com `AGENTS.md` e o Taste Design.
+  5. Atualizada a versão dos assets para `5.8.0` em `app/core/Controller.php` e `app/views/layouts/admin.php` para forçar invalidação imediata de cache nos navegadores.
+  6. Auditoria global executada via `tests/verification_audit.php` com aprovação de 40 de 40 suítes de testes automatizados (100% de sucesso).
+- Como evitar no futuro: Seguir rigorosamente as diretrizes de Taste Design e `AGENTS.md`: nunca usar badges com fundos coloridos chamativos; usar estritamente `.code-tag` neutro ou indicadores tipográficos discretos; sempre conter páginas corporativas em contêineres confortáveis para evitar estiramento visual em monitores de alta resolução.
