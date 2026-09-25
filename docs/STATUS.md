@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 17 — Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança e Entrega
 * **Status da Fase 17:** Concluída com Sucesso [x]
 * **Status Geral do Projeto:** 17 de 17 Fases Concluídas Integralmente (100% do escopo do FSD e DESIGN.md)
-* **Última Atualização:** 2026-09-25 15:35:00 (Otimização de alta performance do espelho de impressão do Extrato do Aluno eliminando congelamento de visão prévia no Chromium: miniatura de logotipo 2.3KB, flexbox em vez de CSS grid, layout de tabela fixo O(1) com quebra de página evitada, disparo assíncrono de window.print e botão de download direto de PDF; incremento de assetVersion para 5.9.8; 41/41 suítes de testes automatizados com 100% de aprovação)
+* **Última Atualização:** 2026-09-25 15:40:00 (Otimização de alta performance do espelho de impressão do Extrato do Aluno eliminando congelamento de visão prévia no Chromium: miniatura de logotipo 2.3KB, flexbox em vez de CSS grid, layout de tabela fixo O(1) com quebra de página evitada, disparo assíncrono de window.print e botão de download direto de PDF; incremento de assetVersion para 5.9.8; 42/42 suítes de testes automatizados com 100% de aprovação)
 
 ---
 
@@ -759,7 +759,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Despacho assíncrono de `window.print()` via `setTimeout(..., 50)` com feedback no botão ("Preparando..."), liberando o event loop do navegador;
     * Inclusão do botão "📄 Baixar PDF Direto" na barra de ações para download imediato do extrato em PDF A4 oficial;
   * Incremento do assetVersion para `5.9.8` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
-  * Suíte global de testes automatizados com 41 arquivos aprovada com 100% de sucesso (`tests/verification_audit.php`).
+  * Suíte global de testes automatizados com 42 arquivos aprovada com 100% de sucesso (`tests/verification_audit.php`).
 
 ---
 

@@ -426,6 +426,15 @@ $router->get('/relatorios/desconto-folha/csv', [\App\Controllers\RelatoriosContr
 $router->get('/relatorios/desconto-folha/detalhes-ajax', [\App\Controllers\RelatoriosController::class, 'descontoFolhaDetalhesAjax'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
+$router->get('/relatorios/desconto-folha/individual-pdf', [\App\Controllers\RelatoriosController::class, 'descontoFolhaIndividualPdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/desconto-folha/individual-imprimir', [\App\Controllers\RelatoriosController::class, 'descontoFolhaIndividualImprimir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/desconto-folha/lote-pdf', [\App\Controllers\RelatoriosController::class, 'descontoFolhaLotePdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
 $router->get('/relatorios/fechamento-caixa', [\App\Controllers\RelatoriosController::class, 'fechamentoCaixa'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);

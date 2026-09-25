@@ -486,6 +486,119 @@ class RelatoriosController extends Controller
     }
 
     /**
+     * Download do PDF A4 Timbrado do Demonstrativo Individual de Desconto em Folha do Colaborador
+     */
+    public function descontoFolhaIndividualPdf(): void
+    {
+        $colaboradorId = (int)$this->input('colaborador_id', 0);
+        $competencia = trim((string)$this->input('competencia', date('Y-m')));
+        if (!preg_match('/^\d{4}-\d{2}$/', $competencia)) {
+            $competencia = date('Y-m');
+        }
+
+        $dados = $this->obterDadosDescontoFolhaIndividual($colaboradorId, $competencia);
+        if (!$dados) {
+            Session::setFlash('danger', 'Colaborador não localizado ou sem movimentações nesta competência.');
+            $this->redirect('/relatorios/desconto-folha?competencia=' . urlencode($competencia));
+            return;
+        }
+
+        $pdfBinario = PdfService::gerarRelatorioDescontoFolhaIndividualPdf($dados);
+        $matriculaLimpa = preg_replace('/[^a-zA-Z0-9_-]/', '', $dados['colaborador']['matricula_funcional'] ?? 'colab');
+        $nomeArquivo = 'desconto_folha_' . $matriculaLimpa . '_' . str_replace('-', '_', $competencia) . '.pdf';
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+        header('Content-Length: ' . strlen($pdfBinario));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
+        echo $pdfBinario;
+        exit;
+    }
+
+    /**
+     * Espelho HTML limpo para visualização e impressão direta do Demonstrativo Individual
+     */
+    public function descontoFolhaIndividualImprimir(): void
+    {
+        $colaboradorId = (int)$this->input('colaborador_id', 0);
+        $competencia = trim((string)$this->input('competencia', date('Y-m')));
+        if (!preg_match('/^\d{4}-\d{2}$/', $competencia)) {
+            $competencia = date('Y-m');
+        }
+
+        $dados = $this->obterDadosDescontoFolhaIndividual($colaboradorId, $competencia);
+        if (!$dados) {
+            Session::setFlash('danger', 'Colaborador não localizado ou sem movimentações nesta competência.');
+            $this->redirect('/relatorios/desconto-folha?competencia=' . urlencode($competencia));
+            return;
+        }
+
+        $html = PdfService::gerarEspelhoDescontoFolhaIndividualHtml($dados);
+
+        header('Content-Type: text/html; charset=UTF-8');
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
+        echo $html;
+        exit;
+    }
+
+    /**
+     * Geração em Lote de Relatórios Individuais (PDF com folhas individuais para todos os colaboradores do mês)
+     */
+    public function descontoFolhaLotePdf(): void
+    {
+        $competencia = trim((string)$this->input('competencia', date('Y-m')));
+        if (!preg_match('/^\d{4}-\d{2}$/', $competencia)) {
+            $competencia = date('Y-m');
+        }
+
+        $dadosFolha = $this->obterDadosDescontoFolha($competencia);
+        $colaboradores = $dadosFolha['colaboradores'] ?? [];
+
+        if (empty($colaboradores)) {
+            Session::setFlash('warning', 'Nenhum colaborador com consumo registrado nesta competência.');
+            $this->redirect('/relatorios/desconto-folha?competencia=' . urlencode($competencia));
+            return;
+        }
+
+        $listaDetalhados = [];
+        foreach ($colaboradores as $c) {
+            $colabId = (int)($c['colaborador_id'] ?? 0);
+            $dadosColab = $this->obterDadosDescontoFolhaIndividual($colabId, $competencia);
+            if ($dadosColab && !empty($dadosColab['itens'])) {
+                $listaDetalhados[] = $dadosColab;
+            }
+        }
+
+        if (empty($listaDetalhados)) {
+            Session::setFlash('warning', 'Nenhum item detalhado localizado para os colaboradores da competência.');
+            $this->redirect('/relatorios/desconto-folha?competencia=' . urlencode($competencia));
+            return;
+        }
+
+        $dadosLote = [
+            'competencia'              => $dadosFolha['competencia'],
+            'competencia_chave'        => $competencia,
+            'colaboradores_detalhados' => $listaDetalhados
+        ];
+
+        $pdfBinario = PdfService::gerarRelatorioDescontoFolhaIndividualLotePdf($dadosLote);
+        $nomeArquivo = 'desconto_folha_todos_individuais_' . str_replace('-', '_', $competencia) . '.pdf';
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+        header('Content-Length: ' . strlen($pdfBinario));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
+        echo $pdfBinario;
+        exit;
+    }
+
+    /**
      * Demonstrativo de Fechamento de Caixa e Prestação de Contas (FSD Tela 5.4 & Módulo 7.2)
      */
     public function fechamentoCaixa(): void
@@ -961,4 +1074,82 @@ class RelatoriosController extends Controller
             'top_colaborador'      => $topColaborador
         ];
     }
+
+    /**
+     * Consolida dados detalhados para o Demonstrativo Individual de Desconto em Folha
+     */
+    private function obterDadosDescontoFolhaIndividual(int $colaboradorId, string $competencia): ?array
+    {
+        $colaborador = Colaborador::buscarPorId($colaboradorId);
+        if (!$colaborador) {
+            return null;
+        }
+
+        [$ano, $mes] = explode('-', $competencia);
+        $ano = (int)$ano;
+        $mes = (int)$mes;
+
+        $pdo = \App\Core\Model::getPdo();
+        $sql = "
+            SELECT 
+                vb.id AS venda_id,
+                vb.created_at,
+                vb.valor_total AS venda_valor_total,
+                sc.turno,
+                u.nome AS operador_nome,
+                ivb.id AS item_id,
+                ivb.quantidade,
+                ivb.preco_unitario,
+                ivb.subtotal,
+                p.descricao AS produto_nome,
+                p.codigo_interno AS produto_codigo
+            FROM vendas_balcao vb
+            INNER JOIN sessoes_caixa sc ON sc.id = vb.sessao_caixa_id
+            INNER JOIN usuarios u ON u.id = vb.operador_id
+            INNER JOIN itens_venda_balcao ivb ON ivb.venda_balcao_id = vb.id
+            INNER JOIN produtos p ON p.id = ivb.produto_id
+            WHERE vb.colaborador_id = :colab_id
+              AND vb.tipo_venda = 'desconto_folha'
+              AND YEAR(vb.created_at) = :ano
+              AND MONTH(vb.created_at) = :mes
+            ORDER BY vb.created_at ASC, vb.id ASC, ivb.id ASC
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['colab_id' => $colaboradorId, 'ano' => $ano, 'mes' => $mes]);
+        $itens = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $totalGeral = 0.0;
+        $totalItens = 0;
+        $vendasIds = [];
+
+        foreach ($itens as $item) {
+            $totalGeral += (float)$item['subtotal'];
+            $totalItens += (int)$item['quantidade'];
+            $vendasIds[$item['venda_id']] = true;
+        }
+
+        $mesesNome = [
+            1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril',
+            5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto',
+            9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'
+        ];
+        $competenciaExtensa = ($mesesNome[$mes] ?? 'Mês ' . $mes) . ' de ' . $ano;
+        $usuario = Auth::user();
+
+        return [
+            'colaborador'       => $colaborador,
+            'competencia'       => $competenciaExtensa,
+            'competencia_chave' => $competencia,
+            'operador'          => $usuario['nome'] ?? 'Administração Geral',
+            'emissao'           => date('d/m/Y H:i:s'),
+            'baseUrl'           => defined('BASE_URL') ? BASE_URL : '',
+            'itens'             => $itens,
+            'totais'            => [
+                'total_desconto' => $totalGeral,
+                'total_lanches'  => $totalItens,
+                'total_compras'  => count($vendasIds)
+            ]
+        ];
+    }
 }
+
