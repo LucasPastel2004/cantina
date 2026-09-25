@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 17 — Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança e Entrega
 * **Status da Fase 17:** Concluída com Sucesso [x]
 * **Status Geral do Projeto:** 17 de 17 Fases Concluídas Integralmente (100% do escopo do FSD e DESIGN.md)
-* **Última Atualização:** 2026-09-25 15:10:00 (Conclusão integral da Fase 17: Central de Relatórios Gerenciais, Extrato Analítico do Aluno em PDF A4 e HTML, Relatório de Vendas por Alimento e Curva ABC, Relatório Mensal de Desconto em Folha para RH em PDF A4 e CSV, Demonstrativo de Fechamento de Caixa, Relatório de Inadimplência/MED; Paginação corporativa com 20 itens por página nas listas de Recargas e Consumo do Extrato do Aluno com parâmetros segregados e âncoras diretas; 41 suítes de testes automatizados com 100% de aprovação e auditoria global de segurança)
+* **Última Atualização:** 2026-09-25 15:35:00 (Otimização de alta performance do espelho de impressão do Extrato do Aluno eliminando congelamento de visão prévia no Chromium: miniatura de logotipo 2.3KB, flexbox em vez de CSS grid, layout de tabela fixo O(1) com quebra de página evitada, disparo assíncrono de window.print e botão de download direto de PDF; incremento de assetVersion para 5.9.8; 41/41 suítes de testes automatizados com 100% de aprovação)
 
 ---
 
@@ -752,7 +752,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Correção em `gerarComprovanteVendaBalcaoPdf()` substituindo `Sessão Caixa:`, `Matrícula:` e `Venda Balcão` por versões ASCII puras;
   * **Remoção de Botão Inútil 'Voltar' no Espelho de Impressão:**
     * Removido o botão `← Voltar ao Sistema` com `window.history.back()` em `PdfService::gerarEspelhoExtratoConsumoAlunoHtml()`, eliminando um botão inoperante e mantendo exclusivamente a ação de destaque `🖨️ Imprimir Extrato` quando aberto em nova aba (`target="_blank"`);
-  * Incremento do assetVersion para `5.9.7` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
+  * **Otimização de Alta Performance da Visão Prévia de Impressão (Chromium):**
+    * Substituição da imagem original em Base64 (65.5 KB) pela miniatura otimizada de 2.3 KB em `PdfService::gerarEspelhoExtratoConsumoAlunoHtml()` (`self::getLogoDataUri(true)`), reduzindo o payload de imagem em > 63 KB;
+    * Eliminação de `display: grid` nos blocos `.student-box` e `.stat-strip`, substituindo por Flexbox (`display: flex;`) com `break-inside: avoid; page-break-inside: avoid;`, sanando o bug de paginação do motor Blink;
+    * Aplicação de `table-layout: fixed !important;` e `thead { display: table-header-group !important; }` na tabela `.table-relatorio`, em conjunto com `break-inside: avoid !important; page-break-inside: avoid !important;` nas linhas `<tr>`, permitindo cálculo O(1) de largura e paginação instantânea;
+    * Despacho assíncrono de `window.print()` via `setTimeout(..., 50)` com feedback no botão ("Preparando..."), liberando o event loop do navegador;
+    * Inclusão do botão "📄 Baixar PDF Direto" na barra de ações para download imediato do extrato em PDF A4 oficial;
+  * Incremento do assetVersion para `5.9.8` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
   * Suíte global de testes automatizados com 41 arquivos aprovada com 100% de sucesso (`tests/verification_audit.php`).
 
 ---

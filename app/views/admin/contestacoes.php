@@ -298,25 +298,14 @@ $totalPaginas = $totalPaginas ?? 1;
                 </table>
             </div>
 
-            <!-- Paginação -->
-            <?php if ($totalPaginas > 1): ?>
-                <div class="p-3 border-top d-flex justify-content-between align-items-center">
-                    <span class="text-secondary text-microcopy">
-                        Página <?php echo $pagina; ?> de <?php echo $totalPaginas; ?>
-                    </span>
-                    <nav aria-label="Navegação da tabela">
-                        <ul class="pagination pagination-sm m-0">
-                            <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
-                                <li class="page-item <?php echo ($i === $pagina) ? 'active' : ''; ?>">
-                                    <a class="page-link" href="<?php echo $baseUrl; ?>/admin/contestacoes?pagina=<?php echo $i; ?>&busca=<?php echo urlencode($filtroBusca); ?>&status=<?php echo urlencode($filtroStatus); ?>">
-                                        <?php echo $i; ?>
-                                    </a>
-                                </li>
-                            <?php endfor; ?>
-                        </ul>
-                    </nav>
-                </div>
-            <?php endif; ?>
+            <!-- Paginação Corporativa Oficial (Padrão Enterprise Anti-Slop) -->
+            <?php 
+                $paginaAtual    = (int)($paginacao['pagina_atual'] ?? $pagina ?? 1);
+                $totalRegistros = (int)($paginacao['total_itens'] ?? 0);
+                $totalPaginas   = (int)($paginacao['total_paginas'] ?? $totalPaginas ?? 1);
+                $itensPorPagina = (int)($paginacao['itens_por_pag'] ?? 20);
+                require __DIR__ . '/../partials/pagination.php'; 
+            ?>
         <?php endif; ?>
     </div>
 </div>

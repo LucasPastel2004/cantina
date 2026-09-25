@@ -3905,7 +3905,8 @@ class PdfService
         $consumo = $dados['consumo'] ?? [];
         $operador = $dados['operador'] ?? 'Atendente da Cantina';
         $emissao = date('d/m/Y H:i:s');
-        $logoDataUri = self::getLogoDataUri(false);
+        $baseUrl = $dados['baseUrl'] ?? (defined('BASE_URL') ? BASE_URL : '');
+        $logoDataUri = self::getLogoDataUri(true);
 
         $totalRecargas = 0.0;
         foreach ($recargas as $r) {
@@ -3922,25 +3923,33 @@ class PdfService
         <html lang="pt-BR">
         <head>
             <meta charset="UTF-8">
-            <title>Extrato de Consumo — <?php echo htmlspecialchars($aluno['nome'] ?? 'Aluno'); ?></title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Extrato de Consumo — <?php echo htmlspecialchars($aluno['nome'] ?? 'Aluno', ENT_QUOTES, 'UTF-8'); ?></title>
             <style>
-                @page { size: A4 portrait; margin: 15mm 12mm 15mm 12mm; }
-                * { box-sizing: border-box; }
+                @page {
+                    size: A4 portrait;
+                    margin: 12mm 10mm;
+                }
+                * {
+                    box-sizing: border-box;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
                 body {
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
                     background-color: #ffffff;
                     color: #0f172a;
                     margin: 0;
                     padding: 20px;
-                    font-size: 12px;
-                    line-height: 1.4;
+                    font-size: 11.5px;
+                    line-height: 1.35;
                 }
                 .font-tabular {
                     font-variant-numeric: tabular-nums;
                     font-feature-settings: 'tnum' 1, 'zero' 1;
                 }
                 .actions-bar {
-                    background: #f1f5f9;
+                    background: #f8fafc;
                     border: 1px solid #cbd5e1;
                     border-radius: 6px;
                     padding: 10px 16px;
@@ -3948,10 +3957,12 @@ class PdfService
                     justify-content: space-between;
                     align-items: center;
                     margin-bottom: 20px;
+                    flex-wrap: wrap;
+                    gap: 10px;
                 }
                 .btn {
-                    padding: 8px 16px;
-                    font-size: 13px;
+                    padding: 7px 14px;
+                    font-size: 12.5px;
                     font-weight: 600;
                     border-radius: 4px;
                     cursor: pointer;
@@ -3959,9 +3970,13 @@ class PdfService
                     display: inline-flex;
                     align-items: center;
                     gap: 6px;
+                    font-family: inherit;
+                    line-height: 1.2;
                 }
-                .btn-primary { background: #1d4ed8; color: #fff; border: 1px solid #1e40af; }
-                .btn-secondary { background: #fff; color: #1e293b; border: 1px solid #cbd5e1; }
+                .btn-primary { background: #1d4ed8; color: #ffffff; border: 1px solid #1e40af; }
+                .btn-primary:hover { background: #1e40af; }
+                .btn-secondary { background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; }
+                .btn-secondary:hover { background: #f1f5f9; }
                 .header-box {
                     border-left: 4px solid #1d4ed8;
                     background: #f8fafc;
@@ -3971,41 +3986,56 @@ class PdfService
                     align-items: center;
                     gap: 16px;
                     margin-bottom: 16px;
+                    break-inside: avoid;
+                    page-break-inside: avoid;
                 }
-                .header-logo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+                .header-logo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid #cbd5e1; }
                 .student-box {
                     border: 1px solid #e2e8f0;
                     background: #ffffff;
                     border-radius: 6px;
                     padding: 12px 16px;
                     margin-bottom: 16px;
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
+                    display: flex;
+                    justify-content: space-between;
                     gap: 16px;
+                    break-inside: avoid;
+                    page-break-inside: avoid;
+                }
+                .student-box > div {
+                    flex: 1;
+                    min-width: 0;
                 }
                 .stat-strip {
-                    display: grid;
-                    grid-template-columns: repeat(4, 1fr);
+                    display: flex;
                     border: 1px solid #e2e8f0;
                     border-radius: 6px;
                     background: #f8fafc;
                     margin-bottom: 20px;
+                    break-inside: avoid;
+                    page-break-inside: avoid;
                 }
                 .stat-item {
+                    flex: 1;
+                    min-width: 0;
                     padding: 10px 14px;
                     border-right: 1px solid #e2e8f0;
                 }
                 .stat-item:last-child { border-right: none; }
                 .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
-                .stat-val { font-size: 16px; font-weight: 700; color: #0f172a; }
+                .stat-val { font-size: 15px; font-weight: 700; color: #0f172a; }
                 .table-relatorio {
                     width: 100%;
                     border-collapse: collapse;
                     margin-bottom: 24px;
-                    font-size: 11.5px;
+                    font-size: 11px;
+                    table-layout: fixed;
+                }
+                .table-relatorio thead {
+                    display: table-header-group;
                 }
                 .table-relatorio th {
-                    background: #f1f5f9;
+                    background: #f1f5f9 !important;
                     border-top: 1px solid #cbd5e1;
                     border-bottom: 1px solid #cbd5e1;
                     color: #475569;
@@ -4016,9 +4046,15 @@ class PdfService
                     text-align: left;
                 }
                 .table-relatorio td {
-                    padding: 7px 10px;
+                    padding: 6px 10px;
                     border-bottom: 1px solid #e2e8f0;
                     color: #0f172a;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                }
+                .table-relatorio tr {
+                    break-inside: avoid !important;
+                    page-break-inside: avoid !important;
                 }
                 .table-relatorio tr:nth-child(even) { background-color: #f8fafc; }
                 .text-end { text-align: right; }
@@ -4029,6 +4065,8 @@ class PdfService
                     margin: 20px 0 8px 0;
                     text-transform: uppercase;
                     letter-spacing: 0.02em;
+                    break-inside: avoid;
+                    page-break-inside: avoid;
                 }
                 .footer-doc {
                     border-top: 1px solid #e2e8f0;
@@ -4038,11 +4076,41 @@ class PdfService
                     display: flex;
                     justify-content: space-between;
                     margin-top: 30px;
+                    break-inside: avoid;
+                    page-break-inside: avoid;
                 }
                 @media print {
-                    .actions-bar { display: none !important; }
-                    body { padding: 0; }
-                    .table-relatorio th { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; }
+                    @page {
+                        size: A4 portrait;
+                        margin: 12mm 10mm;
+                    }
+                    html, body {
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: #ffffff !important;
+                        font-size: 10pt !important;
+                    }
+                    .actions-bar {
+                        display: none !important;
+                    }
+                    .table-relatorio {
+                        width: 100% !important;
+                        table-layout: fixed !important;
+                    }
+                    .table-relatorio thead {
+                        display: table-header-group !important;
+                    }
+                    .table-relatorio tr {
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
+                    }
+                    .table-relatorio th {
+                        background-color: #f1f5f9 !important;
+                    }
+                    .table-relatorio tr:nth-child(even) td {
+                        background-color: #f8fafc !important;
+                    }
                 }
             </style>
         </head>
@@ -4050,9 +4118,15 @@ class PdfService
             <div class="actions-bar">
                 <div>
                     <strong>Espelho de Impressão A4</strong> — Extrato Oficial do Aluno
+                    <span style="font-size: 11px; color: #64748b; margin-left: 8px;">(Atalho: <kbd style="background:#e2e8f0; color:#334155; padding:1px 5px; border-radius:3px; font-size:11px;">Ctrl</kbd> + <kbd style="background:#e2e8f0; color:#334155; padding:1px 5px; border-radius:3px; font-size:11px;">P</kbd>)</span>
                 </div>
-                <div>
-                    <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Imprimir Extrato</button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <a href="<?php echo htmlspecialchars($baseUrl . '/operacional/extrato-aluno/pdf?aluno_id=' . (int)($aluno['id'] ?? 0) . '&data_inicio=' . urlencode($dataInicio) . '&data_fim=' . urlencode($dataFim), ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-secondary" title="Baixar Extrato em PDF A4 Timbrado Direto">
+                        📄 Baixar PDF Direto
+                    </a>
+                    <button type="button" class="btn btn-primary" onclick="this.innerHTML='Preparando...'; const b=this; setTimeout(function(){ window.print(); b.innerHTML='🖨️ Imprimir Extrato'; }, 50);">
+                        🖨️ Imprimir Extrato
+                    </button>
                 </div>
             </div>
 
@@ -4866,4 +4940,806 @@ class PdfService
 
         return self::montarPdfMultiPaginas($finalStreams);
     }
+
+    /**
+     * Gera os streams de desenho de página para o Demonstrativo Individual de Desconto em Folha
+     * de um colaborador específico na competência.
+     *
+     * @param array $dados
+     * @return array<int, string> Streams brutos com marcadores de página __PAG_NUM__ e __PAG_TOT__
+     */
+    public static function obterStreamsPaginasIndividualColaborador(array $dados): array
+    {
+        $colaborador = $dados['colaborador'] ?? [];
+        $competencia = $dados['competencia'] ?? date('m/Y');
+        $operador = $dados['operador'] ?? 'Administração Geral';
+        $emissao = $dados['emissao'] ?? date('d/m/Y H:i:s');
+        $itens = $dados['itens'] ?? [];
+        $totais = $dados['totais'] ?? [];
+
+        $totalDesconto = (float)($totais['total_desconto'] ?? 0.0);
+        $totalLanches = (int)($totais['total_lanches'] ?? 0);
+        $totalCompras = (int)($totais['total_compras'] ?? 0);
+
+        $left = 36.0;
+        $right = self::PAGE_WIDTH - 36.0;
+        $width = $right - $left;
+
+        $pages = [];
+        $currentStream = "";
+        $y = 800.0;
+
+        $iniciarPagina = function(bool $isFirstPage) use (&$currentStream, &$y, $left, $width, $colaborador, $competencia, $operador, $emissao, $totalDesconto, $totalLanches, $totalCompras) {
+            $currentStream = "";
+            $y = 800.0;
+
+            if ($isFirstPage) {
+                // Cabeçalho Principal A4 Timbrado
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.95, 0.96, 0.98);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 48.0, $width, 58.0);
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85); // #1d4ed8
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 48.0, 4.0, 58.0);
+
+                $currentStream .= self::desenharLogoCircular($left + 12.0, $y - 42.0, 42.0);
+
+                $textLeft = $left + 62.0;
+                $currentStream .= "BT\n/F2 13 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 2.0);
+                $currentStream .= "(COLEGIO MONTEIRO LOBATO - CANTINA ESCOLAR) Tj\nET\n";
+
+                $currentStream .= "BT\n/F2 10.5 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 17.0);
+                $currentStream .= "(DEMONSTRATIVO INDIVIDUAL DE DESCONTO EM FOLHA) Tj\nET\n";
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.28 0.33 0.41 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 31.0);
+                $competenciaLimpa = self::removerAcentos($competencia);
+                $operadorLimpo = self::removerAcentos($operador);
+                $currentStream .= sprintf("(Competencia: %s | Emitido em: %s | Responsavel: %s) Tj\nET\n", 
+                    self::escapeText($competenciaLimpa), 
+                    $emissao, 
+                    self::escapeText(substr($operadorLimpo, 0, 30))
+                );
+
+                $y -= 62.0;
+
+                // Box 1: Identificação do Colaborador (altura 44 pt)
+                $boxH = 44.0;
+                $currentStream .= "0.98 0.99 1.00 rg\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $boxH, $width, $boxH);
+                $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $boxH, $width, $boxH);
+
+                $nomeColab = self::removerAcentos($colaborador['nome'] ?? '-');
+                $matColab  = $colaborador['matricula_funcional'] ?? '-';
+                $cargoColab= self::removerAcentos($colaborador['cargo'] ?? '-');
+
+                // Coluna Esquerda: Colaborador
+                $currentStream .= "BT\n/F2 7.5 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.0);
+                $currentStream .= "(COLABORADOR / PROFESSOR:) Tj\nET\n";
+
+                $currentStream .= "BT\n/F2 9.5 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 24.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($nomeColab, 0, 42)));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 35.0);
+                $currentStream .= sprintf("(Matricula: %s  |  Cargo: %s) Tj\nET\n", self::escapeText($matColab), self::escapeText(substr($cargoColab, 0, 32)));
+
+                // Coluna Direita: Competência
+                $colDirX = $left + 300.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $colDirX - 10.0, $y - $boxH, $colDirX - 10.0, $y);
+
+                $currentStream .= "BT\n/F2 7.5 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $colDirX, $y - 12.0);
+                $currentStream .= "(COMPETENCIA & CONFERENCIA:) Tj\nET\n";
+
+                $currentStream .= "BT\n/F2 9.0 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $colDirX, $y - 24.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($competenciaLimpa));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $colDirX, $y - 35.0);
+                $currentStream .= sprintf("(Atendimentos: %d  |  Total de Lanches: %d un) Tj\nET\n", $totalCompras, $totalLanches);
+
+                $y -= ($boxH + 12.0);
+
+                // Box 2: Resumo Financeiro / Stat-Strip (altura 32 pt)
+                $boxH2 = 32.0;
+                $currentStream .= "0.96 0.97 0.99 rg\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $boxH2, $width, $boxH2);
+                $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $boxH2, $width, $boxH2);
+
+                $colW = $width / 3.0;
+
+                // Métrica 1: Total a Descontar
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 11.0);
+                $currentStream .= "(TOTAL A DESCONTAR EM FOLHA) Tj\nET\n";
+
+                $totStr = "R$ " . number_format($totalDesconto, 2, ',', '.');
+                $currentStream .= "BT\n/F2 11 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 24.0);
+                $currentStream .= sprintf("(%s) Tj\nET\n", $totStr);
+
+                // Métrica 2: Lanches
+                $xM2 = $left + $colW + 10.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + $colW, $y - $boxH2, $left + $colW, $y);
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM2, $y - 11.0);
+                $currentStream .= "(TOTAL DE LANCHES / ITENS) Tj\nET\n";
+
+                $currentStream .= "BT\n/F2 11 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM2, $y - 24.0);
+                $currentStream .= sprintf("(%d un) Tj\nET\n", $totalLanches);
+
+                // Métrica 3: Atendimentos
+                $xM3 = $left + ($colW * 2) + 10.0;
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left + ($colW * 2), $y - $boxH2, $left + ($colW * 2), $y);
+                $currentStream .= "BT\n/F1 7 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM3, $y - 11.0);
+                $currentStream .= "(QUANTIDADE DE ATENDIMENTOS) Tj\nET\n";
+
+                $currentStream .= "BT\n/F2 11 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $xM3, $y - 24.0);
+                $currentStream .= sprintf("(%d compras) Tj\nET\n", $totalCompras);
+
+                $y -= ($boxH2 + 14.0);
+            } else {
+                // Mini Cabeçalho Subsequente (Página 2+)
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.95, 0.96, 0.98);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 32.0, $width, 38.0);
+                $currentStream .= sprintf("%.2f %.2f %.2f rg\n", 0.11, 0.31, 0.85);
+                $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - 32.0, 3.0, 38.0);
+
+                $currentStream .= self::desenharLogoCircular($left + 8.0, $y - 28.0, 28.0);
+
+                $textLeft = $left + 46.0;
+                $currentStream .= "BT\n/F2 10 Tf\n0.06 0.09 0.16 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 6.0);
+                $nomeColab = self::removerAcentos($colaborador['nome'] ?? '-');
+                $matColab  = $colaborador['matricula_funcional'] ?? '-';
+                $currentStream .= sprintf("(COLEGIO MONTEIRO LOBATO - DESCONTO EM FOLHA: %s [%s] - CONTINUACAO) Tj\nET\n", self::escapeText(substr($nomeColab, 0, 30)), self::escapeText($matColab));
+
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.30 0.35 0.45 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $textLeft, $y - 20.0);
+                $competenciaLimpa = self::removerAcentos($competencia);
+                $currentStream .= sprintf("(Competencia: %s  |  Emissao: %s) Tj\nET\n", self::escapeText($competenciaLimpa), $emissao);
+
+                $y -= 44.0;
+            }
+        };
+
+        $fecharPagina = function() use (&$pages, &$currentStream, $left, $right) {
+            $yRodape = 32.0;
+            $currentStream .= "0.85 0.88 0.92 RG\n0.75 w\n";
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $yRodape + 10.0, $right, $yRodape + 10.0);
+
+            $currentStream .= "BT\n/F1 7 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left, $yRodape);
+            $currentStream .= sprintf("(Cantina Web - Colegio Monteiro Lobato  |  Demonstrativo Individual de Desconto em Folha para RH e Colaborador) Tj\nET\n");
+
+            $currentStream .= "BT\n/F2 7 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $right - 70.0, $yRodape);
+            $currentStream .= sprintf("(Pagina __PAG_NUM__ de __PAG_TOT__) Tj\nET\n");
+
+            $pages[] = $currentStream;
+        };
+
+        $c1 = $left + 6.0;   // Data/Hora (x = 42.0)
+        $c2 = $left + 88.0;  // Turno (x = 124.0)
+        $c3 = $left + 148.0; // Venda # (x = 184.0)
+        $c4 = $left + 196.0; // Produto (x = 232.0)
+        $c5 = $left + 400.0; // Qtd (right x = 436.0)
+        $c6 = $left + 465.0; // Unit (right x = 501.0)
+        $c7 = $right - 8.0;  // Subtotal (right x = 551.28)
+
+        $imprimirCabecalhoTabela = function() use (&$currentStream, &$y, $left, $width, $c1, $c2, $c3, $c4, $c5, $c6, $c7) {
+            $thH = 17.0;
+            $currentStream .= "0.92 0.94 0.97 rg\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $thH, $width, $thH);
+            $currentStream .= "0.80 0.83 0.88 RG\n0.75 w\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $thH, $width, $thH);
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c1, $y - 11.5);
+            $currentStream .= "(DATA / HORA) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c2, $y - 11.5);
+            $currentStream .= "(TURNO) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c3, $y - 11.5);
+            $currentStream .= "(VENDA) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c4, $y - 11.5);
+            $currentStream .= "(DISCRIMINACAO DO ITEM / LANCHE) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c5 - 20.0, $y - 11.5);
+            $currentStream .= "(QTD) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c6 - 42.0, $y - 11.5);
+            $currentStream .= "(UNITARIO) Tj\nET\n";
+
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.25 0.30 0.40 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c7 - 45.0, $y - 11.5);
+            $currentStream .= "(SUBTOTAL) Tj\nET\n";
+
+            $y -= $thH;
+        };
+
+        $iniciarPagina(true);
+        $imprimirCabecalhoTabela();
+
+        if (empty($itens)) {
+            $rowH = 22.0;
+            $currentStream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
+            $currentStream .= "BT\n/F1 8 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", ($left + $right) / 2.0 - 120.0, $y - 14.0);
+            $currentStream .= sprintf("(Nenhum consumo sob desconto em folha registrado nesta competencia.) Tj\nET\n");
+            $y -= $rowH;
+        } else {
+            $rowH = 16.5;
+            $idx = 0;
+            foreach ($itens as $item) {
+                // Checa espaço (deixa ~130pt para totalizador + assinaturas)
+                if ($y < 140.0) {
+                    $fecharPagina();
+                    $iniciarPagina(false);
+                    $imprimirCabecalhoTabela();
+                }
+
+                $idx++;
+                if ($idx % 2 === 0) {
+                    $currentStream .= "0.98 0.98 0.99 rg\n";
+                    $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $rowH, $width, $rowH);
+                }
+                $currentStream .= "0.89 0.91 0.94 RG\n0.5 w\n";
+                $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $left, $y - $rowH, $right, $y - $rowH);
+
+                $dataHoraStr = date('d/m H:i', strtotime($item['created_at']));
+                $turnoStr    = ucfirst(substr($item['turno'] ?? '-', 0, 3)) . '.'; // Mat. ou Vesp.
+                $vendaStr    = '#' . ($item['venda_id'] ?? '-');
+                $prodStr     = self::removerAcentos($item['produto_nome'] ?? '-');
+                $qtdStr      = (int)($item['quantidade'] ?? 1) . ' un';
+                $unitStr     = 'R$ ' . number_format((float)($item['preco_unitario'] ?? 0.0), 2, ',', '.');
+                $subStr      = 'R$ ' . number_format((float)($item['subtotal'] ?? 0.0), 2, ',', '.');
+
+                // Data/Hora
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.25 0.30 0.40 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c1, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($dataHoraStr));
+
+                // Turno
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.35 0.40 0.50 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c2, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($turnoStr));
+
+                // Venda
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.40 0.45 0.55 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c3, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($vendaStr));
+
+                // Produto
+                $currentStream .= "BT\n/F2 7.5 Tf\n0.08 0.10 0.15 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c4, $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($prodStr, 0, 38)));
+
+                // Qtd
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.10 0.12 0.18 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c5 - (strlen($qtdStr) * 4.6), $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($qtdStr));
+
+                // Unitário
+                $currentStream .= "BT\n/F1 7.5 Tf\n0.30 0.35 0.45 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c6 - (strlen($unitStr) * 4.8), $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($unitStr));
+
+                // Subtotal
+                $currentStream .= "BT\n/F2 8.0 Tf\n0.11 0.31 0.85 rg\n";
+                $currentStream .= sprintf("%.2f %.2f Td\n", $c7 - (strlen($subStr) * 5.0), $y - 11.5);
+                $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($subStr));
+
+                $y -= $rowH;
+            }
+
+            // Linha Totalizadora
+            $totH = 19.0;
+            $currentStream .= "0.94 0.96 0.98 rg\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re f\n", $left, $y - $totH, $width, $totH);
+            $currentStream .= "0.80 0.83 0.88 RG\n1 w\n";
+            $currentStream .= sprintf("%.2f %.2f %.2f %.2f re S\n", $left, $y - $totH, $width, $totH);
+
+            $currentStream .= "BT\n/F2 8 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left + 10.0, $y - 12.5);
+            $currentStream .= sprintf("(MONTANTE TOTAL A DESCONTAR EM FOLHA DESTE COLABORADOR:) Tj\nET\n");
+
+            $tLanchesStr = $totalLanches . " un";
+            $currentStream .= "BT\n/F2 8.5 Tf\n0.10 0.12 0.18 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c5 - (strlen($tLanchesStr) * 5.0), $y - 12.5);
+            $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tLanchesStr));
+
+            $tDescStr = "R$ " . number_format($totalDesconto, 2, ',', '.');
+            $currentStream .= "BT\n/F2 9.5 Tf\n0.11 0.31 0.85 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $c7 - (strlen($tDescStr) * 5.8), $y - 13.0);
+            $currentStream .= sprintf("(%s) Tj\nET\n", self::escapeText($tDescStr));
+
+            $y -= ($totH + 16.0);
+
+            // Verifica se há espaço para termo de ciência e assinaturas (~95pt)
+            if ($y < 115.0) {
+                $fecharPagina();
+                $iniciarPagina(false);
+            }
+
+            // Termo de Ciência
+            $currentStream .= "BT\n/F1 6.5 Tf\n0.35 0.40 0.50 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $left + 2.0, $y);
+            $compAviso = self::removerAcentos($competencia);
+            $currentStream .= sprintf("(Declaro estar ciente e de acordo com o consumo discriminado acima, autorizando o desconto em folha referente a competencia %s.) Tj\nET\n", self::escapeText($compAviso));
+
+            $y -= 8.0;
+
+            // Campos para Assinaturas e Carimbos
+            $signBoxW = ($width - 30.0) / 2.0;
+
+            // Assinatura 1: Colaborador / Professor
+            $xSign1 = $left;
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $xSign1 + 10.0, $y - 25.0, $xSign1 + $signBoxW - 10.0, $y - 25.0);
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.20 0.25 0.35 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $xSign1 + 25.0, $y - 36.0);
+            $currentStream .= "(Assinatura do Colaborador / Professor) Tj\nET\n";
+            $currentStream .= "BT\n/F1 6.5 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $xSign1 + 20.0, $y - 46.0);
+            $currentStream .= sprintf("(Matricula: %s  |  Data: _____ / _____ / 2026) Tj\nET\n", self::escapeText($matColab));
+
+            // Assinatura 2: Visto da Cantina
+            $xSign2 = $left + $signBoxW + 30.0;
+            $currentStream .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $xSign2 + 10.0, $y - 25.0, $xSign2 + $signBoxW - 10.0, $y - 25.0);
+            $currentStream .= "BT\n/F2 7.5 Tf\n0.20 0.25 0.35 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $xSign2 + 25.0, $y - 36.0);
+            $currentStream .= "(Visto da Cantina / Diretoria Administrativa) Tj\nET\n";
+            $currentStream .= "BT\n/F1 6.5 Tf\n0.45 0.50 0.60 rg\n";
+            $currentStream .= sprintf("%.2f %.2f Td\n", $xSign2 + 35.0, $y - 46.0);
+            $currentStream .= "(Colegio Monteiro Lobato  |  Data: _____ / _____ / 2026) Tj\nET\n";
+
+            $y -= 60.0;
+        }
+
+        $fecharPagina();
+
+        return $pages;
+    }
+
+    /**
+     * Gera o arquivo PDF A4 Timbrado oficial do Demonstrativo Individual de Desconto em Folha do Colaborador
+     *
+     * @param array $dados
+     * @return string Conteúdo binário puro do PDF 1.4
+     */
+    public static function gerarRelatorioDescontoFolhaIndividualPdf(array $dados): string
+    {
+        $pages = self::obterStreamsPaginasIndividualColaborador($dados);
+        $totalPaginas = count($pages);
+        $finalStreams = [];
+        foreach ($pages as $idx => $stream) {
+            $pageNum = $idx + 1;
+            $stream = str_replace(
+                ['__PAG_NUM__', '__PAG_TOT__', '%PAGE_NUM%', '%PAGE_TOTAL%', '%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
+                [(string)$pageNum, (string)$totalPaginas, (string)$pageNum, (string)$totalPaginas, (string)$pageNum, (string)$totalPaginas],
+                $stream
+            );
+            $finalStreams[] = $stream;
+        }
+
+        return self::montarPdfMultiPaginas($finalStreams);
+    }
+
+    /**
+     * Gera lote consolidado com os demonstrativos individuais de todos os colaboradores
+     * que tiveram consumo na competência, com folha individual para cada um.
+     *
+     * @param array $dadosLote
+     * @return string Conteúdo binário puro do PDF 1.4
+     */
+    public static function gerarRelatorioDescontoFolhaIndividualLotePdf(array $dadosLote): string
+    {
+        $listaColabs = $dadosLote['colaboradores_detalhados'] ?? [];
+        if (empty($listaColabs)) {
+            return self::gerarRelatorioDescontoFolhaPdf([
+                'competencia'   => $dadosLote['competencia'] ?? date('m/Y'),
+                'colaboradores' => [],
+                'totais'        => ['valor_total' => 0.0, 'total_lanches' => 0, 'total_colaboradores' => 0]
+            ]);
+        }
+
+        $todasPaginas = [];
+        foreach ($listaColabs as $dadosColab) {
+            $paginasColab = self::obterStreamsPaginasIndividualColaborador($dadosColab);
+            $totalPaginasColab = count($paginasColab);
+            foreach ($paginasColab as $idx => $stream) {
+                $pageNum = $idx + 1;
+                $stream = str_replace(
+                    ['__PAG_NUM__', '__PAG_TOT__', '%PAGE_NUM%', '%PAGE_TOTAL%', '%%PAGE_NUM%%', '%%PAGE_TOTAL%%'],
+                    [(string)$pageNum, (string)$totalPaginasColab, (string)$pageNum, (string)$totalPaginasColab, (string)$pageNum, (string)$totalPaginasColab],
+                    $stream
+                );
+                $todasPaginas[] = $stream;
+            }
+        }
+
+        return self::montarPdfMultiPaginas($todasPaginas);
+    }
+
+    /**
+     * Gera espelho HTML limpo e responsivo para visualização e impressão direta
+     * do Demonstrativo Individual de Desconto em Folha do Colaborador.
+     *
+     * @param array $dados
+     * @return string Conteúdo HTML completo
+     */
+    public static function gerarEspelhoDescontoFolhaIndividualHtml(array $dados): string
+    {
+        $colaborador = $dados['colaborador'] ?? [];
+        $competencia = $dados['competencia'] ?? date('m/Y');
+        $competenciaChave = $dados['competencia_chave'] ?? '';
+        $operador = $dados['operador'] ?? 'Administração Geral';
+        $emissao = $dados['emissao'] ?? date('d/m/Y H:i:s');
+        $baseUrl = $dados['baseUrl'] ?? (defined('BASE_URL') ? BASE_URL : '');
+        $itens = $dados['itens'] ?? [];
+        $totais = $dados['totais'] ?? [];
+        $logoDataUri = self::getLogoDataUri(true);
+
+        $totalDesconto = (float)($totais['total_desconto'] ?? 0.0);
+        $totalLanches = (int)($totais['total_lanches'] ?? 0);
+        $totalCompras = (int)($totais['total_compras'] ?? 0);
+        $colabId = (int)($colaborador['id'] ?? 0);
+
+        ob_start();
+        ?>
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Demonstrativo de Folha — <?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador', ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars($competencia, ENT_QUOTES, 'UTF-8'); ?>)</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 12mm 10mm;
+                }
+                * {
+                    box-sizing: border-box;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                    background-color: #ffffff;
+                    color: #0f172a;
+                    margin: 0;
+                    padding: 20px;
+                    font-size: 11.5px;
+                    line-height: 1.35;
+                }
+                .font-tabular {
+                    font-variant-numeric: tabular-nums;
+                    font-feature-settings: 'tnum' 1, 'zero' 1;
+                }
+                .actions-bar {
+                    background: #f8fafc;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    padding: 10px 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+                .btn {
+                    padding: 7px 14px;
+                    font-size: 12.5px;
+                    font-weight: 600;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-family: inherit;
+                    line-height: 1.2;
+                }
+                .btn-primary { background: #1d4ed8; color: #ffffff; border: 1px solid #1e40af; }
+                .btn-primary:hover { background: #1e40af; }
+                .btn-secondary { background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; }
+                .btn-secondary:hover { background: #f1f5f9; }
+                .header-box {
+                    border-left: 4px solid #1d4ed8;
+                    background: #f8fafc;
+                    border-radius: 4px;
+                    padding: 12px 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    margin-bottom: 16px;
+                    break-inside: avoid;
+                    page-break-inside: avoid;
+                }
+                .header-logo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid #cbd5e1; }
+                .profile-box {
+                    border: 1px solid #e2e8f0;
+                    background: #ffffff;
+                    border-radius: 6px;
+                    padding: 12px 16px;
+                    margin-bottom: 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 16px;
+                    break-inside: avoid;
+                    page-break-inside: avoid;
+                }
+                .profile-box > div {
+                    flex: 1;
+                    min-width: 0;
+                }
+                .stat-strip {
+                    display: flex;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 6px;
+                    background: #f8fafc;
+                    margin-bottom: 20px;
+                    break-inside: avoid;
+                    page-break-inside: avoid;
+                }
+                .stat-item {
+                    flex: 1;
+                    min-width: 0;
+                    padding: 10px 14px;
+                    border-right: 1px solid #e2e8f0;
+                }
+                .stat-item:last-child { border-right: none; }
+                .stat-label {
+                    font-size: 10px;
+                    text-transform: uppercase;
+                    color: #64748b;
+                    font-weight: 600;
+                    letter-spacing: 0.03em;
+                    display: block;
+                    margin-bottom: 3px;
+                }
+                .stat-value {
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #0f172a;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+                th {
+                    background: #f1f5f9;
+                    color: #475569;
+                    font-size: 10px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    padding: 8px 10px;
+                    border: 1px solid #cbd5e1;
+                    text-align: left;
+                }
+                td {
+                    padding: 7px 10px;
+                    border: 1px solid #e2e8f0;
+                    font-size: 11px;
+                }
+                tr:nth-child(even) td { background-color: #f8fafc; }
+                .text-end { text-align: right; }
+                .text-center { text-align: center; }
+                .signatures {
+                    margin-top: 30px;
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 30px;
+                    break-inside: avoid;
+                    page-break-inside: avoid;
+                }
+                .signature-box {
+                    flex: 1;
+                    text-align: center;
+                    border-top: 1px solid #0f172a;
+                    padding-top: 6px;
+                    margin-top: 40px;
+                }
+                .footer-box {
+                    margin-top: 25px;
+                    padding-top: 10px;
+                    border-top: 1px solid #e2e8f0;
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 9.5px;
+                    color: #64748b;
+                    break-inside: avoid;
+                    page-break-inside: avoid;
+                }
+                @media print {
+                    .actions-bar { display: none !important; }
+                    body { padding: 0; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="actions-bar">
+                <div class="d-flex align-items-center gap-2">
+                    <span style="font-weight: 600; color: #1e293b;">Demonstrativo Individual para RH</span>
+                    <span style="color: #64748b; font-size: 11px;">• Competência <?php echo htmlspecialchars($competencia, ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+                        Imprimir Demonstrativo
+                    </button>
+                    <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha/individual-pdf?colaborador_id=<?php echo $colabId; ?>&competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-secondary">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>
+                        Baixar PDF A4 Timbrado
+                    </a>
+                    <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha?competencia=<?php echo urlencode($competenciaChave); ?>" class="btn btn-secondary">
+                        ← Voltar ao Relatório de Folha
+                    </a>
+                </div>
+            </div>
+
+            <!-- Cabeçalho Oficial -->
+            <div class="header-box">
+                <?php if (!empty($logoDataUri)): ?>
+                    <img src="<?php echo $logoDataUri; ?>" alt="Logo Colégio Monteiro Lobato" class="header-logo">
+                <?php endif; ?>
+                <div>
+                    <h1 style="font-size: 15px; font-weight: 700; margin: 0; color: #0f172a;">COLÉGIO MONTEIRO LOBATO — CANTINA ESCOLAR</h1>
+                    <h2 style="font-size: 13px; font-weight: 600; margin: 2px 0 0 0; color: #1d4ed8;">DEMONSTRATIVO INDIVIDUAL DE DESCONTO EM FOLHA</h2>
+                    <div style="font-size: 10px; color: #475569; margin-top: 3px;">
+                        Competência: <strong class="text-dark font-tabular"><?php echo htmlspecialchars($competencia, ENT_QUOTES, 'UTF-8'); ?></strong> • 
+                        Emitido em: <span class="font-tabular"><?php echo htmlspecialchars($emissao, ENT_QUOTES, 'UTF-8'); ?></span> • 
+                        Responsável: <?php echo htmlspecialchars($operador, ENT_QUOTES, 'UTF-8'); ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Identificação do Colaborador -->
+            <div class="profile-box">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <?php if (!empty($colaborador['foto_url'])): ?>
+                        <img src="<?php echo htmlspecialchars($colaborador['foto_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="Foto" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; flex-shrink: 0;">
+                    <?php else: ?>
+                        <div style="width: 42px; height: 42px; border-radius: 50%; background: #f1f5f9; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #475569; font-size: 16px; flex-shrink: 0;">
+                            <?php echo htmlspecialchars(strtoupper(substr($colaborador['nome'] ?? 'C', 0, 1)), ENT_QUOTES, 'UTF-8'); ?>
+                        </div>
+                    <?php endif; ?>
+                    <div>
+                        <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600;">Colaborador / Professor:</div>
+                        <div style="font-size: 14px; font-weight: 700; color: #0f172a;"><?php echo htmlspecialchars($colaborador['nome'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></div>
+                        <div style="font-size: 11px; color: #475569;">
+                            Matrícula Funcional: <strong class="font-tabular text-dark"><?php echo htmlspecialchars($colaborador['matricula_funcional'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></strong> • 
+                            Cargo / Função: <strong><?php echo htmlspecialchars($colaborador['cargo'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></strong>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: right; border-left: 1px solid #e2e8f0; padding-left: 16px; max-width: 200px;">
+                    <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600;">Competência Ativa:</div>
+                    <div style="font-size: 13px; font-weight: 700; color: #1d4ed8;" class="font-tabular"><?php echo htmlspecialchars($competencia, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div style="font-size: 10.5px; color: #64748b;" class="font-tabular">
+                        <?php echo $totalCompras; ?> atendimento(s) no balcão
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumo Financeiro / Stat-Strip -->
+            <div class="stat-strip">
+                <div class="stat-item">
+                    <span class="stat-label">Total a Descontar em Folha</span>
+                    <span class="stat-value font-tabular" style="color: #1d4ed8;">
+                        R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?>
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total de Lanches / Itens</span>
+                    <span class="stat-value font-tabular">
+                        <?php echo $totalLanches; ?> <small style="font-size: 12px; font-weight: normal; color: #64748b;">unidades</small>
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Atendimentos no Balcão</span>
+                    <span class="stat-value font-tabular">
+                        <?php echo $totalCompras; ?> <small style="font-size: 12px; font-weight: normal; color: #64748b;">compras</small>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Tabela de Itens Consumidos -->
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">Data / Hora</th>
+                        <th style="width: 90px;">Turno</th>
+                        <th style="width: 80px;">Venda #</th>
+                        <th>Discriminação do Item / Lanche</th>
+                        <th class="text-end" style="width: 80px;">Qtd</th>
+                        <th class="text-end" style="width: 110px;">Unitário</th>
+                        <th class="text-end" style="width: 120px;">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($itens)): ?>
+                        <tr>
+                            <td colspan="7" class="text-center py-4" style="color: #64748b;">
+                                Nenhum consumo registrado sob desconto em folha nesta competência.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($itens as $i): ?>
+                            <tr>
+                                <td class="font-tabular font-weight-bold"><?php echo date('d/m/Y H:i', strtotime($i['created_at'])); ?></td>
+                                <td><?php echo ucfirst($i['turno'] ?? '-'); ?></td>
+                                <td class="font-tabular text-secondary">#<?php echo htmlspecialchars((string)($i['venda_id'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td>
+                                    <strong style="color: #0f172a;"><?php echo htmlspecialchars($i['produto_nome'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></strong>
+                                    <?php if (!empty($i['produto_codigo'])): ?>
+                                        <small style="color: #64748b; font-family: monospace;">(<?php echo htmlspecialchars($i['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?>)</small>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-end font-tabular"><?php echo (int)($i['quantidade'] ?? 1); ?> un</td>
+                                <td class="text-end font-tabular text-secondary">R$ <?php echo number_format((float)($i['preco_unitario'] ?? 0.0), 2, ',', '.'); ?></td>
+                                <td class="text-end font-tabular font-weight-bold" style="color: #1d4ed8;">R$ <?php echo number_format((float)($i['subtotal'] ?? 0.0), 2, ',', '.'); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+                <tfoot>
+                    <tr style="background: #f1f5f9; font-weight: 700;">
+                        <td colspan="4" class="text-end" style="text-transform: uppercase;">Montante Total a Descontar em Folha:</td>
+                        <td class="text-end font-tabular"><?php echo $totalLanches; ?> un</td>
+                        <td></td>
+                        <td class="text-end font-tabular" style="font-size: 13px; color: #1d4ed8;">R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Termo de Ciência e Assinaturas -->
+            <div style="font-size: 10px; color: #475569; margin-top: 15px; margin-bottom: 25px; line-height: 1.4; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px 12px;">
+                <strong>Termo de Ciência do Colaborador:</strong> Declaro estar ciente e de acordo com os lançamentos de consumo acima discriminados, autorizando o respectivo desconto no holerite/folha de pagamento referente à competência <strong><?php echo htmlspecialchars($competencia, ENT_QUOTES, 'UTF-8'); ?></strong>.
+            </div>
+
+            <div class="signatures">
+                <div class="signature-box">
+                    <div style="font-weight: 700; font-size: 11px;"><?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador', ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div style="font-size: 10px; color: #475569;">Matrícula: <?php echo htmlspecialchars($colaborador['matricula_funcional'] ?? '-', ENT_QUOTES, 'UTF-8'); ?> • Assinatura do Colaborador</div>
+                    <div style="font-size: 9.5px; color: #64748b; margin-top: 4px;">Data: _____ / _____ / <?php echo date('Y'); ?></div>
+                </div>
+                <div class="signature-box">
+                    <div style="font-weight: 700; font-size: 11px;">Colégio Monteiro Lobato — Cantina Escolar</div>
+                    <div style="font-size: 10px; color: #475569;">Visto da Cantina / Diretoria Administrativa</div>
+                    <div style="font-size: 9.5px; color: #64748b; margin-top: 4px;">Data: _____ / _____ / <?php echo date('Y'); ?></div>
+                </div>
+            </div>
+
+            <!-- Rodapé Institucional -->
+            <div class="footer-box">
+                <div>Cantina Web — Colégio Monteiro Lobato | Documento oficial de conferência para Recursos Humanos</div>
+                <div>Emissão: <?php echo htmlspecialchars($emissao, ENT_QUOTES, 'UTF-8'); ?></div>
+            </div>
+        </body>
+        </html>
+        <?php
+        return ob_get_clean();
+    }
 }
+

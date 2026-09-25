@@ -514,8 +514,11 @@ class RelatoriosController extends Controller
             'dataInicio'     => $dataInicio,
             'dataFim'        => $dataFim,
             'pagina'         => $pagina,
+            'paginaAtual'    => $pagina,
             'totalPaginas'   => $totalPaginas,
             'totalHistorico' => $totalHistorico,
+            'totalRegistros' => $totalHistorico,
+            'itensPorPagina' => $itensPorPagina,
             'sessoes'        => $sessoes,
             'totaisPeriodo'  => $totaisPeriodo
         ], 'admin');
@@ -546,8 +549,10 @@ class RelatoriosController extends Controller
             'status'                 => $status,
             'busca'                  => $busca,
             'pagina'                 => $pagina,
+            'paginaAtual'            => $pagina,
             'totalPaginas'           => $dados['total_paginas'],
             'totalRegistros'         => $dados['total'],
+            'itensPorPagina'         => $itensPorPagina,
             'familias'               => $dados['itens'],
             'totalDevedor'           => $totalDevedor,
             'totalDevedoresContagem' => $totalDevedoresContagem

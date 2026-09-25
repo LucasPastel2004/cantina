@@ -14,9 +14,9 @@
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
-$paginaAtual    = max(1, (int)($paginaAtual ?? 1));
+$paginaAtual    = max(1, (int)($paginaAtual ?? $pagina ?? 1));
 $totalPaginas   = max(1, (int)($totalPaginas ?? 1));
-$totalRegistros = max(0, (int)($totalRegistros ?? 0));
+$totalRegistros = max(0, (int)($totalRegistros ?? $totalHistorico ?? 0));
 $itensPorPagina = max(1, (int)($itensPorPagina ?? 20));
 
 if ($totalRegistros === 0) {

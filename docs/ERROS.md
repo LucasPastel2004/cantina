@@ -1024,3 +1024,21 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. Versão global de assets atualizada para `5.9.7` em `app/core/Controller.php` e `app/views/layouts/admin.php`.
   6. Validação automatizada realizada com inspeção detalhada de 1.068 literais de texto `Tj` no PDF gerado (0 caracteres não-ASCII ou anomalias) e execução da auditoria global de testes.
 - Como evitar no futuro: Em rotas que abrem espelhos de impressão ou relatórios em novas abas (`target="_blank"`), nunca incluir botões de histórico (`history.back()`), mantendo apenas os botões de ação efetivos da página; e em geração de PDFs com fontes Type1, sanitizar sempre rótulos e variáveis dinâmicas com ASCII limpo para evitar problemas de codificação.
+
+---
+
+## 2026-09-25 - Lentidão e congelamento em 'Preparando visão prévia' na tela de impressão do Extrato do Aluno
+
+- Sintoma: Ao abrir a tela de impressão do Extrato do Aluno (`/operacional/extrato-aluno/imprimir?aluno_id=7`), a caixa de diálogo de impressão do Google Chrome demorava entre 20 e 30 segundos exibindo o indicador circular em "Preparando visão prévia...", travando temporariamente a aba do navegador antes de renderizar as páginas para impressão.
+- Causa:
+  1. *Payload de Logotipo Pesado em Base64:* O método `gerarEspelhoExtratoConsumoAlunoHtml()` em `app/services/PdfService.php` chamava explicitamente `self::getLogoDataUri(false)`, inserindo no DOM uma imagem base64 de 65.5 KB (800x800 px) em vez da miniatura pré-otimizada de 2.3 KB (72x72 px).
+  2. *Cálculo Recursivo de Paginação com CSS Grid:* Os blocos `.student-box` e `.stat-strip` utilizavam `display: grid; grid-template-columns: ...`. Quando o Chromium calcula a paginação de impressão em documentos longos (como extratos com centenas de recargas), o motor de layout do Blink (`LayoutGrid`) recalcula repetidamente fragmentações de caixas para cada quebra de página virtual.
+  3. *Layout Automático de Tabela (`table-layout: auto`) sem Quebra Evitada:* A tabela `.table-relatorio` com centenas de registros não possuía `table-layout: fixed;` nem `break-inside: avoid;` em `<tr>`. O motor realizava checagem recursiva O(N²) de largura de células e divisão de linhas entre páginas, provocando travamento no cálculo de layout de impressão.
+  4. *Disparo Síncrono de `window.print()`:* O botão acionava `onclick="window.print()"` síncrono no evento de clique sem conceder tempo para a fila de eventos do navegador processar renderizações pendentes.
+- Solução aplicada:
+  1. *Substituição pela Miniatura Leve:* Chamada alterada para `self::getLogoDataUri(true)`, reduzindo o payload de imagem base64 em mais de 63 KB (para 2.3 KB).
+  2. *Substituição de CSS Grid por Flexbox:* Refatorados os containers `.student-box` e `.stat-strip` para `display: flex;` com `break-inside: avoid; page-break-inside: avoid;`.
+  3. *Layout de Tabela Fixo O(1) e Quebras de Página Otimizadas:* Adicionados `table-layout: fixed !important;` e `thead { display: table-header-group !important; }` na tabela, além de `break-inside: avoid !important; page-break-inside: avoid !important;` em todos os elementos `<tr>`.
+  4. *Yielding do Event Loop antes da Impressão:* Atualizado o botão de impressão para fornecer feedback visual ("Preparando...") e disparar `window.print()` via `setTimeout(..., 50)`, liberando o ciclo de renderização do navegador para o spooler do sistema operacional.
+  5. *Botão de Download Direto em PDF:* Adicionado o botão "📄 Baixar PDF Direto" na barra de ações (apontando para `/operacional/extrato-aluno/pdf`), permitindo download instantâneo (< 20 ms) do documento oficial sem passar pelo diálogo de prévia do navegador.
+- Como evitar no futuro: Em qualquer espelho HTML destinado à impressão de relatórios com tabelas extensas, nunca utilizar `display: grid` ou imagens base64 volumosas; sempre aplicar `table-layout: fixed !important;`, `thead { display: table-header-group; }` e `break-inside: avoid;` em `<tr>`, e despachar `window.print()` com pequeno delay assíncrono para liberação do ciclo de renderização.

@@ -176,23 +176,14 @@ $familias = $familias ?? [];
         </table>
     </div>
 
-    <!-- Paginação -->
-    <?php if ($totalPaginas > 1): ?>
-        <div class="card-enterprise-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span class="text-secondary text-microcopy font-tabular">
-                Página <?php echo $pagina; ?> de <?php echo $totalPaginas; ?> (<?php echo $totalRegistros; ?> registros)
-            </span>
-            <ul class="pagination pagination-sm mb-0">
-                <?php for ($p = 1; $p <= $totalPaginas; $p++): ?>
-                    <li class="page-item <?php echo ($p === $pagina) ? 'active' : ''; ?>">
-                        <a class="page-link font-tabular" href="<?php echo $baseUrl; ?>/relatorios/devedores?pagina=<?php echo $p; ?>&status=<?php echo urlencode($status); ?>&busca=<?php echo urlencode($busca); ?>">
-                            <?php echo $p; ?>
-                        </a>
-                    </li>
-                <?php endfor; ?>
-            </ul>
-        </div>
-    <?php endif; ?>
+    <!-- Paginação Corporativa Oficial (Padrão Enterprise Anti-Slop) -->
+    <?php 
+        $paginaAtual    = (int)($paginaAtual ?? $pagina ?? 1);
+        $totalRegistros = (int)($totalRegistros ?? 0);
+        $totalPaginas   = (int)($totalPaginas ?? 1);
+        $itensPorPagina = (int)($itensPorPagina ?? 20);
+        require __DIR__ . '/../partials/pagination.php'; 
+    ?>
 </div>
 
 </div>
