@@ -55,10 +55,10 @@ $bloqueadoMed = $bloqueadoMed ?? false;
                     Saldo unificado e compartilhado automaticamente entre todos os seus dependentes.
                 </p>
                 <div class="d-flex gap-2">
-                    <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary flex-fill text-center">
+                    <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-primary flex-fill text-center">
                         Recarregar Saldo
                     </a>
-                    <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary flex-fill text-center">
+                    <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-primary flex-fill text-center">
                         Ver Extrato
                     </a>
                 </div>

@@ -38,7 +38,7 @@ $totalFaturado = (float)($totais['total_geral_faturado'] ?? 0.0);
     </div>
 
     <div>
-        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-secondary btn-sm">
+        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-primary btn-sm">
             ← Voltar à Gestão de Caixa
         </a>
     </div>

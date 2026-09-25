@@ -29,7 +29,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     </div>
 
     <div>
-        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-secondary btn-sm">
+        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-primary btn-sm">
             ← Voltar à Gestão de Caixa
         </a>
     </div>
@@ -82,7 +82,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                         <a href="<?php echo $baseUrl; ?>/operacional/caixa" class="btn btn-enterprise btn-secondary px-3">
                             Cancelar
                         </a>
-                        <button type="submit" class="btn btn-enterprise btn-success px-4">
+                        <button type="submit" class="btn btn-enterprise btn-primary px-4">
                             Confirmar Abertura de Caixa
                         </button>
                     </div>

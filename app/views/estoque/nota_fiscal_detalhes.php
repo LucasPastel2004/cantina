@@ -32,21 +32,21 @@ $chaveFormatada = trim(chunk_split($chaveNfe, 4, ' '));
             <p class="text-secondary text-microcopy mb-0">Memória de cálculo, conversão de embalagens e histórico fiscal do lote recebido.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
-            <button type="button" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1" id="btnAbrirModalXmlDetalhes">
+            <button type="button" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1" id="btnAbrirModalXmlDetalhes">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
                     <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
                 </svg>
                 Visualizar XML
             </button>
-            <a href="<?php echo $baseUrl; ?>/estoque/notas-fiscais/<?php echo $nota['id']; ?>/download" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1">
+            <a href="<?php echo $baseUrl; ?>/estoque/notas-fiscais/<?php echo $nota['id']; ?>/download" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
                     <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
                 </svg>
                 Baixar XML Original
             </a>
-            <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-secondary btn-sm">
+            <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-primary btn-sm">
                 Grade de Saldos
             </a>
         </div>

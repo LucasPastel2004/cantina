@@ -25,7 +25,7 @@ $csrfToken = $csrf_token ?? '';
         </p>
     </div>
     <div class="d-flex gap-2">
-        <a href="<?php echo $baseUrl; ?>/admin/categorias" class="btn btn-enterprise btn-secondary">
+        <a href="<?php echo $baseUrl; ?>/admin/categorias" class="btn btn-enterprise btn-primary">
             Gerenciar Categorias
         </a>
         <button type="button" class="btn btn-enterprise btn-primary" onclick="abrirModalProduto()">
@@ -80,10 +80,10 @@ $csrfToken = $csrf_token ?? '';
                 </select>
             </div>
             <div class="col-6 col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-grow-1" style="height: 31px;">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-grow-1" style="height: 31px;">
                     Filtrar
                 </button>
-                <a href="<?php echo $baseUrl; ?>/admin/produtos" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros" style="height: 31px; padding: 0 10px;">
+                <a href="<?php echo $baseUrl; ?>/admin/produtos" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros" style="height: 31px; padding: 0 10px;">
                     Limpar
                 </a>
             </div>

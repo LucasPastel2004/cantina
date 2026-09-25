@@ -21,11 +21,11 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
             <p class="text-muted small mb-0">Gestão de saldos em tempo real, reservas de pedidos online e pontos de reposição.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="<?php echo $baseUrl; ?>/estoque/movimentacoes" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1">
+            <a href="<?php echo $baseUrl; ?>/estoque/movimentacoes" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg>
                 Extrato de Movimentações
             </a>
-            <a href="<?php echo $baseUrl; ?>/estoque/perdas" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1">
+            <a href="<?php echo $baseUrl; ?>/estoque/perdas" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M7.005 3.1a1 1 0 1 1 1.99 0l-.388 6.35a.61.61 0 0 1-1.214 0zM8 12a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>
                 Lançar Perda
             </a>
@@ -102,11 +102,11 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
                 </select>
             </div>
             <div class="col-6 col-md-1 d-flex gap-1">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm w-100" title="Filtrar">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100" title="Filtrar">
                     Filtrar
                 </button>
                 <?php if (!empty($filtros['busca']) || !empty($filtros['categoria_id']) || !empty($filtros['tipo']) || !empty($filtros['apenas_alerta'])): ?>
-                    <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">✕</a>
+                    <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">✕</a>
                 <?php endif; ?>
             </div>
         </form>

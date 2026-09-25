@@ -36,7 +36,7 @@ $filtros = $filtros ?? ['busca' => '', 'data_inicio' => '', 'data_fim' => ''];
                 </svg>
                 Nova Entrada via XML
             </a>
-            <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-secondary btn-sm">
+            <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-primary btn-sm">
                 Grade de Saldos
             </a>
         </div>
@@ -80,7 +80,7 @@ $filtros = $filtros ?? ['busca' => '', 'data_inicio' => '', 'data_fim' => ''];
             <div class="col-12 col-md-1 d-flex gap-1">
                 <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-fill" title="Filtrar">Filtrar</button>
                 <?php if (!empty($filtros['busca']) || !empty($filtros['data_inicio']) || !empty($filtros['data_fim'])): ?>
-                    <a href="<?php echo $baseUrl; ?>/estoque/notas-fiscais" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">✕</a>
+                    <a href="<?php echo $baseUrl; ?>/estoque/notas-fiscais" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">✕</a>
                 <?php endif; ?>
             </div>
         </form>

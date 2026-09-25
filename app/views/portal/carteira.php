@@ -29,7 +29,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 </svg>
                 Recarregar Saldo (Pix)
             </a>
-            <a href="<?php echo $baseUrl; ?>/portal/agendamento" class="btn btn-enterprise btn-secondary btn-sm">
+            <a href="<?php echo $baseUrl; ?>/portal/agendamento" class="btn btn-enterprise btn-primary btn-sm">
                 Agendar Lanches
             </a>
         </div>
@@ -245,7 +245,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                         </label>
                         <div class="input-group">
                             <input type="text" id="pix-copia-cola-input" class="form-control font-monospace" style="font-size: 11px; background-color: #f8fafc;" readonly>
-                            <button type="button" class="btn btn-enterprise btn-secondary" onclick="copiarPixCodigo()" title="Copiar código Pix">
+                            <button type="button" class="btn btn-enterprise btn-primary" onclick="copiarPixCodigo()" title="Copiar código Pix">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="bi bi-clipboard me-1" viewBox="0 0 16 16">
                                     <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
                                     <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
@@ -285,7 +285,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                         Novo Saldo: R$ 0,00
                     </div>
                     <div class="d-flex justify-content-center gap-2 mt-3">
-                        <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="reiniciarPainelPix()">
+                        <button type="button" class="btn btn-enterprise btn-primary btn-sm" onclick="reiniciarPainelPix()">
                             Nova Recarga
                         </button>
                         <a href="<?php echo $baseUrl; ?>/portal/agendamento" class="btn btn-enterprise btn-primary btn-sm">
@@ -361,11 +361,11 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
             <!-- Botões de Ação do Filtro -->
             <div class="col-12 col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-grow-1">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-grow-1">
                     Filtrar
                 </button>
                 <?php if (!empty($filtros['aluno_id']) || !empty($filtros['tipo_transacao']) || !empty($filtros['data_inicio']) || !empty($filtros['data_fim'])): ?>
-                    <a href="<?php echo $baseUrl; ?>/portal/carteira#secao-extrato" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar filtros">
+                    <a href="<?php echo $baseUrl; ?>/portal/carteira#secao-extrato" class="btn btn-enterprise btn-primary btn-sm" title="Limpar filtros">
                         ✕
                     </a>
                 <?php endif; ?>

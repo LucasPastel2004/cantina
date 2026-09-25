@@ -51,11 +51,11 @@ $csrfField = $csrf_field ?? '';
                 </select>
             </div>
             <div class="col-6 col-sm-3 col-md-4 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-grow-1">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-grow-1">
                     Filtrar
                 </button>
                 <?php if (!empty($busca) || !empty($turno)): ?>
-                    <a href="<?php echo $baseUrl; ?>/admin/turmas" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
+                    <a href="<?php echo $baseUrl; ?>/admin/turmas" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
                         Limpar
                     </a>
                 <?php endif; ?>

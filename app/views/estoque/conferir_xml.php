@@ -168,7 +168,7 @@ $baseUrl = $baseUrl ?? '';
             <a href="<?php echo $baseUrl; ?>/estoque/importar-xml/cancelar" class="btn btn-enterprise btn-secondary btn-sm" onclick="return confirm('Deseja cancelar o processo de entrada?')">
                 Cancelar e Descartar
             </a>
-            <button type="submit" id="btnConfirmarEntrada" class="btn btn-enterprise btn-success btn-sm d-inline-flex align-items-center gap-2">
+            <button type="submit" id="btnConfirmarEntrada" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-2">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/></svg>
                 Confirmar Entrada de Mercadorias e Abastecer Estoque
             </button>

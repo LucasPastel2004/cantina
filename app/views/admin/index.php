@@ -46,7 +46,7 @@ require __DIR__ . '/../partials/stat_strip.php';
             </div>
             <div class="card-enterprise-body p-3">
                 <p class="text-microcopy text-secondary mb-3">Consolidação automática de salgados encomendados pontualmente no corte.</p>
-                <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-primary btn-sm w-100">
                     Acessar Corte
                 </a>
             </div>
@@ -59,7 +59,7 @@ require __DIR__ . '/../partials/stat_strip.php';
             </div>
             <div class="card-enterprise-body p-3">
                 <p class="text-microcopy text-secondary mb-3">Impressão contínua em bobina de 80mm e reemissão de 2ª via com auditoria.</p>
-                <a href="<?php echo $baseUrl; ?>/operacional/tickets" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                <a href="<?php echo $baseUrl; ?>/operacional/tickets" class="btn btn-enterprise btn-primary btn-sm w-100">
                     Imprimir Tickets
                 </a>
             </div>
@@ -72,7 +72,7 @@ require __DIR__ . '/../partials/stat_strip.php';
             </div>
             <div class="card-enterprise-body p-3">
                 <p class="text-microcopy text-secondary mb-3">Vendas avulsas no balcão e consumo de professores com desconto em folha.</p>
-                <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="btn btn-enterprise btn-primary btn-sm w-100">
                     Abrir PDV
                 </a>
             </div>
@@ -85,7 +85,7 @@ require __DIR__ . '/../partials/stat_strip.php';
             </div>
             <div class="card-enterprise-body p-3">
                 <p class="text-microcopy text-secondary mb-3">Abertura com troco e conferência de fechamento por turno (11:00 / 16:00).</p>
-                <a href="<?php echo $baseUrl; ?>/operacional/caixa" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa" class="btn btn-enterprise btn-primary btn-sm w-100">
                     Gerenciar Caixa
                 </a>
             </div>

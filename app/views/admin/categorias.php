@@ -17,7 +17,7 @@ $csrfToken = $csrf_token ?? '';
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
-            <a href="<?php echo $baseUrl; ?>/admin/produtos" class="btn btn-enterprise btn-secondary btn-sm" title="Voltar ao Cardápio">
+            <a href="<?php echo $baseUrl; ?>/admin/produtos" class="btn btn-enterprise btn-primary btn-sm" title="Voltar ao Cardápio">
                 &larr; Cardápio
             </a>
             <h1 class="h5 font-weight-bold text-dark mb-0">Categorias de Alimentos</h1>

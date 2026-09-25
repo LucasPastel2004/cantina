@@ -228,7 +228,7 @@ require __DIR__ . '/../partials/stat_strip.php';
 <div class="card-enterprise mt-4">
     <div class="card-enterprise-header d-flex justify-content-between align-items-center">
         <span class="font-weight-bold text-dark">Mensagem Estruturada para Fornecedor (WhatsApp)</span>
-        <button type="button" class="btn btn-enterprise btn-secondary btn-sm" id="btnCopiarWhatsCard" onclick="copiarPedidoWhatsApp()">
+        <button type="button" class="btn btn-enterprise btn-primary btn-sm" id="btnCopiarWhatsCard" onclick="copiarPedidoWhatsApp()">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" class="me-1" style="vertical-align: -1px;">
                 <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592z"/>
             </svg>

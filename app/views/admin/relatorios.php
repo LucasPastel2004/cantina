@@ -37,7 +37,7 @@ $baseUrl = $baseUrl ?? '';
                     <a href="<?php echo $baseUrl; ?>/operacional/corte/pdf?data=<?php echo date('Y-m-d'); ?>&turno=matutino" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center" target="_blank">
                         Baixar PDF (Manhã)
                     </a>
-                    <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-secondary btn-sm">
+                    <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-primary btn-sm">
                         Painel
                     </a>
                 </div>
@@ -83,10 +83,10 @@ $baseUrl = $baseUrl ?? '';
                     </p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="<?php echo $baseUrl; ?>/estoque/movimentacoes" class="btn btn-enterprise btn-secondary btn-sm flex-fill text-center">
+                    <a href="<?php echo $baseUrl; ?>/estoque/movimentacoes" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center">
                         Ver Movimentações
                     </a>
-                    <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-secondary btn-sm">
+                    <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-primary btn-sm">
                         Inventário
                     </a>
                 </div>

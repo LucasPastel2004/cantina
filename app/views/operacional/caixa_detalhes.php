@@ -51,13 +51,13 @@ $totalFaturado = (float)($totais['total_geral_faturado'] ?? 0.0);
     </div>
 
     <div class="d-flex gap-2">
-        <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $id; ?>" target="_blank" class="btn btn-enterprise btn-secondary btn-sm">
+        <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $id; ?>" target="_blank" class="btn btn-enterprise btn-primary btn-sm">
             Visualizar Espelho A4
         </a>
-        <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $id; ?>/pdf" class="btn btn-enterprise btn-secondary btn-sm">
+        <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $id; ?>/pdf" class="btn btn-enterprise btn-primary btn-sm">
             Baixar PDF A4
         </a>
-        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($sessao['turno'] ?? 'matutino'); ?>" class="btn btn-enterprise btn-secondary btn-sm">
+        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($sessao['turno'] ?? 'matutino'); ?>" class="btn btn-enterprise btn-primary btn-sm">
             ← Voltar ao Caixa
         </a>
     </div>

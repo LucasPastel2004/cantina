@@ -560,21 +560,21 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
         <div class="stat-strip-item d-flex flex-row align-items-center gap-1">
             <!-- Alternador de Turno -->
             <div class="btn-group btn-group-sm me-1" role="group" aria-label="Seletor de Turno PDV">
-                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=matutino" class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-secondary'; ?>" style="font-size: 10.5px; padding: 3px 6px;">Manhã</a>
-                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=vespertino" class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-secondary'; ?>" style="font-size: 10.5px; padding: 3px 6px;">Tarde</a>
+                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=matutino" class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-outline-primary'; ?>" style="font-size: 10.5px; padding: 3px 6px;">Manhã</a>
+                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=vespertino" class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-outline-primary'; ?>" style="font-size: 10.5px; padding: 3px 6px;">Tarde</a>
             </div>
             <?php if (!$caixaAberto): ?>
                 <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModal('modalAbrirCaixa')">
                     Abrir Caixa
                 </button>
             <?php endif; ?>
-            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-secondary btn-sm px-2 py-1" style="font-size: 11px;" title="Gestão e Fechamento de Caixa [F7]">
+            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-primary btn-sm px-2 py-1" style="font-size: 11px;" title="Gestão e Fechamento de Caixa [F7]">
                 Caixa <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F7</span>
             </a>
-            <button type="button" class="btn btn-enterprise btn-secondary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModal('modalEstornoBalcao')" title="Estorno de Ticket [F8]">
+            <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModal('modalEstornoBalcao')" title="Estorno de Ticket [F8]">
                 Estorno <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F8</span>
             </button>
-            <button type="button" class="btn btn-enterprise btn-secondary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModalSobras()" title="Aproveitamento de Sobras do Recreio [F9]">
+            <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModalSobras()" title="Aproveitamento de Sobras do Recreio [F9]">
                 Sobras <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F9</span>
             </button>
         </div>
@@ -587,7 +587,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
                 <span><strong>Alerta Operacional:</strong> A sessão de caixa do turno <strong><?php echo $outroTurnoNome; ?> (Sessão #<?php echo (int)$sessaoOutroTurno['id']; ?>)</strong> ainda está aberta. Recomendamos realizar a prestação de contas na tela de Caixa.</span>
             </div>
-            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-secondary btn-sm" style="font-size: 11px;">
+            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-primary btn-sm" style="font-size: 11px;">
                 Conferir Caixa <?php echo $outroTurnoNome; ?> →
             </a>
         </div>

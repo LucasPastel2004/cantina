@@ -24,10 +24,10 @@ $baseUrl = $baseUrl ?? '';
             <h1 class="h5 fw-bold text-slate-900 mb-0">Registro Operacional de Perdas & Descarte</h1>
         </div>
         <div class="d-flex gap-2">
-            <a href="<?php echo $baseUrl; ?>/estoque/movimentacoes?tipo=saida_perda" class="btn btn-enterprise btn-secondary btn-sm">
+            <a href="<?php echo $baseUrl; ?>/estoque/movimentacoes?tipo=saida_perda" class="btn btn-enterprise btn-primary btn-sm">
                 Histórico Completo de Perdas
             </a>
-            <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-secondary btn-sm">
+            <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-primary btn-sm">
                 Grade de Saldos
             </a>
         </div>

@@ -375,7 +375,7 @@ if ($caixaAberto) {
                 <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-fill">
                     Filtrar
                 </button>
-                <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo $turnoAtual; ?>" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo $turnoAtual; ?>" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
                     Limpar
                 </a>
             </div>
@@ -661,10 +661,10 @@ if ($caixaAberto) {
                             </svg>
                             Imprimir Comprovante Térmico (80mm)
                         </button>
-                        <a href="#" target="_blank" class="btn btn-enterprise btn-secondary px-3" id="recargaBtnBaixarPdf">
+                        <a href="#" target="_blank" class="btn btn-enterprise btn-primary px-3" id="recargaBtnBaixarPdf">
                             Baixar Comprovante em PDF
                         </a>
-                        <button type="button" class="btn btn-enterprise btn-secondary px-3" onclick="window.location.reload();">
+                        <button type="button" class="btn btn-enterprise btn-primary px-3" onclick="window.location.reload();">
                             Concluir e Atualizar Caixa
                         </button>
                     </div>
@@ -680,7 +680,7 @@ if ($caixaAberto) {
                 <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">
                     Cancelar
                 </button>
-                <button type="button" class="btn btn-enterprise btn-success btn-sm px-4" id="recargaBtnConfirmarRecarga" disabled>
+                <button type="button" class="btn btn-enterprise btn-primary btn-sm px-4" id="recargaBtnConfirmarRecarga" disabled>
                     Confirmar Recarga em Dinheiro
                 </button>
             </div>

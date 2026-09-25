@@ -24,11 +24,11 @@ $baseUrl = $baseUrl ?? '';
             <h1 class="h5 fw-bold text-slate-900 mb-0">Extrato Cronológico de Movimentações</h1>
         </div>
         <div class="d-flex gap-2">
-            <a href="<?php echo $baseUrl; ?>/estoque/perdas" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1">
+            <a href="<?php echo $baseUrl; ?>/estoque/perdas" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M7.005 3.1a1 1 0 1 1 1.99 0l-.388 6.35a.61.61 0 0 1-1.214 0zM8 12a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>
                 Lançar Perda
             </a>
-            <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-secondary btn-sm">
+            <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-primary btn-sm">
                 Ver Saldos Atuais
             </a>
         </div>
@@ -73,9 +73,9 @@ $baseUrl = $baseUrl ?? '';
             </div>
             <div class="col-12 d-flex justify-content-end gap-2 mt-2">
                 <?php if (!empty($filtros['busca']) || !empty($filtros['produto_id']) || !empty($filtros['tipo_movimentacao']) || !empty($filtros['data_inicio']) || !empty($filtros['data_fim'])): ?>
-                    <a href="<?php echo $baseUrl; ?>/estoque/movimentacoes" class="btn btn-enterprise btn-secondary btn-sm">Limpar Filtros</a>
+                    <a href="<?php echo $baseUrl; ?>/estoque/movimentacoes" class="btn btn-enterprise btn-primary btn-sm">Limpar Filtros</a>
                 <?php endif; ?>
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm">Filtrar Movimentações</button>
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm">Filtrar Movimentações</button>
             </div>
         </form>
     </div>

@@ -28,7 +28,7 @@ $filtros      = $filtros ?? ['busca' => '', 'turma_id' => 0, 'turno' => '', 'sta
         <p class="text-secondary text-microcopy mb-0">Consulta cadastral, remanejamento de turmas, vínculo familiar e gestão de status.</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="<?php echo $baseUrl; ?>/admin/importacao-escolar" class="btn btn-enterprise btn-secondary">
+        <a href="<?php echo $baseUrl; ?>/admin/importacao-escolar" class="btn btn-enterprise btn-primary">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg>
             Importação em Lote
         </a>
@@ -70,11 +70,11 @@ $filtros      = $filtros ?? ['busca' => '', 'turma_id' => 0, 'turno' => '', 'sta
                 </select>
             </div>
             <div class="col-6 col-md-1 d-flex gap-1">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm w-100" title="Filtrar">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100" title="Filtrar">
                     Filtrar
                 </button>
                 <?php if (!empty($filtros['busca']) || !empty($filtros['turma_id']) || !empty($filtros['turno']) || ($filtros['status'] ?? '') !== 'ativos'): ?>
-                    <a href="<?php echo $baseUrl; ?>/admin/alunos" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
+                    <a href="<?php echo $baseUrl; ?>/admin/alunos" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
                         ✕
                     </a>
                 <?php endif; ?>

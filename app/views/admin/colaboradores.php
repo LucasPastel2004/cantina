@@ -40,11 +40,11 @@ $csrfField = $csrf_field ?? '';
                        placeholder="Digite o nome, matrícula ou cargo..." value="<?php echo htmlspecialchars($busca, ENT_QUOTES, 'UTF-8'); ?>">
             </div>
             <div class="col-12 col-sm-4 col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-grow-1">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-grow-1">
                     Buscar
                 </button>
                 <?php if (!empty($busca)): ?>
-                    <a href="<?php echo $baseUrl; ?>/admin/colaboradores" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Busca">
+                    <a href="<?php echo $baseUrl; ?>/admin/colaboradores" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Busca">
                         Limpar
                     </a>
                 <?php endif; ?>

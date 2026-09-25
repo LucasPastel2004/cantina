@@ -36,7 +36,7 @@ $totalPaginas = $totalPaginas ?? 1;
     <div class="d-flex gap-2">
         <a href="<?php echo $baseUrl; ?>/admin/contestacoes/pdf<?php echo !empty($filtroBusca) ? '?busca=' . urlencode($filtroBusca) : ''; ?>" 
            target="_blank" 
-           class="btn btn-enterprise btn-secondary" 
+           class="btn btn-enterprise btn-primary" 
            title="Exportar Relatório Oficial em PDF Timbrado">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1" aria-hidden="true">
                 <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 1.5 13 5H9.5V1.5zM3 14V2a1 1 0 0 1 1-1h5v4.5a.5.5 0 0 0 .5.5H13v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
@@ -152,11 +152,11 @@ $totalPaginas = $totalPaginas ?? 1;
             </div>
 
             <div class="col-12 col-sm-3 col-md-4 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-grow-1">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-grow-1">
                     Filtrar Registros
                 </button>
                 <?php if (!empty($filtroBusca) || ($filtroStatus !== 'todos' && !empty($filtroStatus))): ?>
-                    <a href="<?php echo $baseUrl; ?>/admin/contestacoes" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
+                    <a href="<?php echo $baseUrl; ?>/admin/contestacoes" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
                         Limpar
                     </a>
                 <?php endif; ?>
