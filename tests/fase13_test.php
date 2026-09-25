@@ -377,17 +377,17 @@ class Fase13Test
 
         // Cria aluno
         $turmaId = $this->obterTurmaId();
-        $mat = 'ALU-' . rand(1000, 9999);
+        $mat = 'ALU-' . bin2hex(random_bytes(4));
         $this->pdo->exec("INSERT INTO alunos (matricula, nome, responsavel_id, turma_id, turno, ativo, created_at) VALUES ('{$mat}', 'Filho Teste Estorno', {$respId}, {$turmaId}, 'matutino', 1, NOW())");
         $alunoId = (int)$this->pdo->lastInsertId();
 
         // Cria produto
-        $codProdEst = 'EST-' . rand(1000, 9999);
+        $codProdEst = 'EST-' . bin2hex(random_bytes(4));
         $this->pdo->exec("INSERT INTO produtos (codigo_interno, descricao, categoria_id, tipo, preco_venda, estoque_atual, estoque_minimo, status_pausa, created_at) VALUES ('{$codProdEst}', 'Coxinha de Frango', {$catId}, 'salgado_diario', 7.50, 10, 2, 'ativo', NOW())");
         $prodId = (int)$this->pdo->lastInsertId();
 
         // Cria pedido e item
-        $codPed = 'PED-EST-' . rand(100, 999);
+        $codPed = 'PED-EST-' . bin2hex(random_bytes(4));
         $this->pdo->exec("INSERT INTO pedidos (codigo_pedido, responsavel_id, aluno_id, data_consumo, turno_consumo, valor_total, status, created_at) VALUES ('{$codPed}', {$respId}, {$alunoId}, CURDATE(), 'matutino', 7.50, 'agendado', NOW())");
         $pedId = (int)$this->pdo->lastInsertId();
 

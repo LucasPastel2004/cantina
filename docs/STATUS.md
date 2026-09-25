@@ -731,7 +731,8 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * **Regras de Preservação Mantidas Rigorosamente:**
     * Botões utilitários de linhas de tabelas/listas internas (`<td>...</td>`, ex: "Ver", "Editar", "Excluir", "Perda", "Mín", "Quitar Débito", "Desbloquear", "Reimprimir 2ª Via") foram mantidos intocados no padrão neutro/secundário discreto, atendendo estritamente ao pedido do usuário ("não converta os botões dentro das lista");
     * Botões de cancelamento/fechamento de modais (`data-bs-dismiss="modal"`, "Cancelar", "Fechar", "Voltar") mantidos em padrão neutro;
-    * Chips informativos e tags de sistema (valores rápidos de Pix, saldo familiar, status pontuais) mantidos rigorosamente neutros conforme `AGENTS.md`;
+  * **Eliminação de Duplicidade em Espelhos HTML:**
+    * Removida a barra de ações/botões redundante que aparecia no rodapé após as assinaturas no espelho de fechamento de caixa (`/operacional/caixa/espelho/{id}`), centralizando os botões de retorno, download de PDF e impressão exclusivamente na barra de ferramentas do topo;
   * Incremento do assetVersion para `5.9.2` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
   * Suíte global de 40 testes automatizados reexecutada e aprovada com 100% de sucesso (`tests/verification_audit.php`).
 

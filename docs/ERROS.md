@@ -964,3 +964,12 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Causa: No `TicketsController`, o método `normalizarTurno(?string $turno)` assume `'vespertino'` quando `$turno === null` e a hora corrente do servidor é $\ge$ 11:00. Como a suíte chamava `/operacional/tickets/lote` sem parâmetros de query string e os tickets de teste foram gerados para o turno `'matutino'`, o controller retornava lista vazia e redirecionava para o painel com flash message, sem renderizar a bobina HTML nem o PDF 80mm.
 - Solução aplicada: Explicitados os parâmetros `?data=2026-09-25&turno=matutino` e os valores correspondentes em `$_GET['data']` e `$_GET['turno']` dentro do script de teste isolado `tests/tickets_web_test.php`.
 - Como evitar no futuro: Em testes automatizados de rotas operacionais dependentes de horário ou turno letivo, sempre fornecer parâmetros explícitos de data e turno para garantir idempotência e independência do horário em que os testes são disparados.
+
+---
+
+## 2026-09-25 - Barra de ações/botões de navegação duplicada no espelho HTML de fechamento de caixa
+
+- Sintoma: A página de espelho de fechamento de caixa (`/operacional/caixa/espelho/{id}`) exibia a barra de ações ("← Voltar ao Caixa", "Baixar PDF", "Imprimir Documento") tanto no cabeçalho quanto no rodapé após as assinaturas, causando duplicidade visual desnecessária.
+- Causa: Em `app/services/PdfService.php` no método `gerarEspelhoFechamentoCaixaHtml()`, havia dois blocos `.no-print`: um no topo antes do cabeçalho da folha e outro replicado abaixo da tabela de assinaturas com IDs e links idênticos (`btnVoltarCaixaRodape`).
+- Solução aplicada: Removido o bloco duplicado do rodapé, mantendo uma única barra de ferramentas corporativa, limpa e padronizada no topo do documento.
+- Como evitar no futuro: Manter a barra de ações/impressão exclusivamente no topo de espelhos e comprovantes HTML (`.no-print`), evitando redundâncias no final do documento que poluam a pré-visualização ou causem confusão ao usuário.

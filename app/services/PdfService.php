@@ -2288,20 +2288,6 @@ class PdfService
                         </td>
                     </tr>
                 </table>
-
-                <div class="no-print" style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-                    <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoRaw); ?>" onclick="executarRetornoAoCaixa(); return false;" class="btn-action btn-secondary" id="btnVoltarCaixaRodape" title="Retornar à tela de Gestão de Caixa">
-                        ← Voltar ao Caixa
-                    </a>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $id; ?>/pdf" target="_blank" download="fechamento_caixa_<?php echo $id; ?>.pdf" class="btn-action btn-secondary">
-                            📄 Baixar PDF
-                        </a>
-                        <button type="button" onclick="window.print()" class="btn-action btn-primary">
-                            🖨️ Imprimir Documento
-                        </button>
-                    </div>
-                </div>
             </div>
 
             <script>
