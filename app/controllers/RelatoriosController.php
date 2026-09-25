@@ -35,7 +35,7 @@ class RelatoriosController extends Controller
         // Métricas consolidadas do mês corrente para a Stat-Strip do Hub
         $pdo = \App\Core\Model::getPdo();
 
-        // 1. Faturamento Total do Mês (Pedidos agendados/entregues + Vendas balcão concluídas)
+        // 1. Faturamento Total do Mês (Pedidos agendados/entregues + Vendas balcão realizadas)
         $sqlFat = "
             SELECT 
                 (
@@ -46,8 +46,7 @@ class RelatoriosController extends Controller
                 ) + (
                     SELECT COALESCE(SUM(valor_total), 0)
                     FROM vendas_balcao
-                    WHERE status = 'concluida'
-                      AND MONTH(created_at) = :mes2 AND YEAR(created_at) = :ano2
+                    WHERE MONTH(created_at) = :mes2 AND YEAR(created_at) = :ano2
                 ) AS faturamento_total
         ";
         $stmt = $pdo->prepare($sqlFat);
@@ -71,8 +70,7 @@ class RelatoriosController extends Controller
                     SELECT COALESCE(SUM(ivb.quantidade), 0)
                     FROM itens_venda_balcao ivb
                     INNER JOIN vendas_balcao vb ON vb.id = ivb.venda_balcao_id
-                    WHERE vb.status = 'concluida'
-                      AND MONTH(vb.created_at) = :mes2 AND YEAR(vb.created_at) = :ano2
+                    WHERE MONTH(vb.created_at) = :mes2 AND YEAR(vb.created_at) = :ano2
                 ) AS lanches_total
         ";
         $stmtLanches = $pdo->prepare($sqlLanches);
@@ -88,7 +86,6 @@ class RelatoriosController extends Controller
             SELECT COALESCE(SUM(valor_total), 0) AS total_folha
             FROM vendas_balcao
             WHERE tipo_venda = 'desconto_folha'
-              AND status = 'concluida'
               AND MONTH(created_at) = :mes AND YEAR(created_at) = :ano
         ";
         $stmtFolha = $pdo->prepare($sqlFolha);
@@ -416,7 +413,6 @@ class RelatoriosController extends Controller
             INNER JOIN usuarios u ON u.id = vb.operador_id
             WHERE vb.colaborador_id = :colab_id
               AND vb.tipo_venda = 'desconto_folha'
-              AND vb.status = 'concluida'
               AND YEAR(vb.created_at) = :ano
               AND MONTH(vb.created_at) = :mes
             ORDER BY vb.created_at DESC
@@ -435,8 +431,8 @@ class RelatoriosController extends Controller
                     ivb.quantidade,
                     ivb.preco_unitario,
                     ivb.subtotal,
-                    p.nome AS produto_nome,
-                    p.codigo AS produto_codigo
+                    p.descricao AS produto_nome,
+                    p.codigo_interno AS produto_codigo
                 FROM itens_venda_balcao ivb
                 INNER JOIN produtos p ON p.id = ivb.produto_id
                 WHERE ivb.venda_balcao_id = :venda_id
@@ -588,12 +584,12 @@ class RelatoriosController extends Controller
             SELECT 
                 p.id AS referencia_id,
                 p.data_consumo,
-                p.turno,
+                p.turno_consumo AS turno,
                 p.status,
                 p.valor_total,
                 p.created_at,
                 'Agendamento Online' AS canal,
-                GROUP_CONCAT(CONCAT(ip.quantidade, 'x ', pr.nome) SEPARATOR ', ') AS itens_descricao,
+                GROUP_CONCAT(CONCAT(ip.quantidade, 'x ', pr.descricao) SEPARATOR ', ') AS itens_descricao,
                 COALESCE(SUM(ip.quantidade), 0) AS total_itens
             FROM pedidos p
             INNER JOIN itens_pedido ip ON ip.pedido_id = p.id
@@ -601,7 +597,7 @@ class RelatoriosController extends Controller
             WHERE p.aluno_id = :aluno_id
               AND p.status IN ('agendado', 'editado', 'entregue')
               AND p.data_consumo BETWEEN :data_ini AND :data_fim
-            GROUP BY p.id, p.data_consumo, p.turno, p.status, p.valor_total, p.created_at
+            GROUP BY p.id, p.data_consumo, p.turno_consumo, p.status, p.valor_total, p.created_at
         ";
         $stmtPed = $pdo->prepare($sqlPedidos);
         $stmtPed->execute([
@@ -617,20 +613,19 @@ class RelatoriosController extends Controller
                 vb.id AS referencia_id,
                 DATE(vb.created_at) AS data_consumo,
                 sc.turno,
-                vb.status,
+                'concluida' AS status,
                 vb.valor_total,
                 vb.created_at,
                 'PDV Balcão' AS canal,
-                GROUP_CONCAT(CONCAT(ivb.quantidade, 'x ', pr.nome) SEPARATOR ', ') AS itens_descricao,
+                GROUP_CONCAT(CONCAT(ivb.quantidade, 'x ', pr.descricao) SEPARATOR ', ') AS itens_descricao,
                 COALESCE(SUM(ivb.quantidade), 0) AS total_itens
             FROM vendas_balcao vb
             INNER JOIN sessoes_caixa sc ON sc.id = vb.sessao_caixa_id
             INNER JOIN itens_venda_balcao ivb ON ivb.venda_balcao_id = vb.id
             INNER JOIN produtos pr ON pr.id = ivb.produto_id
             WHERE vb.aluno_id = :aluno_id
-              AND vb.status = 'concluida'
               AND DATE(vb.created_at) BETWEEN :data_ini AND :data_fim
-            GROUP BY vb.id, vb.created_at, sc.turno, vb.status, vb.valor_total
+            GROUP BY vb.id, vb.created_at, sc.turno, vb.valor_total
         ";
         $stmtBal = $pdo->prepare($sqlBalcao);
         $stmtBal->execute([
@@ -691,7 +686,7 @@ class RelatoriosController extends Controller
         $whereTurno1 = "";
         $whereTurno2 = "";
         if (!empty($turno) && in_array($turno, ['matutino', 'vespertino'], true)) {
-            $whereTurno1 = " AND ped.turno = :turno1";
+            $whereTurno1 = " AND ped.turno_consumo = :turno1";
             $whereTurno2 = " AND sc.turno = :turno2";
             $params['turno1'] = $turno;
             $params['turno2'] = $turno;
@@ -712,8 +707,9 @@ class RelatoriosController extends Controller
         $sql = "
             SELECT 
                 p.id AS produto_id,
-                p.codigo,
-                p.nome AS descricao,
+                p.codigo_interno AS codigo,
+                p.codigo_interno,
+                p.descricao,
                 COALESCE(c.nome, 'Sem Categoria') AS categoria_nome,
                 p.tipo,
                 SUM(v.quantidade) AS quantidade_total,
@@ -741,8 +737,7 @@ class RelatoriosController extends Controller
                 FROM itens_venda_balcao ivb
                 INNER JOIN vendas_balcao vb ON vb.id = ivb.venda_balcao_id
                 INNER JOIN sessoes_caixa sc ON sc.id = vb.sessao_caixa_id
-                WHERE vb.status = 'concluida'
-                  AND DATE(vb.created_at) BETWEEN :ini2 AND :fim2
+                WHERE DATE(vb.created_at) BETWEEN :ini2 AND :fim2
                   {$whereTurno2}
             ) AS v
             INNER JOIN produtos p ON p.id = v.produto_id
@@ -750,7 +745,7 @@ class RelatoriosController extends Controller
             WHERE 1=1
               {$whereCat}
               {$whereTipo}
-            GROUP BY p.id, p.codigo, p.nome, c.nome, p.tipo
+            GROUP BY p.id, p.codigo_interno, p.descricao, c.nome, p.tipo
             ORDER BY faturamento_total DESC, quantidade_total DESC
         ";
 
@@ -839,7 +834,6 @@ class RelatoriosController extends Controller
             FROM colaboradores c
             INNER JOIN vendas_balcao vb ON vb.colaborador_id = c.id
             WHERE vb.tipo_venda = 'desconto_folha'
-              AND vb.status = 'concluida'
               AND YEAR(vb.created_at) = :ano
               AND MONTH(vb.created_at) = :mes
             GROUP BY c.id, c.matricula_funcional, c.nome, c.cargo, c.foto_url
@@ -857,7 +851,6 @@ class RelatoriosController extends Controller
             FROM itens_venda_balcao ivb
             INNER JOIN vendas_balcao vb ON vb.id = ivb.venda_balcao_id
             WHERE vb.tipo_venda = 'desconto_folha'
-              AND vb.status = 'concluida'
               AND YEAR(vb.created_at) = :ano
               AND MONTH(vb.created_at) = :mes
             GROUP BY vb.colaborador_id

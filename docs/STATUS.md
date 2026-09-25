@@ -656,10 +656,15 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] **Matriz de Permissões RBAC e Navegação:**
   * Atualização da barra lateral (`app/views/layouts/sidebar.php`) incluindo "Extrato do Aluno" no menu Operacional;
   * Registro de 16 rotas no Front Controller `index.php` com RBAC estrito (`ROLE_OPERADOR` e `ROLE_ADMINISTRADOR` para extrato do aluno; `ROLE_ADMINISTRADOR` para relatórios gerenciais e financeiros).
-* [x] **Suíte de Testes Automatizados e Auditoria Global:**
+* [x] **Suíte de Testes Automatizados, Auditoria Global e Hotfix de Colunas:**
   * Criação da suíte `tests/fase17_test.php` com 47 asserções aprovadas com 100% de sucesso (PDFs, espelho HTML, CSV UTF-8 BOM, Curva ABC matemática, consultas e RBAC);
+  * Correção pontual de colunas em `app/controllers/RelatoriosController.php`:
+    * Remoção de referências inexistentes a `status = 'concluida'` na tabela `vendas_balcao` (que não possui coluna `status`);
+    * Correção de projeções da tabela `produtos` para `codigo_interno` e `descricao` (e não `codigo` e `nome`);
+    * Correção de referência da tabela `pedidos` para `turno_consumo` (e não `turno`);
+    * Testes HTTP ponta a ponta com sessão autenticada confirmando retorno HTTP 200 OK sem exceções em todas as rotas e exportações de relatórios.
   * Execução do script de auditoria `tests/verification_audit.php`:
-    * Sintaxe PHP válida em 189 arquivos (100%);
+    * Sintaxe PHP válida em 192 arquivos (100%);
     * Proteção `CANTINA_SISTEMA` em 100% dos arquivos internos;
     * 143 rotas no `Router` verificadas e vinculadas a métodos válidos;
     * Prepared Statements estritos em 100% das consultas SQL;

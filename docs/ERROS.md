@@ -865,3 +865,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Causa: Conforme regra contábil da instituição (`docs/FSD.md` Seção 1.2), o saldo é familiar compartilhado e reside na tabela `responsaveis.saldo_atual`. As consultas `Aluno::buscarPorId` e `Aluno::listarTodos` faziam o join com a tabela de responsáveis, mas omitiam o campo `r.saldo_atual`.
 - Solução aplicada: Adicionado `r.saldo_atual` aos campos selecionados no join com `responsaveis` em `Aluno::buscarPorId` e `Aluno::listarTodos`, disponibilizando automaticamente o saldo da carteira em qualquer objeto de aluno instanciado.
 - Como evitar no futuro: Em modelos que representem dependentes de uma conta familiar compartilhada, garantir que as projeções de dados tragam os campos contábeis pertinentes do titular para evitar consultas adicionais desnecessárias.
+---
+
+## 2026-09-25 - Erro SQLSTATE[42S22] Column not found (status em vendas_balcao, codigo/nome em produtos e turno em pedidos) em RelatoriosController
+
+- Sintoma: `PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'status' in 'where clause'` ao acessar a rota `/relatorios` (`http://localhost:8080/relatorios`), gerando tela de erro 500 no ErrorHandler na linha 53 de `app/controllers/RelatoriosController.php`. Subsequentemente identificado em testes em tempo de execução `Unknown column 'p.codigo' / 'p.nome'` na tabela `produtos` e `Unknown column 'p.turno'` na tabela `pedidos`.
+- Causa:
+  1. A tabela `vendas_balcao` (Migration 020) não possui coluna `status`. Toda venda física no balcão (avulsa ou por desconto em folha) é registrada como concluída imediatamente na gravação. As queries de consolidação mensal (`index()`), detalhamento de compras do colaborador (`descontoFolhaDetalhesAjax()`), extrato do aluno (`obterDadosExtratoAluno()`), vendas por alimento (`obterDadosVendasAlimento()`) e desconto em folha para RH (`obterDadosDescontoFolha()`) tentavam filtrar incorretamente `WHERE status = 'concluida'` ou `WHERE vb.status = 'concluida'`.
+  2. Na tabela `produtos` (Migration 011), as colunas oficiais são `codigo_interno` e `descricao` (e não `codigo` e `nome`). As consultas em `obterDadosVendasAlimento` e `descontoFolhaDetalhesAjax` selecionavam `p.codigo` e `p.nome`.
+  3. Na tabela `pedidos` (Migration 016), a coluna oficial do turno é `turno_consumo` (e não `turno`). O extrato do aluno e o filtro de turno em vendas por alimento referenciavam `ped.turno` e `p.turno`.
+- Solução aplicada:
+  1. Em `app/controllers/RelatoriosController.php`, removido o filtro `status = 'concluida'` e `vb.status = 'concluida'` de todas as 8 ocorrências em consultas sobre a tabela `vendas_balcao`. Na união de dados do extrato do aluno, projetado o alias `'concluida' AS status` para compatibilidade com o formato esperado de pedidos.
+  2. Corrigidas as projeções da tabela `produtos` para `p.codigo_interno AS codigo, p.codigo_interno, p.descricao`, agrupando por `p.id, p.codigo_interno, p.descricao, c.nome, p.tipo`.
+  3. Corrigidas as referências de `pedidos` para `p.turno_consumo AS turno` e `ped.turno_consumo`.
+  4. Executados testes ponta a ponta simulando requisições HTTP autênticas no Apache para todas as 8 rotas e exportações de relatórios (`/relatorios`, `/relatorios/vendas-alimento`, `/relatorios/desconto-folha`, `/relatorios/desconto-folha/csv`, `/relatorios/fechamento-caixa`, `/relatorios/devedores`, `/relatorios/extrato-aluno`, `/operacional/extrato-aluno`), validando resposta HTTP 200 OK sem exceções.
+  5. Auditoria global executada via `tests/verification_audit.php` com 100% de sucesso nas 40 suítes de testes automatizados.
+- Como evitar no futuro: Sempre verificar as migrations correspondentes antes de compor consultas SQL complexas unindo múltiplas tabelas, e criar scripts de teste de execução real com o banco de dados ativo simulando dados e requisições completas de ponta a ponta.
