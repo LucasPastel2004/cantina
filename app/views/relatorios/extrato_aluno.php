@@ -36,22 +36,25 @@ $aluno = $dadosExtrato['aluno'] ?? null;
 </div>
 
 <!-- Filtros de Seleção de Aluno e Período de Datas -->
-<div class="card-enterprise mb-4">
-    <div class="card-enterprise-body">
-        <form action="<?php echo $baseUrl; ?>/operacional/extrato-aluno" method="GET" class="row g-3 align-items-end" id="formExtratoAluno">
-            <div class="col-12 col-md-5 position-relative">
+<div class="card-enterprise card-overflow-visible mb-4" style="overflow: visible !important; position: relative; z-index: 30;">
+    <div class="card-enterprise-body" style="overflow: visible !important;">
+        <form action="<?php echo $baseUrl; ?>/operacional/extrato-aluno" method="GET" class="row g-3 align-items-end" id="formExtratoAluno" style="position: relative; overflow: visible !important;">
+            <div class="col-12 col-md-5" style="position: relative; z-index: 40;">
                 <label for="inputBuscaAluno" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">
                     Localizar Aluno (Nome ou Matrícula)
                 </label>
-                <div class="search-input-wrapper">
+                <div class="search-input-wrapper position-relative" style="position: relative;">
                     <span class="search-icon">
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
                     </span>
                     <input type="text" id="inputBuscaAluno" class="form-control form-control-sm" style="padding-left: 46px !important;" placeholder="Digite para buscar aluno..." autocomplete="off" value="<?php echo htmlspecialchars($aluno['nome'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     <input type="hidden" name="aluno_id" id="hiddenAlunoId" value="<?php echo (int)($alunoId ?? 0); ?>">
+
+                    <!-- Dropdown flutuante de Autocomplete (flutua livremente para fora da caixa sobre a página) -->
+                    <div id="autocompleteDropdown" class="list-group position-absolute rounded shadow-lg d-none" 
+                         style="top: calc(100% + 4px); left: 0; right: 0; width: 100%; z-index: 1080; max-height: 280px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2), 0 8px 10px -6px rgba(15, 23, 42, 0.12) !important;">
+                    </div>
                 </div>
-                <!-- Dropdown de Autocomplete -->
-                <div id="autocompleteDropdown" class="list-group position-absolute w-100 shadow-sm border mt-1 d-none" style="z-index: 1050; max-height: 240px; overflow-y: auto;"></div>
             </div>
 
             <div class="col-6 col-md-3">
@@ -330,6 +333,44 @@ document.addEventListener('DOMContentLoaded', function() {
     const dropdown = document.getElementById('autocompleteDropdown');
     const form = document.getElementById('formExtratoAluno');
     let debounceTimer = null;
+    let itemAtivoIndex = -1;
+    let alunosAtuais = [];
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function fecharDropdown() {
+        dropdown.innerHTML = '';
+        dropdown.classList.add('d-none');
+        itemAtivoIndex = -1;
+        alunosAtuais = [];
+    }
+
+    function destacarItem(index) {
+        const itens = dropdown.querySelectorAll('.autocomplete-aluno-item');
+        itens.forEach((el, idx) => {
+            if (idx === index) {
+                el.classList.add('active');
+                el.style.backgroundColor = '#f1f5f9';
+                el.scrollIntoView({ block: 'nearest' });
+            } else {
+                el.classList.remove('active');
+                el.style.backgroundColor = '#ffffff';
+            }
+        });
+    }
+
+    function selecionarAluno(aluno) {
+        if (!aluno) return;
+        hiddenId.value = aluno.id;
+        inputBusca.value = aluno.nome;
+        fecharDropdown();
+        form.submit();
+    }
 
     if (inputBusca && dropdown) {
         inputBusca.addEventListener('input', function() {
@@ -337,53 +378,103 @@ document.addEventListener('DOMContentLoaded', function() {
             const termo = inputBusca.value.trim();
 
             if (termo.length < 2) {
-                dropdown.innerHTML = '';
-                dropdown.classList.add('d-none');
+                fecharDropdown();
                 return;
             }
+
+            // Exibe imediatamente o estado de carregamento flutuante
+            dropdown.innerHTML = '<div class="p-3 text-secondary text-microcopy text-center">' +
+                '<span class="spinner-border spinner-border-sm me-2 text-primary" role="status"></span> Localizando alunos...</div>';
+            dropdown.classList.remove('d-none');
 
             debounceTimer = setTimeout(() => {
                 fetch('<?php echo $baseUrl; ?>/relatorios/buscar-alunos-ajax?q=' + encodeURIComponent(termo))
                     .then(r => r.json())
                     .then(data => {
                         dropdown.innerHTML = '';
-                        if (data.alunos && data.alunos.length > 0) {
-                            data.alunos.forEach(aluno => {
-                                const item = document.createElement('a');
-                                item.href = '#';
-                                item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2';
+                        itemAtivoIndex = -1;
+                        alunosAtuais = data.alunos || [];
+
+                        if (alunosAtuais.length > 0) {
+                            alunosAtuais.forEach((aluno, idx) => {
+                                const item = document.createElement('div');
+                                item.className = 'autocomplete-aluno-item d-flex justify-content-between align-items-center py-2 px-3 border-bottom';
+                                item.style.cursor = 'pointer';
+                                item.style.backgroundColor = '#ffffff';
+                                item.style.transition = 'background-color 0.15s ease';
+                                item.setAttribute('data-idx', idx);
                                 item.innerHTML = `
-                                    <div>
-                                        <div class="font-weight-bold text-dark" style="font-size: 13px;">${aluno.nome}</div>
-                                        <div class="text-secondary text-microcopy font-tabular">Matrícula: ${aluno.matricula} • ${aluno.turma} (${aluno.turno})</div>
+                                    <div class="text-truncate me-2">
+                                        <div class="font-weight-semibold text-dark" style="font-size: 13px;">${escapeHtml(aluno.nome)}</div>
+                                        <div class="text-secondary text-microcopy font-tabular">Matrícula: ${escapeHtml(aluno.matricula)} • ${escapeHtml(aluno.turma)} (${escapeHtml(aluno.turno)})</div>
                                     </div>
-                                    <span class="code-tag font-tabular">${aluno.saldo_fmt}</span>
+                                    <span class="code-tag font-tabular flex-shrink-0">${escapeHtml(aluno.saldo_fmt)}</span>
                                 `;
+
+                                item.addEventListener('mouseenter', function() {
+                                    itemAtivoIndex = idx;
+                                    destacarItem(idx);
+                                });
+
                                 item.addEventListener('click', function(e) {
                                     e.preventDefault();
-                                    hiddenId.value = aluno.id;
-                                    inputBusca.value = aluno.nome;
-                                    dropdown.classList.add('d-none');
-                                    form.submit();
+                                    e.stopPropagation();
+                                    selecionarAluno(aluno);
                                 });
+
                                 dropdown.appendChild(item);
                             });
                             dropdown.classList.remove('d-none');
                         } else {
-                            dropdown.innerHTML = '<div class="p-2 text-secondary text-microcopy text-center">Nenhum aluno localizado.</div>';
+                            dropdown.innerHTML = '<div class="p-3 text-secondary text-microcopy text-center">Nenhum aluno localizado para "<strong>' + escapeHtml(termo) + '</strong>".</div>';
                             dropdown.classList.remove('d-none');
                         }
                     })
                     .catch(() => {
-                        dropdown.classList.add('d-none');
+                        dropdown.innerHTML = '<div class="p-3 text-danger text-microcopy text-center">Erro ao comunicar com o servidor.</div>';
+                        dropdown.classList.remove('d-none');
                     });
-            }, 250);
+            }, 200);
+        });
+
+        // Navegação por teclado no dropdown
+        inputBusca.addEventListener('keydown', function(e) {
+            if (dropdown.classList.contains('d-none') || alunosAtuais.length === 0) {
+                if (e.key === 'Escape') fecharDropdown();
+                return;
+            }
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                itemAtivoIndex = (itemAtivoIndex + 1) % alunosAtuais.length;
+                destacarItem(itemAtivoIndex);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                itemAtivoIndex = (itemAtivoIndex - 1 + alunosAtuais.length) % alunosAtuais.length;
+                destacarItem(itemAtivoIndex);
+            } else if (e.key === 'Enter') {
+                if (itemAtivoIndex >= 0 && itemAtivoIndex < alunosAtuais.length) {
+                    e.preventDefault();
+                    selecionarAluno(alunosAtuais[itemAtivoIndex]);
+                }
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                fecharDropdown();
+            }
+        });
+
+        // Reabrir ao focar se já houver resultados carregados
+        inputBusca.addEventListener('focus', function() {
+            const termo = inputBusca.value.trim();
+            if (termo.length >= 2 && dropdown.children.length > 0) {
+                dropdown.classList.remove('d-none');
+            }
         });
 
         // Fechar dropdown ao clicar fora
         document.addEventListener('click', function(e) {
             if (!inputBusca.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.add('d-none');
+                fecharDropdown();
             }
         });
     }

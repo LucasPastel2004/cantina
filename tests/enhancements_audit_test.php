@@ -92,8 +92,17 @@ $respAposTotal = Responsavel::buscarPorId($respId);
 assertCheck((float)$respAposTotal['saldo_atual'] === 30.00, "Saldo após recarga de quitação: +R$ 30,00", $passados, $total);
 assertCheck((int)$respAposTotal['bloqueado_med'] === 0, "Conta foi AUTOMATICAMENTE DESBLOQUEADA após saldo ficar positivo (bloqueado_med = 0)", $passados, $total);
 
-// 3. Limpeza dos dados de teste
-echo "\n3. Limpando dados temporários...\n";
+// 3. Testando Template do Extrato do Aluno (Card Overflow Visible e Dropdown Flutuante)
+echo "\n3. Testando Template do Extrato do Aluno para Dropdown Flutuante...\n";
+$extratoHtml = file_get_contents(__DIR__ . '/../app/views/relatorios/extrato_aluno.php');
+assertCheck(str_contains($extratoHtml, 'card-overflow-visible'), "Card de filtros do extrato possui classe card-overflow-visible", $passados, $total);
+assertCheck(str_contains($extratoHtml, 'overflow: visible !important;'), "Card de filtros possui style overflow: visible !important para permitir dropdown flutuante", $passados, $total);
+assertCheck(str_contains($extratoHtml, 'id="autocompleteDropdown"'), "Elemento #autocompleteDropdown presente na view", $passados, $total);
+assertCheck(str_contains($extratoHtml, 'top: calc(100% + 4px)'), "Dropdown configurado com top: calc(100% + 4px) para flutuar abaixo do input", $passados, $total);
+assertCheck(str_contains($extratoHtml, 'z-index: 1080'), "Dropdown possui z-index elevado (1080) para sobrepor outros cards", $passados, $total);
+
+// 4. Limpeza dos dados de teste
+echo "\n4. Limpando dados temporários...\n";
 $pdo->prepare("DELETE FROM transacoes_carteira WHERE responsavel_id = :id")->execute([':id' => $respId]);
 $pdo->prepare("DELETE FROM responsaveis WHERE id = :id")->execute([':id' => $respId]);
 $pdo->prepare("DELETE FROM logs_erros WHERE mensagem LIKE :code")->execute([':code' => "%{$testCode}%"]);

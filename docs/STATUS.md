@@ -735,7 +735,11 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Removida a barra de ações/botões redundante que aparecia no rodapé após as assinaturas no espelho de fechamento de caixa (`/operacional/caixa/espelho/{id}`), centralizando os botões de retorno, download de PDF e impressão exclusivamente na barra de ferramentas do topo;
   * **Correção e Calibração de Espaçamento em Campos de Busca com Ícone Interno (`.search-input-wrapper`):**
     * Criada e calibrada a classe `.search-input-wrapper` em `assets/css/custom.css` com ícone absoluto (`left: 14px`, `pointer-events: none`) e `padding-left: 46px !important` no input (com inline style complementar), garantindo respiro visual amplo e confortável de 18px entre a lupa e o texto digitado no Extrato do Aluno (`/operacional/extrato-aluno`), Devedores/MED, Cardápio/Produtos e PDV;
-  * Incremento do assetVersion para `5.9.4` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
+  * **Desbloqueio de Overflow do Autocomplete Flutuante no Extrato do Aluno:**
+    * Adicionada a classe `card-overflow-visible` e `overflow: visible !important;` no card de filtros, card-body e form de `app/views/relatorios/extrato_aluno.php`, eliminando o corte físico do dropdown de sugestões;
+    * Posicionado `#autocompleteDropdown` de forma flutuante (`top: calc(100% + 4px); z-index: 1080;`) sobre a página com sombra e bordas arredondadas, exibindo a lista completa de alunos com nome, turma, matrícula e saldo;
+    * Adicionada navegação por teclado (`ArrowDown`, `ArrowUp`, `Enter`, `Escape`), feedback de busca imediato e teste automatizado de regressão em `tests/enhancements_audit_test.php`;
+  * Incremento do assetVersion para `5.9.5` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
   * Suíte global de 40 testes automatizados reexecutada e aprovada com 100% de sucesso (`tests/verification_audit.php`).
 
 ---

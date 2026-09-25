@@ -1341,6 +1341,15 @@ textarea.form-control {
   overflow: visible !important;
 }
 
+.autocomplete-aluno-item:hover,
+.autocomplete-aluno-item.active {
+  background-color: var(--surface-hover, #f8fafc) !important;
+}
+
+.autocomplete-aluno-item:last-child {
+  border-bottom: none !important;
+}
+
 /* Gatilho e Overlay de Auto-Hide da Barra Lateral */
 .sidebar-edge-trigger,
 .sidebar-floating-overlay {
