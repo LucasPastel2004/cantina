@@ -27,7 +27,7 @@ $alergenosDoAluno  = $alergenosDoAluno ?? [];
         <p class="text-secondary text-microcopy mb-0">Informe os ingredientes ou alérgenos diagnosticados dos seus dependentes para prevenção automática.</p>
     </div>
     <div>
-        <a href="<?php echo $baseUrl; ?>/portal" class="btn btn-enterprise btn-secondary">
+        <a href="<?php echo $baseUrl; ?>/portal" class="btn btn-enterprise btn-primary">
             &larr; Voltar ao Início
         </a>
     </div>

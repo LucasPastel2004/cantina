@@ -85,7 +85,7 @@ $chaveFormatada = trim(chunk_split($chaveNfe, 4, ' '));
                             <?php echo htmlspecialchars($chaveFormatada, ENT_QUOTES, 'UTF-8'); ?>
                         </code>
                     </div>
-                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm" id="btnCopiarChave" data-chave="<?php echo htmlspecialchars($chaveNfe, ENT_QUOTES, 'UTF-8'); ?>">
+                    <button type="button" class="btn btn-enterprise btn-primary btn-sm" id="btnCopiarChave" data-chave="<?php echo htmlspecialchars($chaveNfe, ENT_QUOTES, 'UTF-8'); ?>">
                         📋 Copiar Chave
                     </button>
                 </div>

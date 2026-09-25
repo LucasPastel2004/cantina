@@ -955,3 +955,12 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Padronizadas as colunas do relatório de Desconto em Folha para RH, garantindo respiro mínimo de 35 pontos entre Lanches e Valor a Descontar.
   5. Suíte de testes automatizados e auditoria global (`tests/verification_audit.php`) executada com 100% de sucesso (40 de 40 suítes verdes).
 - Como evitar no futuro: Em templates construídos com concatenação e `sprintf`, utilizar delimitadores neutros (como `__TAG__`) que não colidam com os especificadores de formato do interpretador, ou mapear todas as variantes possíveis no `str_replace`; e manter distâncias mínimas de segurança entre colunas numéricas de valores monetários.
+
+---
+
+## 2026-09-25 - Falha na simulação web de tickets térmicos por dependência temporal de turno automático
+
+- Sintoma: A suíte de testes `tests/tickets_web_test.php` falhava nas rotas 3 (`/operacional/tickets/lote`) e 4 (`/operacional/tickets/lote/pdf`) quando executada após as 11:00 da manhã.
+- Causa: No `TicketsController`, o método `normalizarTurno(?string $turno)` assume `'vespertino'` quando `$turno === null` e a hora corrente do servidor é $\ge$ 11:00. Como a suíte chamava `/operacional/tickets/lote` sem parâmetros de query string e os tickets de teste foram gerados para o turno `'matutino'`, o controller retornava lista vazia e redirecionava para o painel com flash message, sem renderizar a bobina HTML nem o PDF 80mm.
+- Solução aplicada: Explicitados os parâmetros `?data=2026-09-25&turno=matutino` e os valores correspondentes em `$_GET['data']` e `$_GET['turno']` dentro do script de teste isolado `tests/tickets_web_test.php`.
+- Como evitar no futuro: Em testes automatizados de rotas operacionais dependentes de horário ou turno letivo, sempre fornecer parâmetros explícitos de data e turno para garantir idempotência e independência do horário em que os testes são disparados.

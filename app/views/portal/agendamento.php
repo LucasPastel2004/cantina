@@ -38,7 +38,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             </p>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <a href="<?php echo $baseUrl; ?>/portal/pedidos" class="btn btn-enterprise btn-secondary btn-sm">
+            <a href="<?php echo $baseUrl; ?>/portal/pedidos" class="btn btn-enterprise btn-primary btn-sm">
                 Meus Pedidos
             </a>
             <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary btn-sm">
@@ -96,18 +96,16 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 <span class="text-secondary" style="font-size: 12px;">Semana:</span>
                 <div class="btn-group btn-group-sm" role="group">
                     <a href="<?php echo $baseUrl; ?>/portal/agendamento?aluno=<?php echo $alunoSelecionado['id']; ?>&semana=atual" 
-                       class="btn btn-enterprise btn-secondary"
-                       style="<?php echo ($semanaRef === 'atual') ? 'background: #f8fafc; border-color: #475569; color: #0f172a; font-weight: 600;' : 'background: #ffffff; border-color: #e2e8f0; color: #475569;'; ?>">
+                       class="btn btn-enterprise <?php echo ($semanaRef === 'atual') ? 'btn-primary' : 'btn-outline-primary'; ?>">
                         Semana Corrente
                     </a>
                     <?php if ($semanaSeguinteLiberada): ?>
                         <a href="<?php echo $baseUrl; ?>/portal/agendamento?aluno=<?php echo $alunoSelecionado['id']; ?>&semana=seguinte" 
-                           class="btn btn-enterprise btn-secondary"
-                           style="<?php echo ($semanaRef === 'seguinte') ? 'background: #f8fafc; border-color: #475569; color: #0f172a; font-weight: 600;' : 'background: #ffffff; border-color: #e2e8f0; color: #475569;'; ?>">
+                           class="btn btn-enterprise <?php echo ($semanaRef === 'seguinte') ? 'btn-primary' : 'btn-outline-primary'; ?>">
                             Próxima Semana
                         </a>
                     <?php else: ?>
-                        <button type="button" class="btn btn-enterprise btn-secondary disabled" title="Abre sexta-feira às 18:00" style="opacity: 0.6; cursor: not-allowed;">
+                        <button type="button" class="btn btn-enterprise btn-outline-primary disabled" title="Abre sexta-feira às 18:00" style="opacity: 0.5; cursor: not-allowed;">
                             Próxima Semana <span class="text-muted" style="font-size: 10px;">(Sex 18h)</span>
                         </button>
                     <?php endif; ?>
@@ -196,7 +194,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             <p class="text-secondary mb-3" style="font-size: 13px;">
                 Esta data é classificada como <strong><?php echo htmlspecialchars($diaSelecionado['descricao'], ENT_QUOTES, 'UTF-8'); ?></strong>. Não haverá funcionamento da cantina.
             </p>
-            <a href="<?php echo $baseUrl; ?>/portal/agendamento?aluno=<?php echo $alunoSelecionado['id']; ?>&semana=<?php echo $semanaRef; ?>" class="btn btn-enterprise btn-secondary btn-sm">
+            <a href="<?php echo $baseUrl; ?>/portal/agendamento?aluno=<?php echo $alunoSelecionado['id']; ?>&semana=<?php echo $semanaRef; ?>" class="btn btn-enterprise btn-primary btn-sm">
                 Selecionar Outro Dia Letivo
             </a>
         </div>
@@ -218,7 +216,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 <a href="<?php echo $baseUrl; ?>/portal/pedidos" class="btn btn-enterprise btn-primary btn-sm">
                     Consultar Meus Pedidos
                 </a>
-                <a href="<?php echo $baseUrl; ?>/portal/agendamento?aluno=<?php echo $alunoSelecionado['id']; ?>&semana=<?php echo $semanaRef; ?>" class="btn btn-enterprise btn-secondary btn-sm">
+                <a href="<?php echo $baseUrl; ?>/portal/agendamento?aluno=<?php echo $alunoSelecionado['id']; ?>&semana=<?php echo $semanaRef; ?>" class="btn btn-enterprise btn-primary btn-sm">
                     Ver Outras Datas
                 </a>
             </div>
@@ -249,7 +247,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     <a href="<?php echo $baseUrl; ?>/portal/pedidos/editar/<?php echo $pedidoExistente['id']; ?>" class="btn btn-enterprise btn-primary btn-sm">
                         Editar Itens do Pedido
                     </a>
-                    <a href="<?php echo $baseUrl; ?>/portal/pedidos" class="btn btn-enterprise btn-secondary btn-sm">
+                    <a href="<?php echo $baseUrl; ?>/portal/pedidos" class="btn btn-enterprise btn-primary btn-sm">
                         Ver em Meus Pedidos
                     </a>
                 </div>

@@ -26,7 +26,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             <a href="<?php echo $baseUrl; ?>/portal/agendamento" class="btn btn-enterprise btn-primary btn-sm">
                 + Novo Agendamento
             </a>
-            <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-secondary btn-sm">
+            <a href="<?php echo $baseUrl; ?>/portal/carteira" class="btn btn-enterprise btn-primary btn-sm">
                 Extrato Financeiro
             </a>
         </div>
@@ -68,11 +68,11 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
             <!-- Botão Filtrar -->
             <div class="col-12 col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-secondary btn-sm w-100">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100">
                     Filtrar
                 </button>
                 <?php if (!empty($alunoFiltro) || !empty($dataInicio) || !empty($dataFim)): ?>
-                    <a href="<?php echo $baseUrl; ?>/portal/pedidos" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
+                    <a href="<?php echo $baseUrl; ?>/portal/pedidos" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
                         &times;
                     </a>
                 <?php endif; ?>

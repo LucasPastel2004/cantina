@@ -687,20 +687,52 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Ajuste de espaçamento visual na linha de totais consolidados no relatório de Vendas por Alimento, com Preço Médio ancorado em $X = 415.0$ e Faturamento Total em $X = 496.0$, garantindo mais de 23 pontos de respiro entre os números e impedindo qualquer colisão;
   * Alinhamento estrito e respiro mínimo de 35 pontos nas colunas do relatório contábil de Desconto em Folha para RH;
 * [x] **Harmonização Global de Botões de Ação, Filtros e Controles no Azul Institucional Oficial:**
-  * Conversão integral de todos os botões de ação, submissão/filtro, confirmação e controles de alternância das telas operacionais e de relatórios para a classe primária `.btn.btn-enterprise.btn-primary` e `.btn-outline-primary` (azul royal `#1d4ed8` oficial da marca e do logotipo do Colégio Monteiro Lobato):
-    * `app/views/relatorios/vendas_alimento.php`: botão **"Filtrar"**;
-    * `app/views/relatorios/desconto_folha.php`: botões **"Exportar CSV para Folha"** e **"Carregar Mês"**;
-    * `app/views/relatorios/fechamento_caixa.php`: botões **"Operação de Caixa Hoje"**, **"Filtrar"** e **"Limpar"**;
-    * `app/views/relatorios/devedores.php`: botões **"Filtrar"** e **"Limpar"**;
-    * `app/views/operacional/corte.php`: botões **"Exportar PDF (A4)"**, **"Imprimir A4"**, **"Conferir Recebimento &rarr;"** e **"Atualizar Painel"**;
-    * `app/views/relatorios/extrato_aluno.php`: botões **"Imprimir Extrato"** e **"Filtrar"**;
-    * `app/views/operacional/recebimento.php`: botões **"&larr; Painel de Corte"**, **"Preencher com Valores Esperados"** e **"Confirmar Recebimento e Dar Entrada"**;
-    * `app/views/operacional/tickets.php`: botões **"Imprimir Bobina do Turno (80mm)"**, **"Baixar Lote em PDF"** e **"Buscar"**;
-    * `app/views/operacional/pdv.php`: abas segmentadas **"Anônimo"**, **"Aluno"** e **"Colaborador"** no seletor de cliente (`.btn-outline-primary` com ativo em `#1d4ed8`) e botão principal de finalização **"Concluir Venda (F4)"**;
-    * `app/views/operacional/caixa.php`: alternador de turno (**"Matutino"** / **"Vespertino"** em `.btn-outline-primary` quando inativo), botão **"Extrato da Sessão"** e **"&larr; Voltar ao PDV"**;
-  * Definição corporativa de `.btn-outline-primary` em `assets/css/custom.css` com borda e texto em `#1d4ed8` e preenchimento sólido `#1d4ed8` no estado ativo/selecionado;
-  * Preservação rigorosa dos chips de status e tags de sistema no padrão neutro sóbrio `.code-tag font-tabular`;
-  * Incremento do assetVersion para `5.9.1` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
+  * Conversão integral de todos os botões de ação, submissão/filtro, confirmação, cabeçalhos de ação e controles de alternância das telas operacionais, de estoque, administrativas, portal da família e relatórios para a classe primária `.btn.btn-enterprise.btn-primary` e `.btn-outline-primary` (azul royal `#1d4ed8` oficial da marca e do logotipo do Colégio Monteiro Lobato):
+    * **Administração:**
+      * `app/views/admin/produtos.php`: botão "Gerenciar Categorias", "Filtrar" e "Limpar";
+      * `app/views/admin/turmas.php`: botões "Filtrar" e "Limpar";
+      * `app/views/admin/alunos.php`: botão "Importação em Lote", "Filtrar" e "&times;" (Limpar);
+      * `app/views/admin/categorias.php`: botão de navegação "&larr; Cardápio";
+      * `app/views/admin/colaboradores.php`: botões "Buscar" e "Limpar";
+      * `app/views/admin/contestacoes.php`: botão de ação "Exportar PDF", "Filtrar Registros", "Limpar" e botão inline de limpar busca rápida;
+      * `app/views/admin/importacao_escolar.php`: botões "Baixar Planilha Modelo (.csv)" e "Ver Lista de Alunos";
+      * `app/views/admin/index.php`: botões de atalho dos cards executivos ("Acessar Corte", "Imprimir Tickets", "Abrir PDV", "Gerenciar Caixa");
+      * `app/views/admin/relatorios.php`: botões de atalho dos relatórios gerenciais ("Painel", "Ver Movimentações", "Inventário");
+    * **Estoque:**
+      * `app/views/estoque/index.php`: botões "Extrato de Movimentações", "Lançar Perda", "Filtrar" e "&times;" (Limpar);
+      * `app/views/estoque/movimentacoes.php`: botões "Lançar Perda", "Ver Saldos Atuais", "Limpar Filtros" e "Filtrar Movimentações";
+      * `app/views/estoque/notas_fiscais.php`: botão "Grade de Saldos" e "&times;" (Limpar);
+      * `app/views/estoque/nota_fiscal_detalhes.php`: botões "Visualizar XML", "Baixar XML Original", "&larr; Grade de Saldos" e "Copiar Chave";
+      * `app/views/estoque/perdas.php`: botões "Histórico Completo de Perdas" e "Grade de Saldos";
+      * `app/views/estoque/importar_xml.php`: botões "Ver Notas Importadas" e "Grade de Saldos";
+      * `app/views/estoque/conferir_xml.php`: botão de confirmação "Confirmar Entrada de Mercadorias e Abastecer Estoque";
+    * **Operacional:**
+      * `app/views/operacional/corte.php`: botões "Exportar PDF (A4)", "Imprimir A4", "Conferir Recebimento &rarr;", "Atualizar Painel" e "Copiar Texto" (WhatsApp);
+      * `app/views/operacional/recebimento.php`: botões "&larr; Painel de Corte", "Preencher com Valores Esperados" e "Confirmar Recebimento e Dar Entrada";
+      * `app/views/operacional/tickets.php`: botões "Imprimir Bobina do Turno (80mm)", "Baixar Lote em PDF" e "Buscar";
+      * `app/views/operacional/pdv.php`: seletores de turno "Manhã" e "Tarde", abas de cliente "Anônimo", "Aluno" e "Colaborador", atalhos de topo "Caixa [F7]", "Estorno [F8]", "Sobras [F9]", botão "Conferir Caixa outro turno", botão principal "Concluir Venda (F4)" e botão de impressão "Imprimir Comprovante Térmico (80mm)";
+      * `app/views/operacional/caixa.php`: alternador de turno "Matutino" / "Vespertino", botão "Extrato da Sessão", "&larr; Voltar ao PDV", botão "Limpar" e ações dos modais de recarga ("Baixar Comprovante em PDF", "Concluir e Atualizar Caixa", "Confirmar Recarga em Dinheiro");
+      * `app/views/operacional/caixa_detalhes.php`: botões "Visualizar Espelho A4", "Baixar PDF A4" e "&larr; Voltar ao Caixa";
+      * `app/views/operacional/abertura_caixa.php`: botões "&larr; Voltar à Gestão de Caixa" e "Confirmar Abertura de Caixa";
+      * `app/views/operacional/fechamento_caixa.php`: botão "&larr; Voltar à Gestão de Caixa";
+    * **Portal da Família:**
+      * `app/views/portal/index.php`: botões dos cards "Recarregar Saldo" e "Ver Extrato";
+      * `app/views/portal/carteira.php`: botões "Agendar Lanches", "Copiar" (código Pix), "Nova Recarga", "Filtrar" e "&times;" (Limpar);
+      * `app/views/portal/meus_pedidos.php`: botões "+ Novo Agendamento", "Extrato Financeiro", "Filtrar" e "&times;" (Limpar);
+      * `app/views/portal/perfil.php`: botão "&larr; Voltar ao Início";
+      * `app/views/portal/alergias.php`: botão "&larr; Voltar ao Início";
+      * `app/views/portal/agendamento.php`: botão "Meus Pedidos", seletores de semana "Semana Corrente" / "Próxima Semana" e botões dos cards de estado vazio/dia não letivo ("Selecionar Outro Dia Letivo", "Ver Outras Datas", "Ver em Meus Pedidos");
+    * **Relatórios:**
+      * `app/views/relatorios/vendas_alimento.php`: botão "Filtrar";
+      * `app/views/relatorios/desconto_folha.php`: botões "Exportar CSV para Folha" e "Carregar Mês";
+      * `app/views/relatorios/fechamento_caixa.php`: botões "Operação de Caixa Hoje", "Filtrar" e "Limpar";
+      * `app/views/relatorios/devedores.php`: botões "Filtrar" e "Limpar";
+      * `app/views/relatorios/extrato_aluno.php`: botões "Imprimir Extrato" e "Filtrar";
+  * **Regras de Preservação Mantidas Rigorosamente:**
+    * Botões utilitários de linhas de tabelas/listas internas (`<td>...</td>`, ex: "Ver", "Editar", "Excluir", "Perda", "Mín", "Quitar Débito", "Desbloquear", "Reimprimir 2ª Via") foram mantidos intocados no padrão neutro/secundário discreto, atendendo estritamente ao pedido do usuário ("não converta os botões dentro das lista");
+    * Botões de cancelamento/fechamento de modais (`data-bs-dismiss="modal"`, "Cancelar", "Fechar", "Voltar") mantidos em padrão neutro;
+    * Chips informativos e tags de sistema (valores rápidos de Pix, saldo familiar, status pontuais) mantidos rigorosamente neutros conforme `AGENTS.md`;
+  * Incremento do assetVersion para `5.9.2` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
   * Suíte global de 40 testes automatizados reexecutada e aprovada com 100% de sucesso (`tests/verification_audit.php`).
 
 ---

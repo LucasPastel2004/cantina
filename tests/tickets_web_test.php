@@ -45,7 +45,9 @@ echo "2. Rota GET /operacional/tickets (Autenticado Operador) -> " . ($passouPai
 // 3. Acesso à Bobina de 80mm em HTML /operacional/tickets/lote
 $codeLote = '
 $_SERVER["REQUEST_METHOD"] = "GET";
-$_SERVER["REQUEST_URI"] = "/operacional/tickets/lote";
+$_SERVER["REQUEST_URI"] = "/operacional/tickets/lote?data=2026-09-25&turno=matutino";
+$_GET["data"] = "2026-09-25";
+$_GET["turno"] = "matutino";
 $_SERVER["SCRIPT_NAME"] = "/index.php";
 $_SERVER["REMOTE_ADDR"] = "127.0.0.1";
 session_start();
@@ -57,8 +59,8 @@ $_SESSION["_auth_nome"] = "Maria da Silva";
 $_SESSION["_auth_role"] = "operador";
 require "index.php";
 ';
-$outputLote = shell_exec("php -r " . escapeshellarg($codeLote));
-$passouLote = str_contains($outputLote, 'size: 80mm auto')
+$outputLote = shell_exec("php -r " . escapeshellarg($codeLote) . " 2>&1");
+$passouLote = $outputLote !== null && str_contains($outputLote, 'size: 80mm auto')
     && (str_contains($outputLote, 'Imprimir (80mm)') || str_contains($outputLote, 'Imprimir Bobina (80mm)'))
     && str_contains($outputLote, 'receipt-roll');
 
@@ -67,7 +69,9 @@ echo "3. Rota GET /operacional/tickets/lote (Bobina HTML) -> " . ($passouLote ? 
 // 4. Download do PDF da Bobina /operacional/tickets/lote/pdf
 $codePdf = '
 $_SERVER["REQUEST_METHOD"] = "GET";
-$_SERVER["REQUEST_URI"] = "/operacional/tickets/lote/pdf";
+$_SERVER["REQUEST_URI"] = "/operacional/tickets/lote/pdf?data=2026-09-25&turno=matutino";
+$_GET["data"] = "2026-09-25";
+$_GET["turno"] = "matutino";
 $_SERVER["SCRIPT_NAME"] = "/index.php";
 $_SERVER["REMOTE_ADDR"] = "127.0.0.1";
 session_start();
@@ -79,8 +83,8 @@ $_SESSION["_auth_nome"] = "Maria da Silva";
 $_SESSION["_auth_role"] = "operador";
 require "index.php";
 ';
-$outputPdf = shell_exec("php -r " . escapeshellarg($codePdf));
-$passouPdf = str_starts_with($outputPdf, '%PDF-1.4') && str_contains($outputPdf, '%%EOF');
+$outputPdf = shell_exec("php -r " . escapeshellarg($codePdf) . " 2>&1");
+$passouPdf = $outputPdf !== null && str_starts_with($outputPdf, '%PDF-1.4') && str_contains($outputPdf, '%%EOF');
 
 echo "4. Rota GET /operacional/tickets/lote/pdf (PDF 80mm) -> " . ($passouPdf ? "SUCESSO (PDF 1.4 Binário OK)" : "FALHA") . PHP_EOL;
 

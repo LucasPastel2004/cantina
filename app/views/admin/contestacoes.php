@@ -129,7 +129,7 @@ $totalPaginas = $totalPaginas ?? 1;
                            placeholder="Nome, e-mail, telefone ou dependente..." 
                            value="<?php echo htmlspecialchars($filtroBusca, ENT_QUOTES, 'UTF-8'); ?>"
                            autocomplete="off">
-                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm" id="btnLimparBuscaInput" 
+                    <button type="button" class="btn btn-enterprise btn-primary btn-sm" id="btnLimparBuscaInput" 
                             style="<?php echo empty($filtroBusca) ? 'display: none;' : ''; ?>" title="Limpar busca rápida">
                         &times;
                     </button>

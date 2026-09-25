@@ -19,7 +19,7 @@ $dependentes = $dependentes ?? [];
         <p class="text-secondary text-microcopy mb-0">Informações da conta familiar e dependentes vinculados na instituição.</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="<?php echo $baseUrl; ?>/portal" class="btn btn-enterprise btn-secondary">
+        <a href="<?php echo $baseUrl; ?>/portal" class="btn btn-enterprise btn-primary">
             &larr; Voltar ao Início
         </a>
     </div>
