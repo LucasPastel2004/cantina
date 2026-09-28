@@ -42,30 +42,10 @@ function assertCondition(bool $cond, string $msg, &$testsPassed, &$testsFailed):
     }
 }
 
-// 1. Renderiza a sidebar em cenário sem usuário na view (default)
+// 1. Renderiza a sidebar com usuário Administrador
 ob_start();
 $baseUrl = '';
 $activeMenu = '';
-$user = null;
-require __DIR__ . '/../app/views/layouts/sidebar.php';
-$htmlDefault = ob_get_clean();
-
-assertCondition(
-    str_contains($htmlDefault, '/admin/configuracoes'),
-    'Link /admin/configuracoes presente na sidebar por padrão',
-    $testsPassed,
-    $testsFailed
-);
-
-assertCondition(
-    str_contains($htmlDefault, 'Configurações Globais'),
-    'Texto "Configurações Globais" presente na sidebar por padrão',
-    $testsPassed,
-    $testsFailed
-);
-
-// 2. Renderiza a sidebar com usuário admin
-ob_start();
 $user = [
     'nome'   => 'Administrador Geral',
     'usuario'=> 'admin',
@@ -76,8 +56,29 @@ require __DIR__ . '/../app/views/layouts/sidebar.php';
 $htmlAdmin = ob_get_clean();
 
 assertCondition(
+    str_contains($htmlAdmin, 'id="navSectionAdmin"'),
+    'Seção navSectionAdmin presente para Administrador',
+    $testsPassed,
+    $testsFailed
+);
+
+assertCondition(
     str_contains($htmlAdmin, '/admin/configuracoes'),
     'Link /admin/configuracoes presente na sidebar para Administrador',
+    $testsPassed,
+    $testsFailed
+);
+
+assertCondition(
+    str_contains($htmlAdmin, '/admin/colaboradores'),
+    'Link /admin/colaboradores presente na sidebar para Administrador',
+    $testsPassed,
+    $testsFailed
+);
+
+assertCondition(
+    str_contains($htmlAdmin, '/estoque/importar-xml'),
+    'Link Entrada XML NF-e (/estoque/importar-xml) presente na sidebar para Administrador',
     $testsPassed,
     $testsFailed
 );
@@ -89,11 +90,11 @@ assertCondition(
     $testsFailed
 );
 
-// 3. Renderiza a sidebar com usuário operador (como na tela de demonstração ou operador do balcão)
+// 2. Renderiza a sidebar com usuário Operador (Maria Atendente / Balcão / Caixa)
 ob_start();
 $user = [
-    'nome'   => 'Carlos Alberto (Operador)',
-    'usuario'=> 'operador-carlos',
+    'nome'   => 'Maria Atendente (Operador do Caixa)',
+    'usuario'=> 'operador-maria',
     'perfil' => 'operador',
     'role'   => 'operador'
 ];
@@ -101,37 +102,88 @@ require __DIR__ . '/../app/views/layouts/sidebar.php';
 $htmlOperador = ob_get_clean();
 
 assertCondition(
-    str_contains($htmlOperador, '/admin/configuracoes'),
-    'Link /admin/configuracoes visível na seção Administração para facilidade de navegação operacional',
+    !str_contains($htmlOperador, 'id="navSectionAdmin"'),
+    'Seção navSectionAdmin TOTALMENTE OCULTA para perfil Operador',
     $testsPassed,
     $testsFailed
 );
-
-// 4. Verifica via requisição HTTP se a tela /design/admin exibe Configurações Globais
-$ch = curl_init('http://localhost/design/admin');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$resDesign = curl_exec($ch);
-curl_close($ch);
 
 assertCondition(
-    str_contains($resDesign, 'Configurações Globais'),
-    'Endpoint /design/admin exibe "Configurações Globais" no HTML entregue pelo servidor',
+    !str_contains($htmlOperador, '/admin/configuracoes'),
+    'Link /admin/configuracoes OCULTO para perfil Operador',
     $testsPassed,
     $testsFailed
 );
-
-// 5. Verifica via requisição HTTP se a home / exibe link para Configurações Globais
-$ch = curl_init('http://localhost/');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$resHome = curl_exec($ch);
-curl_close($ch);
 
 assertCondition(
-    str_contains($resHome, '/admin/configuracoes'),
-    'Página inicial (/) possui atalho direto para Configurações Globais',
+    !str_contains($htmlOperador, '/admin/colaboradores'),
+    'Link /admin/colaboradores OCULTO para perfil Operador',
     $testsPassed,
     $testsFailed
 );
+
+assertCondition(
+    !str_contains($htmlOperador, '/admin/produtos'),
+    'Link /admin/produtos OCULTO para perfil Operador',
+    $testsPassed,
+    $testsFailed
+);
+
+assertCondition(
+    !str_contains($htmlOperador, '/estoque/importar-xml'),
+    'Link Entrada XML NF-e OCULTO para perfil Operador',
+    $testsPassed,
+    $testsFailed
+);
+
+assertCondition(
+    str_contains($htmlOperador, '/operacional/corte') &&
+    str_contains($htmlOperador, '/operacional/pdv') &&
+    str_contains($htmlOperador, '/operacional/caixa') &&
+    str_contains($htmlOperador, '/operacional/tickets') &&
+    str_contains($htmlOperador, '/operacional/extrato-aluno'),
+    'Módulos operacionais (Corte, PDV, Caixa, Tickets, Extrato) visíveis normalmente para Operador',
+    $testsPassed,
+    $testsFailed
+);
+
+assertCondition(
+    str_contains($htmlOperador, '/estoque') &&
+    str_contains($htmlOperador, '/estoque/perdas'),
+    'Módulos de estoque diário (Saldos e Perdas) visíveis para Operador',
+    $testsPassed,
+    $testsFailed
+);
+
+assertCondition(
+    str_contains($htmlOperador, 'Operador'),
+    'Badge/perfil "Operador" exibido no rodapé da sidebar',
+    $testsPassed,
+    $testsFailed
+);
+
+// 3. Simula autenticação real na Session como operador e valida renderização via Auth::user()
+\App\Core\Session::set('_auth_logged', true);
+\App\Core\Session::set('_auth_type', 'usuario');
+\App\Core\Session::set('_auth_id', 2);
+\App\Core\Session::set('_auth_username', 'operador-maria');
+\App\Core\Session::set('_auth_nome', 'Maria Atendente');
+\App\Core\Session::set('_auth_role', 'operador');
+
+ob_start();
+unset($user);
+require __DIR__ . '/../app/views/layouts/sidebar.php';
+$htmlAuthOperador = ob_get_clean();
+
+assertCondition(
+    !str_contains($htmlAuthOperador, 'navSectionAdmin') && !str_contains($htmlAuthOperador, 'importar-xml'),
+    'Sidebar consumindo Auth::user() em sessão real oculta bloco admin e XML para operador',
+    $testsPassed,
+    $testsFailed
+);
+
+// Limpeza de sessão
+\App\Core\Session::destroy();
 
 echo "\nRESUMO: {$testsPassed} passaram, {$testsFailed} falharam.\n";
 exit($testsFailed > 0 ? 1 : 0);

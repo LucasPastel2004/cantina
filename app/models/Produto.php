@@ -181,30 +181,31 @@ class Produto extends Model
 
         $sql = "INSERT INTO produtos (
                     categoria_id, codigo_interno, descricao, preco_venda, tipo,
-                    turno_disponibilidade, foto_url, estoque_atual, estoque_reservado,
+                    fracionado_salgado_grande, turno_disponibilidade, foto_url, estoque_atual, estoque_reservado,
                     estoque_minimo, status_pausa, created_by, updated_by, created_at, updated_at
                 ) VALUES (
                     :categoria_id, :codigo_interno, :descricao, :preco_venda, :tipo,
-                    :turno_disponibilidade, :foto_url, :estoque_atual, :estoque_reservado,
+                    :fracionado_salgado_grande, :turno_disponibilidade, :foto_url, :estoque_atual, :estoque_reservado,
                     :estoque_minimo, :status_pausa, :created_by, :updated_by, :created_at, :updated_at
                 )";
 
         self::execute($sql, [
-            'categoria_id'          => (int)$dados['categoria_id'],
-            'codigo_interno'        => strtoupper(trim($dados['codigo_interno'] ?? '')),
-            'descricao'             => trim($dados['descricao'] ?? ''),
-            'preco_venda'           => (float)($dados['preco_venda'] ?? 0),
-            'tipo'                  => $dados['tipo'] ?? 'salgado_diario',
-            'turno_disponibilidade' => $dados['turno_disponibilidade'] ?? 'ambos',
-            'foto_url'              => !empty($dados['foto_url']) ? trim($dados['foto_url']) : null,
-            'estoque_atual'         => (int)($dados['estoque_atual'] ?? 0),
-            'estoque_reservado'     => (int)($dados['estoque_reservado'] ?? 0),
-            'estoque_minimo'        => (int)($dados['estoque_minimo'] ?? 5),
-            'status_pausa'          => $dados['status_pausa'] ?? 'ativo',
-            'created_by'            => $usuarioId,
-            'updated_by'            => $usuarioId,
-            'created_at'            => $now,
-            'updated_at'            => $now
+            'categoria_id'              => (int)$dados['categoria_id'],
+            'codigo_interno'            => strtoupper(trim($dados['codigo_interno'] ?? '')),
+            'descricao'                 => trim($dados['descricao'] ?? ''),
+            'preco_venda'               => (float)($dados['preco_venda'] ?? 0),
+            'tipo'                      => $dados['tipo'] ?? 'salgado_diario',
+            'fracionado_salgado_grande' => !empty($dados['fracionado_salgado_grande']) ? 1 : 0,
+            'turno_disponibilidade'     => $dados['turno_disponibilidade'] ?? 'ambos',
+            'foto_url'                  => !empty($dados['foto_url']) ? trim($dados['foto_url']) : null,
+            'estoque_atual'             => (int)($dados['estoque_atual'] ?? 0),
+            'estoque_reservado'         => (int)($dados['estoque_reservado'] ?? 0),
+            'estoque_minimo'            => (int)($dados['estoque_minimo'] ?? 5),
+            'status_pausa'              => $dados['status_pausa'] ?? 'ativo',
+            'created_by'                => $usuarioId,
+            'updated_by'                => $usuarioId,
+            'created_at'                => $now,
+            'updated_at'                => $now
         ]);
 
         $produtoId = (int)self::lastInsertId();
@@ -225,6 +226,7 @@ class Produto extends Model
             'descricao = :descricao',
             'preco_venda = :preco_venda',
             'tipo = :tipo',
+            'fracionado_salgado_grande = :fracionado_salgado_grande',
             'turno_disponibilidade = :turno_disponibilidade',
             'estoque_atual = :estoque_atual',
             'estoque_minimo = :estoque_minimo',
@@ -234,18 +236,19 @@ class Produto extends Model
         ];
 
         $params = [
-            'id'                    => $id,
-            'categoria_id'          => (int)$dados['categoria_id'],
-            'codigo_interno'        => strtoupper(trim($dados['codigo_interno'] ?? '')),
-            'descricao'             => trim($dados['descricao'] ?? ''),
-            'preco_venda'           => (float)($dados['preco_venda'] ?? 0),
-            'tipo'                  => $dados['tipo'] ?? 'salgado_diario',
-            'turno_disponibilidade' => $dados['turno_disponibilidade'] ?? 'ambos',
-            'estoque_atual'         => (int)($dados['estoque_atual'] ?? 0),
-            'estoque_minimo'        => (int)($dados['estoque_minimo'] ?? 5),
-            'status_pausa'          => $dados['status_pausa'] ?? 'ativo',
-            'updated_by'            => $usuarioId,
-            'updated_at'            => date('Y-m-d H:i:s')
+            'id'                        => $id,
+            'categoria_id'              => (int)$dados['categoria_id'],
+            'codigo_interno'            => strtoupper(trim($dados['codigo_interno'] ?? '')),
+            'descricao'                 => trim($dados['descricao'] ?? ''),
+            'preco_venda'               => (float)($dados['preco_venda'] ?? 0),
+            'tipo'                      => $dados['tipo'] ?? 'salgado_diario',
+            'fracionado_salgado_grande' => !empty($dados['fracionado_salgado_grande']) ? 1 : 0,
+            'turno_disponibilidade'     => $dados['turno_disponibilidade'] ?? 'ambos',
+            'estoque_atual'             => (int)($dados['estoque_atual'] ?? 0),
+            'estoque_minimo'            => (int)($dados['estoque_minimo'] ?? 5),
+            'status_pausa'              => $dados['status_pausa'] ?? 'ativo',
+            'updated_by'                => $usuarioId,
+            'updated_at'                => date('Y-m-d H:i:s')
         ];
 
         // Se nova foto foi enviada, atualiza a coluna foto_url

@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 17 — Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança e Entrega
 * **Status da Fase 17:** Concluída com Sucesso [x]
 * **Status Geral do Projeto:** 17 de 17 Fases Concluídas Integralmente (100% do escopo do FSD e DESIGN.md)
-* **Última Atualização:** 2026-09-25 16:08:00 (Correção de inconsistência nos valores do Relatório de Desconto em Folha: a query consolidada somava `vb.valor_total` direto, incluindo vendas órfãs sem itens — alterada para `SUM(ivb.subtotal)` via INNER JOIN com `itens_venda_balcao`, unificando cálculo e contagem de lanches em uma única consulta. Modal AJAX corrigido com filtro `EXISTS` e cálculo por itens. Saneamento executado: 45 vendas órfãs deletadas, 16 colaboradores duplicados removidos (IDs 2-14, 111-113). Testes: 52/52 fase 13 + 36/36 individual = 100% aprovados)
+* **Última Atualização:** 2026-09-28 08:40:00 (Saneamento completo do banco de dados e preparação de base enxuta de demonstração via `database/seed_showcase.php`. Expurgo de centenas de registros temporários e duplicados. Carga oficial com: 3 usuários da cantina, 5 categorias, 12 produtos enxutos com Coxinha Grande e Coxinha Pequena fracionada, 19 turmas escolares oficiais, 6 colaboradores com compras para folha de RH, 4 famílias e 6 alunos com alergias cadastradas, 4 pedidos para a data de hoje 28/09 totalizando 15 coxinhas pequenas que geram 7 Grandes + 1 Pequena no Corte do Turno, 7 tickets impressos em ordem por turma com alertas de alérgenos destacados, sessão de caixa matutina aberta com R$ 100,00 de troco e vendas no balcão em dinheiro com troco, Pix e desconto em folha, alerta de estoque baixo na água mineral e 1 NF-e XML de demonstração. Elaboração do roteiro de apresentação passo a passo ao operador em docs/ROTEIRO_DEMONSTRACAO_OPERADOR.md e artefato dedicado. Testes automatizados 100% verdes).
 
 
 
@@ -781,16 +781,78 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
       * Adicionado botão de topo "Baixar Todos os Individuais (Lote PDF)";
       * Expansão da coluna de ações da tabela ("Relatório & Ações") com 3 botões dedicados e discretos por colaborador: "Ver Itens" (abre modal AJAX), "PDF Individual" (baixa PDF A4 timbrado) e "Imprimir" (abre espelho HTML em nova aba);
       * Inclusão dos botões "Baixar PDF Individual" e "Imprimir" dentro do rodapé do modal `#modalDetalhesColaborador`;
-    * Criação da suíte de testes automatizados `tests/desconto_folha_individual_test.php` com 36/36 asserções aprovadas;
-  * Incremento do assetVersion para `5.9.8` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores;
-  * Suíte global de testes automatizados com 43 arquivos aprovada com 100% de sucesso (`tests/verification_audit.php`).
-
+  * **Implementação de Salgados Fracionados de Salgado Grande (1 Grande = 2 Pequenos para Fornecedor):**
+    * Atendimento ao requisito de negócio onde salgados pequenos são comprados e preparados pela cantina cortando um salgado grande ao meio;
+    * **Migração 027:** Criada e executada `database/migrations/027_add_fracionado_grande_to_produtos.php` adicionando `fracionado_salgado_grande TINYINT(1) NOT NULL DEFAULT 0` na tabela `produtos`;
+    * **Model Produto & AdminController:** Atualizados métodos `criar()` e `atualizar()` em `Produto.php` e `produtosSalvar()` em `AdminController.php` para captura e persistência do campo;
+    * **Interface Administrativa de Produtos (`app/views/admin/produtos.php`):**
+      * Adicionado switch/checkbox corporativo `#prod_fracionado_grande` com texto explicativo e microcopy contextual ("Fracionar de Salgado Grande para Fornecedor (1 Grande = 2 Pequenos)");
+      * Adicionado badge sutil `½ Salgado Grande` na listagem de produtos para conferência visual imediata pelo administrador;
+      * Sincronização nos manipuladores JavaScript `abrirModalProduto()` e `editarProduto(prod)`;
+    * **Consolidação do Corte do Turno (`app/models/Pedido.php`):**
+      * Método `consolidarCorte()` atualizado para identificar produtos marcados com a flag;
+      * Se quantidade for 15 pequenos pedidos: divide em 7 salgados grandes (`intdiv(15, 2) = 7`) com sufixo `-G` e descrição semântica ("Grande") com preço unitário proporcional dobrado, e 1 salgado pequeno restante (`15 % 2 = 1`) com sufixo `-P` e descrição semântica ("Pequeno");
+      * Se a quantidade for par (ex: 14 pequenos): gera exatamente 7 salgados grandes e 0 pequenos;
+      * Se a quantidade for ímpar unitária (ex: 1 pequeno): gera 0 grandes e 1 pequeno;
+      * Recálculo exato de `total_pecas` (peças físicas a encomendar) e `total_demanda_unidades` (lanches a servir aos alunos);
+    * **Comunicação e Exportações Operacionais:**
+      * Formatação de mensagem para WhatsApp (`Pedido::obterTextoWhatsAppCorte`) totalizando peças reais do fornecedor;
+      * Geração de PDF A4 timbrado e espelho HTML (`PdfService`) exibindo as linhas discriminadas de Grandes e Pequenos com seus respectivos códigos e quantitativos;
+    * **Conferência Física e Baixa de Estoque (`confirmarRecebimentoFornecedor` e `app/views/operacional/recebimento.php`):**
+      * Inputs ocultos `fator_conversao` (fator 2 para grande e fator 1 para pequeno) enviados na conferência física;
+      * `confirmarRecebimentoFornecedor()` agrupa itens por `produto_id` e multiplica as peças recebidas pelo fator de conversão;
+      * `estoque_movimentacoes` registra a entrada física equivalente e a liquidação exata da demanda dos alunos em unidades de consumo;
+    * **Testes e Validação:**
+      * Criação da suíte `tests/salgados_fracionados_test.php` com 36 asserções aprovadas com 100% de sucesso;
+      * Regressão da Fase 11 (`tests/fase11_test.php`) com 72/72 asserções aprovadas;
+      * Regressão da Fase 7 (`tests/fase7_test.php`) com 68/68 asserções aprovadas.
+  * **Saneamento do Catálogo de Produtos e Pedidos Reais de Teste para Hoje (28/09/2026):**
+    * Arquivamento via soft delete de 618 produtos acumulados de baterias de testes (como `Item Teste Bloq`, `Lanche Teste Edição`, múltiplos registros idênticos de Coxinhas e Pães de Queijo), eliminando toda duplicidade e deixando exatamente 1 registro limpo de cada item;
+    * Em **Salgados Assados**, preservados exclusivamente o Salgado Grande (`Coxinha de Frango Grande` #252 - R$ 8,00) e seu correspondente pequeno (`Coxinha de Frango pequena` #666 - R$ 4,00 com flag fracionada ativa);
+    * Criação de 2 pedidos agendados para a data de hoje (28/09/2026 - Turno Matutino) para os alunos Lucas Alcantara Santos (10 un) e Lucas Silva (5 un), totalizando 15 unidades de lanches pequenos;
+    * Validação em tempo real do Corte do Turno matutino de hoje exibindo exclusivamente 7 Salgados Grandes e 1 Salgado Pequeno, totalizando 8 peças a encomendar do fornecedor;
+  * **Blindagem e Ocultação Absoluta dos Módulos Administrativos para o Perfil Operador (RBAC na Interface):**
+    * Identificada a causa raiz: a barra lateral (`app/views/layouts/sidebar.php`) renderizava o bloco `navSectionAdmin` ("ADMINISTRAÇÃO") e a opção "Entrada XML NF-e" sem condicional de perfil, confiando apenas no bloqueio RBAC do backend ao clicar;
+    * Implementada verificação `$isAdmin = ($userRole === 'administrador');` envolvendo a opção "Entrada XML NF-e" em `navSectionEstoque` e a seção completa `navSectionAdmin` em `app/views/layouts/sidebar.php`;
+    * Quando o usuário logado possui perfil `operador` (ex.: Maria Atendente / Operador do Caixa), a seção inteira "ADMINISTRAÇÃO" e o link "Entrada XML NF-e" são 100% omitidos do DOM/HTML, exibindo exclusivamente os módulos autorizados: **Operacional** (Corte do Turno, Conferência Fornecedor, Tickets Térmicos, PDV Balcão, Caixa do Turno, Extrato do Aluno) e **Estoque** (Saldos & Pausa, Lançamento de Perdas);
+    * Restrita a rota `GET /admin/produtos` no `index.php` exclusivamente a administradores (`ROLE_ADMINISTRADOR`), mantendo o endpoint `POST /admin/produtos/toggle-pausa` para alternâncias de pausa rápida acionadas a partir de `/estoque`;
+    * Atualizadas as suítes de testes automatizados `tests/sidebar_visibility_test.php` (14/14 asserções) e `tests/admin_web_test.php` (10/10 asserções), e criada a suíte E2E `tests/operator_ui_sanitization_test.php` com 16/16 asserções aprovadas com 100% de sucesso.
+  * Incremento do assetVersion para `5.9.9` em `app/core/Controller.php` e `app/views/layouts/admin.php` para invalidação imediata de cache nos navegadores.
+  * **Evolução do Módulo de Calendário Escolar Interativo (`/admin/calendario`):**
+    * **Diagnóstico Inicial:** A aba "Calendário Escolar" era estática, exibindo apenas a semana fixa de segunda a sexta como dias letivos sem controles de edição ou navegação;
+    * **Navegação Semanal Dinâmica (`CalendarioEscolar::obterDiasSemanaLetiva`):**
+      * Suporte ao parâmetro opcional `$dataBase` (formato YYYY-MM-DD), permitindo transitar por qualquer semana do ano civil;
+      * Controles de navegação na view: botão `‹ Anterior`, botão neutro `Hoje`, botão `Próxima ›`, e seletor rápido de semanas com datepicker (`?semana=YYYY-MM-DD`);
+    * **Gestão de Exceções de Calendário (Feriados, Recessos e Férias):**
+      * Métodos `salvarExcecao(string $data, string $tipo, string $descricao, ?int $usuarioId = null)` e `removerExcecao(string $data)` com UPSERT idempotente em `calendario_letivo`;
+      * Método `listarExcecoes(?int $ano = null)` e `contarMetricasAno(?int $ano = null)` com agregação de feriados, recessos e suspensões;
+      * Tabela anual com badges sóbrios, motivo/descrição, usuário responsável pelo cadastro e ação de exclusão/restauração do dia letivo;
+    * **Rotina Atômica de Suspensão Emergencial com Estorno Automático em Lote:**
+      * Método `CalendarioEscolar::cancelamentoEmergencial(string $data, string $motivo, int $usuarioId, string $ipOrigem)`;
+      * Execução dentro de transação PDO atômica com locks pessimistas:
+        1. Localiza todos os pedidos com status `agendado` ou `editado` para a data da suspensão;
+        2. Altera os pedidos para `cancelado` e cancela todos os tickets térmicos associados;
+        3. Libera o estoque reservado de produtos industrializados;
+        4. Realiza o estorno de 100% dos valores pagos para as carteiras digitais dos responsáveis via `TransacaoCarteira::creditar(tipo: 'estorno_cancelamento')`;
+        5. Cadastra a data em `calendario_letivo` como `cancelado_emergencial`;
+        6. Grava trilha de auditoria imutável em `logs_auditoria` com detalhes do cancelamento em lote;
+    * **Integração Automática com o Portal da Família (`/portal/agendamento`):**
+      * O método `CalendarioEscolar::isDiaLetivo($data)` retorna `false` para qualquer data marcada como feriado, recesso ou suspensão emergencial;
+      * O Portal da Família bloqueia imediatamente a seleção de lanches e agendamento para essas datas de forma nativa e automática;
+    * **Interface Alinhada ao Design System Anti-Slop:**
+      * Stat-Strip institucional no topo com 4 cartões de indicadores (Dias Letivos Semana, Feriados Ano, Recessos Escolares, Suspensões Ativas);
+      * Tabela da semana com cards limpos, badges sóbrios (`● Dia Letivo Regular`, `● Feriado`, `● Recesso`, `● Suspensão Emergencial`) e botão de ação rápida por dia;
+      * Modais Bootstrap 5 nativos e responsivos: `#modalExcecao` (para feriado/recesso) e `#modalEmergencial` (com alerta de cancelamento e estorno em lote);
+    * **Testes e Validação:**
+      * Criação da suíte `tests/calendario_escolar_test.php` com 31 asserções aprovadas com 100% de sucesso cobrindo navegação, persistência, métricas, remoção, cancelamento emergencial em lote com estorno e renderização da view;
+      * Regressão da sanitização da UI do operador (`tests/operator_ui_sanitization_test.php`) com 16/16 asserções aprovadas;
+      * Regressão da Fase 10 (`tests/fase10_test.php`) com 71/71 asserções aprovadas.
 
 ---
 
 ## Próximo Passo Recomendado
 
-O sistema **Cantina Web — Colégio Monteiro Lobato** encontra-se **100% implementado, testado e auditado**, com todas as 17 fases previstas no `docs/PLANO.md` concluídas com sucesso. O próximo passo consiste na homologação operacional final com a equipe da cantina e diretoria escolar, preparação do deploy em ambiente de produção (Hostnet) e início do período letivo.
+O sistema **Cantina Web — Colégio Monteiro Lobato** encontra-se **100% implementado, testado e auditado**, com a interface do operador do caixa completamente limpa e sanitizada, salgados fracionados operando com exatidão no corte e fornecedor, banco de dados enxuto para demonstração e o **módulo de Calendário Escolar totalmente interativo com navegação semanal, cadastro de feriados/recessos e cancelamento emergencial com estorno automático**. O próximo passo consiste na conferência das novas funcionalidades e validação em tela pelo administrador.
 
 
 

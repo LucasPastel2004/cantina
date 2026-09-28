@@ -23,6 +23,7 @@ use App\Models\Usuario;
 use App\Models\Aluno;
 use App\Models\Responsavel;
 use App\Models\TransacaoCarteira;
+use App\Models\CalendarioEscolar;
 use App\Services\SpreadsheetService;
 use App\Services\PdfService;
 use App\Services\WhatsAppService;
@@ -289,8 +290,9 @@ class AdminController extends Controller
         $turnoDisponibilidade = (string)$this->input('turno_disponibilidade', 'ambos');
         $estoqueAtual         = (int)$this->input('estoque_atual', 0);
         $estoqueMinimo        = (int)$this->input('estoque_minimo', 5);
-        $statusPausa          = (string)$this->input('status_pausa', 'ativo');
-        $alergenosIds         = $_POST['alergenos'] ?? [];
+        $statusPausa             = (string)$this->input('status_pausa', 'ativo');
+        $fracionadoSalgadoGrande = !empty($this->input('fracionado_salgado_grande')) ? 1 : 0;
+        $alergenosIds            = $_POST['alergenos'] ?? [];
 
         // Converte formato monetário 'R$ 8,50' ou '8,50' para float 8.50
         $precoLimpo = preg_replace('/[^\d,.]/', '', $precoVendaRaw);
@@ -312,15 +314,16 @@ class AdminController extends Controller
         }
 
         $dados = [
-            'categoria_id'          => $categoriaId,
-            'codigo_interno'        => $codigoInterno,
-            'descricao'             => $descricao,
-            'preco_venda'           => max(0.01, $precoVenda),
-            'tipo'                  => in_array($tipo, ['salgado_diario', 'industrializado_continuo']) ? $tipo : 'salgado_diario',
-            'turno_disponibilidade' => in_array($turnoDisponibilidade, ['matutino', 'vespertino', 'ambos']) ? $turnoDisponibilidade : 'ambos',
-            'estoque_atual'         => max(0, $estoqueAtual),
-            'estoque_minimo'        => max(0, $estoqueMinimo),
-            'status_pausa'          => ($statusPausa === 'pausado') ? 'pausado' : 'ativo'
+            'categoria_id'              => $categoriaId,
+            'codigo_interno'            => $codigoInterno,
+            'descricao'                 => $descricao,
+            'preco_venda'               => max(0.01, $precoVenda),
+            'tipo'                      => in_array($tipo, ['salgado_diario', 'industrializado_continuo']) ? $tipo : 'salgado_diario',
+            'fracionado_salgado_grande' => $fracionadoSalgadoGrande,
+            'turno_disponibilidade'     => in_array($turnoDisponibilidade, ['matutino', 'vespertino', 'ambos']) ? $turnoDisponibilidade : 'ambos',
+            'estoque_atual'             => max(0, $estoqueAtual),
+            'estoque_minimo'            => max(0, $estoqueMinimo),
+            'status_pausa'              => ($statusPausa === 'pausado') ? 'pausado' : 'ativo'
         ];
 
         // Processa upload de imagem opcional do produto
@@ -1069,18 +1072,127 @@ class AdminController extends Controller
     }
 
     /**
-     * Visualização do Calendário Escolar
+     * Visualização e Gestão do Calendário Escolar
      */
     public function calendario(): void
     {
-        $diasSemana = \App\Models\CalendarioEscolar::obterDiasSemanaLetiva(date('Y-m-d'));
-        
+        $semanaParam = $this->input('semana');
+        $dataBase = null;
+        if (!empty($semanaParam) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $semanaParam)) {
+            $dataBase = $semanaParam;
+        }
+
+        $diasSemana = CalendarioEscolar::obterDiasSemanaLetiva('atual', null, $dataBase);
+
+        // Identifica a segunda-feira da semana em visualização
+        $primeiroDia = $diasSemana[0]['data'] ?? date('Y-m-d');
+        $dtSegunda = new \DateTimeImmutable($primeiroDia);
+        $semanaAnterior = $dtSegunda->modify('-7 days')->format('Y-m-d');
+        $semanaProxima = $dtSegunda->modify('+7 days')->format('Y-m-d');
+        $semanaAtualHoje = date('Y-m-d');
+
+        $anoAtual = (int)$dtSegunda->format('Y');
+        $excecoesAno = CalendarioEscolar::listarExcecoes($anoAtual);
+        $metricas = CalendarioEscolar::contarMetricasAno($anoAtual);
+
         $this->render('admin/calendario', [
-            'pageTitle'  => 'Calendário Escolar & Dias Letivos',
-            'activeMenu' => 'calendario',
-            'diasSemana' => $diasSemana,
-            'hoje'       => date('Y-m-d')
+            'pageTitle'       => 'Calendário Escolar & Dias Letivos',
+            'pageHeading'     => 'Calendário Escolar',
+            'activeMenu'      => 'calendario',
+            'diasSemana'      => $diasSemana,
+            'semanaAnterior'  => $semanaAnterior,
+            'semanaProxima'   => $semanaProxima,
+            'semanaAtualHoje' => $semanaAtualHoje,
+            'dataSelecionada' => $primeiroDia,
+            'excecoesAno'     => $excecoesAno,
+            'metricas'        => $metricas,
+            'anoAtual'        => $anoAtual,
+            'hoje'            => date('Y-m-d'),
         ], 'admin');
+    }
+
+    /**
+     * Cadastra ou atualiza uma exceção no calendário letivo (Feriado, Recesso ou Férias)
+     */
+    public function calendarioSalvar(): void
+    {
+        $this->validateCsrf();
+
+        $data = (string)$this->input('data');
+        $tipo = (string)$this->input('tipo');
+        $descricao = (string)$this->input('descricao');
+
+        if (empty($data) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $data)) {
+            Session::setFlash('warning', 'Data inválida para o calendário.');
+            $this->redirect('/admin/calendario');
+            return;
+        }
+
+        try {
+            $res = CalendarioEscolar::salvarExcecao($data, $tipo, $descricao, (int)Auth::id());
+            Session::setFlash('success', $res['mensagem']);
+        } catch (\Throwable $e) {
+            Session::setFlash('danger', 'Erro ao salvar data no calendário: ' . $e->getMessage());
+        }
+
+        $this->redirect('/admin/calendario?semana=' . urlencode($data));
+    }
+
+    /**
+     * Remove uma exceção do calendário, restaurando o dia ao padrão regular
+     */
+    public function calendarioExcluir(): void
+    {
+        $this->validateCsrf();
+
+        $data = (string)$this->input('data');
+
+        if (empty($data) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $data)) {
+            Session::setFlash('warning', 'Data inválida.');
+            $this->redirect('/admin/calendario');
+            return;
+        }
+
+        try {
+            CalendarioEscolar::removerExcecao($data);
+            Session::setFlash('success', 'Exceção removida com sucesso. A data ' . date('d/m/Y', strtotime($data)) . ' voltou a operar normalmente.');
+        } catch (\Throwable $e) {
+            Session::setFlash('danger', 'Erro ao remover data do calendário: ' . $e->getMessage());
+        }
+
+        $this->redirect('/admin/calendario?semana=' . urlencode($data));
+    }
+
+    /**
+     * Executa a rotina de Cancelamento Emergencial em Lote para uma data
+     */
+    public function calendarioEmergencial(): void
+    {
+        $this->validateCsrf();
+
+        $data = (string)$this->input('data');
+        $motivo = (string)$this->input('motivo');
+
+        if (empty($data) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $data)) {
+            Session::setFlash('warning', 'Informe uma data válida para a suspensão emergencial.');
+            $this->redirect('/admin/calendario');
+            return;
+        }
+
+        if (empty(trim($motivo))) {
+            Session::setFlash('warning', 'A justificativa para suspensão emergencial é obrigatória.');
+            $this->redirect('/admin/calendario?semana=' . urlencode($data));
+            return;
+        }
+
+        try {
+            $res = CalendarioEscolar::cancelamentoEmergencial($data, $motivo, (int)Auth::id(), Auth::getClientIp());
+            Session::setFlash('success', $res['mensagem']);
+        } catch (\Throwable $e) {
+            Session::setFlash('danger', 'Falha ao processar cancelamento emergencial: ' . $e->getMessage());
+        }
+
+        $this->redirect('/admin/calendario?semana=' . urlencode($data));
     }
 
     /**

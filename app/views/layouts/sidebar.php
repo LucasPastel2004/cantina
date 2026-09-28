@@ -11,13 +11,13 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 $baseUrl = $baseUrl ?? '';
 $activeMenu = $activeMenu ?? '';
 $user = $user ?? (\App\Core\Auth::check() ? \App\Core\Auth::user() : [
-    'nome' => 'Operador Padrão',
-    'usuario' => 'operador-balcao',
-    'perfil' => 'operador',
-    'role' => 'operador'
+    'nome' => 'Administrador Geral',
+    'usuario' => 'admin',
+    'perfil' => 'administrador',
+    'role' => 'administrador'
 ]);
-$userRole = $user['role'] ?? $user['perfil'] ?? '';
-$isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
+$userRole = $user['role'] ?? $user['perfil'] ?? (\App\Core\Auth::role() ?? 'operador');
+$isAdmin = ($userRole === 'administrador');
 ?>
 
 <!-- Gatilho de Borda Esquerda para Abertura por Hover quando Colapsada (Desktop/Notebook) -->
@@ -119,15 +119,18 @@ $isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
                         <span class="nav-label">Lançamento de Perdas</span>
                     </a>
                 </li>
+                <?php if ($isAdmin): ?>
                 <li class="nav-item">
                     <a href="<?php echo $baseUrl; ?>/estoque/importar-xml" class="nav-link <?php echo ($activeMenu === 'xml') ? 'active' : ''; ?>">
                         <span class="nav-bullet">●</span>
                         <span class="nav-label">Entrada XML NF-e</span>
                     </a>
                 </li>
+                <?php endif; ?>
             </ul>
         </div>
 
+        <?php if ($isAdmin): ?>
         <!-- Grupo 3: Administração e Relatórios -->
         <div class="nav-section-box" id="navSectionAdmin">
             <button type="button" class="nav-section-header" onclick="toggleNavSection('navSectionAdmin')" aria-expanded="true">
@@ -193,6 +196,7 @@ $isAdmin = ($userRole === 'administrador') || \App\Core\Auth::isAdmin();
                 </li>
             </ul>
         </div>
+        <?php endif; ?>
     </nav>
 
     <!-- Rodapé da Sidebar: Usuário Logado e Logout -->

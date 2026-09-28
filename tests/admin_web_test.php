@@ -106,15 +106,20 @@ $loginResOp = makeRequest($baseUrl . '/login', 'POST', [
     'senha'       => 'Operador@123'
 ], $cookieOperador);
 
-// 9. Operador acessando /admin/produtos (deve conseguir acessar 200 OK para pausa rápida)
+// 8. Operador tentando acessar /admin/produtos (RBAC bloqueia e redireciona 302 para /admin)
 $resProdOp = makeRequest($baseUrl . '/admin/produtos', 'GET', [], $cookieOperador);
-$okProdOp = ($resProdOp['code'] === 200 && str_contains($resProdOp['body'], 'Cardápio'));
-echo "8. Operador acessa /admin/produtos para pausa rápida (200 OK): " . ($okProdOp ? "PASS" : "FAIL (code {$resProdOp['code']})") . "\n";
+$okProdOp = ($resProdOp['code'] === 302 && str_contains($resProdOp['headers'], 'Location: /admin'));
+echo "8. Operador bloqueado em /admin/produtos por RBAC (302 para /admin): " . ($okProdOp ? "PASS" : "FAIL (code {$resProdOp['code']})") . "\n";
 
-// 10. Operador tentando acessar /admin/configuracoes (RBAC redireciona com flash para /admin)
+// 9. Operador tentando acessar /admin/configuracoes (RBAC redireciona com flash para /admin)
 $resConfigOp = makeRequest($baseUrl . '/admin/configuracoes', 'GET', [], $cookieOperador);
 $okConfigOp = ($resConfigOp['code'] === 302 && str_contains($resConfigOp['headers'], 'Location: /admin'));
 echo "9. Operador redirecionado de /admin/configuracoes por RBAC (302 para /admin): " . ($okConfigOp ? "PASS" : "FAIL (code {$resConfigOp['code']})") . "\n";
+
+// 10. Operador acessando /estoque para pausa rápida e saldos (200 OK)
+$resEstoqueOp = makeRequest($baseUrl . '/estoque', 'GET', [], $cookieOperador);
+$okEstoqueOp = ($resEstoqueOp['code'] === 200 && str_contains($resEstoqueOp['body'], 'Controle de Estoque'));
+echo "10. Operador acessa /estoque para saldos e pausa rápida (200 OK): " . ($okEstoqueOp ? "PASS" : "FAIL (code {$resEstoqueOp['code']})") . "\n";
 
 // Limpeza de arquivos temporários de cookie
 @unlink($cookieAdmin);

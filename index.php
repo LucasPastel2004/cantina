@@ -328,9 +328,9 @@ $router->post('/admin/categorias/excluir', [\App\Controllers\AdminController::cl
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 
-// 3.3. Produtos e Cardápio (Consulta e Pausa para operador/admin; Criação/Edição/Exclusão para admin)
+// 3.3. Produtos e Cardápio (Consulta, Criação, Edição e Exclusão exclusivo para admin; Pausa rápida para operador via POST)
 $router->get('/admin/produtos', [\App\Controllers\AdminController::class, 'produtos'], [
-    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 $router->post('/admin/produtos/salvar', [\App\Controllers\AdminController::class, 'produtosSalvar'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
@@ -398,9 +398,18 @@ $router->post('/admin/alunos/reativar', [\App\Controllers\AdminController::class
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 
-// 3.8. Calendário Escolar
+// 3.8. Calendário Escolar (Gestão de Dias Letivos, Feriados, Recessos e Suspensão Emergencial)
 $router->get('/admin/calendario', [\App\Controllers\AdminController::class, 'calendario'], [
-    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/calendario/salvar', [\App\Controllers\AdminController::class, 'calendarioSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/calendario/excluir', [\App\Controllers\AdminController::class, 'calendarioExcluir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/calendario/emergencial', [\App\Controllers\AdminController::class, 'calendarioEmergencial'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 
 // 4. Central de Relatórios Gerenciais, Extratos e Exportações (Fase 17 — FSD Área 6 & Módulo 8)

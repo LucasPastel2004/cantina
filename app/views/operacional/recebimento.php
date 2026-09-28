@@ -84,7 +84,14 @@ if ($jaRecebido) {
     foreach ($itens as $it) {
         $qEsp = (int)($it['quantidade_total'] ?? 0);
         $pId = (int)$it['produto_id'];
-        $qEnt = $itensEntreguesMap[$pId] ?? $qEsp;
+        $isFrac = !empty($it['fracionado_salgado_grande']);
+        $tam = $it['tamanho_fornecedor'] ?? null;
+        if ($isFrac && isset($itensEntreguesMap[$pId])) {
+            $totalUnidEntregues = (int)$itensEntreguesMap[$pId];
+            $qEnt = ($tam === 'grande') ? intdiv($totalUnidEntregues, 2) : ($totalUnidEntregues % 2);
+        } else {
+            $qEnt = $itensEntreguesMap[$pId] ?? $qEsp;
+        }
         $totalEntregueAcum += $qEnt;
         $d = $qEnt - $qEsp;
         if ($d > 0) {
@@ -161,7 +168,18 @@ if ($jaRecebido) {
                             <?php 
                             $qtdEsp = (int)($item['quantidade_total'] ?? 0);
                             $prodId = (int)$item['produto_id'];
-                            $qtdEntregueEfetiva = $jaRecebido ? ($itensEntreguesMap[$prodId] ?? $qtdEsp) : $qtdEsp;
+                            $isFrac = !empty($item['fracionado_salgado_grande']);
+                            $tam = $item['tamanho_fornecedor'] ?? null;
+                            if ($jaRecebido) {
+                                if ($isFrac && isset($itensEntreguesMap[$prodId])) {
+                                    $totalUnidEntregues = (int)$itensEntreguesMap[$prodId];
+                                    $qtdEntregueEfetiva = ($tam === 'grande') ? intdiv($totalUnidEntregues, 2) : ($totalUnidEntregues % 2);
+                                } else {
+                                    $qtdEntregueEfetiva = $itensEntreguesMap[$prodId] ?? $qtdEsp;
+                                }
+                            } else {
+                                $qtdEntregueEfetiva = $qtdEsp;
+                            }
                             $diffEfetiva = $qtdEntregueEfetiva - $qtdEsp;
                             ?>
                             <tr>
@@ -170,8 +188,18 @@ if ($jaRecebido) {
                                 </td>
                                 <td>
                                     <span class="font-weight-bold text-dark"><?php echo htmlspecialchars($item['descricao'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <?php if ($isFrac): ?>
+                                        <div class="text-secondary text-microcopy mt-1" style="font-size: 11px;">
+                                            <span class="badge bg-light text-dark border" style="font-size: 9.5px; font-weight: 600; padding: 1px 5px; border-color: #cbd5e1 !important;">
+                                                <?php echo ($tam === 'grande') ? 'Grande (2 Pequenos)' : 'Sobra (1 Pequeno)'; ?>
+                                            </span>
+                                            <span class="ms-1"><?php echo htmlspecialchars($item['obs_conversao'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
+                                        </div>
+                                    <?php endif; ?>
                                     <input type="hidden" name="itens[<?php echo $idx; ?>][produto_id]" value="<?php echo $prodId; ?>">
                                     <input type="hidden" name="itens[<?php echo $idx; ?>][qtd_esperada]" id="qtdEsp_<?php echo $idx; ?>" value="<?php echo $qtdEsp; ?>">
+                                    <input type="hidden" name="itens[<?php echo $idx; ?>][fator_conversao]" value="<?php echo $item['fator_conversao'] ?? 1; ?>">
+                                    <input type="hidden" name="itens[<?php echo $idx; ?>][tamanho_fornecedor]" value="<?php echo $tam ?? ''; ?>">
                                 </td>
                                 <td class="text-secondary">
                                     <?php echo htmlspecialchars($item['categoria_nome'] ?? 'Geral', ENT_QUOTES, 'UTF-8'); ?>

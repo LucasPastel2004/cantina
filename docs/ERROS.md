@@ -1117,3 +1117,53 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Executado saneamento da base de dados: 45 vendas órfãs deletadas, 16 colaboradores duplicados removidos (IDs 2-14, 111-113).
   4. Testes aprovados: `fase13_test.php` (52/52), `desconto_folha_individual_test.php` (36/36).
 - Como evitar no futuro: Sempre usar a mesma fonte de dados (itens reais) em todas as camadas de um relatório (tabela consolidada, modal de detalhes, PDF individual e impressão HTML). Nunca somar `valor_total` direto de `vendas_balcao` se o detalhamento usa `itens_venda_balcao` — as fontes devem ser idênticas para garantir consistência. Scripts de teste devem limpar TODAS as tabelas relacionadas por FK, incluindo `vendas_balcao` e não apenas `itens_venda_balcao` e `produtos`.
+
+---
+
+## 2026-09-28 - Falha de validação de datas e schema ao configurar fixtures de pedidos em testes automatizados
+
+- Sintoma: Erro PDO de coluna inexistente `status` na tabela `responsaveis` e exceção de dia não letivo ao tentar agendar pedidos para datas dinâmicas geradas com `strtotime('+N days')`.
+- Causa:
+  1. A tabela `responsaveis` não possui coluna `status` (utiliza colunas como `bloqueado_med`, `saldo_atual` e `termos_aceitos_em`). O método direto de inserção tentou gravar o campo inexistente.
+  2. O método `Pedido::criarPedido` possui a assinatura `(int $responsavelId, int $alunoId, string $dataConsumo, array $itens, ?DateTimeInterface $agora = null)` — o turno de consumo é derivado da matrícula do aluno e não é passado como parâmetro. Ao passar o turno como quarto argumento, os argumentos subsequentes foram deslocados.
+  3. O cálculo relativo de dias (`+5 days` a partir de uma segunda-feira) caía em sábados e domingos, os quais são categoricamente bloqueados pela regra de negócio `CalendarioEscolar::isDiaLetivo()`.
+- Solução aplicada:
+  1. Utilizado o método oficial `Responsavel::localizarOuCriarPorCpf()` e `TransacaoCarteira::creditar()` para criar o responsável com saldo garantido.
+  2. Ajustada a chamada para a assinatura correta de `Pedido::criarPedido()`.
+  3. Definidas datas fixas de dias letivos válidos (segunda a sexta-feira, ex.: `2026-11-20`, `2026-11-23`, `2026-11-24`), garantindo determinismo total na execução da suíte de testes.
+- Como evitar no futuro: Em scripts de teste que envolvam agendamento de pedidos, sempre utilizar métodos estáticos dos Models correspondentes para instanciar fixtures e utilizar datas fixas sabidamente letivas no calendário escolar para evitar falhas que dependam do dia da semana em que os testes forem executados.
+
+---
+
+## 2026-09-28 - Divergência de contratos de parâmetros em métodos de consulta operacional (WhatsApp do Corte e Totais de Caixa)
+
+- Sintoma: `ArgumentCountError: Too few arguments to function App\Models\Pedido::obterTextoWhatsAppCorte()` e `TypeError: App\Models\SessaoCaixa::obterTotaisEsperados(): Argument #1 ($sessao) must be of type array, int given` ao invocar métodos operacionais em scripts de verificação e auditoria.
+- Causa:
+  1. `Pedido::obterTextoWhatsAppCorte` requer a matriz consolidada de itens como terceiro parâmetro: `(string $dataConsumo, string $turnoConsumo, array $itensConsolidados)`.
+  2. `SessaoCaixa::obterTotaisEsperados` recebe o array associativo da sessão ativa `$sessao` retornado por `obterSessaoAberta()` (contendo `id`, `fundo_troco_inicial`, etc.) e não apenas o identificador numérico escalar `$id`.
+  3. `SessaoCaixa::obterSessaoAberta(?string $turno = null)` aceita o turno como primeiro argumento opcional (e não `$operadorId, $turno`), filtrando a data de abertura pelo dia corrente `DATE(aberto_em) = date('Y-m-d')`.
+- Solução aplicada: Adequadas as invocações aos contratos estritos dos métodos, passando os itens consolidados para a mensagem do WhatsApp e o array da sessão ativa para o cálculo de totais esperados da gaveta.
+- Como evitar no futuro: Consultar sempre as assinaturas dos Models nos arquivos de domínio antes de escrever scripts de automação, garantindo tipagem compatível e aproveitamento de caches de consulta já computados.
+
+---
+
+## 2026-09-28 - Exposição indevida de menus administrativos e entrada XML para perfil de operador na barra lateral
+
+- Sintoma: Operador do caixa (`perfil: operador`) conseguia visualizar a seção "ADMINISTRAÇÃO" (com todos os 9 links: Importação Escolar, Alunos & Matrículas, Turmas Escolares, Colaboradores, Cardápio & Preços, Calendário Escolar, Relatórios Gerenciais, Configurações Globais, Contestações MED) e a opção "Entrada XML NF-e" no menu lateral. Ao clicar em qualquer opção, o sistema bloqueava via RBAC com a mensagem *"Atenção: Acesso negado: seu perfil não possui autorização para acessar este recurso"*, porém a exibição dos itens gerava poluição visual e quebrava o princípio do menor privilégio.
+- Causa: Em `app/views/layouts/sidebar.php`, o bloco `navSectionAdmin` e o item `Entrada XML NF-e` estavam sendo renderizados incondicionalmente no HTML, delegando o controle de acesso unicamente ao redirecionamento RBAC do backend no momento do clique.
+- Solução aplicada:
+  1. No arquivo `app/views/layouts/sidebar.php`, adicionada a checagem `$isAdmin = ($userRole === 'administrador');`.
+  2. Envolvido o item "Entrada XML NF-e" com `<?php if ($isAdmin): ?> ... <?php endif; ?>`.
+  3. Envolvido todo o bloco `navSectionAdmin` com `<?php if ($isAdmin): ?> ... <?php endif; ?>`.
+  4. Restrita a rota `GET /admin/produtos` no `index.php` exclusivamente a `ROLE_ADMINISTRADOR`.
+  5. Atualizadas as suítes de testes `tests/sidebar_visibility_test.php` e `tests/admin_web_test.php`, e criada a suíte E2E `tests/operator_ui_sanitization_test.php` (16/16 asserções aprovadas).
+- Como evitar no futuro: Sempre aplicar a segregação de privilégios tanto na camada de autorização (backend/RBAC) quanto na camada de apresentação (views/UI), ocultando categoricamente elementos aos quais o perfil autenticado não possui acesso.
+ 
+---
+
+## 2026-09-28 - Bloqueio de simulação de pedidos futuros em testes devido à regra RN-06 de liberação semanal
+
+- Sintoma: `DomainException: O cardápio da próxima semana só é liberado na sexta-feira às 18:00` ao tentar agendar um pedido com data futura em teste automatizado de suspensão emergencial do calendário.
+- Causa: O método `Pedido::criarPedido()` valida rigorosamente a regra RN-06: se a data do pedido pertence a uma semana futura em relação ao parâmetro `$agora`, o agendamento só é permitido se `$agora` for sexta-feira a partir das 18:00 ou posterior. No teste, passou-se `$agora = 2026-11-20 07:00:00` (sexta de manhã antes das 18h) com pedido para a quarta da semana seguinte (`2026-11-25`), acionando a trava de segurança da cantina.
+- Solução aplicada: Ajustado o parâmetro de simulação temporal `$agora` para a segunda-feira da mesma semana do pedido (`2026-11-23 07:00:00`), garantindo que o dia pertença à semana corrente aberta e com horário antes do corte diário.
+- Como evitar no futuro: Em fixtures e testes automatizados de agendamento de pedidos, considerar sempre a janela de abertura da RN-06 (semana aberta ou posterior a sexta-feira 18:00) ao injetar instâncias simuladas de `DateTimeInterface $agora`.

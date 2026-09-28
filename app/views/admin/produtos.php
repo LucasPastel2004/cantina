@@ -150,8 +150,15 @@ $csrfToken = $csrf_token ?? '';
                                     <code class="code-tag font-tabular"><?php echo htmlspecialchars($prod['codigo_interno'], ENT_QUOTES, 'UTF-8'); ?></code>
                                 </td>
                                 <td class="cell-left">
-                                    <div class="font-weight-semibold text-dark" style="font-size: 13px;">
-                                        <?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>
+                                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                                        <span class="font-weight-semibold text-dark" style="font-size: 13px;">
+                                            <?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
+                                        <?php if (!empty($prod['fracionado_salgado_grande'])): ?>
+                                            <span class="badge bg-light text-dark border" style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-color: #cbd5e1 !important;" title="Salgado pequeno vendido a partir de salgado grande cortado ao meio (1 grande = 2 pequenos no pedido ao fornecedor)">
+                                                ½ Salgado Grande
+                                            </span>
+                                        <?php endif; ?>
                                     </div>
                                     <?php if (!empty($prod['alergenos_nomes'])): ?>
                                         <div class="d-inline-flex flex-wrap gap-1 mt-1">
@@ -331,6 +338,20 @@ $csrfToken = $csrf_token ?? '';
                         </div>
                     </div>
 
+                    <!-- Configuração de Salgado Pequeno Fracionado de Salgado Grande (1 Grande = 2 Pequenos) -->
+                    <div class="p-3 mb-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" id="prod_fracionado_grande" name="fracionado_salgado_grande" value="1">
+                            <label class="form-check-label font-weight-semibold text-dark ms-1" for="prod_fracionado_grande" style="font-size: 13px;">
+                                Fracionar de Salgado Grande para Fornecedor (1 Grande = 2 Pequenos)
+                            </label>
+                        </div>
+                        <div class="text-secondary text-microcopy mt-1 ms-4" style="font-size: 11px; line-height: 1.4;">
+                            Ative esta opção se este lanche for um salgado pequeno preparado cortando um salgado grande ao meio.
+                            No corte do turno para o fornecedor, cada 2 pedidos deste salgado serão agrupados como 1 salgado grande (ex: 15 pedidos viram 7 grandes e 1 pequeno para entrega).
+                        </div>
+                    </div>
+
                     <div class="row g-3 mb-3">
                         <div class="col-12 col-sm-6">
                             <label for="prod_estoque_atual" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">
@@ -394,6 +415,7 @@ function abrirModalProduto() {
     document.getElementById('prod_tipo').value = 'salgado_diario';
     document.getElementById('prod_turno').value = 'ambos';
     document.getElementById('prod_status_pausa').value = 'ativo';
+    document.getElementById('prod_fracionado_grande').checked = false;
     document.getElementById('prod_estoque_atual').value = '0';
     document.getElementById('prod_estoque_minimo').value = '5';
     document.getElementById('prod_foto').value = '';
@@ -421,6 +443,7 @@ function editarProduto(prod) {
     document.getElementById('prod_tipo').value = prod.tipo;
     document.getElementById('prod_turno').value = prod.turno_disponibilidade;
     document.getElementById('prod_status_pausa').value = prod.status_pausa;
+    document.getElementById('prod_fracionado_grande').checked = (parseInt(prod.fracionado_salgado_grande, 10) === 1);
     document.getElementById('prod_estoque_atual').value = prod.estoque_atual;
     document.getElementById('prod_estoque_minimo').value = prod.estoque_minimo;
     document.getElementById('prod_foto').value = '';

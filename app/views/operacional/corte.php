@@ -178,6 +178,14 @@ require __DIR__ . '/../partials/stat_strip.php';
                             </td>
                             <td>
                                 <span class="font-weight-bold text-dark"><?php echo htmlspecialchars($item['descricao'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
+                                <?php if (!empty($item['fracionado_salgado_grande'])): ?>
+                                    <div class="text-secondary text-microcopy mt-1" style="font-size: 11px;">
+                                        <span class="badge bg-light text-dark border" style="font-size: 9.5px; font-weight: 600; padding: 1px 5px; border-color: #cbd5e1 !important;">
+                                            <?php echo ($item['tamanho_fornecedor'] === 'grande') ? 'Grande (2 Pequenos)' : 'Sobra (1 Pequeno)'; ?>
+                                        </span>
+                                        <span class="ms-1"><?php echo htmlspecialchars($item['obs_conversao'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
+                                    </div>
+                                <?php endif; ?>
                             </td>
                             <td class="text-secondary">
                                 <?php echo htmlspecialchars($item['categoria_nome'] ?? 'Geral', ENT_QUOTES, 'UTF-8'); ?>
@@ -185,6 +193,9 @@ require __DIR__ . '/../partials/stat_strip.php';
                             <td>
                                 <?php if (($item['tipo_produto'] ?? '') === 'salgado_diario'): ?>
                                     <span class="badge bg-light text-dark border" style="font-size: 11px;">Salgado Diário</span>
+                                    <?php if (!empty($item['fracionado_salgado_grande'])): ?>
+                                        <span class="badge bg-light text-secondary border mt-1 d-block" style="font-size: 9.5px; width: fit-content;">½ Salgado</span>
+                                    <?php endif; ?>
                                 <?php else: ?>
                                     <span class="badge bg-light text-secondary border" style="font-size: 11px;">Industrializado</span>
                                 <?php endif; ?>

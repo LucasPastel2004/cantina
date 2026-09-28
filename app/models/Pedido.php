@@ -1029,6 +1029,7 @@ class Pedido extends Model
                        p.codigo_interno, 
                        p.descricao, 
                        p.tipo AS tipo_produto, 
+                       p.fracionado_salgado_grande,
                        p.preco_venda, 
                        c.nome AS categoria_nome,
                        SUM(ip.quantidade) AS quantidade_total,
@@ -1041,27 +1042,105 @@ class Pedido extends Model
                   AND ped.turno_consumo = :turno 
                   AND ped.status IN ('agendado', 'editado')
                   AND p.deleted_at IS NULL
-                GROUP BY p.id, p.codigo_interno, p.descricao, p.tipo, p.preco_venda, c.nome, c.ordem_exibicao
+                GROUP BY p.id, p.codigo_interno, p.descricao, p.tipo, p.fracionado_salgado_grande, p.preco_venda, c.nome, c.ordem_exibicao
                 ORDER BY c.ordem_exibicao ASC, p.descricao ASC";
 
-        $itens = self::fetchAll($sql, [
+        $itensBrutos = self::fetchAll($sql, [
             'data'  => $dataConsumo,
             'turno' => $turnoConsumo
         ]);
 
+        $itensConsolidados = [];
         $totalPecas = 0;
         $totalSalgados = 0;
         $totalValorEstimado = 0.0;
+        $totalDemandaAlunos = 0;
 
-        foreach ($itens as &$it) {
-            $qtd = (int)$it['quantidade_total'];
-            $totalPecas += $qtd;
+        foreach ($itensBrutos as $it) {
+            $qtdOriginal = (int)$it['quantidade_total'];
+            $totalDemandaAlunos += $qtdOriginal;
             $totalValorEstimado += (float)$it['valor_total_estimado'];
-            if ($it['tipo_produto'] === 'salgado_diario') {
-                $totalSalgados += $qtd;
+            $isFracionado = !empty($it['fracionado_salgado_grande']);
+
+            if ($isFracionado) {
+                $grandes = intdiv($qtdOriginal, 2);
+                $pequenos = $qtdOriginal % 2;
+
+                // Formatação semântica dos nomes Grande e Pequeno
+                $descOriginal = trim($it['descricao']);
+                if (preg_match('/\bpequen([oa])s?\b/ui', $descOriginal)) {
+                    $descGrande = preg_replace('/\bpequen([oa])s?\b/ui', 'Grande', $descOriginal);
+                    $descPequeno = $descOriginal;
+                } else {
+                    $descGrande = $descOriginal . ' (Grande)';
+                    $descPequeno = $descOriginal . ' (Pequeno)';
+                }
+
+                $precoUnitarioPequeno = (float)$it['preco_venda'];
+                $precoUnitarioGrande = round($precoUnitarioPequeno * 2, 2);
+
+                if ($grandes > 0) {
+                    $itemGrande = [
+                        'produto_id'                => (int)$it['produto_id'],
+                        'codigo_interno'           => $it['codigo_interno'] . '-G',
+                        'descricao'                => $descGrande,
+                        'tipo_produto'             => $it['tipo_produto'],
+                        'preco_venda'              => $precoUnitarioGrande,
+                        'categoria_nome'           => $it['categoria_nome'],
+                        'quantidade_total'         => $grandes,
+                        'valor_total_estimado'     => round($grandes * $precoUnitarioGrande, 2),
+                        'fracionado_salgado_grande'=> 1,
+                        'tamanho_fornecedor'       => 'grande',
+                        'fator_conversao'          => 2,
+                        'qtd_pedida_original'      => $qtdOriginal,
+                        'obs_conversao'            => "Convertido: {$qtdOriginal} pedidos pequenos = {$grandes} grande(s)" . ($pequenos > 0 ? " + {$pequenos} pequeno" : "")
+                    ];
+                    $itensConsolidados[] = $itemGrande;
+                    $totalPecas += $grandes;
+                    if ($it['tipo_produto'] === 'salgado_diario') {
+                        $totalSalgados += $grandes;
+                    }
+                }
+
+                if ($pequenos > 0) {
+                    $itemPequeno = [
+                        'produto_id'                => (int)$it['produto_id'],
+                        'codigo_interno'           => $it['codigo_interno'] . '-P',
+                        'descricao'                => $descPequeno,
+                        'tipo_produto'             => $it['tipo_produto'],
+                        'preco_venda'              => $precoUnitarioPequeno,
+                        'categoria_nome'           => $it['categoria_nome'],
+                        'quantidade_total'         => $pequenos,
+                        'valor_total_estimado'     => round($pequenos * $precoUnitarioPequeno, 2),
+                        'fracionado_salgado_grande'=> 1,
+                        'tamanho_fornecedor'       => 'pequeno',
+                        'fator_conversao'          => 1,
+                        'qtd_pedida_original'      => $qtdOriginal,
+                        'obs_conversao'            => "Sobra: {$pequenos} pequeno (de {$qtdOriginal} pedidos fracionados)"
+                    ];
+                    $itensConsolidados[] = $itemPequeno;
+                    $totalPecas += $pequenos;
+                    if ($it['tipo_produto'] === 'salgado_diario') {
+                        $totalSalgados += $pequenos;
+                    }
+                }
+            } else {
+                $it['produto_id'] = (int)$it['produto_id'];
+                $it['quantidade_total'] = $qtdOriginal;
+                $it['valor_total_estimado'] = (float)$it['valor_total_estimado'];
+                $it['fracionado_salgado_grande'] = 0;
+                $it['tamanho_fornecedor'] = null;
+                $it['fator_conversao'] = 1;
+                $it['qtd_pedida_original'] = $qtdOriginal;
+                $it['obs_conversao'] = null;
+
+                $itensConsolidados[] = $it;
+                $totalPecas += $qtdOriginal;
+                if ($it['tipo_produto'] === 'salgado_diario') {
+                    $totalSalgados += $qtdOriginal;
+                }
             }
         }
-        unset($it);
 
         // Contagem de pedidos e alunos envolvidos
         $sqlTotais = "SELECT COUNT(DISTINCT ped.id) AS total_pedidos,
@@ -1081,11 +1160,13 @@ class Pedido extends Model
         return [
             'data_consumo'        => $dataConsumo,
             'turno_consumo'       => $turnoConsumo,
-            'itens'               => $itens,
+            'itens'               => $itensConsolidados,
+            'itens_originais'     => $itensBrutos,
             'total_pecas'         => $totalPecas,
             'total_salgados'      => $totalSalgados,
             'total_pedidos'       => (int)($totais['total_pedidos'] ?? 0),
             'total_alunos'        => (int)($totais['total_alunos'] ?? 0),
+            'total_demanda_itens' => $totalDemandaAlunos,
             'total_valor_estimado'=> round($totalValorEstimado, 2),
             'status_corte'        => $statusCorte,
             'status_recebimento'  => $statusRecebimento,
@@ -1243,15 +1324,34 @@ class Pedido extends Model
                 $justificativaBaseEntrada .= " - Obs: " . mb_substr($observacao, 0, 100, 'UTF-8');
             }
 
+            // Agrupa itens recebidos por produto_id para harmonizar salgados fracionados (grandes e pequenos)
+            $itensAgrupados = [];
             foreach ($itensRecebidos as $item) {
                 $produtoId = (int)($item['produto_id'] ?? 0);
-                $qtdEsperada = max(0, (int)($item['qtd_esperada'] ?? 0));
-                $qtdEntregue = max(0, (int)($item['qtd_entregue'] ?? 0));
-
                 if ($produtoId <= 0) {
                     continue;
                 }
+                $fator = max(1, (int)($item['fator_conversao'] ?? 1));
+                $qtdEsperada = max(0, (int)($item['qtd_esperada'] ?? 0));
+                $qtdEntregue = max(0, (int)($item['qtd_entregue'] ?? 0));
 
+                if (!isset($itensAgrupados[$produtoId])) {
+                    $itensAgrupados[$produtoId] = [
+                        'produto_id'            => $produtoId,
+                        'total_esperado_pecas'  => 0,
+                        'total_entregue_pecas'  => 0,
+                        'demanda_esperada_unid' => 0,
+                        'demanda_entregue_unid' => 0,
+                    ];
+                }
+
+                $itensAgrupados[$produtoId]['total_esperado_pecas'] += $qtdEsperada;
+                $itensAgrupados[$produtoId]['total_entregue_pecas'] += $qtdEntregue;
+                $itensAgrupados[$produtoId]['demanda_esperada_unid'] += ($qtdEsperada * $fator);
+                $itensAgrupados[$produtoId]['demanda_entregue_unid'] += ($qtdEntregue * $fator);
+            }
+
+            foreach ($itensAgrupados as $produtoId => $agrupado) {
                 // Bloqueio pessimista do produto
                 $stmtP = $pdo->prepare("SELECT id, codigo_interno, descricao, estoque_atual, tipo FROM produtos WHERE id = :id FOR UPDATE");
                 $stmtP->execute(['id' => $produtoId]);
@@ -1261,15 +1361,19 @@ class Pedido extends Model
                     continue;
                 }
 
-                $totalEsperado += $qtdEsperada;
-                $totalEntregue += $qtdEntregue;
-                $excedente = $qtdEntregue - $qtdEsperada;
+                $totalEsperado += $agrupado['total_esperado_pecas'];
+                $totalEntregue += $agrupado['total_entregue_pecas'];
+
+                $qtdDemandaEsperada = $agrupado['demanda_esperada_unid'];
+                $qtdDemandaEntregue = $agrupado['demanda_entregue_unid'];
+                $excedente = $qtdDemandaEntregue - $qtdDemandaEsperada;
+
                 if ($excedente > 0) {
                     $totalExcedente += $excedente;
                 }
 
-                // 1. Registra entrada da remessa física do fornecedor
-                if ($qtdEntregue > 0) {
+                // 1. Registra entrada da remessa física do fornecedor (em unidades de lanche consumíveis)
+                if ($qtdDemandaEntregue > 0) {
                     $stmtEntrada = $pdo->prepare("
                         INSERT INTO estoque_movimentacoes (
                             produto_id, tipo_movimentacao, quantidade, operador_id, justificativa, created_at
@@ -1279,14 +1383,14 @@ class Pedido extends Model
                     ");
                     $stmtEntrada->execute([
                         'prod_id' => $produtoId,
-                        'qtd'     => $qtdEntregue,
+                        'qtd'     => $qtdDemandaEntregue,
                         'op_id'   => $operadorId,
                         'just'    => $justificativaBaseEntrada
                     ]);
                 }
 
                 // 2. Registra baixa/liquidação da demanda das encomendas do corte
-                if ($qtdEsperada > 0) {
+                if ($qtdDemandaEsperada > 0) {
                     $stmtSaida = $pdo->prepare("
                         INSERT INTO estoque_movimentacoes (
                             produto_id, tipo_movimentacao, quantidade, operador_id, justificativa, created_at
@@ -1296,7 +1400,7 @@ class Pedido extends Model
                     ");
                     $stmtSaida->execute([
                         'prod_id' => $produtoId,
-                        'qtd'     => $qtdEsperada,
+                        'qtd'     => $qtdDemandaEsperada,
                         'op_id'   => $operadorId,
                         'just'    => $justificativaBaseSaida
                     ]);
@@ -1321,8 +1425,8 @@ class Pedido extends Model
                     'produto_id'     => $produtoId,
                     'codigo_interno' => $prod['codigo_interno'],
                     'descricao'      => $prod['descricao'],
-                    'qtd_esperada'   => $qtdEsperada,
-                    'qtd_entregue'   => $qtdEntregue,
+                    'qtd_esperada'   => $agrupado['total_esperado_pecas'],
+                    'qtd_entregue'   => $agrupado['total_entregue_pecas'],
                     'excedente'      => $excedente,
                 ];
             }
