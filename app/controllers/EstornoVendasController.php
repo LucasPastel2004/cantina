@@ -109,63 +109,81 @@ class EstornoVendasController extends Controller
     public function detalhesAjax(): void
     {
         $id = (int)($_GET['id'] ?? 0);
-        $tipo = trim($_GET['tipo'] ?? 'balcao');
+        $tipo = trim($_GET['tipo'] ?? '');
 
         if ($id <= 0) {
             $this->json(['sucesso' => false, 'mensagem' => 'Identificador de venda inválido.'], 400);
             return;
         }
 
-        if ($tipo === 'balcao' || $tipo === 'avulsa' || $tipo === 'sim') {
-            $venda = VendaBalcao::buscarPorId($id);
-            if (!$venda) {
-                $this->json(['sucesso' => false, 'mensagem' => 'Venda de balcão não localizada.'], 404);
-                return;
+        $vendaBalcao = null;
+        $pedidoOnline = null;
+
+        // Se o tipo especificado for pedido ou encomenda
+        if ($tipo === 'pedido' || $tipo === 'encomenda' || $tipo === 'nao') {
+            $pedidoOnline = Pedido::buscarDetalhadoPorId($id) ?? Pedido::buscarPorId($id);
+            if (!$pedidoOnline) {
+                // Fallback defensivo: se não achar em pedidos, procura em balcão
+                $vendaBalcao = VendaBalcao::buscarPorId($id);
             }
+        } else {
+            // Padrão balcão
+            $vendaBalcao = VendaBalcao::buscarPorId($id);
+            if (!$vendaBalcao) {
+                // Fallback defensivo: se não achou em balcão, procura em pedidos
+                $pedidoOnline = Pedido::buscarDetalhadoPorId($id) ?? Pedido::buscarPorId($id);
+            }
+        }
+
+        if ($vendaBalcao) {
             $itens = ItemVendaBalcao::listarPorVenda($id);
             $this->json([
                 'sucesso'  => true,
-                'dados'    => $venda,
+                'dados'    => $vendaBalcao,
                 'tipo'     => 'balcao',
                 'venda'    => [
-                    'id'              => $venda['id'],
-                    'identificador'   => "Venda Balcão #{$venda['id']}",
-                    'data_hora'       => date('d/m/Y H:i', strtotime($venda['created_at'])),
-                    'valor_total'     => (float)$venda['valor_total'],
-                    'forma_pagamento' => $venda['forma_pagamento'],
-                    'tipo_venda'      => $venda['tipo_venda'] ?? 'avulso_aluno',
-                    'status'          => $venda['status'] ?? 'concluida',
-                    'pessoa_nome'     => $venda['colaborador_nome'] ?? ($venda['aluno_nome'] ?? 'Consumidor Avulso'),
-                    'operador_nome'   => $venda['operador_nome'] ?? 'Operador'
+                    'id'              => $vendaBalcao['id'],
+                    'identificador'   => "Venda Balcão #{$vendaBalcao['id']}",
+                    'data_hora'       => date('d/m/Y H:i', strtotime($vendaBalcao['created_at'])),
+                    'valor_total'     => (float)$vendaBalcao['valor_total'],
+                    'forma_pagamento' => $vendaBalcao['forma_pagamento'],
+                    'tipo_venda'      => $vendaBalcao['tipo_venda'] ?? 'avulso_aluno',
+                    'status'          => $vendaBalcao['status'] ?? 'concluida',
+                    'pessoa_nome'     => $vendaBalcao['colaborador_nome'] ?? ($vendaBalcao['aluno_nome'] ?? 'Consumidor Avulso'),
+                    'operador_nome'   => $vendaBalcao['operador_nome'] ?? 'Operador'
                 ],
                 'itens'    => $itens
             ]);
-        } else {
-            // Pedido Online
-            $pedido = Pedido::buscarPorId($id);
-            if (!$pedido) {
-                $this->json(['sucesso' => false, 'mensagem' => 'Pedido não localizado.'], 404);
-                return;
-            }
-            $itens = ItemPedido::listarPorPedido($id);
+            return;
+        }
+
+        if ($pedidoOnline) {
+            $itens = $pedidoOnline['itens'] ?? ItemPedido::listarPorPedido($id);
             $this->json([
                 'sucesso'  => true,
-                'dados'    => $pedido,
+                'dados'    => $pedidoOnline,
                 'tipo'     => 'pedido',
                 'venda'    => [
-                    'id'              => $pedido['id'],
-                    'identificador'   => "Pedido #{$pedido['codigo_pedido']}",
-                    'data_hora'       => date('d/m/Y', strtotime($pedido['data_consumo'])) . " ({$pedido['turno_consumo']})",
-                    'valor_total'     => (float)$pedido['valor_total'],
+                    'id'              => $pedidoOnline['id'],
+                    'identificador'   => "Pedido #{$pedidoOnline['codigo_pedido']}",
+                    'data_hora'       => date('d/m/Y', strtotime($pedidoOnline['data_consumo'])) . " (" . ucfirst($pedidoOnline['turno_consumo'] ?? 'matutino') . ")",
+                    'data_consumo'    => $pedidoOnline['data_consumo'],
+                    'created_at'      => $pedidoOnline['created_at'],
+                    'valor_total'     => (float)$pedidoOnline['valor_total'],
                     'forma_pagamento' => 'Saldo da Carteira Familiar',
                     'tipo_venda'      => 'agendamento_online',
-                    'status'          => $pedido['status'],
-                    'pessoa_nome'     => $pedido['aluno_nome'] ?? 'Aluno',
-                    'responsavel'     => $pedido['responsavel_nome'] ?? 'Responsável'
+                    'status'          => $pedidoOnline['status'],
+                    'pessoa_nome'     => $pedidoOnline['aluno_nome'] ?? 'Aluno',
+                    'aluno_matricula' => $pedidoOnline['aluno_matricula'] ?? '',
+                    'aluno_turma'     => $pedidoOnline['nome_turma'] ?? '',
+                    'responsavel'     => $pedidoOnline['responsavel_nome'] ?? 'Responsável Titular'
                 ],
                 'itens'    => $itens
             ]);
+            return;
         }
+
+        $this->json(['sucesso' => false, 'mensagem' => "Venda ou pedido #{$id} não localizado no sistema."], 404);
     }
 
     /**

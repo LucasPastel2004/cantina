@@ -1013,6 +1013,37 @@ class Pedido extends Model
     }
 
     /**
+     * Busca um pedido detalhado por ID (uso operacional/administrativo)
+     */
+    public static function buscarDetalhadoPorId(int $pedidoId): ?array
+    {
+        $sql = "SELECT p.*, 
+                       a.nome AS aluno_nome, 
+                       a.matricula AS aluno_matricula,
+                       t.nome_turma, t.serie,
+                       r.nome AS responsavel_nome,
+                       r.cpf AS responsavel_cpf,
+                       r.whatsapp AS responsavel_whatsapp
+                FROM pedidos p
+                INNER JOIN alunos a ON a.id = p.aluno_id
+                LEFT JOIN turmas t ON t.id = a.turma_id
+                INNER JOIN responsaveis r ON r.id = p.responsavel_id
+                WHERE p.id = :id
+                LIMIT 1";
+
+        $pedido = self::fetchOne($sql, ['id' => $pedidoId]);
+
+        if (!$pedido) {
+            return null;
+        }
+
+        $pedido['itens'] = ItemPedido::listarPorPedido($pedidoId);
+        $pedido['status_corte'] = self::obterStatusCorte($pedido['data_consumo'], $pedido['turno_consumo']);
+
+        return $pedido;
+    }
+
+    /**
      * Consolida a demanda de itens/salgados de um determinado turno e data
      * Agrupa pedidos agendados ou editados para envio ao fornecedor
      * 
@@ -1513,11 +1544,16 @@ class Pedido extends Model
                 p.created_at,
                 DATE(p.created_at) AS data_criacao,
                 TIME_FORMAT(p.created_at, '%H:%i') AS hora_criacao,
+                COALESCE(p.data_consumo, DATE(p.created_at)) AS data_venda,
+                TIME_FORMAT(p.created_at, '%H:%i') AS hora_venda,
+                'pedido' AS tipo_origem,
                 p.turno_consumo,
                 p.valor_total,
                 p.status,
                 p.aluno_id,
                 a.nome AS aluno_nome,
+                a.nome AS pessoa_nome,
+                CONCAT('Aluno: ', a.nome, ' (', COALESCE(a.matricula, 'S/M'), ' - ', COALESCE(tur.nome_turma, 'Geral'), ') • Resp: ', r.nome) AS pessoa_detalhe,
                 a.matricula AS aluno_matricula,
                 tur.nome_turma AS aluno_turma,
                 p.responsavel_id,
@@ -1528,7 +1564,7 @@ class Pedido extends Model
             INNER JOIN alunos a ON a.id = p.aluno_id
             LEFT JOIN turmas tur ON tur.id = a.turma_id
             INNER JOIN responsaveis r ON r.id = p.responsavel_id
-            LEFT JOIN itens_pedido ip ON ip.id = p.id
+            LEFT JOIN itens_pedido ip ON ip.pedido_id = p.id
             WHERE {$whereSql}
             GROUP BY p.id
             ORDER BY p.data_consumo DESC, p.id DESC

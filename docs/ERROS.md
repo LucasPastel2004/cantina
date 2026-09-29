@@ -1206,3 +1206,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Causa: Quando uma suíte de teste sofre um erro fatal no meio de uma transação aberta sem bloco `finally` garantindo `rollBack()`, a conexão persistente ou locks de linha no MySQL podem manter dados inconsistentes temporariamente para a suíte que executa imediatamente a seguir no mesmo processo ou conexão.
 - Solução aplicada: Assegurado que todos os métodos de estorno em `VendaBalcao` e `Pedido` e as suítes de teste envolvam suas operações em blocos `try/catch/finally` rigorosos com `rollBack()` defensivo sempre que `$pdo->inTransaction()` for verdadeiro. Com os commits e rollbacks normalizados, todas as 48 suítes passaram com 100% de sucesso.
 - Como evitar no futuro: Em scripts de teste de integração que executam transações manuais, sempre implementar o padrão de limpeza em blocos `finally` ou métodos `teardown()`, garantindo o isolamento completo de cada bateria.
+
+---
+
+## 2026-09-29 - Divergência de aliases e tipo no modal de detalhes de estorno para pedidos online
+
+- Sintoma: Erro *"Falha ao obter detalhes da venda"* no modal e colunas de Data/Hora exibindo `--/--/----` e `--:--` na tela de estorno de vendas para encomendas online de alunos (`venda_avulsa = nao`).
+- Causa: Não havia falta de dados no banco de dados. Os dados existiam de forma íntegra no MySQL. A causa raiz era uma divergência de contrato na camada de apresentação:
+  1. `Pedido::listarParaEstorno()` projetava colunas com nomes `data_consumo` e `data_criacao`, enquanto a view aguardava `data_venda` e `hora_venda`.
+  2. O atributo `tipo_origem` não era projetado na query de pedidos, fazendo com que o botão de inspeção da view recebesse `data-tipo="balcao"`.
+  3. Ao clicar para ver detalhes do pedido (ex: pedido #64), o JavaScript disparava requisição AJAX para `/operacional/estornos/detalhes?id=64&tipo=balcao`. O controlador buscava o ID 64 na tabela `vendas_balcao` em vez de `pedidos`, retornando HTTP 404.
+- Solução aplicada:
+  1. Unificado o contrato em `Pedido::listarParaEstorno()` e `VendaBalcao::listarParaEstorno()`, projetando `data_venda`, `hora_venda`, `tipo_origem`, `pessoa_nome` e `pessoa_detalhe` consistentes.
+  2. Implementado método `Pedido::buscarDetalhadoPorId()` com joins em alunos, turmas e responsáveis.
+  3. Adicionado fallback defensivo bidirecional em `EstornoVendasController::detalhesAjax()`: se um registro não for localizado como balcão, busca automaticamente em pedidos (e vice-versa), tolerando divergências de parâmetro.
+  4. Adicionados fallbacks robustos na view `app/views/operacional/estorno_vendas.php` e sanitização com `escapeHtml` no modal de detalhes.
+- Como evitar no futuro: Em interfaces que unificam diferentes entidades de domínio (como Vendas Balcão e Pedidos Online) em uma mesma grade de consulta, definir um contrato rigoroso e idêntico de aliases de saída nas models e utilizar fallbacks defensivos nos endpoints AJAX.

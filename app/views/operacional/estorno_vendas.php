@@ -222,10 +222,22 @@ $motivoFiltro = $motivoFiltro ?? '';
                         <?php foreach ($vendas as $v): 
                             $vId = (int)$v['id'];
                             $valorVenda = (float)($v['valor_total'] ?? 0.0);
-                            $dataVenda = !empty($v['data_venda']) ? date('d/m/Y', strtotime($v['data_venda'])) : '--/--/----';
-                            $horaVenda = !empty($v['hora_venda']) ? substr($v['hora_venda'], 0, 5) : '--:--';
-                            $tipoOrigem = $v['tipo_origem'] ?? 'balcao';
-                            $nomePessoa = $v['pessoa_nome'] ?? 'Consumidor Geral';
+                            $dataVenda = !empty($v['data_venda']) 
+                                ? date('d/m/Y', strtotime($v['data_venda'])) 
+                                : (!empty($v['data_consumo']) 
+                                    ? date('d/m/Y', strtotime($v['data_consumo'])) 
+                                    : (!empty($v['created_at']) 
+                                        ? date('d/m/Y', strtotime($v['created_at'])) 
+                                        : '--/--/----'));
+                            $horaVenda = !empty($v['hora_venda']) 
+                                ? substr($v['hora_venda'], 0, 5) 
+                                : (!empty($v['hora_criacao']) 
+                                    ? substr($v['hora_criacao'], 0, 5) 
+                                    : (!empty($v['created_at']) 
+                                        ? date('H:i', strtotime($v['created_at'])) 
+                                        : '--:--'));
+                            $tipoOrigem = $v['tipo_origem'] ?? ($vendaAvulsa === 'sim' ? 'balcao' : 'pedido');
+                            $nomePessoa = $v['pessoa_nome'] ?? ($v['aluno_nome'] ?? ($v['colaborador_nome'] ?? 'Consumidor Geral'));
                             $detalhePessoa = $v['pessoa_detalhe'] ?? '';
                         ?>
                             <tr id="linhaVenda_<?php echo $vId; ?>">
@@ -683,7 +695,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
 
-                    const venda = data.dados;
+                    const venda = data.dados || {};
+                    const vInfo = data.venda || {};
                     const itens = data.itens || [];
 
                     let itensHtml = '';
@@ -691,13 +704,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         itensHtml = '<tr><td colspan="4" class="text-center text-muted small py-2">Nenhum item discriminado.</td></tr>';
                     } else {
                         itens.forEach(function(item) {
-                            const desc = item.nome_produto || item.produto_nome || item.descricao || 'Item';
+                            const desc = item.nome_produto || item.produto_nome || item.produto_descricao || item.descricao || 'Item';
                             const qtd = parseFloat(item.quantidade || 1);
                             const unit = parseFloat(item.preco_unitario || item.valor_unitario || 0);
                             const sub = parseFloat(item.subtotal || item.valor_total || (qtd * unit));
                             
                             itensHtml += '<tr>' +
-                                '<td class="small">' + desc + '</td>' +
+                                '<td class="small">' + escapeHtml(desc) + '</td>' +
                                 '<td class="small font-tabular text-center">' + qtd + '</td>' +
                                 '<td class="small font-tabular text-end">R$ ' + unit.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</td>' +
                                 '<td class="small font-tabular font-weight-bold text-end">R$ ' + sub.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</td>' +
@@ -705,21 +718,32 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     }
 
-                    let formaPgto = venda.forma_pagamento || '--';
+                    let formaPgto = vInfo.forma_pagamento || venda.forma_pagamento || '--';
                     if (formaPgto === 'saldo_carteira') formaPgto = 'Saldo em Carteira (Familiar)';
                     else if (formaPgto === 'folha_pagamento') formaPgto = 'Folha de Pagamento (Colaborador)';
                     else if (formaPgto === 'dinheiro') formaPgto = 'Dinheiro em Espécie';
                     else if (formaPgto === 'pix_balcao') formaPgto = 'Pix no Balcão';
 
-                    let dataFmt = venda.created_at || venda.data_hora || '';
-                    let valorFmt = parseFloat(venda.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                    let dataFmt = vInfo.data_hora || (venda.data_consumo ? (venda.data_consumo + (venda.turno_consumo ? ' (' + venda.turno_consumo + ')' : '')) : (venda.created_at || ''));
+                    let valorFmt = parseFloat(venda.valor_total || vInfo.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                    let pessoaFmt = vInfo.pessoa_nome || venda.aluno_nome || venda.colaborador_nome || 'Consumidor Geral';
+                    let infoVinculo = '';
+                    if (vInfo.aluno_turma || venda.aluno_turma || venda.turma_nome || venda.nome_turma) {
+                        infoVinculo = 'Turma: ' + (vInfo.aluno_turma || venda.aluno_turma || venda.turma_nome || venda.nome_turma);
+                    }
+                    if (vInfo.responsavel || venda.responsavel_nome) {
+                        infoVinculo += (infoVinculo ? ' • ' : '') + 'Responsável: ' + (vInfo.responsavel || venda.responsavel_nome);
+                    } else if (vInfo.operador_nome || venda.operador_nome) {
+                        infoVinculo += (infoVinculo ? ' • ' : '') + 'Operador: ' + (vInfo.operador_nome || venda.operador_nome);
+                    }
 
                     let html = 
                         '<div class="row g-2 mb-3 bg-light p-2 rounded border">' +
-                            '<div class="col-6 col-sm-3"><span class="text-secondary small">Data/Hora:</span><div class="small font-tabular font-weight-medium">' + dataFmt + '</div></div>' +
-                            '<div class="col-6 col-sm-3"><span class="text-secondary small">Forma Pgto:</span><div class="small font-weight-medium">' + formaPgto + '</div></div>' +
-                            '<div class="col-6 col-sm-3"><span class="text-secondary small">Status:</span><div><span class="badge bg-primary-subtle text-primary border" style="font-size: 11px;">' + (venda.status || 'concluida') + '</span></div></div>' +
+                            '<div class="col-6 col-sm-3"><span class="text-secondary small">Data/Hora:</span><div class="small font-tabular font-weight-medium">' + escapeHtml(dataFmt) + '</div></div>' +
+                            '<div class="col-6 col-sm-3"><span class="text-secondary small">Forma Pgto:</span><div class="small font-weight-medium">' + escapeHtml(formaPgto) + '</div></div>' +
+                            '<div class="col-6 col-sm-3"><span class="text-secondary small">Status:</span><div><span class="badge bg-primary-subtle text-primary border" style="font-size: 11px;">' + escapeHtml(venda.status || 'concluida') + '</span></div></div>' +
                             '<div class="col-6 col-sm-3"><span class="text-secondary small">Valor Total:</span><div class="fs-6 font-tabular font-weight-bold text-primary">R$ ' + valorFmt + '</div></div>' +
+                            (pessoaFmt ? ('<div class="col-12 border-top pt-2 mt-2"><span class="text-secondary small">Pessoa / Vínculo:</span> <strong class="small text-dark">' + escapeHtml(pessoaFmt) + '</strong>' + (infoVinculo ? ' <span class="text-secondary text-microcopy font-tabular">(' + escapeHtml(infoVinculo) + ')</span>' : '') + '</div>') : '') +
                         '</div>' +
                         '<h6 class="small font-weight-bold text-secondary mb-2">Itens da Venda:</h6>' +
                         '<div class="table-responsive border rounded">' +

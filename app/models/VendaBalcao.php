@@ -408,6 +408,7 @@ class VendaBalcao extends Model
                 vb.forma_pagamento,
                 vb.tipo_venda,
                 vb.status,
+                'balcao' AS tipo_origem,
                 vb.aluno_id,
                 a.nome AS aluno_nome,
                 a.matricula AS aluno_matricula,
@@ -417,6 +418,16 @@ class VendaBalcao extends Model
                 c.cargo AS colaborador_cargo,
                 c.matricula_funcional AS colaborador_matricula,
                 u.nome AS operador_nome,
+                CASE 
+                    WHEN c.nome IS NOT NULL THEN c.nome
+                    WHEN a.nome IS NOT NULL THEN a.nome
+                    ELSE 'Consumidor Geral'
+                END AS pessoa_nome,
+                CASE 
+                    WHEN c.nome IS NOT NULL THEN CONCAT('Colaborador • Matrícula: ', COALESCE(c.matricula_funcional, 'S/M'), ' • ', COALESCE(c.cargo, ''))
+                    WHEN a.nome IS NOT NULL THEN CONCAT('Aluno • Matrícula: ', COALESCE(a.matricula, 'S/M'), ' • ', COALESCE(tur.nome_turma, 'Geral'))
+                    ELSE 'Venda Avulsa de Balcão'
+                END AS pessoa_detalhe,
                 COUNT(ivb.id) AS total_itens
             FROM vendas_balcao vb
             INNER JOIN usuarios u ON u.id = vb.operador_id

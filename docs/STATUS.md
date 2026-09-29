@@ -890,13 +890,15 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Ação `detalhesAjax`: endpoint JSON assíncrono para exibição dos produtos e histórico da venda no modal informativo;
   * Ação `gravar`: validação de CSRF, motivo obrigatório (mínimo 5 caracteres), execução de estornos em lote e feedback tátil corporativo.
 * [x] **View Operacional (`app/views/operacional/estorno_vendas.php`):**
-  * Layout 100% fiel ao screenshot oficial do Escolar Manager (`docs/alterações sistema guideline/extorno de vendas.pdf`);
+  * Layout no padrão visual corporativo do sistema com botões no padrão azul primário (`btn-primary` e `btn-outline-primary`);
   * Ações de cabeçalho: botões `✕ Cancelar` e `💾 Gravar`;
-  * Card de filtros com toggles segmentados e seletores dinâmicos de Aluno / Colaborador;
-  * Tabela operacional de alta densidade com cabeçalho azul cobalto (`#2563eb`), checkbox mestre de seleção múltipla, tipografia tabular nos valores e botão informativo neutro `(i)`;
-  * Modal de detalhes assíncrono e modal de confirmação pré-estorno com resumo financeiro.
+  * Barra de digitação inteligente com autocomplete instantâneo para Alunos e Colaboradores (dispensa rolagem em listas extensas de pessoas);
+  * Card de filtros com toggles segmentados de Venda Avulsa (Sim / Não) e Aluno / Colaborador;
+  * Tabela operacional de alta densidade com cabeçalho azul cobalto (`#2563eb`), checkbox mestre de seleção múltipla, tipografia tabular nos valores (`.font-tabular`), colunas normalizadas de data/hora para Balcão e Encomendas Online e botão informativo `(i)`;
+  * Modal de detalhes assíncrono com suporte nativo a Vendas Balcão e Pedidos Online (com fallback defensivo de identificador e exibição discriminada de itens e vínculo de turma/responsável);
+  * Modal de confirmação pré-estorno com resumo financeiro e validação de justificativa obrigatória.
 * [x] **Navegação e Roteamento:**
-  * Rota `/operacional/estornos`, `/operacional/estornos/detalhes` e `/operacional/estornos/gravar` registradas em `index.php` protegidas por RBAC (`ROLE_OPERADOR` e `ROLE_ADMINISTRADOR`);
+  * Rotas `/operacional/estornos`, `/operacional/estornos/detalhes` e `/operacional/estornos/gravar` registradas em `index.php` protegidas por RBAC (`ROLE_OPERADOR` e `ROLE_ADMINISTRADOR`);
   * Link oficial "Estorno de Vendas" adicionado na sidebar operacional (`app/views/layouts/sidebar.php`).
 * [x] **Testes Automatizados e Auditoria Global:**
   * Criação da suíte oficial `tests/fase19_test.php` com 34 asserções executadas e 100% aprovadas;
