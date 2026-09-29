@@ -238,5 +238,19 @@ class Colaborador extends Model
             'busca_cargo' => $param
         ]);
     }
+
+    /**
+     * Lista colaboradores ativos para seleção em dropdowns e filtros
+     * 
+     * @return array
+     */
+    public static function listarParaSelecao(): array
+    {
+        $sql = "SELECT id, matricula_funcional, nome, cargo
+                FROM colaboradores
+                WHERE deleted_at IS NULL AND ativo = 1
+                ORDER BY nome ASC";
+        return self::fetchAll($sql);
+    }
 }
 

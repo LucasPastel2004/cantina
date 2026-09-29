@@ -29,6 +29,7 @@ class Pedido extends Model
     public const STATUS_EDITADO   = 'editado';
     public const STATUS_CANCELADO = 'cancelado';
     public const STATUS_ENTREGUE  = 'entregue';
+    public const STATUS_ESTORNADO = 'estornado';
 
     // Turnos oficiais
     public const TURNO_MATUTINO   = 'matutino';
@@ -1468,6 +1469,254 @@ class Pedido extends Model
                 'itens'            => $itensProcessados,
                 'mensagem'         => "Recebimento confirmado com sucesso! Foram registradas {$totalEntregue} unidades entregues."
             ];
+        } catch (\Throwable $e) {
+            if ($iniciouTransacao && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Lista pedidos agendados/online elegíveis para estorno conforme filtros informados
+     * 
+     * @param array $filtros [data_inicio, data_fim, aluno_id, status]
+     * @return array
+     */
+    public static function listarParaEstorno(array $filtros = []): array
+    {
+        $whereClauses = ["p.status NOT IN ('cancelado', 'estornado')"];
+        $params = [];
+
+        if (!empty($filtros['data_inicio'])) {
+            $whereClauses[] = "p.data_consumo >= :data_inicio";
+            $params['data_inicio'] = $filtros['data_inicio'];
+        }
+
+        if (!empty($filtros['data_fim'])) {
+            $whereClauses[] = "p.data_consumo <= :data_fim";
+            $params['data_fim'] = $filtros['data_fim'];
+        }
+
+        if (!empty($filtros['aluno_id'])) {
+            $whereClauses[] = "p.aluno_id = :aluno_id";
+            $params['aluno_id'] = (int)$filtros['aluno_id'];
+        }
+
+        $whereSql = implode(' AND ', $whereClauses);
+
+        $sql = "
+            SELECT 
+                p.id,
+                p.codigo_pedido,
+                p.data_consumo,
+                p.created_at,
+                DATE(p.created_at) AS data_criacao,
+                TIME_FORMAT(p.created_at, '%H:%i') AS hora_criacao,
+                p.turno_consumo,
+                p.valor_total,
+                p.status,
+                p.aluno_id,
+                a.nome AS aluno_nome,
+                a.matricula AS aluno_matricula,
+                tur.nome_turma AS aluno_turma,
+                p.responsavel_id,
+                r.nome AS responsavel_nome,
+                r.cpf AS responsavel_cpf,
+                COUNT(ip.id) AS total_itens
+            FROM pedidos p
+            INNER JOIN alunos a ON a.id = p.aluno_id
+            LEFT JOIN turmas tur ON tur.id = a.turma_id
+            INNER JOIN responsaveis r ON r.id = p.responsavel_id
+            LEFT JOIN itens_pedido ip ON ip.id = p.id
+            WHERE {$whereSql}
+            GROUP BY p.id
+            ORDER BY p.data_consumo DESC, p.id DESC
+        ";
+
+        return self::fetchAll($sql, $params);
+    }
+
+    /**
+     * Executa o estorno atômico de um pedido online pela equipe da cantina
+     * 
+     * @param int $pedidoId
+     * @param int $operadorId
+     * @param string $motivo
+     * @param string $ipOrigem
+     * @return array Dados do pedido estornado
+     * @throws \DomainException|\InvalidArgumentException|\Throwable
+     */
+    public static function estornarPedido(
+        int $pedidoId,
+        int $operadorId,
+        string $motivo,
+        string $ipOrigem = '127.0.0.1'
+    ): array {
+        $motivoLimpo = trim($motivo);
+        if (mb_strlen($motivoLimpo) < 5) {
+            throw new \InvalidArgumentException('O motivo do estorno deve conter no mínimo 5 caracteres.');
+        }
+
+        $pdo = self::getPdo();
+        $iniciouTransacao = false;
+        if (!$pdo->inTransaction()) {
+            $pdo->beginTransaction();
+            $iniciouTransacao = true;
+        }
+
+        try {
+            // 1. Busca pedido com bloqueio pessimista
+            $stmt = $pdo->prepare("
+                SELECT p.*, a.nome AS aluno_nome, r.nome AS responsavel_nome
+                FROM pedidos p
+                INNER JOIN alunos a ON a.id = p.aluno_id
+                INNER JOIN responsaveis r ON r.id = p.responsavel_id
+                WHERE p.id = :id
+                FOR UPDATE
+            ");
+            $stmt->execute(['id' => $pedidoId]);
+            $pedido = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$pedido) {
+                throw new \DomainException("Pedido #{$pedidoId} não foi localizado.");
+            }
+
+            if ($pedido['status'] === self::STATUS_CANCELADO || $pedido['status'] === self::STATUS_ESTORNADO) {
+                throw new \DomainException("O pedido #{$pedido['codigo_pedido']} já se encontra cancelado ou estornado.");
+            }
+
+            // 2. Atualiza status do pedido
+            $stmtUpPedido = $pdo->prepare("
+                UPDATE pedidos
+                SET status = :status,
+                    estornado_em = NOW(),
+                    estornado_por = :op_id,
+                    motivo_estorno = :motivo,
+                    updated_at = NOW()
+                WHERE id = :id
+            ");
+            $stmtUpPedido->execute([
+                'status' => self::STATUS_ESTORNADO,
+                'op_id'  => $operadorId,
+                'motivo' => mb_substr($motivoLimpo, 0, 255),
+                'id'     => $pedidoId
+            ]);
+
+            // 3. Estorno integral de 100% creditado na carteira familiar
+            $valorTotal = (float)$pedido['valor_total'];
+            $descricaoTransacao = sprintf(
+                "Estorno da cantina - Pedido: %s - Aluno: %s (Motivo: %s)",
+                $pedido['codigo_pedido'],
+                $pedido['aluno_nome'],
+                $motivoLimpo
+            );
+
+            TransacaoCarteira::creditar(
+                (int)$pedido['responsavel_id'],
+                $valorTotal,
+                TransacaoCarteira::TIPO_ESTORNO_BALCAO,
+                $descricaoTransacao,
+                $pedido['codigo_pedido'],
+                (int)$pedido['aluno_id'],
+                $operadorId
+            );
+
+            // 4. Invalida tickets térmicos vinculados
+            $stmtTickets = $pdo->prepare("
+                UPDATE tickets
+                SET status = 'estornado',
+                    estornado_em = NOW(),
+                    motivo_estorno = :motivo
+                WHERE pedido_id = :pedido_id
+                  AND status != 'cancelado'
+            ");
+            $stmtTickets->execute([
+                'motivo'    => mb_substr("Estorno operacional: " . $motivoLimpo, 0, 255),
+                'pedido_id' => $pedidoId
+            ]);
+
+            // 5. Reintegração de estoque
+            $stmtItens = $pdo->prepare("
+                SELECT ip.*, prod.tipo, prod.descricao AS produto_descricao, prod.estoque_reservado
+                FROM itens_pedido ip
+                INNER JOIN produtos prod ON prod.id = ip.produto_id
+                WHERE ip.pedido_id = :pedido_id
+            ");
+            $stmtItens->execute(['pedido_id' => $pedidoId]);
+            $itens = $stmtItens->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach ($itens as $item) {
+                $prodId = (int)$item['produto_id'];
+                $qtd = (int)$item['quantidade'];
+
+                // Se era industrializado e tinha reserva, libera a reserva
+                if ($item['tipo'] === 'industrializado_continuo') {
+                    $stmtLiberaReserva = $pdo->prepare("
+                        UPDATE produtos
+                        SET estoque_reservado = GREATEST(0, estoque_reservado - :qtd),
+                            updated_at = NOW()
+                        WHERE id = :prod_id
+                    ");
+                    $stmtLiberaReserva->execute([
+                        'qtd'     => $qtd,
+                        'prod_id' => $prodId
+                    ]);
+                }
+
+                // Se a remessa do dia já havia sido recebida do fornecedor ou o pedido já havia sido entregue,
+                // devolve ao estoque físico e registra movimentação
+                if ($pedido['status'] === self::STATUS_ENTREGUE || $pedido['data_consumo'] <= date('Y-m-d')) {
+                    $stmtDevolveFisico = $pdo->prepare("
+                        UPDATE produtos
+                        SET estoque_atual = estoque_atual + :qtd,
+                            updated_at = NOW()
+                        WHERE id = :prod_id
+                    ");
+                    $stmtDevolveFisico->execute([
+                        'qtd'     => $qtd,
+                        'prod_id' => $prodId
+                    ]);
+
+                    $stmtMov = $pdo->prepare("
+                        INSERT INTO estoque_movimentacoes (
+                            produto_id, tipo_movimentacao, quantidade, motivo_perda,
+                            nota_fiscal_id, operador_id, justificativa, created_at
+                        ) VALUES (
+                            :prod_id, 'entrada_estorno', :qtd, NULL,
+                            NULL, :op_id, :just, NOW()
+                        )
+                    ");
+                    $stmtMov->execute([
+                        'prod_id' => $prodId,
+                        'qtd'     => $qtd,
+                        'op_id'   => $operadorId,
+                        'just'    => "Reintegração por estorno do Pedido #{$pedido['codigo_pedido']}: {$motivoLimpo}"
+                    ]);
+                }
+            }
+
+            // 6. Trilha obrigatória de auditoria (logs_auditoria)
+            Auditoria::registrar(
+                $operadorId,
+                Auditoria::ACAO_ESTORNO_BALCAO,
+                'pedidos',
+                $pedidoId,
+                sprintf(
+                    "Estorno operacional de pedido #%s (Aluno: %s, Valor: R$ %s). Motivo: %s",
+                    $pedido['codigo_pedido'],
+                    $pedido['aluno_nome'],
+                    number_format($valorTotal, 2, ',', '.'),
+                    $motivoLimpo
+                ),
+                $ipOrigem
+            );
+
+            if ($iniciouTransacao) {
+                $pdo->commit();
+            }
+
+            return self::buscarPorId($pedidoId);
         } catch (\Throwable $e) {
             if ($iniciouTransacao && $pdo->inTransaction()) {
                 $pdo->rollBack();

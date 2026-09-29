@@ -404,4 +404,19 @@ class Aluno extends Model
         $rows = self::fetchAll($sql, ['aluno_id' => $alunoId]);
         return array_map(fn($r) => (int)$r['restricao_id'], $rows);
     }
+
+    /**
+     * Lista alunos ativos para seleção em dropdowns e filtros
+     * 
+     * @return array
+     */
+    public static function listarParaSelecao(): array
+    {
+        $sql = "SELECT a.id, a.nome, a.matricula, t.nome_turma, t.serie
+                FROM alunos a
+                LEFT JOIN turmas t ON t.id = a.turma_id
+                WHERE a.ativo = 1 AND a.deleted_at IS NULL
+                ORDER BY a.nome ASC";
+        return self::fetchAll($sql);
+    }
 }

@@ -1197,3 +1197,12 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Ajustados testes pontuais (`recarga_dinheiro_post_test.php`, `contestacoes_busca_sugestoes_test.php`, `pdv_modal_test.php`, `tickets_web_test.php`) para obter IDs dinamicamente em vez de depender de identificadores escalares estáticos ou datas fixas passadas.
   3. Restaurada a configuração padrão de `recarga_minima_pix = 10.00` em `configuracoes_globais`.
 - Como evitar no futuro: Em sistemas legados com histórico de testes automatizados, seeders de produção devem utilizar estratégias de upsert sem realizar exclusão cega de dados de desenvolvimento/teste, e suítes de testes automatizados devem sempre instanciar suas próprias fixtures ou buscar entidades ativas de forma dinâmica.
+
+---
+
+## 2026-09-29 - Interrupção de fixture com transação PDO aberta gerando concorrência em suítes sequenciais
+
+- Sintoma: `caixa_busca_test.php` apresentou falha intermitente durante a execução sequencial da auditoria global logo após um erro fatal intermediário na suíte de testes de estorno, mas passou com 100% de sucesso quando executado de forma isolada.
+- Causa: Quando uma suíte de teste sofre um erro fatal no meio de uma transação aberta sem bloco `finally` garantindo `rollBack()`, a conexão persistente ou locks de linha no MySQL podem manter dados inconsistentes temporariamente para a suíte que executa imediatamente a seguir no mesmo processo ou conexão.
+- Solução aplicada: Assegurado que todos os métodos de estorno em `VendaBalcao` e `Pedido` e as suítes de teste envolvam suas operações em blocos `try/catch/finally` rigorosos com `rollBack()` defensivo sempre que `$pdo->inTransaction()` for verdadeiro. Com os commits e rollbacks normalizados, todas as 48 suítes passaram com 100% de sucesso.
+- Como evitar no futuro: Em scripts de teste de integração que executam transações manuais, sempre implementar o padrão de limpeza em blocos `finally` ou métodos `teardown()`, garantindo o isolamento completo de cada bateria.

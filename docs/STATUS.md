@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 18 — Carga e Saneamento de Dados Oficiais da Escola (Matrículas Reais)
-* **Status da Fase 18:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 18 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
-* **Última Atualização:** 2026-09-29 10:35:00 (Conclusão da Fase 18: Carga e saneamento dos dados oficiais da escola a partir de Matriculas.pdf — 19 turmas oficiais, 195 responsáveis únicos / 197 agrupamentos e 232 alunos reais com 0 órfãos; preservação integral dos operadores e produtos; 47/47 suítes de testes globais aprovadas).
+* **Fase Atual:** Fase 19 — Módulo Completo (CRUD) de Estorno de Vendas e Invalidação
+* **Status da Fase 19:** Concluída [x] (100% Homologada)
+* **Status Geral do Projeto:** 19 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
+* **Última Atualização:** 2026-09-29 14:00:00 (Conclusão da Fase 19: Módulo Completo de Estorno de Vendas e Invalidação de Tickets, conforme Guideline Oficial do Escolar Manager e FSD — Migration 028, grid com seleção múltipla, estorno atômico de vendas balcão e encomendas online, reintegração física de estoque e cancelamento térmico; 48/48 suítes de testes globais aprovadas).
 
 
 
@@ -875,13 +875,32 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 19 — Módulo Completo (CRUD) de Estorno de Vendas e Invalidação
-* [ ] Rota `/operacional/estornos` e controller `app/controllers/EstornoVendasController.php`.
-* [ ] View operacional `app/views/operacional/estorno_vendas.php` conforme `docs/alterações sistema guideline/extorno de vendas.pdf`.
-* [ ] Grid de seleção múltipla com checkboxes e campo obrigatório de justificativa de estorno.
-* [ ] Rotina atômica de gravação de estornos com reversão de carteira/caixa, devolução automática ao estoque e cancelamento de tickets.
-* [ ] Trilha de auditoria em `logs_auditoria`.
-* [ ] Bateria de testes automatizados `tests/fase19_test.php`.
+### [x] Fase 19 — Módulo Completo (CRUD) de Estorno de Vendas e Invalidação
+* [x] **Migration 028 (`database/migrations/028_add_estorno_fields_to_vendas_balcao.php`):**
+  * Adição das colunas `status` ENUM('concluida', 'estornada'), `estornado_em`, `estornado_por` (FK para `usuarios`) e `motivo_estorno` na tabela `vendas_balcao`;
+  * Expansão do ENUM `status` de `pedidos` para incluir `'estornado'`, e adição das colunas `estornado_em`, `estornado_por` e `motivo_estorno`;
+  * Expansão do ENUM `tipo_movimentacao` de `estoque_movimentacoes` para incluir `'entrada_estorno'`.
+* [x] **Modelos de Dados Atualizados:**
+  * `app/models/VendaBalcao.php`: métodos `listarParaEstorno(array $filtros)` e `estornarVenda(int $vendaId, int $operadorId, string $motivo, string $ipOrigem)` com transação atômica PDO, devolução física de estoque via `entrada_estorno`, ajuste da gaveta do caixa corrente e auditoria imutável;
+  * `app/models/Pedido.php`: métodos `listarParaEstorno(array $filtros)` e `estornarPedido(int $pedidoId, int $operadorId, string $motivo, string $ipOrigem)` com reembolso integral na carteira familiar (`TransacaoCarteira::creditar`), cancelamento de tickets térmicos associados e liberação de reservas;
+  * `app/models/Aluno.php`: método `listarParaSelecao()` para dropdowns operacionais rápidos;
+  * `app/models/Colaborador.php`: método `listarParaSelecao()` para dropdowns operacionais rápidos.
+* [x] **Controlador (`app/controllers/EstornoVendasController.php`):**
+  * Ação `index`: processamento de filtros (Venda avulsa Sim/Não, Filtrar por Aluno/Colaborador, Pessoa, Período De/Até e Motivo) e renderização da tela;
+  * Ação `detalhesAjax`: endpoint JSON assíncrono para exibição dos produtos e histórico da venda no modal informativo;
+  * Ação `gravar`: validação de CSRF, motivo obrigatório (mínimo 5 caracteres), execução de estornos em lote e feedback tátil corporativo.
+* [x] **View Operacional (`app/views/operacional/estorno_vendas.php`):**
+  * Layout 100% fiel ao screenshot oficial do Escolar Manager (`docs/alterações sistema guideline/extorno de vendas.pdf`);
+  * Ações de cabeçalho: botões `✕ Cancelar` e `💾 Gravar`;
+  * Card de filtros com toggles segmentados e seletores dinâmicos de Aluno / Colaborador;
+  * Tabela operacional de alta densidade com cabeçalho azul cobalto (`#2563eb`), checkbox mestre de seleção múltipla, tipografia tabular nos valores e botão informativo neutro `(i)`;
+  * Modal de detalhes assíncrono e modal de confirmação pré-estorno com resumo financeiro.
+* [x] **Navegação e Roteamento:**
+  * Rota `/operacional/estornos`, `/operacional/estornos/detalhes` e `/operacional/estornos/gravar` registradas em `index.php` protegidas por RBAC (`ROLE_OPERADOR` e `ROLE_ADMINISTRADOR`);
+  * Link oficial "Estorno de Vendas" adicionado na sidebar operacional (`app/views/layouts/sidebar.php`).
+* [x] **Testes Automatizados e Auditoria Global:**
+  * Criação da suíte oficial `tests/fase19_test.php` com 34 asserções executadas e 100% aprovadas;
+  * Execução da auditoria global de verificação (`tests/verification_audit.php`): 48/48 suítes aprovadas com 100% de sucesso.
 
 ---
 
@@ -932,12 +951,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Executar a **Fase 19 — Módulo Completo (CRUD) de Estorno de Vendas e Invalidação**:
-1. Criar a rota `/operacional/estornos` e o controller `app/controllers/EstornoVendasController.php`;
-2. Implementar a view operacional `app/views/operacional/estorno_vendas.php` conforme `docs/alterações sistema guideline/extorno de vendas.pdf`;
-3. Desenvolver o grid de seleção múltipla com checkboxes e campo obrigatório de justificativa de estorno;
-4. Implementar rotina atômica de gravação de estornos com reversão de carteira/caixa, devolução automática ao estoque e cancelamento de tickets térmicos;
-5. Validar com bateria de testes automatizados `tests/fase19_test.php`.
+Executar a **Fase 20 — Nova Arquitetura de PDF (HTML+CSS+Gotenberg) & Migração Completa de Relatórios + Fechamento de Caixa**:
+1. Adicionar o contêiner Gotenberg 8 no `docker-compose.yml` (porta 3000);
+2. Configurar `config/config.php` com suporte ao driver Gotenberg com fallback robusto;
+3. Refatorar `app/services/PdfService.php` para utilizar chamadas HTTP multipart à API do Gotenberg;
+4. Implementar a view e geração do espelho oficial A4 de Fechamento de Caixa (`app/views/relatorios/fechamento_caixa_pdf.php`) com as 4 seções oficiais conforme `28 setembro matutino.pdf` e `28 setembro vespertino.pdf`;
+5. Validar todas as rotas e emissões com a suíte `tests/fase20_test.php`.
+
 
 
 

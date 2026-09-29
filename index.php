@@ -474,6 +474,17 @@ $router->get('/relatorios/buscar-alunos-ajax', [\App\Controllers\RelatoriosContr
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 
+// 4.3. Estorno de Vendas da Cantina e Invalidação de Tickets (Fase 19 — FSD Área 4 e Guideline Oficial)
+$router->get('/operacional/estornos', [\App\Controllers\EstornoVendasController::class, 'index'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/estornos/detalhes', [\App\Controllers\EstornoVendasController::class, 'detalhesAjax'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/operacional/estornos/gravar', [\App\Controllers\EstornoVendasController::class, 'gravar'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+
 // 5. Gestão de Contestações e Mecanismo Especial de Devolução - MED Pix (Fase 16 — Acesso exclusivo 'administrador')
 $router->get('/admin/contestacoes', [\App\Controllers\AdminController::class, 'contestacoes'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)

@@ -29,6 +29,9 @@ class VendaBalcao extends Model
     public const FORMA_PIX_BALCAO     = 'pix_balcao';
     public const FORMA_DESCONTO_FOLHA = 'desconto_folha';
 
+    public const STATUS_CONCLUIDA = 'concluida';
+    public const STATUS_ESTORNADA = 'estornada';
+
     /**
      * Cria e processa atomicamente uma venda no PDV de balcão
      * 
@@ -304,11 +307,12 @@ class VendaBalcao extends Model
             LEFT JOIN colaboradores c ON c.id = vb.colaborador_id
             LEFT JOIN alunos a ON a.id = vb.aluno_id
             LEFT JOIN itens_venda_balcao ivb ON ivb.venda_balcao_id = vb.id
+            WHERE (vb.status IS NULL OR vb.status = 'concluida')
         ";
 
         $params = [];
         if ($sessaoCaixaId !== null) {
-            $sql .= " WHERE vb.sessao_caixa_id = :sessao_id";
+            $sql .= " AND vb.sessao_caixa_id = :sessao_id";
             $params['sessao_id'] = $sessaoCaixaId;
         }
 
@@ -338,6 +342,7 @@ class VendaBalcao extends Model
                 COALESCE(SUM(CASE WHEN vb.forma_pagamento = 'desconto_folha' THEN vb.valor_total ELSE 0 END), 0.00) AS total_folha
             FROM vendas_balcao vb
             WHERE DATE(vb.created_at) = CURDATE()
+              AND (vb.status IS NULL OR vb.status = 'concluida')
         ";
 
         $params = [];
@@ -356,4 +361,233 @@ class VendaBalcao extends Model
             'total_folha'     => (float)($row['total_folha'] ?? 0.00)
         ];
     }
+
+    /**
+     * Lista vendas de balcão elegíveis para estorno conforme filtros informados
+     * 
+     * @param array $filtros [data_inicio, data_fim, filtrar_por, aluno_id, colaborador_id, status]
+     * @return array
+     */
+    public static function listarParaEstorno(array $filtros = []): array
+    {
+        $whereClauses = ["(vb.status IS NULL OR vb.status = 'concluida')"];
+        $params = [];
+
+        if (!empty($filtros['data_inicio'])) {
+            $whereClauses[] = "DATE(vb.created_at) >= :data_inicio";
+            $params['data_inicio'] = $filtros['data_inicio'];
+        }
+
+        if (!empty($filtros['data_fim'])) {
+            $whereClauses[] = "DATE(vb.created_at) <= :data_fim";
+            $params['data_fim'] = $filtros['data_fim'];
+        }
+
+        $filtrarPor = $filtros['filtrar_por'] ?? '';
+        if ($filtrarPor === 'aluno' && !empty($filtros['aluno_id'])) {
+            $whereClauses[] = "vb.aluno_id = :aluno_id";
+            $params['aluno_id'] = (int)$filtros['aluno_id'];
+        } elseif ($filtrarPor === 'colaborador' && !empty($filtros['colaborador_id'])) {
+            $whereClauses[] = "vb.colaborador_id = :colaborador_id";
+            $params['colaborador_id'] = (int)$filtros['colaborador_id'];
+        } elseif ($filtrarPor === 'aluno') {
+            $whereClauses[] = "vb.aluno_id IS NOT NULL";
+        } elseif ($filtrarPor === 'colaborador') {
+            $whereClauses[] = "vb.colaborador_id IS NOT NULL";
+        }
+
+        $whereSql = implode(' AND ', $whereClauses);
+
+        $sql = "
+            SELECT 
+                vb.id,
+                vb.created_at,
+                DATE(vb.created_at) AS data_venda,
+                TIME_FORMAT(vb.created_at, '%H:%i') AS hora_venda,
+                vb.valor_total,
+                vb.forma_pagamento,
+                vb.tipo_venda,
+                vb.status,
+                vb.aluno_id,
+                a.nome AS aluno_nome,
+                a.matricula AS aluno_matricula,
+                tur.nome_turma AS aluno_turma,
+                vb.colaborador_id,
+                c.nome AS colaborador_nome,
+                c.cargo AS colaborador_cargo,
+                c.matricula_funcional AS colaborador_matricula,
+                u.nome AS operador_nome,
+                COUNT(ivb.id) AS total_itens
+            FROM vendas_balcao vb
+            INNER JOIN usuarios u ON u.id = vb.operador_id
+            LEFT JOIN alunos a ON a.id = vb.aluno_id
+            LEFT JOIN turmas tur ON tur.id = a.turma_id
+            LEFT JOIN colaboradores c ON c.id = vb.colaborador_id
+            LEFT JOIN itens_venda_balcao ivb ON ivb.venda_balcao_id = vb.id
+            WHERE {$whereSql}
+            GROUP BY vb.id
+            ORDER BY vb.created_at DESC, vb.id DESC
+        ";
+
+        return self::fetchAll($sql, $params);
+    }
+
+    /**
+     * Executa o estorno atômico de uma venda de balcão
+     * 
+     * @param int $vendaId
+     * @param int $operadorId
+     * @param string $motivo
+     * @param string $ipOrigem
+     * @return array Dados da venda estornada
+     * @throws \DomainException|\InvalidArgumentException|\Throwable
+     */
+    public static function estornarVenda(
+        int $vendaId,
+        int $operadorId,
+        string $motivo,
+        string $ipOrigem = '127.0.0.1'
+    ): array {
+        $motivoLimpo = trim($motivo);
+        if (mb_strlen($motivoLimpo) < 5) {
+            throw new \InvalidArgumentException('O motivo do estorno deve conter no mínimo 5 caracteres.');
+        }
+
+        $pdo = self::getPdo();
+        $iniciouTransacao = false;
+        if (!$pdo->inTransaction()) {
+            $pdo->beginTransaction();
+            $iniciouTransacao = true;
+        }
+
+        try {
+            // 1. Busca venda com bloqueio pessimista
+            $stmt = $pdo->prepare("
+                SELECT vb.*, a.nome AS aluno_nome, c.nome AS colaborador_nome
+                FROM vendas_balcao vb
+                LEFT JOIN alunos a ON a.id = vb.aluno_id
+                LEFT JOIN colaboradores c ON c.id = vb.colaborador_id
+                WHERE vb.id = :id
+                FOR UPDATE
+            ");
+            $stmt->execute(['id' => $vendaId]);
+            $venda = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$venda) {
+                throw new \DomainException("Venda de balcão #{$vendaId} não foi localizada.");
+            }
+
+            if (!empty($venda['status']) && $venda['status'] === self::STATUS_ESTORNADA) {
+                throw new \DomainException("A venda #{$vendaId} já se encontra estornada.");
+            }
+
+            // 2. Atualiza status da venda para estornada
+            $stmtUp = $pdo->prepare("
+                UPDATE vendas_balcao
+                SET status = :status,
+                    estornado_em = NOW(),
+                    estornado_por = :operador_id,
+                    motivo_estorno = :motivo
+                WHERE id = :id
+            ");
+            $stmtUp->execute([
+                'status'      => self::STATUS_ESTORNADA,
+                'operador_id' => $operadorId,
+                'motivo'      => mb_substr($motivoLimpo, 0, 255),
+                'id'          => $vendaId
+            ]);
+
+            // 3. Reintegração de estoque para cada item vendido
+            $itens = ItemVendaBalcao::listarPorVenda($vendaId);
+
+            $stmtEstoque = $pdo->prepare("
+                UPDATE produtos
+                SET estoque_atual = estoque_atual + :qtd,
+                    updated_at = NOW()
+                WHERE id = :produto_id
+            ");
+
+            $stmtMovEstoque = $pdo->prepare("
+                INSERT INTO estoque_movimentacoes (
+                    produto_id, tipo_movimentacao, quantidade, motivo_perda,
+                    nota_fiscal_id, operador_id, justificativa, created_at
+                ) VALUES (
+                    :produto_id, 'entrada_estorno', :quantidade, NULL,
+                    NULL, :operador_id, :justificativa, NOW()
+                )
+            ");
+
+            foreach ($itens as $item) {
+                $prodId = (int)$item['produto_id'];
+                $qtd = (int)$item['quantidade'];
+
+                // Devolve ao saldo físico
+                $stmtEstoque->execute([
+                    'qtd'        => $qtd,
+                    'produto_id' => $prodId
+                ]);
+
+                // Registra movimentação de devolução por estorno
+                $stmtMovEstoque->execute([
+                    'produto_id'    => $prodId,
+                    'quantidade'    => $qtd,
+                    'operador_id'   => $operadorId,
+                    'justificativa' => "Reintegração por estorno da Venda de Balcão #{$vendaId}: {$motivoLimpo}"
+                ]);
+            }
+
+            // 4. Ajuste contábil da sessão de caixa (se a sessão ainda estiver aberta)
+            $sessaoId = (int)$venda['sessao_caixa_id'];
+            $valorTotal = (float)$venda['valor_total'];
+
+            if ($venda['forma_pagamento'] === self::FORMA_DINHEIRO) {
+                $stmtCaixa = $pdo->prepare("
+                    UPDATE sessoes_caixa
+                    SET total_dinheiro_avulso = GREATEST(0.00, total_dinheiro_avulso - :valor)
+                    WHERE id = :id AND status = 'aberto'
+                ");
+                $stmtCaixa->execute(['valor' => $valorTotal, 'id' => $sessaoId]);
+            } elseif ($venda['forma_pagamento'] === self::FORMA_PIX_BALCAO) {
+                $stmtCaixa = $pdo->prepare("
+                    UPDATE sessoes_caixa
+                    SET total_pix_balcao = GREATEST(0.00, total_pix_balcao - :valor)
+                    WHERE id = :id AND status = 'aberto'
+                ");
+                $stmtCaixa->execute(['valor' => $valorTotal, 'id' => $sessaoId]);
+            }
+
+            // 5. Trilha obrigatória de auditoria (logs_auditoria)
+            $identificacaoPessoa = $venda['colaborador_nome'] 
+                ? "Colaborador: {$venda['colaborador_nome']}" 
+                : ($venda['aluno_nome'] ? "Aluno: {$venda['aluno_nome']}" : "Consumidor Avulso");
+
+            Auditoria::registrar(
+                $operadorId,
+                Auditoria::ACAO_ESTORNO_BALCAO,
+                'vendas_balcao',
+                $vendaId,
+                sprintf(
+                    "Estorno de venda balcão #%d (%s, Valor: R$ %s, Pagto: %s). Motivo: %s",
+                    $vendaId,
+                    $identificacaoPessoa,
+                    number_format($valorTotal, 2, ',', '.'),
+                    $venda['forma_pagamento'],
+                    $motivoLimpo
+                ),
+                $ipOrigem
+            );
+
+            if ($iniciouTransacao) {
+                $pdo->commit();
+            }
+
+            return self::buscarPorId($vendaId);
+        } catch (\Throwable $e) {
+            if ($iniciouTransacao && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
 }
+
