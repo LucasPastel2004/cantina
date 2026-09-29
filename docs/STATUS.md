@@ -902,7 +902,8 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Link oficial "Estorno de Vendas" adicionado na sidebar operacional (`app/views/layouts/sidebar.php`).
 * [x] **Testes Automatizados e Auditoria Global:**
   * Criação da suíte oficial `tests/fase19_test.php` com 34 asserções executadas e 100% aprovadas;
-  * Execução da auditoria global de verificação (`tests/verification_audit.php`): 48/48 suítes aprovadas com 100% de sucesso.
+  * Execução da auditoria global de verificação (`tests/verification_audit.php`): 48/48 suítes aprovadas com 100% de sucesso;
+  * **Purga Definitiva de Registros Falsos e Blindagem de Testes:** Criação do script `database/purgar_fakes_e_semear_reais.php` eliminando todos os alunos/responsáveis/pedidos residuais de teste e gerando encomendas online e vendas balcão reais exclusivamente com os 232 alunos oficiais de `Matriculas.pdf`; adição de limpezas defensivas automáticas em `tests/fase13_test.php`, `tests/pedido_editar_web_test.php` e `tests/calendario_escolar_test.php` para impedir que novas execuções de testes voltem a poluir o banco de dados.
 
 ---
 

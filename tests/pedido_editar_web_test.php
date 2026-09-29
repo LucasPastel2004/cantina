@@ -4,6 +4,7 @@
  */
 
 define('CANTINA_SISTEMA', true);
+define('CANTINA_TEST_MODE', true);
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../app/core/Model.php';
@@ -129,14 +130,18 @@ try {
 
 // Limpeza no banco
 $pdo = \Database::getInstance();
-$pdo->exec("DELETE FROM tickets WHERE pedido_id IN (SELECT id FROM pedidos WHERE codigo_pedido LIKE 'PED-2026-%') AND pedido_id > 40");
-$pdo->exec("DELETE FROM itens_pedido WHERE pedido_id IN (SELECT id FROM pedidos WHERE codigo_pedido LIKE 'PED-2026-%') AND pedido_id > 40");
-$pdo->exec("DELETE FROM pedidos WHERE id > 40");
-$pdo->exec("DELETE FROM alunos WHERE matricula LIKE 'MAT-EDIT-%'");
-$pdo->exec("DELETE FROM turmas WHERE nome_turma = '7º Ano A'");
-$pdo->exec("DELETE FROM produtos WHERE codigo_interno LIKE 'PRD-ED-%'");
-$pdo->exec("DELETE FROM transacoes_carteira WHERE responsavel_id IN (SELECT id FROM responsaveis WHERE cpf = '99911122233')");
-$pdo->exec("DELETE FROM responsaveis WHERE cpf = '99911122233'");
+$pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+if (!empty($pedido['id'])) {
+    $pedIdNum = (int)$pedido['id'];
+    $pdo->exec("DELETE FROM tickets WHERE pedido_id = {$pedIdNum}");
+    $pdo->exec("DELETE FROM itens_pedido WHERE pedido_id = {$pedIdNum}");
+    $pdo->exec("DELETE FROM pedidos WHERE id = {$pedIdNum}");
+}
+$pdo->exec("DELETE FROM alunos WHERE matricula LIKE 'MAT-EDIT-%' OR id = " . (int)$alunoId);
+$pdo->exec("DELETE FROM produtos WHERE id = " . (int)$prodId);
+$pdo->exec("DELETE FROM transacoes_carteira WHERE responsavel_id = " . (int)$resp['id']);
+$pdo->exec("DELETE FROM responsaveis WHERE id = " . (int)$resp['id']);
+$pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
 
 if ($sucessoGet && str_contains($outputGet, 'Editar Pedido') && str_contains($outputGet, $pedido['codigo_pedido'])) {
     echo "[PASS] GET /portal/pedidos/editar/{id} executada com sucesso! Tela renderizada perfeitamente.\n";

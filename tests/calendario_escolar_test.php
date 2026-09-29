@@ -178,6 +178,13 @@ assertCondition($infoEmerg['tipo'] === CalendarioEscolar::TIPO_CANCELADO_EMERGEN
 // Limpeza de testes
 CalendarioEscolar::removerExcecao($dataFeriado);
 CalendarioEscolar::removerExcecao($dataEmergencial);
+$pdoTest = \App\Core\Model::getPdo();
+$pdoTest->exec("DELETE FROM tickets WHERE pedido_id = {$pedidoId}");
+$pdoTest->exec("DELETE FROM itens_pedido WHERE pedido_id = {$pedidoId}");
+$pdoTest->exec("DELETE FROM pedidos WHERE id = {$pedidoId}");
+$pdoTest->exec("DELETE FROM transacoes_carteira WHERE responsavel_id = {$respId}");
+$pdoTest->exec("DELETE FROM alunos WHERE id = {$aluno['id']}");
+$pdoTest->exec("DELETE FROM responsaveis WHERE id = {$respId}");
 
 // --- 7. Teste de Renderização da View de Calendário ---
 echo "\n--- 7. Renderização da View admin/calendario.php ---\n";

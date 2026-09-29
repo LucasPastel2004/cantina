@@ -444,6 +444,16 @@ class Fase13Test
         $stmtAud->execute(['ticket_id' => $ticketId]);
         $aud = $stmtAud->fetch(\PDO::FETCH_ASSOC);
         $this->assert($aud !== false, "Evento de estorno registrado na tabela logs_auditoria");
+
+        // Limpeza defensiva dos dados de teste para não poluir o banco de dados
+        $this->pdo->exec("DELETE FROM tickets WHERE id = {$ticketId}");
+        $this->pdo->exec("DELETE FROM itens_pedido WHERE id = {$itemId}");
+        $this->pdo->exec("DELETE FROM pedidos WHERE id = {$pedId}");
+        $this->pdo->exec("DELETE FROM produtos WHERE id = {$prodId}");
+        $this->pdo->exec("DELETE FROM transacoes_carteira WHERE responsavel_id = {$respId}");
+        $this->pdo->exec("DELETE FROM logs_auditoria WHERE registro_id = {$ticketId} AND tabela_afetada = 'tickets'");
+        $this->pdo->exec("DELETE FROM alunos WHERE id = {$alunoId}");
+        $this->pdo->exec("DELETE FROM responsaveis WHERE id = {$respId}");
     }
 
     private function testarAproveitamentoSobrasRecreio(): void
@@ -503,6 +513,16 @@ class Fase13Test
         $stmtMov->execute(['prod_id' => $prodId]);
         $mov = $stmtMov->fetch(\PDO::FETCH_ASSOC);
         $this->assert($mov !== false && (int)$mov['quantidade'] === 3, "Movimentação em estoque_movimentacoes gravada como aproveitamento_sobra");
+
+        // Limpeza defensiva dos dados de teste para não poluir o banco de dados
+        $this->pdo->exec("DELETE FROM tickets WHERE id = {$ticketId}");
+        $this->pdo->exec("DELETE FROM itens_pedido WHERE id = {$itemId}");
+        $this->pdo->exec("DELETE FROM pedidos WHERE id = {$pedId}");
+        $this->pdo->exec("DELETE FROM estoque_movimentacoes WHERE produto_id = {$prodId}");
+        $this->pdo->exec("DELETE FROM produtos WHERE id = {$prodId}");
+        $this->pdo->exec("DELETE FROM transacoes_carteira WHERE responsavel_id = {$respId}");
+        $this->pdo->exec("DELETE FROM alunos WHERE id = {$alunoId}");
+        $this->pdo->exec("DELETE FROM responsaveis WHERE id = {$respId}");
     }
 
     private function testarComprovanteTermicoPdfEHtml(): void
