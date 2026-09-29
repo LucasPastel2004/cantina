@@ -3,33 +3,33 @@
  * Cantina Web — Colégio Monteiro Lobato
  * View Operacional: Estorno de Vendas e Invalidação de Tickets
  * 
- * Conforme docs/FSD.md, docs/DESIGN.md e docs/alterações sistema guideline/extorno de vendas.pdf
+ * Conforme docs/FSD.md, docs/DESIGN.md e diretrizes operacionais do sistema
  */
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
 $csrfToken = \App\Core\Session::generateCsrfToken();
-$filtros = $filtros ?? [];
 $vendas = $vendas ?? [];
 $alunos = $alunos ?? [];
 $colaboradores = $colaboradores ?? [];
 
-$vendaAvulsa = $filtros['venda_avulsa'] ?? 'sim';
-$filtrarPor = $filtros['filtrar_por'] ?? 'aluno';
-$dataInicio = $filtros['data_inicio'] ?? date('Y-m-d');
-$dataFim = $filtros['data_fim'] ?? date('Y-m-d');
-$pessoaId = $filtros['pessoa_id'] ?? '';
-$motivoFiltro = $filtros['motivo'] ?? '';
+$vendaAvulsa = $vendaAvulsa ?? 'sim';
+$filtrarPor = $filtrarPor ?? 'aluno';
+$pessoaId = $pessoaId ?? null;
+$nomePessoaSelecionada = $nomePessoaSelecionada ?? '';
+$dataInicio = $dataInicio ?? date('Y-m-d');
+$dataFim = $dataFim ?? date('Y-m-d');
+$motivoFiltro = $motivoFiltro ?? '';
 ?>
 
-<!-- Cabeçalho e Barra de Ações Primárias -->
+<!-- Cabeçalho da Página e Ações Primárias (Botões no padrão azul corporativo) -->
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
             <h1 class="h5 font-weight-bold text-dark mb-0">Estorno de Venda da Cantina</h1>
-            <span class="badge bg-white text-secondary border font-tabular" style="font-size: 11px; font-weight: 600; border-color: #cbd5e1 !important;">
-                Módulo de Invalidação e Estorno
+            <span class="badge bg-white text-primary border border-primary-subtle font-tabular" style="font-size: 11px; font-weight: 600;">
+                Módulo Operacional
             </span>
         </div>
         <p class="text-secondary text-microcopy mb-0">
@@ -37,15 +37,15 @@ $motivoFiltro = $filtros['motivo'] ?? '';
         </p>
     </div>
 
-    <!-- Ações no Topo: Cancelar e Gravar (Fiel ao Escolar Manager) -->
+    <!-- Ações no Topo: Todos os botões no padrão AZUL corporativo do sistema -->
     <div class="d-flex align-items-center gap-2">
-        <a href="<?php echo $baseUrl; ?>/operacional/estornos" class="btn btn-enterprise btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" title="Limpar seleções e recarregar">
+        <a href="<?php echo $baseUrl; ?>/operacional/estornos" class="btn btn-enterprise btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" title="Limpar filtros e recarregar">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
             </svg>
             Cancelar
         </a>
-        <button type="button" id="btnGravarEstornoTopo" class="btn btn-enterprise btn-success btn-sm d-inline-flex align-items-center gap-1" style="background-color: #16a34a; border-color: #16a34a;">
+        <button type="button" id="btnGravarEstornoTopo" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5 shadow-sm">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4.414A1 1 0 0 0 14.586 3.707l-2.293-2.293A1 1 0 0 0 11.586 1H2zm10 2v2H4V3h8zm-8 4h8v6H4V7z"/>
             </svg>
@@ -54,44 +54,25 @@ $motivoFiltro = $filtros['motivo'] ?? '';
     </div>
 </div>
 
-<?php if (!empty($flashSuccess)): ?>
-    <div class="alert alert-success border-0 shadow-sm d-flex align-items-center gap-2 py-2 mb-3">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" class="text-success flex-shrink-0">
-            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
-        </svg>
-        <div class="small text-dark font-weight-medium"><?php echo htmlspecialchars($flashSuccess, ENT_QUOTES, 'UTF-8'); ?></div>
-    </div>
-<?php endif; ?>
+<!-- Alertas Flash do Sistema -->
+<?php require __DIR__ . '/../partials/alert.php'; ?>
 
-<?php if (!empty($flashError)): ?>
-    <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center gap-2 py-2 mb-3">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" class="text-danger flex-shrink-0">
-            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16zM7.002 11a1 1 0 1 0 2 0 1 1 0 0 0-2 0zm.05-7.95a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 1 0v-5a.5.5 0 0 0-.5-.5z"/>
-        </svg>
-        <div class="small text-dark font-weight-medium"><?php echo htmlspecialchars($flashError, ENT_QUOTES, 'UTF-8'); ?></div>
-    </div>
-<?php endif; ?>
-
-<!-- Formulário Mestre que engloba Filtros e Execução de Gravação -->
-<form id="formEstorno" action="<?php echo $baseUrl; ?>/operacional/estornos/gravar" method="POST">
-    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
-    <input type="hidden" name="venda_avulsa" value="<?php echo htmlspecialchars($vendaAvulsa, ENT_QUOTES, 'UTF-8'); ?>">
-
-    <!-- Painel de Filtros e Critérios de Busca (Baseado no Guideline Oficial) -->
-    <div class="card border-0 shadow-sm mb-3" style="background-color: #ffffff; border: 1px solid #e2e8f0 !important;">
-        <div class="card-body p-3">
-            <div class="row g-3 align-items-end">
+<!-- Painel de Filtros e Critérios de Busca (com barra de digitação/autocomplete de nomes) -->
+<div class="card-enterprise card-overflow-visible mb-3" style="overflow: visible !important; position: relative; z-index: 30;">
+    <div class="card-enterprise-body p-3" style="overflow: visible !important;">
+        <form id="formFiltrosEstorno" action="<?php echo $baseUrl; ?>/operacional/estornos" method="GET" style="overflow: visible !important;">
+            <div class="row g-3 align-items-end" style="overflow: visible !important;">
                 
                 <!-- Venda Avulsa (Sim / Não) -->
                 <div class="col-12 col-sm-6 col-md-2">
-                    <label class="form-label text-secondary small font-weight-bold mb-1">Venda avulsa:</label>
+                    <label class="form-label text-microcopy text-uppercase font-weight-bold text-secondary mb-1">Venda avulsa:</label>
                     <div class="d-flex gap-3 pt-1">
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="filtro_venda_avulsa_radio" id="vaSim" value="sim" <?php echo ($vendaAvulsa === 'sim') ? 'checked' : ''; ?>>
+                            <input class="form-check-input" type="radio" name="venda_avulsa" id="vaSim" value="sim" <?php echo ($vendaAvulsa === 'sim') ? 'checked' : ''; ?>>
                             <label class="form-check-label small" for="vaSim">Sim</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="filtro_venda_avulsa_radio" id="vaNao" value="nao" <?php echo ($vendaAvulsa === 'nao') ? 'checked' : ''; ?>>
+                            <input class="form-check-input" type="radio" name="venda_avulsa" id="vaNao" value="nao" <?php echo ($vendaAvulsa === 'nao') ? 'checked' : ''; ?>>
                             <label class="form-check-label small" for="vaNao">Não</label>
                         </div>
                     </div>
@@ -99,100 +80,115 @@ $motivoFiltro = $filtros['motivo'] ?? '';
 
                 <!-- Filtrar Por (Aluno / Colaborador) -->
                 <div class="col-12 col-sm-6 col-md-2" id="boxFiltrarPor" style="<?php echo ($vendaAvulsa === 'nao') ? 'display: none;' : ''; ?>">
-                    <label class="form-label text-secondary small font-weight-bold mb-1">Filtrar por:</label>
+                    <label class="form-label text-microcopy text-uppercase font-weight-bold text-secondary mb-1">Filtrar por:</label>
                     <div class="d-flex gap-3 pt-1">
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="filtro_filtrar_por_radio" id="fpAluno" value="aluno" <?php echo ($filtrarPor === 'aluno') ? 'checked' : ''; ?>>
+                            <input class="form-check-input" type="radio" name="filtrar_por" id="fpAluno" value="aluno" <?php echo ($filtrarPor === 'aluno') ? 'checked' : ''; ?>>
                             <label class="form-check-label small" for="fpAluno">Aluno</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="filtro_filtrar_por_radio" id="fpColaborador" value="colaborador" <?php echo ($filtrarPor === 'colaborador') ? 'checked' : ''; ?>>
+                            <input class="form-check-input" type="radio" name="filtrar_por" id="fpColaborador" value="colaborador" <?php echo ($filtrarPor === 'colaborador') ? 'checked' : ''; ?>>
                             <label class="form-check-label small" for="fpColaborador">Colaborador</label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Seletor de Pessoa (Aluno ou Colaborador conforme filtro) -->
-                <div class="col-12 col-sm-12 col-md-4">
-                    <label class="form-label text-secondary small font-weight-bold mb-1" id="lblPessoa">
-                        <?php echo ($filtrarPor === 'colaborador' && $vendaAvulsa === 'sim') ? 'Colaborador:' : 'Aluno:'; ?>
-                    </label>
-                    
-                    <!-- Select para Alunos -->
-                    <div id="selectAlunoContainer" style="<?php echo ($filtrarPor === 'colaborador' && $vendaAvulsa === 'sim') ? 'display: none;' : ''; ?>">
-                        <select class="form-select form-select-sm" id="selectAluno" name="pessoa_id_aluno">
-                            <option value="">-- Todos os Alunos --</option>
-                            <?php foreach ($alunos as $al): ?>
-                                <option value="<?php echo $al['id']; ?>" <?php echo ((string)$pessoaId === (string)$al['id'] && $filtrarPor === 'aluno') ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($al['nome'] . ' (' . ($al['matricula'] ?: 'S/M') . ' - ' . ($al['nome_turma'] ?? 'Geral') . ')', ENT_QUOTES, 'UTF-8'); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                <!-- BARRA DE DIGITAÇÃO / AUTOCOMPLETE (Elimina scroll na lista gigante) -->
+                <div class="col-12 col-sm-12 col-md-4" style="position: relative; z-index: 40;">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="inputBuscaPessoa" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary mb-0" id="lblBuscaPessoa">
+                            <?php echo ($filtrarPor === 'colaborador' && $vendaAvulsa === 'sim') ? 'Colaborador (Nome ou Cargo)' : 'Aluno (Nome ou Matrícula)'; ?>
+                        </label>
+                        <?php if (!empty($pessoaId)): ?>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-tabular" style="font-size: 10px;">Filtrado</span>
+                        <?php endif; ?>
                     </div>
+                    
+                    <div class="search-input-wrapper position-relative" style="position: relative;">
+                        <input type="text" id="inputBuscaPessoa" class="form-control form-control-sm pe-4" 
+                               placeholder="<?php echo ($filtrarPor === 'colaborador' && $vendaAvulsa === 'sim') ? 'Digite para buscar colaborador...' : 'Digite para buscar aluno...'; ?>" 
+                               autocomplete="off" 
+                               value="<?php echo htmlspecialchars($nomePessoaSelecionada, ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="hidden" name="pessoa_id" id="hiddenPessoaId" value="<?php echo htmlspecialchars((string)($pessoaId ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
 
-                    <!-- Select para Colaboradores -->
-                    <div id="selectColaboradorContainer" style="<?php echo ($filtrarPor === 'colaborador' && $vendaAvulsa === 'sim') ? '' : 'display: none;'; ?>">
-                        <select class="form-select form-select-sm" id="selectColaborador" name="pessoa_id_colaborador">
-                            <option value="">-- Todos os Colaboradores --</option>
-                            <?php foreach ($colaboradores as $col): ?>
-                                <option value="<?php echo $col['id']; ?>" <?php echo ((string)$pessoaId === (string)$col['id'] && $filtrarPor === 'colaborador') ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($col['nome'] . ' (' . ($col['matricula_funcional'] ?: 'S/M') . ' - ' . ($col['cargo'] ?? 'Geral') . ')', ENT_QUOTES, 'UTF-8'); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <!-- Botão de Limpar Busca -->
+                        <button type="button" id="btnLimparPessoa" class="btn btn-sm btn-link text-secondary position-absolute" 
+                                style="right: 6px; top: 50%; transform: translateY(-50%); text-decoration: none; padding: 0; line-height: 1; font-size: 14px; <?php echo empty($nomePessoaSelecionada) ? 'display: none;' : ''; ?>" 
+                                title="Limpar pessoa selecionada">
+                            ✕
+                        </button>
+
+                        <!-- Dropdown Flutuante de Autocomplete -->
+                        <div id="autocompleteDropdownPessoa" class="list-group position-absolute rounded shadow-lg d-none" 
+                             style="top: calc(100% + 4px); left: 0; right: 0; width: 100%; z-index: 1080; max-height: 260px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2), 0 8px 10px -6px rgba(15, 23, 42, 0.12) !important;">
+                        </div>
+                    </div>
+                    <div class="text-secondary text-microcopy mt-1">
+                        Digite para autocompletar sem precisar navegar na lista completa.
                     </div>
                 </div>
 
                 <!-- Período: De -->
                 <div class="col-6 col-sm-6 col-md-2">
-                    <label class="form-label text-secondary small font-weight-bold mb-1">De:</label>
+                    <label for="filtroDataInicio" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary mb-1">De:</label>
                     <input type="date" class="form-control form-control-sm font-tabular" id="filtroDataInicio" name="data_inicio" value="<?php echo htmlspecialchars($dataInicio, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
 
-                <!-- Período: Até -->
+                <!-- Período: Até e Botão Filtrar Azul -->
                 <div class="col-6 col-sm-6 col-md-2">
-                    <div class="d-flex gap-2 align-items-end">
-                        <div class="flex-grow-1">
-                            <label class="form-label text-secondary small font-weight-bold mb-1">Até:</label>
-                            <input type="date" class="form-control form-control-sm font-tabular" id="filtroDataFim" name="data_fim" value="<?php echo htmlspecialchars($dataFim, ENT_QUOTES, 'UTF-8'); ?>">
-                        </div>
-                        <button type="button" id="btnFiltrar" class="btn btn-enterprise btn-outline-primary btn-sm flex-shrink-0" title="Pesquisar vendas com estes filtros">
+                    <label for="filtroDataFim" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary mb-1">Até:</label>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="date" class="form-control form-control-sm font-tabular" id="filtroDataFim" name="data_fim" value="<?php echo htmlspecialchars($dataFim, ENT_QUOTES, 'UTF-8'); ?>">
+                        <button type="submit" id="btnFiltrar" class="btn btn-enterprise btn-primary btn-sm flex-shrink-0 d-inline-flex align-items-center gap-1" title="Pesquisar vendas com estes filtros">
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
                             </svg>
+                            Filtrar
                         </button>
                     </div>
                 </div>
 
             </div>
+        </form>
 
-            <!-- Linha Obrigatória do Motivo do Estorno -->
-            <div class="row g-3 mt-1 pt-2 border-top">
-                <div class="col-12">
-                    <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
-                        <label for="campoMotivo" class="form-label text-secondary small font-weight-bold mb-0 flex-shrink-0" style="min-width: 140px;">
-                            Motivo do estorno: <span class="text-danger">*</span>
-                        </label>
-                        <div class="input-group input-group-sm flex-grow-1">
-                            <input type="text" class="form-control form-control-sm" id="campoMotivo" name="motivo" 
-                                   placeholder="Informe a justificativa obrigatória do estorno (mínimo 5 caracteres)..." 
-                                   value="<?php echo htmlspecialchars($motivoFiltro, ENT_QUOTES, 'UTF-8'); ?>" required>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLimparMotivo" title="Limpar justificativa">
-                                ✕
-                            </button>
-                        </div>
-                    </div>
-                    <div class="text-muted" style="font-size: 11px; margin-left: 148px; margin-top: 3px;">
-                        Esta justificativa será registrada de forma imutável nos logs de auditoria e no histórico contábil.
+        <!-- Campo Obrigatório do Motivo do Estorno -->
+        <div class="row g-3 mt-1 pt-2 border-top">
+            <div class="col-12">
+                <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
+                    <label for="campoMotivo" class="form-label text-secondary small font-weight-bold mb-0 flex-shrink-0" style="min-width: 140px;">
+                        Motivo do estorno: <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group input-group-sm flex-grow-1">
+                        <input type="text" class="form-control form-control-sm" id="campoMotivo" name="motivo" 
+                               placeholder="Informe a justificativa obrigatória do estorno (mínimo 5 caracteres)..." 
+                               value="<?php echo htmlspecialchars($motivoFiltro, ENT_QUOTES, 'UTF-8'); ?>" required>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLimparMotivo" title="Limpar justificativa">
+                            ✕
+                        </button>
                     </div>
                 </div>
+                <div class="text-secondary text-microcopy mt-1" style="margin-left: 148px;">
+                    Esta justificativa será registrada de forma imutável nos logs de auditoria e no histórico contábil.
+                </div>
             </div>
-
         </div>
-    </div>
 
-    <!-- Tabela / Data-Grid Operacional (Fiel ao Escolar Manager) -->
-    <div class="card border-0 shadow-sm mb-3" style="background-color: #ffffff; border: 1px solid #e2e8f0 !important;">
+    </div>
+</div>
+
+<!-- Formulário que submete a gravação das vendas selecionadas -->
+<form id="formGravarEstorno" action="<?php echo $baseUrl; ?>/operacional/estornos/gravar" method="POST">
+    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+    <input type="hidden" name="venda_avulsa" value="<?php echo htmlspecialchars($vendaAvulsa, ENT_QUOTES, 'UTF-8'); ?>">
+    <input type="hidden" name="filtrar_por" value="<?php echo htmlspecialchars($filtrarPor, ENT_QUOTES, 'UTF-8'); ?>">
+    <input type="hidden" name="pessoa_id" value="<?php echo htmlspecialchars((string)($pessoaId ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
+    <input type="hidden" name="aluno_id" value="<?php echo htmlspecialchars((string)($pessoaId ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
+    <input type="hidden" name="data_inicio" value="<?php echo htmlspecialchars($dataInicio, ENT_QUOTES, 'UTF-8'); ?>">
+    <input type="hidden" name="data_fim" value="<?php echo htmlspecialchars($dataFim, ENT_QUOTES, 'UTF-8'); ?>">
+    <input type="hidden" name="motivo_estorno" id="hiddenMotivoEstorno" value="">
+
+    <!-- Tabela / Data-Grid Operacional (Padrão Visual do Sistema) -->
+    <div class="card-enterprise mb-3">
         <div class="table-responsive">
             <table class="table table-hover table-striped table-sm mb-0 align-middle">
                 <thead style="background-color: #2563eb; color: #ffffff;">
@@ -204,7 +200,7 @@ $motivoFiltro = $filtros['motivo'] ?? '';
                         <th style="width: 90px; font-weight: 600; font-size: 12px;">Hora</th>
                         <th style="width: 130px; font-weight: 600; font-size: 12px; text-align: right;">Valor total</th>
                         <th style="font-weight: 600; font-size: 12px;">Pessoa</th>
-                        <th style="width: 120px; font-weight: 600; font-size: 12px; text-align: center;">Tipo / Status</th>
+                        <th style="width: 130px; font-weight: 600; font-size: 12px; text-align: center;">Tipo / Status</th>
                         <th style="width: 80px; font-weight: 600; font-size: 12px; text-align: center;">Ações</th>
                     </tr>
                 </thead>
@@ -213,12 +209,12 @@ $motivoFiltro = $filtros['motivo'] ?? '';
                         <tr>
                             <td colspan="7" class="text-center py-4 text-secondary">
                                 <div class="py-3">
-                                    <svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor" class="text-muted mb-2 opacity-50">
+                                    <svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor" class="text-secondary mb-2 opacity-50">
                                         <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
                                         <path d="M4 4h8v1H4V4zm0 2h8v1H4V6zm0 2h8v1H4V8zm0 2h5v1H4v-1z"/>
                                     </svg>
                                     <div class="small font-weight-medium">Não há vendas concluídas encontradas para os filtros informados.</div>
-                                    <div class="text-muted text-microcopy mt-1">Ajuste o período ou o cliente pesquisado.</div>
+                                    <div class="text-secondary text-microcopy mt-1">Ajuste o período ou limpe o filtro de pessoa para visualizar outros registros.</div>
                                 </div>
                             </td>
                         </tr>
@@ -244,19 +240,19 @@ $motivoFiltro = $filtros['motivo'] ?? '';
                                 <td>
                                     <div class="small font-weight-medium text-dark"><?php echo htmlspecialchars($nomePessoa, ENT_QUOTES, 'UTF-8'); ?></div>
                                     <?php if (!empty($detalhePessoa)): ?>
-                                        <div class="text-muted text-microcopy"><?php echo htmlspecialchars($detalhePessoa, ENT_QUOTES, 'UTF-8'); ?></div>
+                                        <div class="text-secondary text-microcopy"><?php echo htmlspecialchars($detalhePessoa, ENT_QUOTES, 'UTF-8'); ?></div>
                                     <?php endif; ?>
                                 </td>
                                 <td style="text-align: center;">
                                     <?php if ($tipoOrigem === 'balcao'): ?>
-                                        <span class="badge bg-light text-primary border" style="font-size: 11px; font-weight: 500;">Balcão</span>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-tabular" style="font-size: 11px; font-weight: 500;">Balcão</span>
                                     <?php else: ?>
-                                        <span class="badge bg-light text-purple border" style="font-size: 11px; font-weight: 500; color: #7c3aed; border-color: #ddd6fe !important;">Encomenda</span>
+                                        <span class="badge bg-secondary-subtle text-dark border font-tabular" style="font-size: 11px; font-weight: 500;">Encomenda</span>
                                     <?php endif; ?>
                                 </td>
                                 <td style="text-align: center;">
-                                    <!-- Botão Neutro de Detalhes (i) conforme diretrizes Anti-Slop -->
-                                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm p-1 btn-ver-detalhes" 
+                                    <!-- Botão de Ação Azul Corporativo -->
+                                    <button type="button" class="btn btn-enterprise btn-outline-primary btn-sm p-1 btn-ver-detalhes" 
                                             data-id="<?php echo $vId; ?>" 
                                             data-tipo="<?php echo $tipoOrigem; ?>" 
                                             title="Ver itens e detalhes desta venda">
@@ -273,7 +269,7 @@ $motivoFiltro = $filtros['motivo'] ?? '';
         </div>
 
         <!-- Rodapé do Data-Grid: Contadores e Totais da Seleção -->
-        <div class="card-footer bg-light border-top p-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="card-enterprise-footer bg-light border-top p-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div class="small text-secondary">
                 Total de registros: <span class="font-tabular font-weight-bold text-dark" id="txtTotalRegistros"><?php echo count($vendas); ?></span>
             </div>
@@ -289,7 +285,7 @@ $motivoFiltro = $filtros['motivo'] ?? '';
     </div>
 </form>
 
-<!-- Modal de Detalhes da Venda (Carregado via Ajax) -->
+<!-- Modal de Detalhes da Venda (Carregado via Ajax com botões azuis) -->
 <div class="modal fade" id="modalDetalhesVenda" tabindex="-1" aria-labelledby="modalDetalhesVendaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -304,24 +300,24 @@ $motivoFiltro = $filtros['motivo'] ?? '';
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Carregando detalhes...</span>
                     </div>
-                    <div class="small text-muted mt-2">Buscando itens da venda...</div>
+                    <div class="small text-secondary mt-2">Buscando itens da venda...</div>
                 </div>
                 <div id="modConteudo" style="display: none;">
                     <!-- Preenchido dinamicamente via JS -->
                 </div>
             </div>
             <div class="modal-footer py-2 bg-light">
-                <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-enterprise btn-outline-primary btn-sm" data-bs-dismiss="modal">Fechar</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal de Confirmação de Estorno -->
+<!-- Modal de Confirmação de Estorno (Padrão Azul Corporativo) -->
 <div class="modal fade" id="modalConfirmarEstorno" tabindex="-1" aria-labelledby="modalConfirmarEstornoLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header py-2 bg-danger text-white">
+            <div class="modal-header py-2" style="background-color: #2563eb; color: #ffffff;">
                 <h5 class="modal-title fs-6 font-weight-bold" id="modalConfirmarEstornoLabel">
                     Confirmação de Estorno
                 </h5>
@@ -329,9 +325,10 @@ $motivoFiltro = $filtros['motivo'] ?? '';
             </div>
             <div class="modal-body p-3">
                 <div class="d-flex align-items-start gap-3">
-                    <div class="flex-shrink-0 text-danger mt-1">
+                    <div class="flex-shrink-0 text-primary mt-1">
                         <svg width="28" height="28" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M7.002 11a1 1 0 1 0 2 0 1 1 0 0 0-2 0zm.05-7.95a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 1 0v-5a.5.5 0 0 0-.5-.5z"/>
                         </svg>
                     </div>
                     <div>
@@ -339,8 +336,8 @@ $motivoFiltro = $filtros['motivo'] ?? '';
                         <p class="small text-secondary mb-2" id="txtConfirmarResumo">
                             Você está prestes a estornar X venda(s) no total de R$ 0,00.
                         </p>
-                        <div class="alert alert-warning py-1 px-2 mb-2 text-microcopy border-0" style="background-color: #fef9c3; color: #854d0e;">
-                            <strong>Atenção:</strong> O estoque físico será reintegrado, saldos/encomendas serão recalculados e tickets térmicos associados serão invalidados permanentemente.
+                        <div class="p-2 mb-2 rounded bg-light border text-microcopy text-secondary">
+                            <strong class="text-dark">Atenção:</strong> O estoque físico será reintegrado, saldos/encomendas serão recalculados e tickets térmicos associados serão invalidados permanentemente.
                         </div>
                         <div class="small">
                             <strong>Motivo informado:</strong>
@@ -350,9 +347,9 @@ $motivoFiltro = $filtros['motivo'] ?? '';
                 </div>
             </div>
             <div class="modal-footer py-2 bg-light">
-                <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">Voltar</button>
-                <button type="button" id="btnConfirmarEstornoFinal" class="btn btn-enterprise btn-danger btn-sm">
-                    Sim, Executar Estorno
+                <button type="button" class="btn btn-enterprise btn-outline-primary btn-sm" data-bs-dismiss="modal">Voltar</button>
+                <button type="button" id="btnConfirmarEstornoFinal" class="btn btn-enterprise btn-primary btn-sm">
+                    Confirmar e Gravar Estorno
                 </button>
             </div>
         </div>
@@ -362,7 +359,11 @@ $motivoFiltro = $filtros['motivo'] ?? '';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const baseUrl = <?php echo json_encode($baseUrl); ?>;
-    const formEstorno = document.getElementById('formEstorno');
+    const listaAlunos = <?php echo json_encode($alunos); ?>;
+    const listaColaboradores = <?php echo json_encode($colaboradores); ?>;
+
+    const formFiltros = document.getElementById('formFiltrosEstorno');
+    const formGravar = document.getElementById('formGravarEstorno');
     const checkTodos = document.getElementById('checkTodos');
     const checksVenda = document.querySelectorAll('.check-venda');
     const txtTotalSelecionados = document.getElementById('txtTotalSelecionados');
@@ -370,19 +371,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnGravarEstornoTopo = document.getElementById('btnGravarEstornoTopo');
     const campoMotivo = document.getElementById('campoMotivo');
     const btnLimparMotivo = document.getElementById('btnLimparMotivo');
-    const btnFiltrar = document.getElementById('btnFiltrar');
+    const hiddenMotivoEstorno = document.getElementById('hiddenMotivoEstorno');
 
     // Filtros de Alternância
-    const radiosVendaAvulsa = document.querySelectorAll('input[name="filtro_venda_avulsa_radio"]');
-    const radiosFiltrarPor = document.querySelectorAll('input[name="filtro_filtrar_por_radio"]');
+    const radiosVendaAvulsa = document.querySelectorAll('input[name="venda_avulsa"]');
+    const radiosFiltrarPor = document.querySelectorAll('input[name="filtrar_por"]');
     const boxFiltrarPor = document.getElementById('boxFiltrarPor');
-    const lblPessoa = document.getElementById('lblPessoa');
-    const selectAlunoContainer = document.getElementById('selectAlunoContainer');
-    const selectColaboradorContainer = document.getElementById('selectColaboradorContainer');
-    const selectAluno = document.getElementById('selectAluno');
-    const selectColaborador = document.getElementById('selectColaborador');
-    const filtroDataInicio = document.getElementById('filtroDataInicio');
-    const filtroDataFim = document.getElementById('filtroDataFim');
+    const lblBuscaPessoa = document.getElementById('lblBuscaPessoa');
+    const inputBuscaPessoa = document.getElementById('inputBuscaPessoa');
+    const hiddenPessoaId = document.getElementById('hiddenPessoaId');
+    const btnLimparPessoa = document.getElementById('btnLimparPessoa');
+    const dropdownPessoa = document.getElementById('autocompleteDropdownPessoa');
 
     // Modais
     const modalDetalhesEl = document.getElementById('modalDetalhesVenda');
@@ -390,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalConfirmarEl = document.getElementById('modalConfirmarEstorno');
     const modalConfirmar = modalConfirmarEl ? new bootstrap.Modal(modalConfirmarEl) : null;
 
-    // Função de recalcular totais selecionados
+    // Recálculo de Totais Selecionados
     function recalcularTotais() {
         let qtd = 0;
         let soma = 0.0;
@@ -418,7 +417,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Eventos nos checkboxes
     if (checkTodos) {
         checkTodos.addEventListener('change', function() {
             const marcar = checkTodos.checked;
@@ -436,82 +434,164 @@ document.addEventListener('DOMContentLoaded', function() {
     // Alternador Venda Avulsa (Sim / Não)
     radiosVendaAvulsa.forEach(function(r) {
         r.addEventListener('change', function() {
+            hiddenPessoaId.value = '';
+            inputBuscaPessoa.value = '';
+            btnLimparPessoa.style.display = 'none';
+
             if (this.value === 'nao') {
                 boxFiltrarPor.style.display = 'none';
-                lblPessoa.textContent = 'Aluno:';
-                selectAlunoContainer.style.display = '';
-                selectColaboradorContainer.style.display = 'none';
+                lblBuscaPessoa.textContent = 'Aluno (Nome ou Matrícula)';
+                inputBuscaPessoa.placeholder = 'Digite para buscar aluno...';
             } else {
                 boxFiltrarPor.style.display = '';
-                atualizarExibicaoFiltrarPor();
+                atualizarLabelBusca();
             }
-            executarFiltro();
+            formFiltros.submit();
         });
     });
 
     // Alternador Filtrar Por (Aluno / Colaborador)
     radiosFiltrarPor.forEach(function(r) {
         r.addEventListener('change', function() {
-            atualizarExibicaoFiltrarPor();
-            executarFiltro();
+            hiddenPessoaId.value = '';
+            inputBuscaPessoa.value = '';
+            btnLimparPessoa.style.display = 'none';
+            atualizarLabelBusca();
+            formFiltros.submit();
         });
     });
 
-    function atualizarExibicaoFiltrarPor() {
-        const selecionado = document.querySelector('input[name="filtro_filtrar_por_radio"]:checked');
+    function atualizarLabelBusca() {
+        const selecionado = document.querySelector('input[name="filtrar_por"]:checked');
         const tipo = selecionado ? selecionado.value : 'aluno';
-
         if (tipo === 'colaborador') {
-            lblPessoa.textContent = 'Colaborador:';
-            selectAlunoContainer.style.display = 'none';
-            selectColaboradorContainer.style.display = '';
+            lblBuscaPessoa.textContent = 'Colaborador (Nome ou Cargo)';
+            inputBuscaPessoa.placeholder = 'Digite para buscar colaborador...';
         } else {
-            lblPessoa.textContent = 'Aluno:';
-            selectAlunoContainer.style.display = '';
-            selectColaboradorContainer.style.display = 'none';
+            lblBuscaPessoa.textContent = 'Aluno (Nome ou Matrícula)';
+            inputBuscaPessoa.placeholder = 'Digite para buscar aluno...';
         }
     }
 
-    // Função de navegação / submissão do filtro
-    function executarFiltro() {
-        const va = document.querySelector('input[name="filtro_venda_avulsa_radio"]:checked').value;
-        const fp = document.querySelector('input[name="filtro_filtrar_por_radio"]:checked').value;
-        const dtIni = filtroDataInicio.value;
-        const dtFim = filtroDataFim.value;
-        const motivo = campoMotivo.value;
-        
-        let pId = '';
-        if (va === 'sim' && fp === 'colaborador') {
-            pId = selectColaborador.value;
-        } else {
-            pId = selectAluno.value;
+    // AUTOCOMPLETE REATIVO INSTANTÂNEO DE ALUNOS OU COLABORADORES
+    let debounceTimer = null;
+    let itemAtivoIndex = -1;
+    let resultadosAtuais = [];
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+    }
+
+    function fecharDropdown() {
+        dropdownPessoa.classList.add('d-none');
+        dropdownPessoa.innerHTML = '';
+        itemAtivoIndex = -1;
+        resultadosAtuais = [];
+    }
+
+    function selecionarPessoa(item) {
+        hiddenPessoaId.value = item.id;
+        let desc = item.nome;
+        if (item.matricula || item.matricula_funcional) {
+            desc += ' (' + (item.matricula || item.matricula_funcional) + ')';
         }
-
-        const params = new URLSearchParams();
-        params.set('venda_avulsa', va);
-        params.set('filtrar_por', fp);
-        if (pId) params.set('pessoa_id', pId);
-        if (dtIni) params.set('data_inicio', dtIni);
-        if (dtFim) params.set('data_fim', dtFim);
-        if (motivo) params.set('motivo', motivo);
-
-        window.location.href = baseUrl + '/operacional/estornos?' + params.toString();
+        inputBuscaPessoa.value = desc;
+        btnLimparPessoa.style.display = '';
+        fecharDropdown();
+        formFiltros.submit();
     }
 
-    if (btnFiltrar) {
-        btnFiltrar.addEventListener('click', executarFiltro);
+    if (btnLimparPessoa) {
+        btnLimparPessoa.addEventListener('click', function(e) {
+            e.preventDefault();
+            hiddenPessoaId.value = '';
+            inputBuscaPessoa.value = '';
+            this.style.display = 'none';
+            fecharDropdown();
+            formFiltros.submit();
+        });
     }
-    if (selectAluno) {
-        selectAluno.addEventListener('change', executarFiltro);
-    }
-    if (selectColaborador) {
-        selectColaborador.addEventListener('change', executarFiltro);
-    }
-    if (filtroDataInicio) {
-        filtroDataInicio.addEventListener('change', executarFiltro);
-    }
-    if (filtroDataFim) {
-        filtroDataFim.addEventListener('change', executarFiltro);
+
+    if (inputBuscaPessoa) {
+        inputBuscaPessoa.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const termo = this.value.trim().toLowerCase();
+
+            if (termo.length === 0) {
+                hiddenPessoaId.value = '';
+                btnLimparPessoa.style.display = 'none';
+                fecharDropdown();
+                return;
+            }
+
+            btnLimparPessoa.style.display = '';
+
+            debounceTimer = setTimeout(function() {
+                const radioColab = document.querySelector('input[name="filtrar_por"]:checked');
+                const isColab = (radioColab && radioColab.value === 'colaborador' && document.getElementById('vaSim').checked);
+                const listaFonte = isColab ? listaColaboradores : listaAlunos;
+
+                // Filtra localmente de forma ultrarrápida
+                resultadosAtuais = listaFonte.filter(function(p) {
+                    const nome = (p.nome || '').toLowerCase();
+                    const mat = (p.matricula || p.matricula_funcional || '').toLowerCase();
+                    const extra = (p.nome_turma || p.cargo || '').toLowerCase();
+                    return nome.includes(termo) || mat.includes(termo) || extra.includes(termo);
+                }).slice(0, 15); // Limita aos 15 mais relevantes
+
+                dropdownPessoa.innerHTML = '';
+                itemAtivoIndex = -1;
+
+                if (resultadosAtuais.length > 0) {
+                    resultadosAtuais.forEach(function(p, idx) {
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'd-flex justify-content-between align-items-center py-2 px-3 border-bottom';
+                        itemEl.style.cursor = 'pointer';
+                        itemEl.style.backgroundColor = '#ffffff';
+
+                        const infoSec = p.nome_turma 
+                            ? 'Matrícula: ' + (p.matricula || 'S/M') + ' • ' + p.nome_turma 
+                            : (p.cargo ? 'Matrícula: ' + (p.matricula_funcional || 'S/M') + ' • ' + p.cargo : '');
+
+                        itemEl.innerHTML = 
+                            '<div class="text-truncate me-2">' +
+                                '<div class="font-weight-semibold text-dark" style="font-size: 13px;">' + escapeHtml(p.nome) + '</div>' +
+                                '<div class="text-secondary text-microcopy font-tabular">' + escapeHtml(infoSec) + '</div>' +
+                            '</div>' +
+                            '<span class="badge bg-light text-primary border font-tabular" style="font-size: 10px;">Selecionar</span>';
+
+                        itemEl.addEventListener('mouseenter', function() {
+                            itemEl.style.backgroundColor = '#f1f5f9';
+                        });
+                        itemEl.addEventListener('mouseleave', function() {
+                            itemEl.style.backgroundColor = '#ffffff';
+                        });
+
+                        itemEl.addEventListener('click', function(ev) {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            selecionarPessoa(p);
+                        });
+
+                        dropdownPessoa.appendChild(itemEl);
+                    });
+                    dropdownPessoa.classList.remove('d-none');
+                } else {
+                    dropdownPessoa.innerHTML = '<div class="p-3 text-secondary text-microcopy text-center">Nenhum registro localizado para "<strong>' + escapeHtml(termo) + '</strong>".</div>';
+                    dropdownPessoa.classList.remove('d-none');
+                }
+            }, 120);
+        });
+
+        // Fechar dropdown ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (!inputBuscaPessoa.contains(e.target) && !dropdownPessoa.contains(e.target)) {
+                fecharDropdown();
+            }
+        });
     }
 
     if (btnLimparMotivo) {
@@ -545,16 +625,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            hiddenMotivoEstorno.value = motivo;
+
             // Abre modal de confirmação
             document.getElementById('txtConfirmarResumo').innerHTML = 
-                'Você está prestes a estornar <strong>' + selecionadas.length + '</strong> venda(s) no valor total de <strong>R$ ' + soma.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</strong>.';
+                'Você está prestes a estornar <strong>' + selecionadas.length + '</strong> venda(s) no valor total de <strong class="font-tabular">R$ ' + soma.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</strong>.';
             document.getElementById('txtConfirmarMotivo').textContent = motivo;
 
             if (modalConfirmar) {
                 modalConfirmar.show();
             } else {
                 if (confirm('Confirma o estorno de ' + selecionadas.length + ' venda(s)?')) {
-                    formEstorno.submit();
+                    formGravar.submit();
                 }
             }
         });
@@ -564,8 +646,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnConfirmarEstornoFinal) {
         btnConfirmarEstornoFinal.addEventListener('click', function() {
             this.disabled = true;
-            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Estornando...';
-            formEstorno.submit();
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Gravando estorno...';
+            formGravar.submit();
         });
     }
 
@@ -634,10 +716,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     let html = 
                         '<div class="row g-2 mb-3 bg-light p-2 rounded border">' +
-                            '<div class="col-6 col-sm-3"><span class="text-muted small">Data/Hora:</span><div class="small font-tabular font-weight-medium">' + dataFmt + '</div></div>' +
-                            '<div class="col-6 col-sm-3"><span class="text-muted small">Forma Pgto:</span><div class="small font-weight-medium">' + formaPgto + '</div></div>' +
-                            '<div class="col-6 col-sm-3"><span class="text-muted small">Status:</span><div><span class="badge bg-success" style="font-size: 11px;">' + (venda.status || 'concluida') + '</span></div></div>' +
-                            '<div class="col-6 col-sm-3"><span class="text-muted small">Valor Total:</span><div class="fs-6 font-tabular font-weight-bold text-primary">R$ ' + valorFmt + '</div></div>' +
+                            '<div class="col-6 col-sm-3"><span class="text-secondary small">Data/Hora:</span><div class="small font-tabular font-weight-medium">' + dataFmt + '</div></div>' +
+                            '<div class="col-6 col-sm-3"><span class="text-secondary small">Forma Pgto:</span><div class="small font-weight-medium">' + formaPgto + '</div></div>' +
+                            '<div class="col-6 col-sm-3"><span class="text-secondary small">Status:</span><div><span class="badge bg-primary-subtle text-primary border" style="font-size: 11px;">' + (venda.status || 'concluida') + '</span></div></div>' +
+                            '<div class="col-6 col-sm-3"><span class="text-secondary small">Valor Total:</span><div class="fs-6 font-tabular font-weight-bold text-primary">R$ ' + valorFmt + '</div></div>' +
                         '</div>' +
                         '<h6 class="small font-weight-bold text-secondary mb-2">Itens da Venda:</h6>' +
                         '<div class="table-responsive border rounded">' +
@@ -656,7 +738,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     if (venda.motivo_estorno) {
                         html += '<div class="alert alert-warning mt-3 py-2 small mb-0">' +
-                            '<strong>Estorno já efetuado:</strong> ' + venda.motivo_estorno +
+                            '<strong>Estorno já efetuado:</strong> ' + escapeHtml(venda.motivo_estorno) +
                         '</div>';
                     }
 

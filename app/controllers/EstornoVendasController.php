@@ -32,12 +32,14 @@ class EstornoVendasController extends Controller
         $vendaAvulsa = (isset($_GET['venda_avulsa']) && $_GET['venda_avulsa'] === 'sim') ? 'sim' : 'nao';
         $filtrarPor = (isset($_GET['filtrar_por']) && $_GET['filtrar_por'] === 'colaborador') ? 'colaborador' : 'aluno';
         
-        $alunoId = !empty($_GET['aluno_id']) ? (int)$_GET['aluno_id'] : null;
-        $colaboradorId = !empty($_GET['colaborador_id']) ? (int)$_GET['colaborador_id'] : null;
+        $pessoaId = !empty($_GET['pessoa_id']) ? (int)$_GET['pessoa_id'] : null;
+        $alunoId = !empty($_GET['aluno_id']) ? (int)$_GET['aluno_id'] : ($filtrarPor === 'aluno' ? $pessoaId : null);
+        $colaboradorId = !empty($_GET['colaborador_id']) ? (int)$_GET['colaborador_id'] : ($filtrarPor === 'colaborador' ? $pessoaId : null);
         
         $hoje = date('Y-m-d');
         $dataInicio = !empty($_GET['data_inicio']) ? trim(strip_tags($_GET['data_inicio'])) : $hoje;
         $dataFim = !empty($_GET['data_fim']) ? trim(strip_tags($_GET['data_fim'])) : $hoje;
+        $motivoFiltro = !empty($_GET['motivo']) ? trim(strip_tags($_GET['motivo'])) : '';
 
         // Monta array de filtros
         $filtros = [
@@ -46,6 +48,7 @@ class EstornoVendasController extends Controller
             'filtrar_por'    => $filtrarPor,
             'aluno_id'       => $alunoId,
             'colaborador_id' => $colaboradorId,
+            'pessoa_id'      => $pessoaId,
         ];
 
         // Consulta vendas elegíveis para estorno conforme o tipo selecionado
@@ -61,21 +64,42 @@ class EstornoVendasController extends Controller
         $alunos = Aluno::listarParaSelecao();
         $colaboradores = Colaborador::listarParaSelecao();
 
+        // Localiza nome da pessoa selecionada caso haja filtro ativo
+        $nomePessoaSelecionada = '';
+        if ($filtrarPor === 'colaborador' && $colaboradorId) {
+            foreach ($colaboradores as $col) {
+                if ((int)$col['id'] === $colaboradorId) {
+                    $nomePessoaSelecionada = $col['nome'] . ' (' . ($col['matricula_funcional'] ?: 'S/M') . ' - ' . ($col['cargo'] ?? '') . ')';
+                    break;
+                }
+            }
+        } elseif ($alunoId) {
+            foreach ($alunos as $al) {
+                if ((int)$al['id'] === $alunoId) {
+                    $nomePessoaSelecionada = $al['nome'] . ' (' . ($al['matricula'] ?: 'S/M') . ' - ' . ($al['nome_turma'] ?? '') . ')';
+                    break;
+                }
+            }
+        }
+
         $this->render('operacional/estorno_vendas', [
-            'activeMenu'     => 'estornos',
-            'pageTitle'      => 'Estorno de Venda da Cantina',
-            'pageHeading'    => 'Estorno de Venda da Cantina',
-            'vendaAvulsa'    => $vendaAvulsa,
-            'filtrarPor'     => $filtrarPor,
-            'alunoId'        => $alunoId,
-            'colaboradorId'  => $colaboradorId,
-            'dataInicio'     => $dataInicio,
-            'dataFim'        => $dataFim,
-            'vendas'         => $vendas,
-            'alunos'         => $alunos,
-            'colaboradores'  => $colaboradores,
-            'totalVendas'    => count($vendas),
-            'user'           => Auth::user()
+            'activeMenu'            => 'estornos',
+            'pageTitle'             => 'Estorno de Venda da Cantina',
+            'pageHeading'           => 'Estorno de Venda da Cantina',
+            'vendaAvulsa'           => $vendaAvulsa,
+            'filtrarPor'            => $filtrarPor,
+            'alunoId'               => $alunoId,
+            'colaboradorId'         => $colaboradorId,
+            'pessoaId'              => ($filtrarPor === 'colaborador' ? $colaboradorId : $alunoId),
+            'nomePessoaSelecionada' => $nomePessoaSelecionada,
+            'dataInicio'            => $dataInicio,
+            'dataFim'               => $dataFim,
+            'motivoFiltro'          => $motivoFiltro,
+            'vendas'                => $vendas,
+            'alunos'                => $alunos,
+            'colaboradores'         => $colaboradores,
+            'totalVendas'           => count($vendas),
+            'user'                  => Auth::user()
         ], 'admin');
     }
 
@@ -85,14 +109,14 @@ class EstornoVendasController extends Controller
     public function detalhesAjax(): void
     {
         $id = (int)($_GET['id'] ?? 0);
-        $tipo = trim($_GET['tipo'] ?? 'avulsa');
+        $tipo = trim($_GET['tipo'] ?? 'balcao');
 
         if ($id <= 0) {
             $this->json(['sucesso' => false, 'mensagem' => 'Identificador de venda inválido.'], 400);
             return;
         }
 
-        if ($tipo === 'avulsa') {
+        if ($tipo === 'balcao' || $tipo === 'avulsa' || $tipo === 'sim') {
             $venda = VendaBalcao::buscarPorId($id);
             if (!$venda) {
                 $this->json(['sucesso' => false, 'mensagem' => 'Venda de balcão não localizada.'], 404);
@@ -101,14 +125,15 @@ class EstornoVendasController extends Controller
             $itens = ItemVendaBalcao::listarPorVenda($id);
             $this->json([
                 'sucesso'  => true,
-                'tipo'     => 'avulsa',
+                'dados'    => $venda,
+                'tipo'     => 'balcao',
                 'venda'    => [
                     'id'              => $venda['id'],
                     'identificador'   => "Venda Balcão #{$venda['id']}",
                     'data_hora'       => date('d/m/Y H:i', strtotime($venda['created_at'])),
                     'valor_total'     => (float)$venda['valor_total'],
                     'forma_pagamento' => $venda['forma_pagamento'],
-                    'tipo_venda'      => $venda['tipo_venda'],
+                    'tipo_venda'      => $venda['tipo_venda'] ?? 'avulso_aluno',
                     'status'          => $venda['status'] ?? 'concluida',
                     'pessoa_nome'     => $venda['colaborador_nome'] ?? ($venda['aluno_nome'] ?? 'Consumidor Avulso'),
                     'operador_nome'   => $venda['operador_nome'] ?? 'Operador'
@@ -125,6 +150,7 @@ class EstornoVendasController extends Controller
             $itens = ItemPedido::listarPorPedido($id);
             $this->json([
                 'sucesso'  => true,
+                'dados'    => $pedido,
                 'tipo'     => 'pedido',
                 'venda'    => [
                     'id'              => $pedido['id'],
