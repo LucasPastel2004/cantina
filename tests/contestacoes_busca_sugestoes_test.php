@@ -33,6 +33,36 @@ $assertCustom = function(bool $condicao, string $msg) use (&$passou, &$total) {
     }
 };
 
+$pdo = \Database::getInstance();
+// Garantir Carlos Eduardo Ribeiro (bloqueado_med = 1, saldo = -50.00)
+$carlosResp = $pdo->query("SELECT id FROM responsaveis WHERE cpf = '55566677788' LIMIT 1")->fetch();
+if ($carlosResp) {
+    $carlosId = (int)$carlosResp['id'];
+    $pdo->exec("UPDATE responsaveis SET saldo_atual = -50.00, bloqueado_med = 1 WHERE id = {$carlosId}");
+} else {
+    $pdo->exec("INSERT INTO responsaveis (cpf, nome, whatsapp, email, senha_hash, saldo_atual, bloqueado_med) VALUES ('55566677788', 'Carlos Eduardo Ribeiro', '(62) 98888-7777', 'carlos@test.com', '', -50.00, 1)");
+    $carlosId = (int)$pdo->lastInsertId();
+}
+
+// Garantir Família Alerta (bloqueado_med = 0, saldo = -20.00)
+$famResp = $pdo->query("SELECT id FROM responsaveis WHERE cpf = '88877766655' LIMIT 1")->fetch();
+if ($famResp) {
+    $famId = (int)$famResp['id'];
+    $pdo->exec("UPDATE responsaveis SET nome = 'Família Alerta Silva', saldo_atual = -20.00, bloqueado_med = 0 WHERE id = {$famId}");
+} else {
+    $pdo->exec("INSERT INTO responsaveis (cpf, nome, whatsapp, email, senha_hash, saldo_atual, bloqueado_med) VALUES ('88877766655', 'Família Alerta Silva', '(62) 97777-6666', 'alerta@test.com', '', -20.00, 0)");
+    $famId = (int)$pdo->lastInsertId();
+}
+
+// Garantir Mariana Ribeiro vinculada a Carlos
+$turmaId = (int)($pdo->query("SELECT id FROM turmas WHERE deleted_at IS NULL LIMIT 1")->fetchColumn() ?: 1);
+$alunoMariana = $pdo->query("SELECT id FROM alunos WHERE responsavel_id = {$carlosId} AND nome LIKE '%Mariana%' LIMIT 1")->fetch();
+if (!$alunoMariana) {
+    $pdo->exec("INSERT INTO alunos (responsavel_id, turma_id, nome, matricula, ativo, created_at, updated_at) VALUES ({$carlosId}, {$turmaId}, 'Mariana Ribeiro', 'MAT-MED-10', 1, NOW(), NOW())");
+} else {
+    $pdo->exec("UPDATE alunos SET turma_id = {$turmaId} WHERE id = " . (int)$alunoMariana['id']);
+}
+
 // -----------------------------------------------------------------
 // 1. Validação do Filtro por Status em Responsavel::listarNegativadosMed
 // -----------------------------------------------------------------
@@ -107,11 +137,10 @@ foreach ($resBuscaCarlos['itens'] as $item) {
 $assertCustom($carlosAchado, "Busca por 'carlos' retorna Carlos Eduardo Ribeiro");
 
 // Busca por dependente "Mariana" (garante vínculo prévio se não existir)
-$pdo = \Database::getInstance();
-$alunoMariana = $pdo->query("SELECT id FROM alunos WHERE responsavel_id = 10 AND nome LIKE '%Mariana%' LIMIT 1")->fetch();
+$alunoMariana = $pdo->query("SELECT id FROM alunos WHERE responsavel_id = {$carlosId} AND nome LIKE '%Mariana%' LIMIT 1")->fetch();
 if (!$alunoMariana) {
     $turmaId = (int)($pdo->query("SELECT id FROM turmas LIMIT 1")->fetchColumn() ?: 1);
-    $pdo->exec("INSERT INTO alunos (responsavel_id, turma_id, nome, matricula, created_at, updated_at) VALUES (10, {$turmaId}, 'Mariana Ribeiro', 'MAT-MED-10', NOW(), NOW())");
+    $pdo->exec("INSERT INTO alunos (responsavel_id, turma_id, nome, matricula, ativo, created_at, updated_at) VALUES ({$carlosId}, {$turmaId}, 'Mariana Ribeiro', 'MAT-MED-10', 1, NOW(), NOW())");
 }
 
 $resBuscaMariana = \App\Models\Responsavel::listarNegativadosMed(['busca' => 'Mariana']);

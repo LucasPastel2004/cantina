@@ -1167,3 +1167,33 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Causa: O método `Pedido::criarPedido()` valida rigorosamente a regra RN-06: se a data do pedido pertence a uma semana futura em relação ao parâmetro `$agora`, o agendamento só é permitido se `$agora` for sexta-feira a partir das 18:00 ou posterior. No teste, passou-se `$agora = 2026-11-20 07:00:00` (sexta de manhã antes das 18h) com pedido para a quarta da semana seguinte (`2026-11-25`), acionando a trava de segurança da cantina.
 - Solução aplicada: Ajustado o parâmetro de simulação temporal `$agora` para a segunda-feira da mesma semana do pedido (`2026-11-23 07:00:00`), garantindo que o dia pertença à semana corrente aberta e com horário antes do corte diário.
 - Como evitar no futuro: Em fixtures e testes automatizados de agendamento de pedidos, considerar sempre a janela de abertura da RN-06 (semana aberta ou posterior a sexta-feira 18:00) ao injetar instâncias simuladas de `DateTimeInterface $agora`.
+
+---
+
+## 2026-09-29 - Falso positivo de turno no parsing de turmas da educação infantil contendo a palavra MATERNAL
+
+- Sintoma: Turmas como "MATERNAL / A - VES" foram incorretamente categorizadas como turno "matutino" pelo script inicial de parsing do PDF oficial de matrículas.
+- Causa: A expressão de busca por turno utilizava uma busca ingênua por substring contendo `'MAT'`, a qual casava com a palavra `MATERNAL` (série do aluno), mesmo quando o sufixo da turma indicava claramente turno vespertino (`- VES`).
+- Solução aplicada: Refatorada a expressão regular em `database/parse_matriculas.py` para buscar delimitadores de fronteira de palavra rigorosos no sufixo do nome (`r'-\s*MAT\b'` vs `r'-\s*VES\b'`). Adicionada também regra explícita para turmas especiais como o `Núcleo de Apoio Infantil A - MAT`.
+- Como evitar no futuro: Em rotinas de extração de texto (OCR ou PDF parsing), nunca utilizar buscas de substrings curtas em textos ricos; utilizar expressões regulares delimitadas (`\b`, `$`, ou separadores de hífen) para evitar falsos positivos com nomes de séries escolares.
+
+---
+
+## 2026-09-29 - Falha de integridade ao popular responsáveis reais devido a colunas obrigatórias no schema
+
+- Sintoma: `PDOException: Column 'email' cannot be null` e `Column 'senha_hash' cannot be null` ao rodar a primeira versão do seeder `database/seed_matriculas_reais.php`.
+- Causa: O documento `Matriculas.pdf` fornece apenas Nome e CPF do responsável financeiro (não inclui e-mail nem credenciais de acesso). No entanto, o schema da tabela `responsaveis` (criado na Fase 3) define `email` e `senha_hash` como colunas `NOT NULL`.
+- Solução aplicada: O método `Responsavel::localizarOuCriarPorCpf` gera um e-mail temporário padronizado caso não fornecido (`cpf_numerico@escola.local`) e inicializa `senha_hash = ''` e `termos_aceitos_em = NULL`, permitindo que o responsável utilize normalmente o fluxo de Primeiro Acesso com validação por WhatsApp/SMS quando entrar no Portal da Família.
+- Como evitar no futuro: Ao realizar migrações de dados legados ou planilhas que não contenham todos os campos de uma conta de usuário, preencher valores padrão seguros que preservem o contrato de primeiro acesso da aplicação sem violar restrições `NOT NULL` do banco de dados.
+
+---
+
+## 2026-09-29 - Convivência entre fixtures legadas de testes de regressão e carga real de matrículas escolares
+
+- Sintoma: Falhas em testes anteriores (`calendario_escolar_test.php`, `recarga_dinheiro_post_test.php`, `fase15_test.php`) após o seeder da Fase 18 realizar soft-delete em todos os alunos que não estivessem listados no PDF escolar de 2026.
+- Causa: O seeder inicial tentou fazer soft-delete (`deleted_at = NOW()`) em todos os registros pré-existentes. Porém, diversas suítes de testes anteriores utilizavam alunos e turmas com IDs específicos (ex.: Aluno 10, Turma 1 a 20) como fixtures de integração contínua.
+- Solução aplicada: 
+  1. O seeder oficial `database/seed_matriculas_reais.php` sincroniza e reativa os 232 alunos oficiais da escola e 19 turmas oficiais sem desativar as fixtures necessárias para a bateria global de testes.
+  2. Ajustados testes pontuais (`recarga_dinheiro_post_test.php`, `contestacoes_busca_sugestoes_test.php`, `pdv_modal_test.php`, `tickets_web_test.php`) para obter IDs dinamicamente em vez de depender de identificadores escalares estáticos ou datas fixas passadas.
+  3. Restaurada a configuração padrão de `recarga_minima_pix = 10.00` em `configuracoes_globais`.
+- Como evitar no futuro: Em sistemas legados com histórico de testes automatizados, seeders de produção devem utilizar estratégias de upsert sem realizar exclusão cega de dados de desenvolvimento/teste, e suítes de testes automatizados devem sempre instanciar suas próprias fixtures ou buscar entidades ativas de forma dinâmica.

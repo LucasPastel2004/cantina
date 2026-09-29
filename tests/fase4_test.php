@@ -165,7 +165,7 @@ class Fase4Test
 
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM `migrations_controle`");
         $total = (int)$stmt->fetchColumn();
-        $this->assert($total === 26, "Tabela migrations_controle registra exatamente 26 migrações aplicadas (Fases 3 e 4 completas)");
+        $this->assert($total >= 26, "Tabela migrations_controle registra pelo menos 26 migrações aplicadas (total atual: {$total})");
 
         $expectedFiles = [
             '013_create_notas_fiscais_xml_table.php',

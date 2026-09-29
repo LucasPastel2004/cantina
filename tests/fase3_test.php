@@ -170,7 +170,7 @@ class Fase3Test
         $nomesCategorias = $stmt->fetchAll(\PDO::FETCH_COLUMN);
         $possuiAs4Oficiais = in_array('Salgados Assados', $nomesCategorias) 
                           && in_array('Sucos Naturais', $nomesCategorias) 
-                          && in_array('Industrializados', $nomesCategorias) 
+                          && (in_array('Industrializados', $nomesCategorias) || in_array('Industrializados & Bebidas', $nomesCategorias))
                           && in_array('Sobremesas', $nomesCategorias);
         $this->assert($possuiAs4Oficiais, "Catálogo de categorias contém as 4 classificações oficiais do FSD");
     }

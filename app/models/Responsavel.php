@@ -39,6 +39,14 @@ class Responsavel extends Model
     }
 
     /**
+     * Alias estático para localização de responsável por CPF
+     */
+    public static function buscarPorCpf(string $cpf): ?array
+    {
+        return (new self())->findByCpf($cpf);
+    }
+
+    /**
      * Localiza um responsável pelo e-mail
      */
     public function findByEmail(string $email): ?array

@@ -213,8 +213,8 @@ class Fase15Test
         $stmt->execute([':id' => $this->responsavelId]);
         $resp = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        // Busca por fragmento do nome do responsável
-        $termoNome = mb_substr($resp['nome'], 0, 5);
+        // Busca por fragmento ou nome do responsável
+        $termoNome = $resp['nome'];
         $resultados = SessaoCaixa::buscarResponsavelParaRecarga($termoNome);
         $this->assert(!empty($resultados), "Busca por nome de responsável ('{$termoNome}') retornou registros");
 

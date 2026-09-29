@@ -1,0 +1,5708 @@
+[
+  {
+    "index": 1,
+    "responsavel_financeiro": {
+      "nome": "ACACIO ROSA NEVES",
+      "cpf_formatado": "891.008.321-20",
+      "cpf_limpo": "89100832120",
+      "endereco": "RUA 49, 79 VERA CRUZ ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001713",
+        "nome": "LAURA MOREIRA NEVES",
+        "turma_original": "8º ANO / A - MAT",
+        "serie": "8º ANO",
+        "turma_letra": "A",
+        "nome_turma": "8º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 2,
+    "responsavel_financeiro": {
+      "nome": "ADRIANE DA SILVA MARTINS",
+      "cpf_formatado": "997.512.161-68",
+      "cpf_limpo": "99751216168",
+      "endereco": "50 B, 159 VILA NOVA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002092",
+        "nome": "JÚLIA MARTINS GARCIA",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 3,
+    "responsavel_financeiro": {
+      "nome": "AECIO BATISTA MOTA",
+      "cpf_formatado": "897.124.471-20",
+      "cpf_limpo": "89712447120",
+      "endereco": "AVENIDA FARNESE RABELO, QD 01 LT 04 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002421",
+        "nome": "JOÃO LUCAS GOMES MOTA",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 4,
+    "responsavel_financeiro": {
+      "nome": "AELSON ROMÃO DE FARIAS FILHO",
+      "cpf_formatado": "085.018.417-73",
+      "cpf_limpo": "08501841773",
+      "endereco": "TG 02, Q15  L 10 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": "(62) 99987-0686"
+    },
+    "responsavel_pedagogico": {
+      "nome": "DANILLA DIAS DA CUNHA",
+      "cpf_formatado": "007.896.731-77",
+      "cpf_limpo": "00789673177",
+      "endereco": "TG 02, Q15  L 10, TEREZEINHA GLÓRIA, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99987-0686"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002236",
+        "nome": "ALICE DIAS FARIAS",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 5,
+    "responsavel_financeiro": {
+      "nome": "ALESSANDRA ALVES PACIFICO CAMPOS",
+      "cpf_formatado": "993.765.201-49",
+      "cpf_limpo": "99376520149",
+      "endereco": "45, 620 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98416-0616",
+        "Celular: (62)98578-0501",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98416-0616"
+    },
+    "responsavel_pedagogico": {
+      "nome": "ALESSANDRA ALVES PACIFICO CAMPOS",
+      "cpf_formatado": "993.765.201-49",
+      "cpf_limpo": "99376520149",
+      "endereco": "RUA 45, 620, CENTRO, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98416-0616",
+        "Celular: (62)98578-0501"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002326",
+        "nome": "GABRIEL HENRIQUE PACIFICO CAMPOS",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 6,
+    "responsavel_financeiro": {
+      "nome": "ALESSANDRO BARBOSA DE MORAES",
+      "cpf_formatado": "919.836.141-49",
+      "cpf_limpo": "91983614149",
+      "endereco": "FAZENDA PEDREIRA ZONA RURAL ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002676",
+        "nome": "VITORIA BUENO BARBOSA",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 7,
+    "responsavel_financeiro": {
+      "nome": "ALIANNY APARECIDA PONTES DE ALENCASTRO",
+      "cpf_formatado": "017.994.621-88",
+      "cpf_limpo": "01799462188",
+      "endereco": "Rua Rio Uru Qd 19 Lt 26 Setor Milton Camilo ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (64)99254-3960",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(64) 99254-3960"
+    },
+    "responsavel_pedagogico": {
+      "nome": "BRUNO LEONARDO SOUZA",
+      "cpf_formatado": "029.957.041-06",
+      "cpf_limpo": "02995704106",
+      "endereco": "Rua Rio Uru Qd 19 Lt 26, Milton Camilo, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (64)99227-9699"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002783",
+        "nome": "BRUNO GOUVEIA ALENCASTRO SOUZA",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 8,
+    "responsavel_financeiro": {
+      "nome": "ALICE DUARTE SOARES",
+      "cpf_formatado": "754.862.451-49",
+      "cpf_limpo": "75486245149",
+      "endereco": "Rua 48, quadra 05, lote 12, Setor Oeste. s/n, Setor Oeste, ITAPURANGA - GO CEP: 07680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "ALICE DUARTE SOARES",
+      "cpf_formatado": "754.862.451-49",
+      "cpf_limpo": "75486245149",
+      "endereco": "Rua 48, quadra 05, lote 12, Setor Oeste. s/n, Setor Oeste, ITAPURANGA - GO CEP: 07680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002800",
+        "nome": "FRANCISCO AUGUSTO DUARTE DA ROCHA",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 9,
+    "responsavel_financeiro": {
+      "nome": "ALINE FRANCIELE SILVA SANTOS",
+      "cpf_formatado": "028.258.931-70",
+      "cpf_limpo": "02825893170",
+      "endereco": "RUA TG 02, 305, QD 14 LT. 08 TEREZINHA GLÓRIA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98523-0980",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98523-0980"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002007",
+        "nome": "CLARICE SANTOS PESSOA",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 10,
+    "responsavel_financeiro": {
+      "nome": "ALINE JORDANE FARIA SILVA",
+      "cpf_formatado": "042.815.211-27",
+      "cpf_limpo": "04281521127",
+      "endereco": "AVENIDA BOAVENTURA, Q 12 L 9 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "ALINE JORDANE FARIA SILVA",
+      "cpf_formatado": "042.815.211-27",
+      "cpf_limpo": "04281521127",
+      "endereco": "AVENIDA BOAVENTURA, Q 12 L 9, CONDE DOS ARCOS, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002403",
+        "nome": "ITALO FARIA DE AZEVEDO",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 11,
+    "responsavel_financeiro": {
+      "nome": "ALYSSON ANDRADE DA SILVA",
+      "cpf_formatado": "778.172.811-49",
+      "cpf_limpo": "77817281149",
+      "endereco": "RUA 50A    QD 01   LT 10 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98145-4663",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98145-4663"
+    },
+    "responsavel_pedagogico": {
+      "nome": "ROSEMAR DO NASCIMENTO BARISTA",
+      "cpf_formatado": "618.167.871-91",
+      "cpf_limpo": "61816787191",
+      "endereco": "RUA 50A    QD 01   LT 10, CENTRO, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002732",
+        "nome": "MARIANE RAFAELA NASCIMENTO ANDRADE",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 12,
+    "responsavel_financeiro": {
+      "nome": "AMANDA REZENDE SILVA",
+      "cpf_formatado": "031.431.841-08",
+      "cpf_limpo": "03143184108",
+      "endereco": "41B QD 31 LT 2, 00 VILA BARRINHA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)3312-1427",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 3312-1427"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002396",
+        "nome": "ISIS IRAIDES REZENDE NASCIMENTO",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002801",
+        "nome": "ÍCARO MIGUEL REZENDE NASCIMENTO",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 13,
+    "responsavel_financeiro": {
+      "nome": "ANA RAQUEL DA MATA",
+      "cpf_formatado": "019.484.111-13",
+      "cpf_limpo": "01948411113",
+      "endereco": "RUA RIO CORUMBÁ, QD 09 LT 02 MILTON   CAMILO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002594",
+        "nome": "GABRIELA DA MATA CAMARGO",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 14,
+    "responsavel_financeiro": {
+      "nome": "ANALTA DOS SANTOS CARVALHO",
+      "cpf_formatado": "791.867.771-49",
+      "cpf_limpo": "79186777149",
+      "endereco": "Rua 3 qd 22 Lt 9 Vila barrinha ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98651-2362",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98651-2362"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002763",
+        "nome": "MATHEUS HENRIQUE CARVALHO FERRAZ",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 15,
+    "responsavel_financeiro": {
+      "nome": "ANDRE LUIS MIRANDA",
+      "cpf_formatado": "007.759.461-41",
+      "cpf_limpo": "00775946141",
+      "endereco": "TG 04, Q 04 LT 05 RESIDENCIAL TEREZINHA GLORIA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002452",
+        "nome": "ANDRÉ LUCAS MOREIRA MIRANDA",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 16,
+    "responsavel_financeiro": {
+      "nome": "ANDREA DE ALMEIDA PINTO CARDOSO",
+      "cpf_formatado": "019.892.991-99",
+      "cpf_limpo": "01989299199",
+      "endereco": "57 N° 280 JOAQUIM DA SILVA MOREIRA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99859-1352",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99859-1352"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002204",
+        "nome": "LARA JÚLIA DE ALMEIDA CARDOSO",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 17,
+    "responsavel_financeiro": {
+      "nome": "APARECIDA RODRIGUES CASTELO",
+      "cpf_formatado": "020.291.351-19",
+      "cpf_limpo": "02029135119",
+      "endereco": "FAZENDA RENACER CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002407",
+        "nome": "ALICE DE MOURA RODRIGUES",
+        "turma_original": "9º ANO / A - MAT",
+        "serie": "9º ANO",
+        "turma_letra": "A",
+        "nome_turma": "9º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 18,
+    "responsavel_financeiro": {
+      "nome": "BIANCA GARCIA",
+      "cpf_formatado": "029.174.131-23",
+      "cpf_limpo": "02917413123",
+      "endereco": "FAZENDA PALMEIRAL ZONA RURAL ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99131-9450",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99131-9450"
+    },
+    "responsavel_pedagogico": {
+      "nome": "BIANCA GARCIA",
+      "cpf_formatado": "029.174.131-23",
+      "cpf_limpo": "02917413123",
+      "endereco": "FAZENDA PALMEIRAL, ZONA RURAL, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99131-9450"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002606",
+        "nome": "MANUELLA GARCIA CARDOSO",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      },
+      {
+        "matricula": "00002605",
+        "nome": "PEDRO LUCAS GARCIA CARDOSO",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 19,
+    "responsavel_financeiro": {
+      "nome": "BIANCA SILVA DE CASTRO",
+      "cpf_formatado": "037.440.791-63",
+      "cpf_limpo": "03744079163",
+      "endereco": "Rua TG04    QD11   LT08, Terezinha Gloria, ITAPURANGA - GO CEP: 76687-310",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002823",
+        "nome": "HEITOR REIS SOARES DE CASTRO",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 20,
+    "responsavel_financeiro": {
+      "nome": "BRASILINA VIEIRA DE MORAIS",
+      "cpf_formatado": "004.723.591-85",
+      "cpf_limpo": "00472359185",
+      "endereco": "RUA 39, 340, QD 1 A LT 152 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002572",
+        "nome": "ELIAS VITÓRIO MORAIS TEIXEIRA",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 21,
+    "responsavel_financeiro": {
+      "nome": "BRUNA MOREIRA PICCIRILLI",
+      "cpf_formatado": "017.598.021-74",
+      "cpf_limpo": "01759802174",
+      "endereco": "RUA 52, 316 VILA RENATA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002685",
+        "nome": "MARIA EDUARDA DE CASTRO PICCIRILLI",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 22,
+    "responsavel_financeiro": {
+      "nome": "BRUNO JACOB DE PINA CUNHA",
+      "cpf_formatado": "017.377.791-02",
+      "cpf_limpo": "01737779102",
+      "endereco": "RUA JOSÉ ANTONIO DE LIMA, QD 01 LT 14 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002539",
+        "nome": "LIZ JACOB PEREIRA CUNHA",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002320",
+        "nome": "LAURA JACOB PEREIRA CUNHA",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 23,
+    "responsavel_financeiro": {
+      "nome": "CARLOS ALBERTO MACHADO DA SILVA",
+      "cpf_formatado": "499.125.181-87",
+      "cpf_limpo": "49912518187",
+      "endereco": "Rua  02 esquina com 01  qd04 lt01, Lara parque, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002798",
+        "nome": "CARLOS ALBERTO MACHADO DA SILVA FILHO",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 24,
+    "responsavel_financeiro": {
+      "nome": "CARLOS ATILA PIMENTA",
+      "cpf_formatado": "016.093.111-83",
+      "cpf_limpo": "01609311183",
+      "endereco": "Rua Antonio Braga  Qd 06 Lt 05, Kenia Park 2, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98491-1893",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98491-1893"
+    },
+    "responsavel_pedagogico": {
+      "nome": "LORRAYNE BIANCHI BRAGA VIEIRA",
+      "cpf_formatado": "036.056.671-55",
+      "cpf_limpo": "03605667155",
+      "endereco": "Rua Antonio Braga  Qd 06 Lt 05, Kenia Park 2, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98605-5058"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002769",
+        "nome": "GUILHERME BIANCHI PIMENTA",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002816",
+        "nome": "FELIPE BIANCHI PIMENTA",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 25,
+    "responsavel_financeiro": {
+      "nome": "CARLOS ROBERTO DE MIRANDA",
+      "cpf_formatado": "419.015.091-68",
+      "cpf_limpo": "41901509168",
+      "endereco": "RUA 34, QD 13 LT 35 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98596-5888",
+        "Celular: (62)98416-0488",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98596-5888"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001899",
+        "nome": "EDUARDA OLIVEIRA MIRANDA",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 26,
+    "responsavel_financeiro": {
+      "nome": "CEIÇA DA SILVA RODRIGUES MORAIS",
+      "cpf_formatado": "001.425.861-70",
+      "cpf_limpo": "00142586170",
+      "endereco": "RIO VERMELLHO QD06  LT 13 RIO VERMELLHO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98556-4481",
+        "Celular: (62)98556-3670",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98556-4481"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001314",
+        "nome": "FELIPE AUGUSTO RODRIGUES MORAIS",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      },
+      {
+        "matricula": "00001913",
+        "nome": "JOÃO HEITOR RODRIGUES MORAIS",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      },
+      {
+        "matricula": "00002620",
+        "nome": "LUIZ MIGUEL RODRIGUES MORAIS",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 27,
+    "responsavel_financeiro": {
+      "nome": "CHARLES ADRIANO DE SIQUEIRA CAMPOS",
+      "cpf_formatado": "772.409.361-04",
+      "cpf_limpo": "77240936104",
+      "endereco": "RUA A, QD34 LT14 PARQUE ALVORADA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002743",
+        "nome": "ERIC VIEIRA DE SIQUEIRA CAMPOS",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      },
+      {
+        "matricula": "00002658",
+        "nome": "JÚLIA CARDOSO DE SIQUEIRA",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 28,
+    "responsavel_financeiro": {
+      "nome": "CIDIMAR DOS SANTOS FERREIRA LEMES",
+      "cpf_formatado": "703.886.601-04",
+      "cpf_limpo": "70388660104",
+      "endereco": "RUA  DOS GIRASSOIS, QD 04 L 2 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)3312-1719",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 3312-1719"
+    },
+    "responsavel_pedagogico": {
+      "nome": "FRANCYELLE LEMES FARIA FERREIRA",
+      "cpf_formatado": "020.930.611-47",
+      "cpf_limpo": "02093061147",
+      "endereco": "RUA DOS GIRASSOIS, QD 04 LT 02, RESIDENCIAL FLAMBOAYANT, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002569",
+        "nome": "DAVI AUGUSTO LEMES FERREIRA",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002681",
+        "nome": "MIGUEL LEMES FERREIRA",
+        "turma_original": "JARDIM II / B - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM II B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 29,
+    "responsavel_financeiro": {
+      "nome": "CINTIA CAMPOS MORREIRA",
+      "cpf_formatado": "031.352.211-13",
+      "cpf_limpo": "03135221113",
+      "endereco": "RIO CANASTRA, LT 03  QD. 19 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002459",
+        "nome": "HELENA DE CAMPOS FERREIRA",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 30,
+    "responsavel_financeiro": {
+      "nome": "CIRIO GERALDO DE BORBA MOREIRA",
+      "cpf_formatado": "028.001.551-83",
+      "cpf_limpo": "02800155183",
+      "endereco": "Rua 42 Qd 3-A Lt 237 nr 1001, Centro, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98444-8361",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98444-8361"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002795",
+        "nome": "HENRIQUE BRAZ BORBA MOREIRA",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 31,
+    "responsavel_financeiro": {
+      "nome": "CLAUDIO  DOS SANTOS FERREIRA",
+      "cpf_formatado": "005.247.961-73",
+      "cpf_limpo": "00524796173",
+      "endereco": "Rua 01, Qd 2 ,   Lt 20,   n°191, Vera Cruz , ITAPURANGA - GO CEP: 76685-058",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "MICHELLE MENDES MOREIRA GUERRA",
+      "cpf_formatado": "025.906.711-30",
+      "cpf_limpo": "02590671130",
+      "endereco": "Rua 01, Qd 2 ,   Lt 20,   n°191, Vera Cruz , ITAPURANGA - GO CEP: 76685-058",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002827",
+        "nome": "LETICIA MENDES DOS SANTOS",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 32,
+    "responsavel_financeiro": {
+      "nome": "CLECIA COSTA DA SILVA",
+      "cpf_formatado": "813.810.852-53",
+      "cpf_limpo": "81381085253",
+      "endereco": "RUA 67, QD 10 LT 03 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002687",
+        "nome": "ISAAC COSTA OLIVEIRA",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 33,
+    "responsavel_financeiro": {
+      "nome": "CÉLIA FRANCISCA LEITE",
+      "cpf_formatado": "005.319.031-92",
+      "cpf_limpo": "00531903192",
+      "endereco": "Rua 50c QD 2 LT 43, Novo Horizonte, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002809",
+        "nome": "ENZO GABRIEL OLIVEIRA LEITE",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 34,
+    "responsavel_financeiro": {
+      "nome": "CÍNTIA CAMPOS MOREIRA",
+      "cpf_formatado": "031.352.211-13",
+      "cpf_limpo": "03135221113",
+      "endereco": "RIO CANASTRA, QD 03 LT 19 MILTON   CAMILO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002034",
+        "nome": "HEITOR DE CAMPOS FERREIRA",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 35,
+    "responsavel_financeiro": {
+      "nome": "DANIEL DE CASTRO BRUM",
+      "cpf_formatado": "021.536.981-54",
+      "cpf_limpo": "02153698154",
+      "endereco": "RUA MARIA ALVES, QD 12 LT 15 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002472",
+        "nome": "JÚLIA CUNHA DE CASTRO",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 36,
+    "responsavel_financeiro": {
+      "nome": "DANIEL LUCAS DE OLIVEIRA",
+      "cpf_formatado": "035.467.881-76",
+      "cpf_limpo": "03546788176",
+      "endereco": "Rua RG02    Qd13    Lt10 Residencial Teresinha Gloria ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "GABRIELA CRISTINA CHAVES CORRÊA",
+      "cpf_formatado": "608.245.763-30",
+      "cpf_limpo": "60824576330",
+      "endereco": "Rua TG2  Qd13   Lt10, Teresinha Gloria , ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002824",
+        "nome": "MARIA JÚLIA CORRÊA DE OLIVEIRA",
+        "turma_original": "JARDIM II / B - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM II B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 37,
+    "responsavel_financeiro": {
+      "nome": "DANIELE GOMES FERREIRA",
+      "cpf_formatado": "038.686.341-50",
+      "cpf_limpo": "03868634150",
+      "endereco": "RUA 54, 420 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002489",
+        "nome": "ELLOAH GOMES VIANA",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 38,
+    "responsavel_financeiro": {
+      "nome": "DANIELE GOMES FERREIRA",
+      "cpf_formatado": "038.686.341-50",
+      "cpf_limpo": "03868634150",
+      "endereco": "RUA 54, 420 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002490",
+        "nome": "HEITOR GOMES VIANA",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 39,
+    "responsavel_financeiro": {
+      "nome": "DANILLO DE SOUZA MACHADO",
+      "cpf_formatado": "028.418.241-95",
+      "cpf_limpo": "02841824195",
+      "endereco": "Rua 35 qd21  lt466, São Sebastião , ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "LETÍCIA DE SOUZA ROSA",
+      "cpf_formatado": "035.616.881-60",
+      "cpf_limpo": "03561688160",
+      "endereco": "Rua 35 qd21  lt466, São Sebastião , ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002812",
+        "nome": "RAVIH DE SOUZA MACHADO ROSA",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 40,
+    "responsavel_financeiro": {
+      "nome": "DANILLO FERREIRA DOS SANTOS",
+      "cpf_formatado": "002.886.701-75",
+      "cpf_limpo": "00288670175",
+      "endereco": "05, QD.19 LT.12 PARQUE ALVORADA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99657-9200",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99657-9200"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001386",
+        "nome": "EVELYN ORDONES FERREIRA",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      },
+      {
+        "matricula": "00002779",
+        "nome": "ESTHER ORDONES FERREIRA",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 41,
+    "responsavel_financeiro": {
+      "nome": "DANILO DOMINGOS COELHO DA ROCHA",
+      "cpf_formatado": "019.786.631-02",
+      "cpf_limpo": "01978663102",
+      "endereco": "RUA 33   QD 41   LT 642, 122 SÃO SEBASTIÃO DO XIXA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002654",
+        "nome": "ELOÁ CAMPOS ROCHA",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 42,
+    "responsavel_financeiro": {
+      "nome": "DANUBIA DA SILVA AMORIM",
+      "cpf_formatado": "007.763.181-10",
+      "cpf_limpo": "00776318110",
+      "endereco": "V 08, 08  Q 09 LT 11 VEREDAS ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002165",
+        "nome": "MATHEUS HENRIQUE RIBEIRO AMORIM",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 43,
+    "responsavel_financeiro": {
+      "nome": "DAYANE KELLY DOS SANTOS GURGEL",
+      "cpf_formatado": "034.190.381-78",
+      "cpf_limpo": "03419038178",
+      "endereco": "Rua 51 nº 403 C/P Sifuentes Setor central ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98532-9873",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98532-9873"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002738",
+        "nome": "MARIA LUÍSA GURGEL SANTOS",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 44,
+    "responsavel_financeiro": {
+      "nome": "DENIS DENON DA SILVA",
+      "cpf_formatado": "001.288.341-70",
+      "cpf_limpo": "00128834170",
+      "endereco": "RUA DAS ORQUÍDIAS, QD 04 LT 06 RESIDENCIAL FLAMBOAYANT ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002700",
+        "nome": "NAYSA FERREIRA SILVA",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002645",
+        "nome": "YANNE FERREIRA SILVA",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002699",
+        "nome": "MAYLA FERREIRA SILVA",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 45,
+    "responsavel_financeiro": {
+      "nome": "DENISE CARRION DE SOUZA MENDANHA",
+      "cpf_formatado": "863.613.501-00",
+      "cpf_limpo": "86361350100",
+      "endereco": "SEBASTIÃO RODRIGUES COELHO, QD. 47 LT 01 E CENTRO GUARAITA CEP: 76690-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002372",
+        "nome": "SASKIA CARRION MENDANHA",
+        "turma_original": "8º ANO / A - MAT",
+        "serie": "8º ANO",
+        "turma_letra": "A",
+        "nome_turma": "8º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 46,
+    "responsavel_financeiro": {
+      "nome": "DENISE MARINHO OLIVEIRA",
+      "cpf_formatado": "036.374.471-18",
+      "cpf_limpo": "03637447118",
+      "endereco": "RUA EURICO PICKARDT, 696 CENTRO GUARAITA CEP: 76690-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002679",
+        "nome": "JOÃO MIGUEL MARINHO CRUZ",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 47,
+    "responsavel_financeiro": {
+      "nome": "DHAYSLAINY NOGUEIRA DE SOUZA",
+      "cpf_formatado": "016.745.941-43",
+      "cpf_limpo": "01674594143",
+      "endereco": "RUA 02, QD F LT 09 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002719",
+        "nome": "ALÍCIA NOGUEIRA CORRÊA",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 48,
+    "responsavel_financeiro": {
+      "nome": "DIVINO CARLOS CARDOSO",
+      "cpf_formatado": "380.351.541-68",
+      "cpf_limpo": "38035154168",
+      "endereco": "57 N° 280 JOAQUIM DA SILVA MOREIRA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (65)99603-8788",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(65) 99603-8788"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001860",
+        "nome": "BRUNO GABRIEL DE ALMEIDA CARDOSO",
+        "turma_original": "8º ANO / A - MAT",
+        "serie": "8º ANO",
+        "turma_letra": "A",
+        "nome_turma": "8º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 49,
+    "responsavel_financeiro": {
+      "nome": "DIVINO INÁCIO DA SILVA JÚNIOR",
+      "cpf_formatado": "017.964.081-07",
+      "cpf_limpo": "01796408107",
+      "endereco": "CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002664",
+        "nome": "OLIVER INÁCIO CORREIA",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 50,
+    "responsavel_financeiro": {
+      "nome": "EDER DE MENEZES",
+      "cpf_formatado": "951.093.401-10",
+      "cpf_limpo": "95109340110",
+      "endereco": "AV. GOIÁS, QD. 03 LT. 129 SAO SEBASTIÃO XIXA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98533-8660",
+        "Celular: (62)98535-6638",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98533-8660"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002555",
+        "nome": "LIZ SOARES MENEZES",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 51,
+    "responsavel_financeiro": {
+      "nome": "EDMAR ROSA DE OLIVEIRA",
+      "cpf_formatado": "015.253.571-31",
+      "cpf_limpo": "01525357131",
+      "endereco": "Rua 47 QD 24 LT 24, Centro, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98345-8634",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98345-8634"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002791",
+        "nome": "THEO ROSA DE OLIVEIRA LEMES",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 52,
+    "responsavel_financeiro": {
+      "nome": "EDUARDO MENDANHA DA CUNHA",
+      "cpf_formatado": "702.183.071-87",
+      "cpf_limpo": "70218307187",
+      "endereco": "RUA 50A, 562, SALA 2 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99964-1768",
+        "Celular: (62)3312-1487",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99964-1768"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002018",
+        "nome": "MARIA EDUARDA SOARES DA CUNHA",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 53,
+    "responsavel_financeiro": {
+      "nome": "ELISANGELA ALVES RODRIGUES",
+      "cpf_formatado": "848.734.261-20",
+      "cpf_limpo": "84873426120",
+      "endereco": "Rua 57 Parque Alvorada ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99665-7540",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99665-7540"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002781",
+        "nome": "GABRIEL RODRIGUES COSTA",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 54,
+    "responsavel_financeiro": {
+      "nome": "ELYABE IZIDORO DIAS GARCIA",
+      "cpf_formatado": "042.522.771-59",
+      "cpf_limpo": "04252277159",
+      "endereco": "Rua 54 Q 14 L 06A Vila Nova ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "RAQUEL RODRIGUES DA SILVA",
+      "cpf_formatado": "703.167.431-00",
+      "cpf_limpo": "70316743100",
+      "endereco": "Rua 54 Q 14 L 06 A, Vila Nova, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002796",
+        "nome": "GUSTAVO RODRIGUES DIAS GARCIA",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 55,
+    "responsavel_financeiro": {
+      "nome": "EZEQUIEL CARDOSO DO NASCIMENTO",
+      "cpf_formatado": "039.639.594-52",
+      "cpf_limpo": "03963959452",
+      "endereco": "Rua 54  N°419 C/10 , Setor Central, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002830",
+        "nome": "ANA VALENTINA DA SILVA CARDOSO",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 56,
+    "responsavel_financeiro": {
+      "nome": "FABIANE BATISTA RODRIGUES",
+      "cpf_formatado": "029.879.771-23",
+      "cpf_limpo": "02987977123",
+      "endereco": "AVENIDA RIO PARANAIBA, QD 4 LT 19 MILTON CAMILO DE FARIA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "FABIANE BATISTA RODRIGUES",
+      "cpf_formatado": "029.879.771-23",
+      "cpf_limpo": "02987977123",
+      "endereco": "AVENIDA RIO PARANAIBA, QD 4 LT 19, MILTON CAMILO DE FARIA, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002731",
+        "nome": "EMANUEL RODRIGUES DE ASSIS",
+        "turma_original": "JARDIM II / B - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM II B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 57,
+    "responsavel_financeiro": {
+      "nome": "FABIO DE SOUSA VIEIRA",
+      "cpf_formatado": "007.759.141-00",
+      "cpf_limpo": "00775914100",
+      "endereco": "RUA 40, QD 14B LT 366 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99823-4893",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99823-4893"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002559",
+        "nome": "NICOLAS VIEIRA ROCHA",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 58,
+    "responsavel_financeiro": {
+      "nome": "FABIO GONÇALVES FERREIRA",
+      "cpf_formatado": "934.409.361-04",
+      "cpf_limpo": "93440936104",
+      "endereco": "RUA 04, 72, QD 05    LT 19 VERA CRUZ ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002659",
+        "nome": "MARIA ANTÔNIA CAMARGO GONÇALVES",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 59,
+    "responsavel_financeiro": {
+      "nome": "FAGNER VIEIRA MARQUES",
+      "cpf_formatado": "036.800.571-21",
+      "cpf_limpo": "03680057121",
+      "endereco": "RUA ALADIR BRAZ DA CRUZ, QD 01 LT 18 JOÃO NUNES PERDIGÃO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002574",
+        "nome": "MIGUEL FERREIRA MARQUES",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 60,
+    "responsavel_financeiro": {
+      "nome": "FAUSTO PINTO",
+      "cpf_formatado": "024.816.041-99",
+      "cpf_limpo": "02481604199",
+      "endereco": "rua 48, setor novo horizonte , ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98101-9670",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98101-9670"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002749",
+        "nome": "MANUELA MACEDO MENEZES",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 61,
+    "responsavel_financeiro": {
+      "nome": "FAUSTO TÚLIO SILVA ABREU",
+      "cpf_formatado": "995.502.611-15",
+      "cpf_limpo": "99550261115",
+      "endereco": "52 A, 430, QD 02 LT 09 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002087",
+        "nome": "LUISA CHAVES ABREU",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      },
+      {
+        "matricula": "00002545",
+        "nome": "TÚLIO CHAVES ABREU",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 62,
+    "responsavel_financeiro": {
+      "nome": "FELIPE ALVES TAVARES",
+      "cpf_formatado": "012.240.841-10",
+      "cpf_limpo": "01224084110",
+      "endereco": "RUA 49 N 1136 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99361-3763",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99361-3763"
+    },
+    "responsavel_pedagogico": {
+      "nome": "BRUNA NOGUEIRA ALVES",
+      "cpf_formatado": "042.874.821-07",
+      "cpf_limpo": "04287482107",
+      "endereco": "rua 49 n 1136, centro, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99236-7173"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002755",
+        "nome": "CECÍLIA ALVES TAVARES",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002752",
+        "nome": "MANOEL FRANCISCO ALVES TAVARES",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 63,
+    "responsavel_financeiro": {
+      "nome": "FELIPE TOSTES DE PAULA",
+      "cpf_formatado": "000.163.271-01",
+      "cpf_limpo": "00016327101",
+      "endereco": "RUA 44, 712 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99696-4594",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99696-4594"
+    },
+    "responsavel_pedagogico": {
+      "nome": "GABRIELA MOTA GONÇALVES",
+      "cpf_formatado": "013.236.621-54",
+      "cpf_limpo": "01323662154",
+      "endereco": "RUA 44, 712, CENTRO, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98228-2930",
+        "Celular: (62)99696-4594"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002536",
+        "nome": "NINA GONÇALVES TOSTES",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 64,
+    "responsavel_financeiro": {
+      "nome": "FLAVIA DE SOUSA CARVALHO SANTANA",
+      "cpf_formatado": "900.573.501-59",
+      "cpf_limpo": "90057350159",
+      "endereco": "AV. RIO PARANAIBA  Q 14  L 04, 146 MILTON   CAMILO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99926-6652",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99926-6652"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002160",
+        "nome": "HELOÍSA DE SOUSA CARVALHO SANTANA",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 65,
+    "responsavel_financeiro": {
+      "nome": "FRANK HENRIQUE MENEZES DE SIQUEIRA",
+      "cpf_formatado": "884.351.992-15",
+      "cpf_limpo": "88435199215",
+      "endereco": "Rua 05 Q11 L1 N° 141, Comercial, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99858-8989",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99858-8989"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002815",
+        "nome": "NICOLAS DOS SANTOS SIQUEIRA",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 66,
+    "responsavel_financeiro": {
+      "nome": "GABRIELA BATISTA MARQUES FERNANDES",
+      "cpf_formatado": "032.839.651-61",
+      "cpf_limpo": "03283965161",
+      "endereco": "Rua do Matadouro Qd 01 Lt 23, Residencial Arruda , ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (61)99270-3355",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(61) 99270-3355"
+    },
+    "responsavel_pedagogico": {
+      "nome": "GABRIELA BATISTA MARQUES FERNANDES",
+      "cpf_formatado": "032.839.651-61",
+      "cpf_limpo": "03283965161",
+      "endereco": "Rua do Matadouro Qd 01 Lt 23, Residencial Arruda , ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (61)99270-3355"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002774",
+        "nome": "JOSÉ FERNANDES MARQUES",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002775",
+        "nome": "IMMANUEL FERNANDES MARQUES",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 67,
+    "responsavel_financeiro": {
+      "nome": "GEISA FERREIRA COSTA MAKISHI",
+      "cpf_formatado": "994.909.601-44",
+      "cpf_limpo": "99490960144",
+      "endereco": "RUA JOSÉ ALVESD DE SOUZA, QD 04 LT 08 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99605-5419",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99605-5419"
+    },
+    "responsavel_pedagogico": {
+      "nome": "GEISA FERREIRA COSTA MAKISHI",
+      "cpf_formatado": "994.909.601-44",
+      "cpf_limpo": "99490960144",
+      "endereco": "RUA JOSÉ ALVES DE SOUZA, QD 04 LT 08, RESIDENCIAL PORTO SEGURO, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99605-5419"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002528",
+        "nome": "HELENA DE AQUINO FERREIRA MAKISHI",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 68,
+    "responsavel_financeiro": {
+      "nome": "GEISIANE ROCHA ARAÚJO FERREIRA",
+      "cpf_formatado": "020.450.351-58",
+      "cpf_limpo": "02045035158",
+      "endereco": "rua rio apore com rio meia ponte, quadra 5, lote 6 milton faria ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98463-7320",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98463-7320"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002758",
+        "nome": "SOFIA ROCHA SANTOS",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 69,
+    "responsavel_financeiro": {
+      "nome": "GEISLA CRISTINA FERREIRA LIMA",
+      "cpf_formatado": "055.350.371-50",
+      "cpf_limpo": "05535037150",
+      "endereco": "Joaquim da Silva Moreira, Rua 44  com a 55  n 975, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "GEISLA CRISTINA FERREIRA LIMA",
+      "cpf_formatado": "055.350.371-50",
+      "cpf_limpo": "05535037150",
+      "endereco": "Joaquim da Silva Moreira, Rua 44  com a 55  n 975, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002804",
+        "nome": "JOÃO PEDRO FERREIRA DE OLIVEIRA",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 70,
+    "responsavel_financeiro": {
+      "nome": "GENESIO JOSE DOS SANTOS",
+      "cpf_formatado": "457.366.341-04",
+      "cpf_limpo": "45736634104",
+      "endereco": "Rua 52 qd 2 lt 6 Parque Alvorada ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99633-8879",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99633-8879"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002440",
+        "nome": "TAMARA SILVA DOS SANTOS",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 71,
+    "responsavel_financeiro": {
+      "nome": "GERALDO MAURÍCIO FILHO",
+      "cpf_formatado": "854.387.901-91",
+      "cpf_limpo": "85438790191",
+      "endereco": "RUA RIO PIRACANJUBA, QD 11 LT 06 MILTON   CAMILO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98156-7515",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98156-7515"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001439",
+        "nome": "ARTHUR FERNANDES GONDIM",
+        "turma_original": "9º ANO / A - MAT",
+        "serie": "9º ANO",
+        "turma_letra": "A",
+        "nome_turma": "9º ANO A",
+        "turno": "matutino"
+      },
+      {
+        "matricula": "00001839",
+        "nome": "VITORIA FERNANDES GONDIM",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 72,
+    "responsavel_financeiro": {
+      "nome": "GINA COELHO DE MORAIS",
+      "cpf_formatado": "807.850.181-15",
+      "cpf_limpo": "80785018115",
+      "endereco": "30 ESQ.C/ 47, 77 SÃO SEBASTIÃO DO XIXA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99927-5822",
+        "Celular: (62)3312-2590",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99927-5822"
+    },
+    "responsavel_pedagogico": {
+      "nome": "GINA COELHO DE MORAIS",
+      "cpf_formatado": "807.850.181-15",
+      "cpf_limpo": "80785018115",
+      "endereco": "30 ESQ.C/ 47, 77, SÃO SEBASTIÃO DO XIXA, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99927-5822",
+        "Celular: (62)3312-2590"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00001730",
+        "nome": "BENJAMIM BATISTA COELHO DE MORAIS",
+        "turma_original": "9º ANO / A - MAT",
+        "serie": "9º ANO",
+        "turma_letra": "A",
+        "nome_turma": "9º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 73,
+    "responsavel_financeiro": {
+      "nome": "GISLAINE FERREIRA CARDOSO",
+      "cpf_formatado": "054.096.971-03",
+      "cpf_limpo": "05409697103",
+      "endereco": "RUA DE PEDRESTRE, QD 01 LT 09 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "GISLAINE FERREIRA CARDOSO",
+      "cpf_formatado": "054.096.971-03",
+      "cpf_limpo": "05409697103",
+      "endereco": "RUA DE PEDRESTRE, QD 01 LT 09, RESIDENCIAL FLAMBOAYANT, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002571",
+        "nome": "NOAH GABRIEL MENDONÇA FERREIRA",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 74,
+    "responsavel_financeiro": {
+      "nome": "GLAUCIANE MATIAS ALMEIDA",
+      "cpf_formatado": "024.948.211-85",
+      "cpf_limpo": "02494821185",
+      "endereco": "Rua 43 nº 260 Centro ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99980-5100",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99980-5100"
+    },
+    "responsavel_pedagogico": {
+      "nome": "GLAUCIANE MATIAS ALMEIDA",
+      "cpf_formatado": "024.948.211-85",
+      "cpf_limpo": "02494821185",
+      "endereco": "Rua 43 nº 260, Centro, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99980-5100"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002790",
+        "nome": "MARIA CECÍLIA MATIAS CAMARGO",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 75,
+    "responsavel_financeiro": {
+      "nome": "GUILHERME SOARES BATISTA LINHARES",
+      "cpf_formatado": "051.501.101-08",
+      "cpf_limpo": "05150110108",
+      "endereco": "RUA 34, QD 12 LT 117 SÃO SEBASTIÃO DO XIXA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "VITORIA SILVA CAMPOS",
+      "cpf_formatado": "035.670.851-90",
+      "cpf_limpo": "03567085190",
+      "endereco": "RUA 34, QD 12 LT 117, SÃO SEBASTIÃO DO XIXA, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002647",
+        "nome": "GUILHERME HENRIQUE SILVA SOARES",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 76,
+    "responsavel_financeiro": {
+      "nome": "GUSTAVO FERREIRA MOTA",
+      "cpf_formatado": "015.619.371-00",
+      "cpf_limpo": "01561937100",
+      "endereco": "RUA 05, QD 03 LT 06 SETOR COMERCIAL ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98533-8727",
+        "Celular: (62)98533-9495",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98533-8727"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002191",
+        "nome": "EMANUEL VAZ FERREIRA MOTA",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002646",
+        "nome": "MANUELA VAZ FERREIRA MOTA",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 77,
+    "responsavel_financeiro": {
+      "nome": "GUSTAVO GOMES",
+      "cpf_formatado": "002.182.591-23",
+      "cpf_limpo": "00218259123",
+      "endereco": "AV. RIO PARANAIBA, QL. 2 LT. 16 VEREDAS ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98536-3225",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98536-3225"
+    },
+    "responsavel_pedagogico": {
+      "nome": "LORENA ZUPPA GRAZIANI",
+      "cpf_formatado": "991.383.871-15",
+      "cpf_limpo": "99138387115",
+      "endereco": "AV. RIO PARANAIBA, QL. 2 LT. 16, VEREDAS, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002741",
+        "nome": "HENRIQUE ZUPPA GOMES",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002199",
+        "nome": "ELISA ZUPPA GOMES",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 78,
+    "responsavel_financeiro": {
+      "nome": "HEBER DE LIMA FERNANDES",
+      "cpf_formatado": "031.236.051-75",
+      "cpf_limpo": "03123605175",
+      "endereco": "RUA EURICO PICARTIS, 351 CENTRO GUARAITA CEP: 76690-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002729",
+        "nome": "AISHA COELHO FERNANDES",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 79,
+    "responsavel_financeiro": {
+      "nome": "HELOISY CUNHA AQUINO",
+      "cpf_formatado": "030.550.841-52",
+      "cpf_limpo": "03055084152",
+      "endereco": "48, Q 04   L 12 SETOR MARISTA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98651-2496",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98651-2496"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002260",
+        "nome": "ARTHUR BUENO CUNHA",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 80,
+    "responsavel_financeiro": {
+      "nome": "HERICA MICHELE TAVARES",
+      "cpf_formatado": "843.047.821-34",
+      "cpf_limpo": "84304782134",
+      "endereco": "RUA 67, QD 08 LT 05 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99909-4238",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99909-4238"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001995",
+        "nome": "MARCIO AUGUSTO TAVARES DE BORBA",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 81,
+    "responsavel_financeiro": {
+      "nome": "HILDELIO JOSE LEAO FILHO",
+      "cpf_formatado": "894.767.351-04",
+      "cpf_limpo": "89476735104",
+      "endereco": "47, 1181 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002442",
+        "nome": "GABRIEL CHAVES LEÃO",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 82,
+    "responsavel_financeiro": {
+      "nome": "HOOVER VINÍCIUS FONSECA DOURADO CUNHA",
+      "cpf_formatado": "094.575.416-77",
+      "cpf_limpo": "09457541677",
+      "endereco": "Rua 46  qd 06    lt 02  n°171 Joaquim da Silva Moreira ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "MAYARA DE BARROS ROCHA DOURADO",
+      "cpf_formatado": "017.438.761-06",
+      "cpf_limpo": "01743876106",
+      "endereco": "Rua 46  qd 06    lt 02  n°171, Joaquim da Silva Moreira, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002821",
+        "nome": "MATEUS VINÍCIUS ROCHA DOURADO",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 83,
+    "responsavel_financeiro": {
+      "nome": "IARA CARVALHO SILVEIRA DE MORAIS",
+      "cpf_formatado": "050.779.501-64",
+      "cpf_limpo": "05077950164",
+      "endereco": "Rua Jose Bueno de Jesus PC-053, Central, GUARAITA - GO CEP: 76690-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002831",
+        "nome": "ISAH SOPHIA CARVALHO MORAIS PETRI",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 84,
+    "responsavel_financeiro": {
+      "nome": "IGOR OLIVEIRA DA SILVA",
+      "cpf_formatado": "056.307.761-18",
+      "cpf_limpo": "05630776118",
+      "endereco": "RUA 01, QD 35 LT 06 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002493",
+        "nome": "KAUAN DA MATA OLIVEIRA",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002834",
+        "nome": "CECÍLIA DA MATA OLIVEIRA",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 85,
+    "responsavel_financeiro": {
+      "nome": "ILTRO SEBASTIAO TEIXEIRA",
+      "cpf_formatado": "875.190.701-15",
+      "cpf_limpo": "87519070115",
+      "endereco": "JOSE ARAUJO Q10  L11 CONDE DOS ARCOS CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "TAIS CAIXETA RIBEIRO",
+      "cpf_formatado": "033.539.161-30",
+      "cpf_limpo": "03353916130",
+      "endereco": ", CENTRO, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002402",
+        "nome": "OLIVÍA CAIXETA TEIXEIRA",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002166",
+        "nome": "LUISA CAIXETA TEIXEIRA",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 86,
+    "responsavel_financeiro": {
+      "nome": "ISLEILA FELIX DA SILVA SOARES",
+      "cpf_formatado": "006.319.231-44",
+      "cpf_limpo": "00631923144",
+      "endereco": "Avenida da rosas casa 1, Jardim Imperial, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002797",
+        "nome": "FRANCISCO JOSÉ CAMARGO FELIX NUNES",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 87,
+    "responsavel_financeiro": {
+      "nome": "JANINY LOPES GARCIA",
+      "cpf_formatado": "046.399.311-07",
+      "cpf_limpo": "04639931107",
+      "endereco": "RUA 49, 429, QD CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002657",
+        "nome": "ISIS GABRIELY LOPES DE MORAIS",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 88,
+    "responsavel_financeiro": {
+      "nome": "JANIO RIBEIRO MOREIRA BRANDÃO",
+      "cpf_formatado": "910.010.991-68",
+      "cpf_limpo": "91001099168",
+      "endereco": "RUA 69, Q. 13 A CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": "(62) 98633-8234"
+    },
+    "responsavel_pedagogico": {
+      "nome": "ARETUZA CARDOSO SIQUEIRA BRANDÃO",
+      "cpf_formatado": "007.896.421-07",
+      "cpf_limpo": "00789642107",
+      "endereco": "RUA 69, Q. 13 A, SETOR CANASTRA, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98633-8234"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002434",
+        "nome": "ANA SOPHIA BRANDÃO",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 89,
+    "responsavel_financeiro": {
+      "nome": "JAQUELINE FERNANDES COELHO BARBOSA",
+      "cpf_formatado": "950.645.751-49",
+      "cpf_limpo": "95064575149",
+      "endereco": "AV AGONCILIO DA SILVA MOREIRA, QD 07 LT 01 VILA RENATA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99391-5115",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99391-5115"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002562",
+        "nome": "RAFAEL FERNANDES BARBOSA",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002117",
+        "nome": "FELIPE FERNANDES BARBOSA",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 90,
+    "responsavel_financeiro": {
+      "nome": "JEALLISSON OTAVIO PEREIRA MARTINS",
+      "cpf_formatado": "024.816.481-37",
+      "cpf_limpo": "02481648137",
+      "endereco": "RUA 05, QD. 3 LT 06 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002463",
+        "nome": "JADE MOTA MARTINS",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 91,
+    "responsavel_financeiro": {
+      "nome": "JEAN CARLOS BATISTA DE SOUZA",
+      "cpf_formatado": "043.945.151-57",
+      "cpf_limpo": "04394515157",
+      "endereco": "Rua TG3  QD15  LT22,  Terezinha Glória, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "MAÍSA ABIGAIR BOLENTINI",
+      "cpf_formatado": "040.384.161-51",
+      "cpf_limpo": "04038416151",
+      "endereco": "Rua TG3  QD15  LT22,  Terezinha Glória, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002820",
+        "nome": "BENÍCIO DE SOUZA BOLENTINI",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 92,
+    "responsavel_financeiro": {
+      "nome": "JOAQUIN DEL VALLE RIVERO",
+      "cpf_formatado": "716.616.471-97",
+      "cpf_limpo": "71661647197",
+      "endereco": "Rua A  Lt 07, Parque Alvorada , ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002745",
+        "nome": "NOHARIS DEL VALLE SÁNCHEZ",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 93,
+    "responsavel_financeiro": {
+      "nome": "JOICCE ANA FERREIRA",
+      "cpf_formatado": "024.213.901-92",
+      "cpf_limpo": "02421390192",
+      "endereco": "51, 220 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99649-5291",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99649-5291"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002272",
+        "nome": "GABRIEL FERREIRA TEIXEIRA",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002766",
+        "nome": "HENRIQUE FERREIRA TEIXEIRA",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 94,
+    "responsavel_financeiro": {
+      "nome": "JORGE HERMÍNIO GUIMARÃES CAMPOS DE ARAÚJO",
+      "cpf_formatado": "591.239.231-72",
+      "cpf_limpo": "59123923172",
+      "endereco": "RUA CARLOS PRESTES, QD 20 LT 25 CONDE DOS ARCOS ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98545-1380",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98545-1380"
+    },
+    "responsavel_pedagogico": {
+      "nome": "NUBIA MARTINS DE OLIVEIRA",
+      "cpf_formatado": "003.851.391-95",
+      "cpf_limpo": "00385139195",
+      "endereco": "RUA CARLOS PRESTES, QD 20 LT 25, CONDE DOS ARCOS, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98441-2122"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002449",
+        "nome": "RAFAEL GUIMARÃES DE OLIVEIRA",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 95,
+    "responsavel_financeiro": {
+      "nome": "JOSE ANTONIO GARCIA DOS SANTOS",
+      "cpf_formatado": "109.511.317-88",
+      "cpf_limpo": "10951131788",
+      "endereco": "RUA ALADIR BRAZ DA CRUZ, QD 1LT 17A JOÃO NUNES PERDIGÃO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002477",
+        "nome": "ANA LUIZA GARCIA DOS SANTOS",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 96,
+    "responsavel_financeiro": {
+      "nome": "JOSÉ ALVES DE FARIA NETO",
+      "cpf_formatado": "020.331.591-08",
+      "cpf_limpo": "02033159108",
+      "endereco": "Rua 45 nº 440, São Sebastião do Xixá, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99116-2567",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99116-2567"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002788",
+        "nome": "JOÃO FELIPE RODRIGUES SOUSA DE FARIA",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002744",
+        "nome": "MARIA ELISA RODRIGUES SOUSA DE FARIA",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 97,
+    "responsavel_financeiro": {
+      "nome": "JOSÉ CARLOS RODRIGUES",
+      "cpf_formatado": "867.718.171-72",
+      "cpf_limpo": "86771817172",
+      "endereco": "Rua 41 Esquuna Com Rua 42 n° 179, Centro, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98500-0588",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98500-0588"
+    },
+    "responsavel_pedagogico": {
+      "nome": "EDINEIDE DONIZETH DE LIMA",
+      "cpf_formatado": "003.570.191-99",
+      "cpf_limpo": "00357019199",
+      "endereco": "Rua 41 Esquuna Com Rua 42 n° 179, Centro, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99294-4032"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002759",
+        "nome": "MATEUS LIMA RODRIGUES",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 98,
+    "responsavel_financeiro": {
+      "nome": "JOSÉ FRANCISCO ALBINO MOTA",
+      "cpf_formatado": "641.661.471-53",
+      "cpf_limpo": "64166147153",
+      "endereco": "Rua 41 N 99, São Sebastião do Xixá, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002750",
+        "nome": "CIRO ALBINO MOTA NETO",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 99,
+    "responsavel_financeiro": {
+      "nome": "JOVERCI JOSE DA SILVA JUNIOR",
+      "cpf_formatado": "939.961.791-20",
+      "cpf_limpo": "93996179120",
+      "endereco": "Rua Ferreira Avelar, Faina, FAINA - GO CEP: 76740-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "ROSIANE LACERDA LIMA",
+      "cpf_formatado": "016.072.291-88",
+      "cpf_limpo": "01607229188",
+      "endereco": "Rua Ferreira Avelar, Faina, FAINA - GO CEP: 76740-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002803",
+        "nome": "ISADORA LACERDA LIMA SILVA",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 100,
+    "responsavel_financeiro": {
+      "nome": "JULIANA MARTA DE OLIVEIRA",
+      "cpf_formatado": "836.527.951-72",
+      "cpf_limpo": "83652795172",
+      "endereco": "65, 375, QD.50 LT.06 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002478",
+        "nome": "DAVI EMANUEL DE OLIVEIRA GOMES",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 101,
+    "responsavel_financeiro": {
+      "nome": "JULIANA MOURA DA CRUZ",
+      "cpf_formatado": "009.242.471-69",
+      "cpf_limpo": "00924247169",
+      "endereco": "RUA 06  QD 13   LT 03, 109 SETOR COMERCIAL ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002715",
+        "nome": "LETÍCIA MOURA VIEIRA",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 102,
+    "responsavel_financeiro": {
+      "nome": "JULIO CÉSAR DE SOUZA",
+      "cpf_formatado": "013.433.501-58",
+      "cpf_limpo": "01343350158",
+      "endereco": "Rua 05 Q 61 L 09, Parque Alvorada, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99271-8546",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99271-8546"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002773",
+        "nome": "OLIVER CHRISTOPHER DE SOUZA",
+        "turma_original": "JARDIM II / B - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM II B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 103,
+    "responsavel_financeiro": {
+      "nome": "JÉSSICA ALVES BORGES",
+      "cpf_formatado": "027.968.491-63",
+      "cpf_limpo": "02796849163",
+      "endereco": "RL 03 QD 02 LT 04 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002735",
+        "nome": "GABRIEL CUNHA BORGES",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 104,
+    "responsavel_financeiro": {
+      "nome": "KATHLEERYN APARECIDA FERNANDES FERREIRA",
+      "cpf_formatado": "063.724.641-10",
+      "cpf_limpo": "06372464110",
+      "endereco": "Fazanda Agua Santa, Zona Rural, FAINA - GO CEP: 76740-000",
+      "telefones": [
+        "Residencial: (62)99209-7444",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99209-7444"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002780",
+        "nome": "ÍSIS VALENTINNY APARECIDA FERNANDES",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 105,
+    "responsavel_financeiro": {
+      "nome": "KATIANE MEIRELES DA ROCHA",
+      "cpf_formatado": "012.268.071-51",
+      "cpf_limpo": "01226807151",
+      "endereco": "RUA 2, SETOR COMERCIAL, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002835",
+        "nome": "JOSÉ RAFAEL MEIRELES MAIONI",
+        "turma_original": "NÚCLEO DE APOIO INFANTIL / A - MAT",
+        "serie": "NÚCLEO DE APOIO INFANTIL",
+        "turma_letra": "A",
+        "nome_turma": "NÚCLEO DE APOIO INFANTIL A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 106,
+    "responsavel_financeiro": {
+      "nome": "KELCE TEIXEIRA DE CAMPOS",
+      "cpf_formatado": "813.395.851-20",
+      "cpf_limpo": "81339585120",
+      "endereco": "RUA RIO CORUMBÁ, QD 11 LT 12 MILTON   CAMILO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98545-5569",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98545-5569"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002058",
+        "nome": "ENZO CAMPOS FREIRE",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 107,
+    "responsavel_financeiro": {
+      "nome": "KLEBER LEANDRO TOLEDO RODRIGUES",
+      "cpf_formatado": "269.663.208-11",
+      "cpf_limpo": "26966320811",
+      "endereco": "RUA 44, 600 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002333",
+        "nome": "MIGUEL TEIXEIRA RODRIGUES",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002332",
+        "nome": "CLARA TEIXEIRA RODRIGUES",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 108,
+    "responsavel_financeiro": {
+      "nome": "LANA LEMES CAMILO",
+      "cpf_formatado": "025.579.041-47",
+      "cpf_limpo": "02557904147",
+      "endereco": "RIO CLARO, QD. 07 LT. 9 MILTON CAMILO DE FARIA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98574-3971",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98574-3971"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002814",
+        "nome": "JOÃO MIGUEL NASCIMENTO MORAIS",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 109,
+    "responsavel_financeiro": {
+      "nome": "LARISSA RAFAELA DA SILVA",
+      "cpf_formatado": "039.306.381-00",
+      "cpf_limpo": "03930638100",
+      "endereco": "Qd07   lt09, Maria Delcia, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "LARISSA RAFAELA DA SILVA",
+      "cpf_formatado": "039.306.381-00",
+      "cpf_limpo": "03930638100",
+      "endereco": "Qd07   lt09, Maria Delcia, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002818",
+        "nome": "LUCAS RAFAEL ABREU DO CARMO",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 110,
+    "responsavel_financeiro": {
+      "nome": "LEANA SILVA DE FARIA",
+      "cpf_formatado": "011.163.401-60",
+      "cpf_limpo": "01116340160",
+      "endereco": "RUA 1 QD 32 LT 3 PARQUE ALVORADA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99865-4419",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99865-4419"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002825",
+        "nome": "MANUELA LAGARES DE FARIA MARTINS",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 111,
+    "responsavel_financeiro": {
+      "nome": "LEANDRO DA SILVA MIRANDA",
+      "cpf_formatado": "022.449.381-74",
+      "cpf_limpo": "02244938174",
+      "endereco": "RUA 55 QD. 17 LT. L 6-A, QD. 17 LT. 5 A CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98454-5146",
+        "Celular: (62)98413-2045",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98454-5146"
+    },
+    "responsavel_pedagogico": {
+      "nome": "KARITA LORRANE DE BORBA MOTA",
+      "cpf_formatado": "034.874.201-04",
+      "cpf_limpo": "03487420104",
+      "endereco": "55, QD. 17 LT. 5 A, Centro, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002768",
+        "nome": "MELINA MIRANDA MOTA",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002543",
+        "nome": "MIGUEL MIRANDA MOTA",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 112,
+    "responsavel_financeiro": {
+      "nome": "LEANDRO NUNES PEREIRA",
+      "cpf_formatado": "036.712.341-05",
+      "cpf_limpo": "03671234105",
+      "endereco": "RUA BELA VISTA, QD 04 LT 01 CASA 1 SETOR  MARISTA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002746",
+        "nome": "LUAN CARDOSO NUNES",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 113,
+    "responsavel_financeiro": {
+      "nome": "LEILIANE DE ALMEIDA CHAVES SILVA",
+      "cpf_formatado": "748.490.501-15",
+      "cpf_limpo": "74849050115",
+      "endereco": "XAVANTES QUADRA 02 LOTE 02 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "LUCAS DA SILVA GONÇALVES",
+      "cpf_formatado": "020.332.261-40",
+      "cpf_limpo": "02033226140",
+      "endereco": "XAVANTES QUADRA 02 LOTE 02, JARDIM IMPERIAL, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002430",
+        "nome": "GEOVANA ALMEIDA SILVA",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 114,
+    "responsavel_financeiro": {
+      "nome": "LEONARDO DA SILVA AZEVEDO",
+      "cpf_formatado": "043.216.411-10",
+      "cpf_limpo": "04321641110",
+      "endereco": "Rua Tg 08  qd 10  lt 29 S/N, Residencial Terezinha Gloria, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "POLIANA PEREIRA SANTOS",
+      "cpf_formatado": "710.171.681-48",
+      "cpf_limpo": "71017168148",
+      "endereco": "Rua Tg 08  qd 10  lt 29 S/N, Residencial Terezinha Gloria, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002833",
+        "nome": "ZAYAN PEREIRA AZEVEDO",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 115,
+    "responsavel_financeiro": {
+      "nome": "LETÍCIA RIBEIRO DE SOUSA LIMA",
+      "cpf_formatado": "036.088.341-92",
+      "cpf_limpo": "03608834192",
+      "endereco": "RUA 41, 1850 SETOR  MARISTA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99670-0565",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99670-0565"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002623",
+        "nome": "MARIA LUIZA RIBEIRO LIMA",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 116,
+    "responsavel_financeiro": {
+      "nome": "LEUZIANE DE OLIVEIRA",
+      "cpf_formatado": "783.652.361-68",
+      "cpf_limpo": "78365236168",
+      "endereco": "RUA 56, QD 01 LT 04 SETOR MARISTA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98442-0530",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98442-0530"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002450",
+        "nome": "VALENTINA DO CARMO DE OLIVEIRA",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 117,
+    "responsavel_financeiro": {
+      "nome": "LORENA ALVARENGA ALMEIDA PESSOA",
+      "cpf_formatado": "033.652.521-42",
+      "cpf_limpo": "03365252142",
+      "endereco": "RUA 48, QD. 21 LT. 09 JOAQUIM DA SILVA MOREIRA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99950-3802",
+        "Celular: (62)99696-3062",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99950-3802"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002544",
+        "nome": "MARIA ALVARENGA PESSOA",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 118,
+    "responsavel_financeiro": {
+      "nome": "LUCIANO COELHO GUIMARÃES",
+      "cpf_formatado": "463.462.281-53",
+      "cpf_limpo": "46346228153",
+      "endereco": "RUA RIO DAS ALMAS, QD 12 LT 03 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99964-2628",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99964-2628"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001872",
+        "nome": "HEITOR MIQUELIN GUIMARÃES",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      },
+      {
+        "matricula": "00001871",
+        "nome": "OTÁVIO MIQUELIN GUIMARÃES",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 119,
+    "responsavel_financeiro": {
+      "nome": "LUCIANO GONCALVES DE QUEIROZ",
+      "cpf_formatado": "002.012.481-31",
+      "cpf_limpo": "00201248131",
+      "endereco": "RUA 53, 395 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002786",
+        "nome": "MATHEUS BENTO FARIA DE QUEIROZ",
+        "turma_original": "JARDIM II / B - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM II B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 120,
+    "responsavel_financeiro": {
+      "nome": "LUCIANY DE OLIVEIRA COSTA",
+      "cpf_formatado": "002.139.601-92",
+      "cpf_limpo": "00213960192",
+      "endereco": "RUA 34, QD 13 LT 35 SÃO SEBASTIÃO DO XIXA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98596-5888",
+        "Celular: (62)98416-0488",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98596-5888"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001148",
+        "nome": "EMANUELLA OLIVEIRA MIRANDA",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 121,
+    "responsavel_financeiro": {
+      "nome": "LUNA JÉSSICA SOARES CALDAS",
+      "cpf_formatado": "016.677.701-36",
+      "cpf_limpo": "01667770136",
+      "endereco": "AV. GOIÁS, QD. 03 LT 129 SAO SEBASTIÃO XIXA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98533-8660",
+        "Celular: (62)98533-8660",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98533-8660"
+    },
+    "responsavel_pedagogico": {
+      "nome": "EDER DE MENEZES",
+      "cpf_formatado": "951.093.401-10",
+      "cpf_limpo": "95109340110",
+      "endereco": "AV. GOIÁS, QD. 03 LT 129, SÃO SEBASTIÃO DO XIXA, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98533-8660",
+        "Celular: (62)98535-6638"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002819",
+        "nome": "ANNE  SOARES MENEZES",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 122,
+    "responsavel_financeiro": {
+      "nome": "LUNARA BARBOSA MOREIRA",
+      "cpf_formatado": "066.256.111-23",
+      "cpf_limpo": "06625611123",
+      "endereco": "RUA 52 - A QD 53 L 2A, JOAQUIM DA SILVA, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002807",
+        "nome": "MARIA OLÍVIA BARBOSA LOPES",
+        "turma_original": "JARDIM II / B - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM II B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 123,
+    "responsavel_financeiro": {
+      "nome": "LÍDIA RIBEIRO SOUZA",
+      "cpf_formatado": "022.835.771-36",
+      "cpf_limpo": "02283577136",
+      "endereco": "RUA 01     QD 24    LT 04, 604 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002475",
+        "nome": "EMILLY SOUZA REIS",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 124,
+    "responsavel_financeiro": {
+      "nome": "MAISA PACIFICO VASQUES",
+      "cpf_formatado": "029.269.631-06",
+      "cpf_limpo": "02926963106",
+      "endereco": "RUA 48      CASA 03     QD 03   LT 8-A CANASTRA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002778",
+        "nome": "BENTO VASQUES QUEIROZ",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002638",
+        "nome": "HELENA VASQUES QUEIROZ",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 125,
+    "responsavel_financeiro": {
+      "nome": "MANUELLA CRISTINE OLIVEIRA FREIRE",
+      "cpf_formatado": "028.122.671-78",
+      "cpf_limpo": "02812267178",
+      "endereco": "RUA 55   QD 03     LT 01, AP 02 VILA RENATA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002717",
+        "nome": "ALYSSA MARIA ARSENAULT",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 126,
+    "responsavel_financeiro": {
+      "nome": "MARCELLO BORBA FARIAS",
+      "cpf_formatado": "009.064.061-61",
+      "cpf_limpo": "00906406161",
+      "endereco": "RUA RIO CORUMBA, QD 10   LT 10 MILTON CAMILO DE FARIA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002648",
+        "nome": "MARCELA MUNIZ FARIAS",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002822",
+        "nome": "MAITÊ MUNIZ FARIAS",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 127,
+    "responsavel_financeiro": {
+      "nome": "MARCELO CHAVES DE FARIA",
+      "cpf_formatado": "827.826.951-34",
+      "cpf_limpo": "82782695134",
+      "endereco": "JOSE MARTINS DE OLIVEIRA, DQ.02 LT.14 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002465",
+        "nome": "LORENZO ALVES CHAVES DE FARIA",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002314",
+        "nome": "JOÃO MARCELO ALVES DE FARIA",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 128,
+    "responsavel_financeiro": {
+      "nome": "MARCELO JOÃO DOS SANTOS",
+      "cpf_formatado": "950.203.061-34",
+      "cpf_limpo": "95020306134",
+      "endereco": "Leonidio Martins Cardoso, Rua 01   qd01   lt09, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "VALERIA ELIAS RIBEIRO",
+      "cpf_formatado": "020.331.851-09",
+      "cpf_limpo": "02033185109",
+      "endereco": "Leonidio Martins Cardoso, Rua 01   qd01   lt09, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002810",
+        "nome": "THÉO HENRIQUE SANTOS RIBEIRO",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 129,
+    "responsavel_financeiro": {
+      "nome": "MARCIA VEIRA DA SILVA MARTINS",
+      "cpf_formatado": "005.803.471-41",
+      "cpf_limpo": "00580347141",
+      "endereco": "RUA 02, QD 04 LT 36 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002563",
+        "nome": "VITORIA VIEIRA MARTINS",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 130,
+    "responsavel_financeiro": {
+      "nome": "MARCIO ALVES DA SILVA",
+      "cpf_formatado": "023.278.081-11",
+      "cpf_limpo": "02327808111",
+      "endereco": "RUA TAMOYO, QD 14  LT 04 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002673",
+        "nome": "MIGUEL BUENO BORBA GUIMARÃES",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 131,
+    "responsavel_financeiro": {
+      "nome": "MARCO ANTONIO SILVA OLIVEIRA",
+      "cpf_formatado": "020.311.661-58",
+      "cpf_limpo": "02031166158",
+      "endereco": "FAZENDA ANA FÉLIX ZONA RURAL ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98592-4868",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98592-4868"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002557",
+        "nome": "ARTHUR GABRIEL DE OLIVEIRA",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 132,
+    "responsavel_financeiro": {
+      "nome": "MARCOS ANTONIO PIRES FILHO",
+      "cpf_formatado": "038.438.161-82",
+      "cpf_limpo": "03843816182",
+      "endereco": "AVENIDA AGONCILIO DA SILVA MOREIRA, 240, QD 03    LT 02 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002628",
+        "nome": "BENÍCIO OLIVEIRA PIRES",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 133,
+    "responsavel_financeiro": {
+      "nome": "MARCUS VINICIUS MEDEIROS DE ABREU FERREIRA DA SILVA",
+      "cpf_formatado": "023.035.831-44",
+      "cpf_limpo": "02303583144",
+      "endereco": "RUA RIO PIRANCANJUBA, QD 12 LT 12 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98542-7520",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98542-7520"
+    },
+    "responsavel_pedagogico": {
+      "nome": "MURIELE LORRANE DE OLIVEIRA SILVA MEDEIROS",
+      "cpf_formatado": "055.668.141-07",
+      "cpf_limpo": "05566814107",
+      "endereco": "RUA RIO PIRANCANJUBA, QD 12 LT 12, CENTRO, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98642-0131"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002454",
+        "nome": "ALICE MEDEIROS OLIVEIRA SILVA",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 134,
+    "responsavel_financeiro": {
+      "nome": "MARIA HELENA ALVES CORREIA",
+      "cpf_formatado": "003.004.131-73",
+      "cpf_limpo": "00300413173",
+      "endereco": "AVENIDA FARNESE RABELO, QD 02 LT 01 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98621-1072",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98621-1072"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002303",
+        "nome": "ANTONELLA ALVES DE ALMEIDA",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 135,
+    "responsavel_financeiro": {
+      "nome": "MARIA LAURA TEORI MARTINS",
+      "cpf_formatado": "065.212.751-78",
+      "cpf_limpo": "06521275178",
+      "endereco": "RUA 59, 49 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002689",
+        "nome": "GABRIEL TEORI LIMA",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 136,
+    "responsavel_financeiro": {
+      "nome": "MATHEUS DOS SANTOS TAVARES",
+      "cpf_formatado": "754.837.931-53",
+      "cpf_limpo": "75483793153",
+      "endereco": "Rua 69    Qg13     Lt03, Setor Canastra, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "LETÍCIA LEMES BRANDÃO",
+      "cpf_formatado": "058.251.611-04",
+      "cpf_limpo": "05825161104",
+      "endereco": "Rua 69    Qg13     Lt03, Setor Canastra, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002789",
+        "nome": "JOSÉ MIGUEL BRANDÃO TAVARES",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 137,
+    "responsavel_financeiro": {
+      "nome": "MAURO FERREIRA PEDROSA JUNIOR",
+      "cpf_formatado": "011.777.071-01",
+      "cpf_limpo": "01177707101",
+      "endereco": "RUA JOÃO DO COUTO ROSA, QD 11 LT 14 C CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002315",
+        "nome": "VITORIA OLIVEIRA PEDROSA",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 138,
+    "responsavel_financeiro": {
+      "nome": "MAÍRA CÂNDIDA DIAS CAMPOS",
+      "cpf_formatado": "006.936.111-89",
+      "cpf_limpo": "00693611189",
+      "endereco": "RUA 43, 885 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002697",
+        "nome": "IGOR DIAS CAMPOS BORGES",
+        "turma_original": "JARDIM II / B - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM II B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 139,
+    "responsavel_financeiro": {
+      "nome": "NAIANI SILVEIRA MOREIRA",
+      "cpf_formatado": "026.127.821-50",
+      "cpf_limpo": "02612782150",
+      "endereco": "Rua 53 pc 5739 Parque Alvorada ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98121-8489",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98121-8489"
+    },
+    "responsavel_pedagogico": {
+      "nome": "NAIANI SILVEIRA MOREIRA",
+      "cpf_formatado": "026.127.821-50",
+      "cpf_limpo": "02612782150",
+      "endereco": "Rua 53 pc 5739, Parque alvorada, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98121-8489"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002785",
+        "nome": "LIZ SILVEIRA PEREIRA",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 140,
+    "responsavel_financeiro": {
+      "nome": "NATALIA CRISTINA DE ALMEIDA GOMES",
+      "cpf_formatado": "047.607.451-73",
+      "cpf_limpo": "04760745173",
+      "endereco": "RUA SEBASTIÃO RODRIGUES, 067, QD 46 /LT 17 CENTRO GUARAITA CEP: 76690-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "NATALIA CRISTINA DE ALMEIDA GOMES",
+      "cpf_formatado": "047.607.451-73",
+      "cpf_limpo": "04760745173",
+      "endereco": "RUA SEBASTIÃO RODRIGUES, 067, QD 46 /LT 17, CENTRO, GUARAITA - GO CEP: 76690-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002672",
+        "nome": "ANALLICE DE ALMEIDA CAVALCANTE",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002747",
+        "nome": "RAVI DE ALMEIDA CAVALCANTE",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 141,
+    "responsavel_financeiro": {
+      "nome": "NATALIA MARIANA DE FARIA",
+      "cpf_formatado": "060.377.771-60",
+      "cpf_limpo": "06037777160",
+      "endereco": "RUA ITAPURANGA, QD 02 LT 01 A SETOR OESTE ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99627-2236",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99627-2236"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002405",
+        "nome": "HUGO SAYMON FARIA RODRIGUES",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 142,
+    "responsavel_financeiro": {
+      "nome": "NILBERTO ALVES TERRA",
+      "cpf_formatado": "360.175.581-53",
+      "cpf_limpo": "36017558153",
+      "endereco": "RUA 48 N° 239 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98432-6512",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98432-6512"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002794",
+        "nome": "RAFAEL SOUZA TERRA",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 143,
+    "responsavel_financeiro": {
+      "nome": "NITIAN PANTOJA DE SOUZA",
+      "cpf_formatado": "037.867.481-10",
+      "cpf_limpo": "03786748110",
+      "endereco": "RUA 50, 412 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98526-6577",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98526-6577"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002649",
+        "nome": "JOÃO LUCAS MARTINS PANTOJA",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 144,
+    "responsavel_financeiro": {
+      "nome": "OSMAR FERRAZ ROSA",
+      "cpf_formatado": "018.735.831-17",
+      "cpf_limpo": "01873583117",
+      "endereco": "RUA GV 01, QD 01 LT 25 GREENVILE ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002575",
+        "nome": "JOÃO MIGUEL SOUSA FERRAZ",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002828",
+        "nome": "HELENA SOUSA FERRAZ",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 145,
+    "responsavel_financeiro": {
+      "nome": "PATRICIA GABRIELA SILVA",
+      "cpf_formatado": "034.801.401-57",
+      "cpf_limpo": "03480140157",
+      "endereco": "48, 200, QD. E LOTE 05 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99943-6715",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99943-6715"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002395",
+        "nome": "ANTONELLA ALCANTARA SILVA MORAIS",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 146,
+    "responsavel_financeiro": {
+      "nome": "PATRICIA MARTINS ROSA MOTA",
+      "cpf_formatado": "024.561.121-56",
+      "cpf_limpo": "02456112156",
+      "endereco": "AVENIDA RIO ARAGUAIA, QD 06 LT 05 SETOR CANASTRA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002564",
+        "nome": "SOFIA DA MOTA PAES",
+        "turma_original": "9º ANO / A - MAT",
+        "serie": "9º ANO",
+        "turma_letra": "A",
+        "nome_turma": "9º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 147,
+    "responsavel_financeiro": {
+      "nome": "PAULO ARAUJO PARREIRA",
+      "cpf_formatado": "946.648.031-68",
+      "cpf_limpo": "94664803168",
+      "endereco": "RUA DAS ORQUÍDEAS COM A GIRASSOL, QD 03 LT 02 E 03 S/N CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002439",
+        "nome": "THÉO OLIVEIRA ARAÚJO",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002802",
+        "nome": "MAITÊ OLIVEIRA ARAUJO",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 148,
+    "responsavel_financeiro": {
+      "nome": "PAULO HENRIQUE CUNHA AQUINO",
+      "cpf_formatado": "015.199.151-01",
+      "cpf_limpo": "01519915101",
+      "endereco": "RUA TG 2, QD. 15 LT 15 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99936-3732",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99936-3732"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002567",
+        "nome": "ANALLU DE OLIVEIRA CUNHA",
+        "turma_original": "1º ANO / B - VES",
+        "serie": "1º ANO",
+        "turma_letra": "B",
+        "nome_turma": "1º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 149,
+    "responsavel_financeiro": {
+      "nome": "PAULO HENRIQUE DOS SANTOS PINTO",
+      "cpf_formatado": "035.550.091-41",
+      "cpf_limpo": "03555009141",
+      "endereco": "RUA 53 ESQUINA C 50-A, 524 JOAQUIM DA SILVA MOREIRA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99964-6164",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99964-6164"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002624",
+        "nome": "SOPHIA OLIVEIRA DOS SANTOS",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 150,
+    "responsavel_financeiro": {
+      "nome": "PEDRO ARAUJO LOPES",
+      "cpf_formatado": "018.942.191-63",
+      "cpf_limpo": "01894219163",
+      "endereco": "RUA 47, 191 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002596",
+        "nome": "VALENTINA FORNAZIERE FERNANDES",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      },
+      {
+        "matricula": "00002595",
+        "nome": "LORENZO FORNAZIERE FERNANDES",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 151,
+    "responsavel_financeiro": {
+      "nome": "PEDRO GOMES DE SOUSA FILHO",
+      "cpf_formatado": "596.419.591-15",
+      "cpf_limpo": "59641959115",
+      "endereco": "RUA 45, 590, CENTRO, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)",
+        "Residencial: (62)98565-2250",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98565-2250"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002507",
+        "nome": "PEDRO HENRIQUE DOS SANTOS SOUSA",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 152,
+    "responsavel_financeiro": {
+      "nome": "PEDRO RAFAEL MARTINS",
+      "cpf_formatado": "017.780.181-65",
+      "cpf_limpo": "01778018165",
+      "endereco": "AV. T5 Nº 1770 - APTO 303 SETOR SERRINHA GOIÂNIA CEP: 74835-120",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002817",
+        "nome": "RAFAEL CARVALHO MARTINS",
+        "turma_original": "JARDIM II / B - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM II B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 153,
+    "responsavel_financeiro": {
+      "nome": "PRISCILLA RIBEIRO SOUZA",
+      "cpf_formatado": "022.835.801-96",
+      "cpf_limpo": "02283580196",
+      "endereco": "RUA JOSÉ DE ARAUJO PARRERA, QD 09 LT 04 CONDE DOS ARCOS ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99981-7482",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99981-7482"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002313",
+        "nome": "AYLA NARA MARTINS SOUZA",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 154,
+    "responsavel_financeiro": {
+      "nome": "QUERITA CAVALCANTE DE FREITAS",
+      "cpf_formatado": "010.548.311-73",
+      "cpf_limpo": "01054831173",
+      "endereco": "Rua Joscelino Morais dos Santos   Qd 03   Lt 06 Casa 2, Loteamento Inacio Martins Coelho, GUARAITA - GO CEP: 76690-",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002829",
+        "nome": "FABIANY FREITAS DA SILVA",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 155,
+    "responsavel_financeiro": {
+      "nome": "RAFAEL FERREIRA COLETA",
+      "cpf_formatado": "037.431.041-64",
+      "cpf_limpo": "03743104164",
+      "endereco": "Rua 49 nº 56 pc 224 c/ 34, Centro, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98217-4303",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98217-4303"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002792",
+        "nome": "HELENA ALMEIDA COLETA",
+        "turma_original": "JARDIM II / B - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM II B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 156,
+    "responsavel_financeiro": {
+      "nome": "RAFAEL MARCOS DA MATA",
+      "cpf_formatado": "017.957.621-60",
+      "cpf_limpo": "01795762160",
+      "endereco": "AVENIDA ALBION DE BARROS CURADO, 460, QD 09 LT 02 CENTRO FAINA CEP: 76740-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "MIRIAM DE MATOS FABRI",
+      "cpf_formatado": "734.917.991-04",
+      "cpf_limpo": "73491799104",
+      "endereco": "RUA RIO CORUMBÁ, QD 09 LT 02, MILTON   CAMILO, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002683",
+        "nome": "GABRIEL FABRI DA MATA",
+        "turma_original": "8º ANO / A - MAT",
+        "serie": "8º ANO",
+        "turma_letra": "A",
+        "nome_turma": "8º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 157,
+    "responsavel_financeiro": {
+      "nome": "RAFAEL QUEIROZ DE MORAIS",
+      "cpf_formatado": "010.043.201-83",
+      "cpf_limpo": "01004320183",
+      "endereco": "RUA 54, 1101 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002577",
+        "nome": "ENRICO SOUSA DE MORAIS",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 158,
+    "responsavel_financeiro": {
+      "nome": "RAQUEL GUIMARÃES DE OLIVEIRA",
+      "cpf_formatado": "017.232.081-08",
+      "cpf_limpo": "01723208108",
+      "endereco": "47 A, QD 34 LT 02 VILA BARRINHA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002098",
+        "nome": "HANIEL MARCOS GUIMARÃES SOUZA",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 159,
+    "responsavel_financeiro": {
+      "nome": "RAUL RIBEIRO",
+      "cpf_formatado": "030.789.801-62",
+      "cpf_limpo": "03078980162",
+      "endereco": "Rua 47 c/ 54 Qd C Lt 2 Centro ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99404-9905",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99404-9905"
+    },
+    "responsavel_pedagogico": {
+      "nome": "JACQUELINE GONÇALVES DE FARIA BARBOSA",
+      "cpf_formatado": "046.702.881-80",
+      "cpf_limpo": "04670288180",
+      "endereco": "Rua 47 c/ 54 , Setor Central, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99211-4709"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002787",
+        "nome": "EMANUEL DE FARIA BARBOSA RIBEIRO",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 160,
+    "responsavel_financeiro": {
+      "nome": "RENATA CORRÊA GOMES",
+      "cpf_formatado": "993.155.721-49",
+      "cpf_limpo": "99315572149",
+      "endereco": "Fazenda do Meio Zona Rural FAINA CEP: 76740-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "RENATA CORRÊA GOMES",
+      "cpf_formatado": "993.155.721-49",
+      "cpf_limpo": "99315572149",
+      "endereco": "Fazenda do Meio, Zona Rural, ITAPURANGA - GO CEP: 07674-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002808",
+        "nome": "DANIEL CORRÊA GOMES ALVES",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 161,
+    "responsavel_financeiro": {
+      "nome": "RENATA FRANCO DE CARVALHO",
+      "cpf_formatado": "004.933.473-56",
+      "cpf_limpo": "00493347356",
+      "endereco": "PATAXO, 00, QD. 07 LT. 05 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98470-9813",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98470-9813"
+    },
+    "responsavel_pedagogico": {
+      "nome": "JAIR DE SOUZA VIEIRA JUNIOR",
+      "cpf_formatado": "020.313.361-77",
+      "cpf_limpo": "02031336177",
+      "endereco": "PATAXO, 00, QD. 07 LT. 05, JARDIM IMPERIAL, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002482",
+        "nome": "ANA LIZ FRANCO VIEIRA",
+        "turma_original": "1º ANO / A - VES",
+        "serie": "1º ANO",
+        "turma_letra": "A",
+        "nome_turma": "1º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 162,
+    "responsavel_financeiro": {
+      "nome": "RODRIGO LUIZ DE CAMARGO",
+      "cpf_formatado": "004.702.381-35",
+      "cpf_limpo": "00470238135",
+      "endereco": "RUA 48   QD 01  LT10 NOVO HORIZONTE ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "MARINA SALES RODRIGUES",
+      "cpf_formatado": "019.324.291-58",
+      "cpf_limpo": "01932429158",
+      "endereco": "RUA 4   QD 01    LT 10, NOVO HORIZONTE, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002641",
+        "nome": "LETÍCIA SALES RODRIGUES CAMARGO",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 163,
+    "responsavel_financeiro": {
+      "nome": "RODRIGO NOGUEIRA SANTOS",
+      "cpf_formatado": "055.822.681-70",
+      "cpf_limpo": "05582268170",
+      "endereco": "Rua 02, qd 02, Lt 02 Leonidio Martins Cardoso ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002764",
+        "nome": "MANUELA FERRAZ NOGUEIRA",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 164,
+    "responsavel_financeiro": {
+      "nome": "RODRIGO RODRIGUES PEREIRA",
+      "cpf_formatado": "955.032.771-04",
+      "cpf_limpo": "95503277104",
+      "endereco": "AV. DOS IPÊS    ÁREA 270  COND. REAIS PARQUE DOS CISNES ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002627",
+        "nome": "BENÍCIO GAMA RODRIGUES",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 165,
+    "responsavel_financeiro": {
+      "nome": "ROGERIO ANTONIO DE CARVALHO VELOSO",
+      "cpf_formatado": "994.348.301-68",
+      "cpf_limpo": "99434830168",
+      "endereco": "RUA 57 QD 26 LT 9 Nº 1383, SETOR JOAQUIM DA SILVA MOREIRA, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99288-7654",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99288-7654"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002813",
+        "nome": "ARTHUR ANTÔNIO SILVA CARVALHO",
+        "turma_original": "JARDIM III / A - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM III A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 166,
+    "responsavel_financeiro": {
+      "nome": "ROGERIO DA COSTA MIRANDA",
+      "cpf_formatado": "005.225.041-59",
+      "cpf_limpo": "00522504159",
+      "endereco": "rua 10, quadra 11, lote 6, numero 2 vera cruz ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98511-7074",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98511-7074"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002753",
+        "nome": "ÍTALO MENDONÇA MIRANDA",
+        "turma_original": "JARDIM II / A - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM II A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 167,
+    "responsavel_financeiro": {
+      "nome": "RONALDO GONÇALVES CAMPOS",
+      "cpf_formatado": "794.354.401-34",
+      "cpf_limpo": "79435440134",
+      "endereco": "RUA 69, QD 10 LT 13 Setor Canastra ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98150-9025",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98150-9025"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002508",
+        "nome": "ALLANA SOUZA CAMPOS",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 168,
+    "responsavel_financeiro": {
+      "nome": "RONAN ANTONIO AZZI FILHO",
+      "cpf_formatado": "791.031.891-04",
+      "cpf_limpo": "79103189104",
+      "endereco": "AVENIDA RIO PARANAIBA, QD10 LT 17 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98111-6677",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98111-6677"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001889",
+        "nome": "DANIEL REZENDE AZZI",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      },
+      {
+        "matricula": "00002125",
+        "nome": "MARIA JÚLIA REZENDE AZZI",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 169,
+    "responsavel_financeiro": {
+      "nome": "RONEI SILVA DE SANTANA",
+      "cpf_formatado": "017.271.881-36",
+      "cpf_limpo": "01727188136",
+      "endereco": "RUA 03, 430 VILA BARRINHA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "PRISCILA DOS SANTOS TAVARES",
+      "cpf_formatado": "709.635.401-81",
+      "cpf_limpo": "70963540181",
+      "endereco": "RUA DO MATADOURO  QD 01     LT23, RESIDENCIAL ARRUDA, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002702",
+        "nome": "EMILLY SILVA TAVARES",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 170,
+    "responsavel_financeiro": {
+      "nome": "RUI CANDIDO FREIRE",
+      "cpf_formatado": "302.113.281-20",
+      "cpf_limpo": "30211328120",
+      "endereco": "RUA 44, 80 JOSÉ PEREIRA DE FARIA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99906-7921",
+        "Celular: (62)98532-0716",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99906-7921"
+    },
+    "responsavel_pedagogico": {
+      "nome": "LIELMA LOPES OLIVEIRA FREIRE",
+      "cpf_formatado": "947.238.341-68",
+      "cpf_limpo": "94723834168",
+      "endereco": "RUA 44, 80, JOSÉ PEREIRA DE FARIA, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00001477",
+        "nome": "RUI CANDIDO FREIRE FILHO",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 171,
+    "responsavel_financeiro": {
+      "nome": "SAHYRRA KARULINA DE SOUZA FERRAZ ANDRAOS",
+      "cpf_formatado": "948.435.031-34",
+      "cpf_limpo": "94843503134",
+      "endereco": "RUA 48, 740, QD 07 LT 02 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99211-4839",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99211-4839"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002675",
+        "nome": "MARIA NINA DE SOUZA FERRAZ BORGES ANDRAOS",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00001886",
+        "nome": "MARIA VALENTINA DE SOUZA FERRAZ ANDRAOS",
+        "turma_original": "8º ANO / A - MAT",
+        "serie": "8º ANO",
+        "turma_letra": "A",
+        "nome_turma": "8º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 172,
+    "responsavel_financeiro": {
+      "nome": "SILVANA ALVES DE CARVALHO",
+      "cpf_formatado": "649.375.691-04",
+      "cpf_limpo": "64937569104",
+      "endereco": "RUA 07, QD 09+ LT 03 PARQUE ALVORADA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002378",
+        "nome": "FILIPE AUGUSTO CARVALHO CAMPOS",
+        "turma_original": "9º ANO / A - MAT",
+        "serie": "9º ANO",
+        "turma_letra": "A",
+        "nome_turma": "9º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 173,
+    "responsavel_financeiro": {
+      "nome": "SILVANO FÉLIX RODRIGUES JUNIOR",
+      "cpf_formatado": "704.098.461-04",
+      "cpf_limpo": "70409846104",
+      "endereco": "ANTONIO BRAGA, QD 06 LT 11 KENIA PARK II ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002120",
+        "nome": "BERNARDO CAMARGO FÉLIX",
+        "turma_original": "5º ANO / A - MAT",
+        "serie": "5º ANO",
+        "turma_letra": "A",
+        "nome_turma": "5º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 174,
+    "responsavel_financeiro": {
+      "nome": "SIMONE MACHADO DIAS OFOL DE MATTOS",
+      "cpf_formatado": "534.502.801-04",
+      "cpf_limpo": "53450280104",
+      "endereco": "Rua Rio Piracanjuba Qd:12 Lt 08 Nº 50 Setor Milton Camilo de Faria ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98409-6603",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98409-6603"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002433",
+        "nome": "MANUELLA DUARTE DIAS",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 175,
+    "responsavel_financeiro": {
+      "nome": "SOLEMAR FERNANDES DE AZEVEDO",
+      "cpf_formatado": "527.142.501-06",
+      "cpf_limpo": "52714250106",
+      "endereco": "RUA OVIDIO DE MORAIS PRETO CENTRO GUARAITA CEP: 76690-000",
+      "telefones": [
+        "Residencial: (62)98575-9791",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98575-9791"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002551",
+        "nome": "ISABELA VITÓRIA MORAIS AZEVEDO",
+        "turma_original": "7º ANO / A - MAT",
+        "serie": "7º ANO",
+        "turma_letra": "A",
+        "nome_turma": "7º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 176,
+    "responsavel_financeiro": {
+      "nome": "SONIA MARIA DA CRUZ ARAGÃO",
+      "cpf_formatado": "935.972.662-15",
+      "cpf_limpo": "93597266215",
+      "endereco": "RUA 47A, 510, APTO 101 QD 13 LT 03 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002806",
+        "nome": "DAVI GABRIEL ARAGÃO MACHADO",
+        "turma_original": "MATERNAL / A - VES",
+        "serie": "MATERNAL",
+        "turma_letra": "A",
+        "nome_turma": "MATERNAL A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 177,
+    "responsavel_financeiro": {
+      "nome": "TARIKY CURADO DE CASTRO  SANTANA",
+      "cpf_formatado": "047.051.981-90",
+      "cpf_limpo": "04705198190",
+      "endereco": "Rua 02 Qd 2 Lt 8 A , Setor Comercial, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99863-7034",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99863-7034"
+    },
+    "responsavel_pedagogico": {
+      "nome": "ISABELLA FERREIRA VIEIRA",
+      "cpf_formatado": "704.064.621-86",
+      "cpf_limpo": "70406462186",
+      "endereco": "Rua 02 Qd 2 Lt 8 A , Setor Comercial, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99623-2005"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002777",
+        "nome": "LUIZA VIEIRA SANTANA",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 178,
+    "responsavel_financeiro": {
+      "nome": "TATIANE MUNIZ DE CARVALHO",
+      "cpf_formatado": "006.536.101-65",
+      "cpf_limpo": "00653610165",
+      "endereco": "RIO CANASTRA, DQ. B LT.01 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "EDERSON  TAVARES",
+      "cpf_formatado": "715.151.511-15",
+      "cpf_limpo": "71515151115",
+      "endereco": "RIO CANASTRA, DQ. B LT.01, MILTON   CAMILO, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002441",
+        "nome": "JOÃO LUCAS MUNIZ TAVARES",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 179,
+    "responsavel_financeiro": {
+      "nome": "TECIA MOREIRA DOS SANTOS",
+      "cpf_formatado": "015.278.011-44",
+      "cpf_limpo": "01527801144",
+      "endereco": "TG 04, Q 04 LT 05 RESIDENCIAL TEREZINHA GLORIA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002177",
+        "nome": "LUISA MOREIRA MIRANDA",
+        "turma_original": "6º ANO / A - MAT",
+        "serie": "6º ANO",
+        "turma_letra": "A",
+        "nome_turma": "6º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 180,
+    "responsavel_financeiro": {
+      "nome": "THIAGO DE SOUZA  NAVES",
+      "cpf_formatado": "716.225.511-68",
+      "cpf_limpo": "71622551168",
+      "endereco": "RUA DAS LARANJEIRAS, QD 05 LT 22 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002292",
+        "nome": "BEATRIZ LEMES NAVES",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      },
+      {
+        "matricula": "00002799",
+        "nome": "ISABELA LEMES NAVES",
+        "turma_original": "JARDIM I / A - VES",
+        "serie": "JARDIM I",
+        "turma_letra": "A",
+        "nome_turma": "JARDIM I A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 181,
+    "responsavel_financeiro": {
+      "nome": "THIAGO MENDES RODRIGUES",
+      "cpf_formatado": "983.440.721-15",
+      "cpf_limpo": "98344072115",
+      "endereco": "RUA 48, 1600 CANASTRA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002479",
+        "nome": "MATHEUS QUEIROZ MENDES",
+        "turma_original": "2º ANO / A - VES",
+        "serie": "2º ANO",
+        "turma_letra": "A",
+        "nome_turma": "2º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 182,
+    "responsavel_financeiro": {
+      "nome": "TIAGO DE LIMA",
+      "cpf_formatado": "702.611.301-10",
+      "cpf_limpo": "70261130110",
+      "endereco": "RUA 05 QD 19 LT 10 A PARQUE ALVORADA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002760",
+        "nome": "LUISA SOUZA DE LIMA",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 183,
+    "responsavel_financeiro": {
+      "nome": "TOMAZ DE SOUZA DIAS CAMPOS",
+      "cpf_formatado": "921.779.721-91",
+      "cpf_limpo": "92177972191",
+      "endereco": "47 A ESQ COM RUA 05, QD 08 LT 15 VILA BARRINHA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98404-6996",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98404-6996"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001147",
+        "nome": "CARLOS DIAS CAMPOS",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 184,
+    "responsavel_financeiro": {
+      "nome": "UEBERSON PEROBA DE JESUS",
+      "cpf_formatado": "007.906.421-31",
+      "cpf_limpo": "00790642131",
+      "endereco": "RUA RIO VERMELHO, QD 03 LT 37B VEREDAS ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99602-0733",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99602-0733"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002471",
+        "nome": "BENÍCIO REZENDE DE JESUS",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 185,
+    "responsavel_financeiro": {
+      "nome": "UEDER PEREIRA DA SILVA ALVES",
+      "cpf_formatado": "020.331.831-57",
+      "cpf_limpo": "02033183157",
+      "endereco": "47 S/C 02, 00, CANTINHO DA FAMILIA GRIO CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002397",
+        "nome": "GUILHERME HENRIQUE SOUZA ALVES",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 186,
+    "responsavel_financeiro": {
+      "nome": "VALDETE MARTINS DOS SANTOS",
+      "cpf_formatado": "003.317.941-79",
+      "cpf_limpo": "00331794179",
+      "endereco": "Rua TG 05    QD 10     LT11, Residencial Teresinha Gloria, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": {
+      "nome": "VALDETE MARTINS DOS SANTOS",
+      "cpf_formatado": "003.317.941-79",
+      "cpf_limpo": "00331794179",
+      "endereco": "Rua TG 05    QD 10     LT11, Residencial Teresinha Gloria, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": []
+    },
+    "alunos": [
+      {
+        "matricula": "00002793",
+        "nome": "KAIKI SANTOS OLIVEIRA",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 187,
+    "responsavel_financeiro": {
+      "nome": "VALTER ORIZONA DUTRA",
+      "cpf_formatado": "418.964.911-20",
+      "cpf_limpo": "41896491120",
+      "endereco": "42, 721 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)99649-4498",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99649-4498"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001722",
+        "nome": "JHONATAN MARINS DUTRA",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 188,
+    "responsavel_financeiro": {
+      "nome": "VALÉRIA ALVES CORREIA TAVARES",
+      "cpf_formatado": "858.344.751-91",
+      "cpf_limpo": "85834475191",
+      "endereco": "RUA V6 QD 9 LT 7, Setor Veredas, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99151-6062",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99151-6062"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002805",
+        "nome": "AUGUSTO CORREIA PINHEIRO TAVARES",
+        "turma_original": "8º ANO / A - MAT",
+        "serie": "8º ANO",
+        "turma_letra": "A",
+        "nome_turma": "8º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 189,
+    "responsavel_financeiro": {
+      "nome": "VANDERLEI JOSE GOMES JUNIOR",
+      "cpf_formatado": "011.851.761-95",
+      "cpf_limpo": "01185176195",
+      "endereco": "RUA 53 QD. 14 LT. 2, PARQUE ALVORADA PARQUE ALVORADA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002393",
+        "nome": "GABRIELA TRINDADE GOMES",
+        "turma_original": "3º ANO / A - VES",
+        "serie": "3º ANO",
+        "turma_letra": "A",
+        "nome_turma": "3º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 190,
+    "responsavel_financeiro": {
+      "nome": "VIVIAN DE NAZARÉ TSUJI DE OLIVEIRA",
+      "cpf_formatado": "011.459.652-29",
+      "cpf_limpo": "01145965229",
+      "endereco": "Rua, Centro, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002761",
+        "nome": "SARAH DAVILY TSUJI DE OLIVEIRA",
+        "turma_original": "3º ANO / B - VES",
+        "serie": "3º ANO",
+        "turma_letra": "B",
+        "nome_turma": "3º ANO B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 191,
+    "responsavel_financeiro": {
+      "nome": "WALISSON GOMES DE OLIVEIRA",
+      "cpf_formatado": "014.618.061-51",
+      "cpf_limpo": "01461806151",
+      "endereco": "rua 6, quadra 14, lote 6 setor comercial ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)99670-9189",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99670-9189"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002757",
+        "nome": "MAITÊ RODRIGUES CORRÊA GOMES",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 192,
+    "responsavel_financeiro": {
+      "nome": "WANDERSON FABIO DOS SANTOS LIMA",
+      "cpf_formatado": "839.233.221-00",
+      "cpf_limpo": "83923322100",
+      "endereco": "45, 708, APART.06 CENTRO ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Endereço Completo Telefone(s)"
+      ],
+      "whatsapp": ""
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00001405",
+        "nome": "THIAGO AUGUSTO PINHEIRO VELOSO  LIMA",
+        "turma_original": "1ª SÉRIE / A - MAT",
+        "serie": "1ª SÉRIE",
+        "turma_letra": "A",
+        "nome_turma": "1ª SÉRIE A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 193,
+    "responsavel_financeiro": {
+      "nome": "WEDER SOUSA SANTOS",
+      "cpf_formatado": "986.058.441-91",
+      "cpf_limpo": "98605844191",
+      "endereco": "04, QD.48 LT.05 PARQUE ALVORADA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98415-3622",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98415-3622"
+    },
+    "responsavel_pedagogico": {
+      "nome": "TATIANA DE SOUZA CARRILHO SANTOS",
+      "cpf_formatado": "020.329.771-76",
+      "cpf_limpo": "02032977176",
+      "endereco": "Parque Alvorada, Rua 05   qd46  Lt08, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98515-3622"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002811",
+        "nome": "ANA LIZ CARRILHO SANTOS",
+        "turma_original": "JARDIM II / B - VES",
+        "serie": "JARDIM II",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM II B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 194,
+    "responsavel_financeiro": {
+      "nome": "WESLLEY FERREIRA DE ANDRADE",
+      "cpf_formatado": "918.820.281-04",
+      "cpf_limpo": "91882028104",
+      "endereco": "RUA CARDOSO , JARDIM MARACANÃ, FAINA - GO CEP: 76740-000",
+      "telefones": [
+        "Celular: (62)99196-7373",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 99196-7373"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002740",
+        "nome": "TAUMATURGO SILVA FERREIRA DE ANDRADE",
+        "turma_original": "4º ANO / A - VES",
+        "serie": "4º ANO",
+        "turma_letra": "A",
+        "nome_turma": "4º ANO A",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 195,
+    "responsavel_financeiro": {
+      "nome": "WILLIAN ADAO ROSA",
+      "cpf_formatado": "641.915.241-00",
+      "cpf_limpo": "64191524100",
+      "endereco": "Fazenda Santo Antônio, Zona Rural, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98461-2014",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98461-2014"
+    },
+    "responsavel_pedagogico": {
+      "nome": "THAIS PRIMO DE SOUSA",
+      "cpf_formatado": "023.562.421-71",
+      "cpf_limpo": "02356242171",
+      "endereco": "Fazenda Santo Antônio, Zona Rural, ITAPURANGA - GO CEP: 76680-000",
+      "telefones": [
+        "Celular: (62)98622-0118"
+      ]
+    },
+    "alunos": [
+      {
+        "matricula": "00002748",
+        "nome": "FRANCISCO ROSA PRIMO",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  },
+  {
+    "index": 196,
+    "responsavel_financeiro": {
+      "nome": "WILSON DE SOUZA NEIA JUNIOR",
+      "cpf_formatado": "830.792.111-20",
+      "cpf_limpo": "83079211120",
+      "endereco": "rua 4, quadra 17, lote 3  parque alvorada ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Celular: (64)99607-3681",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(64) 99607-3681"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002756",
+        "nome": "JULIA SILVA NÉIA",
+        "turma_original": "9º ANO / A - MAT",
+        "serie": "9º ANO",
+        "turma_letra": "A",
+        "nome_turma": "9º ANO A",
+        "turno": "matutino"
+      }
+    ]
+  },
+  {
+    "index": 197,
+    "responsavel_financeiro": {
+      "nome": "YARA ESTEVÃO FERNANDES",
+      "cpf_formatado": "058.353.491-06",
+      "cpf_limpo": "05835349106",
+      "endereco": "RUA 04, QD 36 LT 11 PARQUE ALVORADA ITAPURANGA CEP: 76680-000",
+      "telefones": [
+        "Residencial: (62)98431-6608",
+        "Celular: (62)99623-3652",
+        "Telefone(s)"
+      ],
+      "whatsapp": "(62) 98431-6608"
+    },
+    "responsavel_pedagogico": null,
+    "alunos": [
+      {
+        "matricula": "00002713",
+        "nome": "NOAH ESTEVÃO MARTINS",
+        "turma_original": "JARDIM III / B - VES",
+        "serie": "JARDIM III",
+        "turma_letra": "B",
+        "nome_turma": "JARDIM III B",
+        "turno": "vespertino"
+      }
+    ]
+  }
+]

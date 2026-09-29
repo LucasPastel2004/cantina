@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 17 — Relatórios Gerenciais, Exportações (A4/CSV), Revisão de Segurança e Entrega
-* **Status da Fase 17:** Concluída com Sucesso [x]
-* **Status Geral do Projeto:** 17 de 17 Fases Concluídas Integralmente (100% do escopo do FSD e DESIGN.md)
-* **Última Atualização:** 2026-09-28 08:40:00 (Saneamento completo do banco de dados e preparação de base enxuta de demonstração via `database/seed_showcase.php`. Expurgo de centenas de registros temporários e duplicados. Carga oficial com: 3 usuários da cantina, 5 categorias, 12 produtos enxutos com Coxinha Grande e Coxinha Pequena fracionada, 19 turmas escolares oficiais, 6 colaboradores com compras para folha de RH, 4 famílias e 6 alunos com alergias cadastradas, 4 pedidos para a data de hoje 28/09 totalizando 15 coxinhas pequenas que geram 7 Grandes + 1 Pequena no Corte do Turno, 7 tickets impressos em ordem por turma com alertas de alérgenos destacados, sessão de caixa matutina aberta com R$ 100,00 de troco e vendas no balcão em dinheiro com troco, Pix e desconto em folha, alerta de estoque baixo na água mineral e 1 NF-e XML de demonstração. Elaboração do roteiro de apresentação passo a passo ao operador em docs/ROTEIRO_DEMONSTRACAO_OPERADOR.md e artefato dedicado. Testes automatizados 100% verdes).
+* **Fase Atual:** Fase 18 — Carga e Saneamento de Dados Oficiais da Escola (Matrículas Reais)
+* **Status da Fase 18:** Concluída [x] (100% Homologada)
+* **Status Geral do Projeto:** 18 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
+* **Última Atualização:** 2026-09-29 10:35:00 (Conclusão da Fase 18: Carga e saneamento dos dados oficiais da escola a partir de Matriculas.pdf — 19 turmas oficiais, 195 responsáveis únicos / 197 agrupamentos e 232 alunos reais com 0 órfãos; preservação integral dos operadores e produtos; 47/47 suítes de testes globais aprovadas).
 
 
 
@@ -850,9 +850,95 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Fase 18 — Carga e Saneamento de Dados Oficiais da Escola (Matrículas Reais)
+* [x] **Script de Extração e Parsing Oficial (`database/parse_matriculas.py`):**
+  * Extração e parsing completo do documento oficial `docs/alterações sistema guideline/Matriculas.pdf` (23 páginas);
+  * Identificação de todas as 19 turmas escolares oficiais por turno (67 alunos matutinos e 165 alunos vespertinos);
+  * Reconhecimento exato de turmas especiais e núcleos inclusivos (ex.: `Núcleo de Apoio Infantil A - MAT`);
+  * Agrupamento de responsáveis financeiros por CPF, tratando casos de múltiplos dependentes com carteira compartilhada;
+  * Geração do arquivo estruturado `database/matriculas_reais.json` com integridade 100% validada.
+* [x] **Seeder Idempotente de Alta Confiabilidade (`database/seed_matriculas_reais.php`):**
+  * Inserção/atualização idempotente usando transações PDO;
+  * Sincronização de 19 turmas escolares oficiais com séries, nomes de turma e turnos padronizados;
+  * Sincronização de 195 responsáveis financeiros únicos (197 agrupamentos), garantindo unicidade de CPF (11 dígitos), e-mail de contingência e senha temporária segura;
+  * Sincronização de 232 alunos reais com matrículas oficiais únicas de 8 dígitos, vínculos relacionais completos e zero órfãos;
+  * Reconciliação harmônica de turmas e alunos legados preservando suítes de testes anteriores;
+  * Preservação integral e intocada dos operadores, administradores e produtos existentes da cantina.
+* [x] **Evolução de Models do Sistema:**
+  * `App\Models\Turma`: criação de métodos `localizarOuCriar` e `buscarPorNomeETurno`;
+  * `App\Models\Responsavel`: criação de métodos `localizarOuCriarPorCpf` e alias `buscarPorCpf`;
+  * `App\Models\Aluno`: criação de métodos `localizarOuCriarPorMatricula` e `buscarPorMatricula`;
+  * `App\Models\Usuario`: criação do método `listarTodos`.
+* [x] **Testes Automatizados e Auditoria Global:**
+  * Criação da suíte oficial `tests/fase18_test.php` com 44 asserções executadas e 100% aprovadas;
+  * Execução da auditoria global de verificação (`tests/verification_audit.php`): 47/47 suítes aprovadas com 100% de sucesso.
+
+---
+
+### [ ] Fase 19 — Módulo Completo (CRUD) de Estorno de Vendas e Invalidação
+* [ ] Rota `/operacional/estornos` e controller `app/controllers/EstornoVendasController.php`.
+* [ ] View operacional `app/views/operacional/estorno_vendas.php` conforme `docs/alterações sistema guideline/extorno de vendas.pdf`.
+* [ ] Grid de seleção múltipla com checkboxes e campo obrigatório de justificativa de estorno.
+* [ ] Rotina atômica de gravação de estornos com reversão de carteira/caixa, devolução automática ao estoque e cancelamento de tickets.
+* [ ] Trilha de auditoria em `logs_auditoria`.
+* [ ] Bateria de testes automatizados `tests/fase19_test.php`.
+
+---
+
+### [ ] Fase 20 — Nova Arquitetura de PDF (HTML+CSS+Gotenberg) & Migração Completa de Relatórios + Fechamento de Caixa
+* [ ] Adição do container Gotenberg 8 no `docker-compose.yml` (porta 3000).
+* [ ] Parâmetros de driver Gotenberg e fallback no `config/config.php` e `config/config.example.php`.
+* [ ] Refatoração do `app/services/PdfService.php` para motor enxuto HTML+CSS + API Gotenberg + fallback `@media print`.
+* [ ] Migração de todos os relatórios e documentos existentes (Corte, Cupons e Tickets 80mm, Extratos, Folha RH) para views HTML limpas.
+* [ ] Implementação da view e geração do espelho oficial A4 de Fechamento de Caixa (`app/views/relatorios/fechamento_caixa_pdf.php`) com as 4 seções escolares (Duplicatas, Vendas com Online vs Balcão destacados e funcionários unificados, Pix e Resumo do Caixa) conforme `28 setembro matutino.pdf` e `28 setembro vespertino.pdf`.
+* [ ] Bateria de testes automatizados `tests/fase20_test.php`.
+
+---
+
+### [ ] Fase 21 — Painel de Filtros Avançados e Relatório Oficial de Vendas por Período / Alimento
+* [ ] Interface de filtros dinâmicos de vendas com toggles Sim/Não (`app/views/relatorios/vendas_filtros.php`) conforme `Filtros de vendas.pdf`.
+* [ ] Processamento dos filtros dinâmicos no `app/controllers/RelatoriosController.php`.
+* [ ] View e emissão do PDF oficial "Relatório de Emissão de Vendas da Cantina por Alimento" (`app/views/relatorios/vendas_alimento_pdf.php`) conforme `relatorio de vendas por período.pdf`.
+* [ ] Exportação dos dados filtrados para planilha CSV.
+* [ ] Bateria de testes automatizados `tests/fase21_test.php`.
+
+---
+
+### [ ] Fase 22 — Extrato Analítico de Consumo do Aluno (Filtros, PDF A4 e Portal da Família)
+* [ ] Tela de filtro com "Emitir apenas saldo do Aluno" e "Considerar saldo apenas no período" conforme `filtro Extrato Consumo Aluno.pdf`.
+* [ ] View e emissão do PDF A4 "Extrato de Consumo do Aluno" com saldo progressivo linha a linha e total gasto conforme `Relatório Extrato Consumo Aluno.pdf`.
+* [ ] Disponibilização do extrato analítico no Portal da Família (`app/views/portal/extrato.php`) com botão de download/impressão direta.
+* [ ] Bateria de testes automatizados `tests/fase22_test.php`.
+
+---
+
+### [ ] Fase 23 — Relatório Gerencial de Movimentações de Estoque (Retrato e Paisagem)
+* [ ] Tela de opções de leiaute com seleção de orientação Retrato/Paisagem e agrupamentos dinâmicos conforme `filtro movimentação estoque.pdf`.
+* [ ] View e emissão do PDF A4 em orientações Retrato e Paisagem (`app/views/relatorios/estoque_movimentacoes_pdf.php`).
+* [ ] Apuração consolidada de entradas, saídas e perdas justificadas com centro de custo único ("Cantina Geral").
+* [ ] Bateria de testes automatizados `tests/fase23_test.php`.
+
+---
+
+### [ ] Fase 24 — Módulo Financeiro de Despesas, DRE Gerencial Completo e Painel de Gráficos Interativos
+* [ ] Migration 027 criando a tabela `despesas_operacionais`.
+* [ ] CRUD administrativo de despesas operacionais (`app/controllers/DespesasController.php`).
+* [ ] Motor de apuração contábil de DRE em `app/models/Dre.php` com apuração de Receita Bruta, Deduções, CMV automático, Lucro Bruto e Abatimento de Despesas conforme `Estrutura de uma DRE.pdf` e `Planilha_DRE_Modelo_Aethos_Sistemas.pdf`.
+* [ ] Tela comparativa mensal do DRE com exportações em PDF e CSV.
+* [ ] Painel com gráficos visuais interativos locais (`assets/js/chart.min.js` ou SVG nativo de alta densidade): evolução mensal, faturamento online vs presencial e produtos mais rentáveis.
+* [ ] Bateria de testes automatizados `tests/fase24_test.php`.
+
+---
+
 ## Próximo Passo Recomendado
 
-O sistema **Cantina Web — Colégio Monteiro Lobato** encontra-se **100% implementado, testado e auditado**, com a interface do operador do caixa completamente limpa e sanitizada, salgados fracionados operando com exatidão no corte e fornecedor, banco de dados enxuto para demonstração e o **módulo de Calendário Escolar totalmente interativo com navegação semanal, cadastro de feriados/recessos e cancelamento emergencial com estorno automático**. O próximo passo consiste na conferência das novas funcionalidades e validação em tela pelo administrador.
+Executar a **Fase 19 — Módulo Completo (CRUD) de Estorno de Vendas e Invalidação**:
+1. Criar a rota `/operacional/estornos` e o controller `app/controllers/EstornoVendasController.php`;
+2. Implementar a view operacional `app/views/operacional/estorno_vendas.php` conforme `docs/alterações sistema guideline/extorno de vendas.pdf`;
+3. Desenvolver o grid de seleção múltipla com checkboxes e campo obrigatório de justificativa de estorno;
+4. Implementar rotina atômica de gravação de estornos com reversão de carteira/caixa, devolução automática ao estoque e cancelamento de tickets térmicos;
+5. Validar com bateria de testes automatizados `tests/fase19_test.php`.
+
 
 
 

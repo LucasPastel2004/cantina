@@ -39,15 +39,23 @@ $outputAuth = shell_exec("php -r " . escapeshellarg($codeAuth));
 $passouPainel = str_contains($outputAuth, 'Gestão e Impressão de Tickets Térmicos')
     && str_contains($outputAuth, 'Total de Tickets')
     && str_contains($outputAuth, 'Lotes de Fichas por Turma Escolar');
-
 echo "2. Rota GET /operacional/tickets (Autenticado Operador) -> " . ($passouPainel ? "SUCESSO (Painel 200 OK Renderizado)" : "FALHA") . PHP_EOL;
+
+if (!defined('CANTINA_SISTEMA')) {
+    define('CANTINA_SISTEMA', true);
+}
+require_once __DIR__ . '/../config/database.php';
+$pdo = Database::getInstance();
+$tickInfo = $pdo->query("SELECT p.data_consumo, p.turno_consumo FROM tickets t INNER JOIN pedidos p ON p.id = t.pedido_id LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+$dtTeste = $tickInfo['data_consumo'] ?? '2026-09-28';
+$tnTeste = $tickInfo['turno_consumo'] ?? 'matutino';
 
 // 3. Acesso à Bobina de 80mm em HTML /operacional/tickets/lote
 $codeLote = '
 $_SERVER["REQUEST_METHOD"] = "GET";
-$_SERVER["REQUEST_URI"] = "/operacional/tickets/lote?data=2026-09-25&turno=matutino";
-$_GET["data"] = "2026-09-25";
-$_GET["turno"] = "matutino";
+$_SERVER["REQUEST_URI"] = "/operacional/tickets/lote?data=' . $dtTeste . '&turno=' . $tnTeste . '";
+$_GET["data"] = "' . $dtTeste . '";
+$_GET["turno"] = "' . $tnTeste . '";
 $_SERVER["SCRIPT_NAME"] = "/index.php";
 $_SERVER["REMOTE_ADDR"] = "127.0.0.1";
 session_start();
@@ -69,9 +77,9 @@ echo "3. Rota GET /operacional/tickets/lote (Bobina HTML) -> " . ($passouLote ? 
 // 4. Download do PDF da Bobina /operacional/tickets/lote/pdf
 $codePdf = '
 $_SERVER["REQUEST_METHOD"] = "GET";
-$_SERVER["REQUEST_URI"] = "/operacional/tickets/lote/pdf?data=2026-09-25&turno=matutino";
-$_GET["data"] = "2026-09-25";
-$_GET["turno"] = "matutino";
+$_SERVER["REQUEST_URI"] = "/operacional/tickets/lote/pdf?data=' . $dtTeste . '&turno=' . $tnTeste . '";
+$_GET["data"] = "' . $dtTeste . '";
+$_GET["turno"] = "' . $tnTeste . '";
 $_SERVER["SCRIPT_NAME"] = "/index.php";
 $_SERVER["REMOTE_ADDR"] = "127.0.0.1";
 session_start();

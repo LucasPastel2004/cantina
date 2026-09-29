@@ -60,6 +60,14 @@ class Usuario extends Model
     }
 
     /**
+     * Retorna todos os usuários ativos da equipe
+     */
+    public static function listarTodos(): array
+    {
+        return self::fetchAll("SELECT * FROM usuarios WHERE deleted_at IS NULL ORDER BY nome ASC");
+    }
+
+    /**
      * Atualiza a senha criptografada de um usuário
      */
     public function updatePassword(int $id, string $plainPassword): bool

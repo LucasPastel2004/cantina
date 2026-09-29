@@ -43,12 +43,13 @@ if (!$sessao) {
 }
 $assertCustom($sessao !== null && $sessao['status'] === 'aberto', "Sessão de caixa ativa para recargas");
 
-// Obter responsável Carlos Eduardo Silva (id 9)
-$resp = \App\Models\Responsavel::buscarPorId(9);
+// Obter responsável (preferência por ID 2 Carlos Eduardo ou primeiro disponível)
+$resp = \App\Models\Responsavel::buscarPorId(2) ?: \App\Models\Responsavel::buscarPorId(1) ?: $pdo->query("SELECT * FROM responsaveis LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+$respId = (int)$resp['id'];
 $saldoInicial = (float)$resp['saldo_atual'];
 
 // 2. Teste de registro direto com valor em float 50.00
-$resultado1 = \App\Models\SessaoCaixa::registrarRecargaDinheiro(9, 50.00, 1, 'Teste float 50.00');
+$resultado1 = \App\Models\SessaoCaixa::registrarRecargaDinheiro($respId, 50.00, 1, 'Teste float 50.00');
 $assertCustom((float)$resultado1['valor'] === 50.00, "Valor registrado confere com R$ 50,00");
 $assertCustom((float)$resultado1['saldo_resultante'] === ($saldoInicial + 50.00), "Saldo resultante confere com saldo inicial + 50.00");
 
@@ -56,7 +57,7 @@ $assertCustom((float)$resultado1['saldo_resultante'] === ($saldoInicial + 50.00)
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_SERVER['HTTP_X_REQUESTED_WITH'] = 'xmlhttprequest';
 $_POST['csrf_token'] = \App\Core\Session::generateCsrfToken();
-$_POST['responsavel_id'] = '9';
+$_POST['responsavel_id'] = (string)$respId;
 $_POST['valor'] = '100,00';
 $_POST['observacoes'] = 'Teste valor com virgula 100,00';
 
@@ -73,7 +74,7 @@ $assertCustom((float)$jsonVirgula['valor_creditado'] === 100.00, "Valor creditad
 
 // 4. Teste do Controller com valor enviado com ponto decimal ('100.00' via toFixed)
 $_POST['csrf_token'] = \App\Core\Session::generateCsrfToken();
-$_POST['responsavel_id'] = '9';
+$_POST['responsavel_id'] = (string)$respId;
 $_POST['valor'] = '100.00';
 $_POST['observacoes'] = 'Teste valor com ponto toFixed 100.00';
 
@@ -117,11 +118,13 @@ $diferencaExata = round($informadoExato - $esperadoGaveta, 2);
 $assertCustom($diferencaExata === 0.0, "Conferência exata com R$ 250 contados e R$ 250 esperados é exatamente R$ 0,00");
 
 // Limpeza das transações criadas neste teste específico
-$txsParaExcluir = [$resultado1['transacao_id'], $jsonVirgula['transacao_id'], $jsonPonto['transacao_id']];
-$idsIn = implode(',', $txsParaExcluir);
-$pdo->exec("DELETE FROM transacoes_carteira WHERE id IN ({$idsIn})");
-$pdo->exec("DELETE FROM logs_auditoria WHERE tabela_afetada = 'transacoes_carteira' AND registro_id IN ({$idsIn})");
-$pdo->exec("UPDATE responsaveis SET saldo_atual = {$saldoInicial} WHERE id = 9");
+$txsParaExcluir = array_filter([$resultado1['transacao_id'] ?? null, $jsonVirgula['transacao_id'] ?? null, $jsonPonto['transacao_id'] ?? null]);
+if (!empty($txsParaExcluir)) {
+    $idsIn = implode(',', $txsParaExcluir);
+    $pdo->exec("DELETE FROM transacoes_carteira WHERE id IN ({$idsIn})");
+    $pdo->exec("DELETE FROM logs_auditoria WHERE tabela_afetada = 'transacoes_carteira' AND registro_id IN ({$idsIn})");
+}
+$pdo->exec("UPDATE responsaveis SET saldo_atual = {$saldoInicial} WHERE id = {$respId}");
 
 echo "\n-------------------------------------------------------\n";
 echo "RESULTADO: {$passou}/{$total} asserções aprovadas (" . round(($passou / $total) * 100, 1) . "%)\n";
