@@ -122,13 +122,12 @@ class Fase21Test
         $content = file_get_contents($viewPath);
         $this->assert(str_contains($content, "CANTINA_SISTEMA"), "View possui salvaguarda CANTINA_SISTEMA.");
         $this->assert(str_contains($content, "id=\"dropdownEmitir\""), "Botão Dropdown 'Emitir' presente.");
-        $this->assert(str_contains($content, "Visualizar / Imprimir (A4)"), "Opção de Visualização/Impressão presente no Dropdown.");
-        $this->assert(str_contains($content, "Baixar em PDF (A4)"), "Opção de Download de PDF A4 presente no Dropdown.");
-        $this->assert(str_contains($content, "Exportar Planilha (CSV)"), "Opção de Exportação CSV presente no Dropdown.");
-
-        // Abas
-        $this->assert(str_contains($content, "id=\"tabBtnFiltro\""), "Aba Filtro & Parâmetros presente.");
-        $this->assert(str_contains($content, "id=\"tabBtnLeiaute\""), "Aba Opções de Agrupamento presente.");
+        $this->assert(str_contains($content, "Visualizar / Imprimir (A4)"), "Opção de Visualização/Impressão presente.");
+        $this->assert(str_contains($content, "Baixar em PDF (A4)"), "Opção de Download de PDF A4 presente.");
+        $this->assert(str_contains($content, "Exportar Planilha (CSV)"), "Opção de Exportação CSV presente.");
+        // Toggles com destaque azul corporativo e botões de emissão
+        $this->assert(str_contains($content, "btn-toggle-blue"), "Toggles utilizam classe de destaque em azul corporativo (.btn-toggle-blue).");
+        $this->assert(!str_contains($content, "tabelaVendasOficial"), "Lista de relatório inline removida da tela de filtros (emissão exclusiva em PDF/Impressão).");
 
         // Toggles Oficiais Sim/Não conforme Filtros de vendas.pdf
         $toggles = [

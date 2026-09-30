@@ -316,7 +316,6 @@ class RelatoriosController extends Controller
     public function vendasFiltros(): void
     {
         $filtros = $this->extrairFiltrosVendas();
-        $dadosRelatorio = $this->obterDadosVendasAvancadas($filtros);
         $categorias = Categoria::listarTodas(true);
 
         $this->render('relatorios/vendas_filtros', [
@@ -325,7 +324,7 @@ class RelatoriosController extends Controller
             'user'           => Auth::user(),
             'filtros'        => $filtros,
             'categorias'     => $categorias,
-            'dadosRelatorio' => $dadosRelatorio
+            'dadosRelatorio' => []
         ], 'admin');
     }
 
