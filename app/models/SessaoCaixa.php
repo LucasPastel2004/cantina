@@ -862,19 +862,27 @@ class SessaoCaixa extends Model
             ];
         }
 
-        // 2. VENDAS (BALCÃO + ONLINE COM SEGREGAÇÃO E FUNCIONÁRIOS UNIFICADOS)
+        // 2. VENDAS (CANTINA WEB ONLINE + BALCÃO PRESENCIAL COM SEGREGAÇÃO E FUNCIONÁRIOS UNIFICADOS)
         $vendasItens = [];
+        $vendasBalcao = [];
+        $vendasOnline = [];
+        $subtotalBalcao = 0.0;
+        $subtotalOnline = 0.0;
         $subtotalVendas = 0.0;
 
         $stmtVb = $pdo->prepare("
-            SELECT vb.id AS venda_id, vb.tipo_venda, vb.forma_pagamento, vb.colaborador_id,
+            SELECT vb.id AS venda_id, vb.tipo_venda, vb.forma_pagamento, vb.colaborador_id, vb.aluno_id,
                    c.nome AS colaborador_nome, c.cargo AS colaborador_cargo,
+                   a.nome AS aluno_nome, a.matricula AS aluno_matricula,
+                   CONCAT(t.serie, ' ', t.nome_turma) AS turma_nome,
                    ivb.produto_id, ivb.quantidade, ivb.preco_unitario, ivb.subtotal,
                    p.descricao AS produto_descricao
             FROM vendas_balcao vb
             INNER JOIN itens_venda_balcao ivb ON ivb.venda_balcao_id = vb.id
             INNER JOIN produtos p ON p.id = ivb.produto_id
             LEFT JOIN colaboradores c ON c.id = vb.colaborador_id
+            LEFT JOIN alunos a ON a.id = vb.aluno_id
+            LEFT JOIN turmas t ON t.id = a.turma_id
             WHERE vb.sessao_caixa_id = :sessao_id AND vb.status = 'concluida'
             ORDER BY vb.id ASC, ivb.id ASC
         ");
@@ -883,10 +891,14 @@ class SessaoCaixa extends Model
 
         foreach ($itensBalcao as $ib) {
             $sub = (float)$ib['subtotal'];
+            $subtotalBalcao += $sub;
             $subtotalVendas += $sub;
 
-            $pessoa = 'Balcão / Aluno';
-            if (!empty($ib['colaborador_nome'])) {
+            $pessoa = 'Balcão (Presencial)';
+            if (!empty($ib['aluno_nome'])) {
+                $turmaStr = !empty($ib['turma_nome']) ? " ({$ib['turma_nome']})" : '';
+                $pessoa = "{$ib['aluno_nome']}{$turmaStr}";
+            } elseif (!empty($ib['colaborador_nome'])) {
                 $cargo = !empty($ib['colaborador_cargo']) ? $ib['colaborador_cargo'] : 'Colaborador';
                 $pessoa = "{$ib['colaborador_nome']} - {$cargo}";
             }
@@ -894,11 +906,15 @@ class SessaoCaixa extends Model
             $tipoStr = 'Dinheiro';
             if ($ib['forma_pagamento'] === 'pix') {
                 $tipoStr = 'Pix';
-            } elseif ($ib['tipo_venda'] === 'desconto_folha') {
+            } elseif ($ib['tipo_venda'] === 'desconto_folha' || $ib['forma_pagamento'] === 'desconto_folha') {
                 $tipoStr = 'Folha';
+            } elseif ($ib['forma_pagamento'] === 'cartao_debito') {
+                $tipoStr = 'Débito';
+            } elseif ($ib['forma_pagamento'] === 'cartao_credito') {
+                $tipoStr = 'Crédito';
             }
 
-            $vendasItens[] = [
+            $itemBalcao = [
                 'origem'         => 'balcao',
                 'alimento'       => $ib['produto_descricao'],
                 'pessoa'         => $pessoa,
@@ -907,16 +923,21 @@ class SessaoCaixa extends Model
                 'valor_pago'     => $sub,
                 'tipo'           => $tipoStr
             ];
+
+            $vendasBalcao[] = $itemBalcao;
+            $vendasItens[] = $itemBalcao;
         }
 
-        // Encomendas online
+        // Encomendas online (Cantina Web)
         $stmtOnline = $pdo->prepare("
             SELECT p.id AS pedido_id, p.data_consumo, p.turno_consumo,
                    a.nome AS aluno_nome, a.matricula AS aluno_matricula,
+                   CONCAT(t.serie, ' ', t.nome_turma) AS turma_nome,
                    ip.produto_id, ip.quantidade, ip.preco_unitario, ip.subtotal,
                    pr.descricao AS produto_descricao
             FROM pedidos p
             INNER JOIN alunos a ON a.id = p.aluno_id
+            LEFT JOIN turmas t ON t.id = a.turma_id
             INNER JOIN itens_pedido ip ON ip.pedido_id = p.id
             INNER JOIN produtos pr ON pr.id = ip.produto_id
             WHERE p.data_consumo = :data_consumo
@@ -932,17 +953,23 @@ class SessaoCaixa extends Model
 
         foreach ($itensOnline as $io) {
             $sub = (float)$io['subtotal'];
+            $subtotalOnline += $sub;
             $subtotalVendas += $sub;
 
-            $vendasItens[] = [
+            $turmaStr = !empty($io['turma_nome']) ? " ({$io['turma_nome']})" : '';
+
+            $itemOnline = [
                 'origem'         => 'online',
                 'alimento'       => $io['produto_descricao'],
-                'pessoa'         => "{$io['aluno_nome']} - Aluno (Online)",
+                'pessoa'         => "{$io['aluno_nome']}{$turmaStr}",
                 'preco_unitario' => (float)$io['preco_unitario'],
                 'quantidade'     => (int)$io['quantidade'],
                 'valor_pago'     => $sub,
                 'tipo'           => 'Saldo'
             ];
+
+            $vendasOnline[] = $itemOnline;
+            $vendasItens[] = $itemOnline;
         }
 
         // 3. RECEBIMENTO EM PIX
@@ -1030,6 +1057,10 @@ class SessaoCaixa extends Model
             'duplicatas'             => $duplicatas,
             'subtotal_duplicatas'    => $subtotalDuplicatas,
             'vendas'                 => $vendasItens,
+            'vendas_cantina_web'     => $vendasOnline,
+            'subtotal_cantina_web'   => $subtotalOnline,
+            'vendas_balcao'          => $vendasBalcao,
+            'subtotal_balcao'        => $subtotalBalcao,
             'subtotal_vendas'        => $subtotalVendas,
             'pix_recebimentos'       => $pixRecebimentos,
             'total_pix_recebimentos' => $totalPixRecebimentos,

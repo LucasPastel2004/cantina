@@ -918,7 +918,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Implementada a view oficial `app/views/relatorios/fechamento_caixa_pdf.php` alinhada aos modelos reais `28 setembro matutino.pdf` e `28 setembro vespertino.pdf`;
   * Exibição das 4 seções contábeis oficiais:
     1. **Duplicatas:** Relação nominal de vendas faturadas em duplicata com parcelamento e vencimentos;
-    2. **Vendas Nutre:** Segregação e destaque analítico entre *Venda Balcão* e *Encomendas Online*, com funcionários/colaboradores unificados;
+    2. **Vendas Cantina Web & Vendas Presenciais no Balcão:** Segregação e destaque analítico entre *Vendas Cantina Web (Online)* e *Vendas Presenciais no Balcão*, com funcionários/colaboradores unificados;
     3. **Recebimento em Pix:** Registros discriminados de recargas e pagamentos via Pix com valor líquido apurado;
     4. **Resumo do Caixa:** Consolidação com as 4 colunas mestre: Fundo de Troco Inicial, Entradas, Saídas e Saldo Final em Dinheiro na Gaveta;
   * Identificador de controle `#ID` da sessão, cabeçalho institucional com logotipo do colégio e área de assinaturas do Operador de Caixa e Gerente da Cantina;

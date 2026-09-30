@@ -17,7 +17,29 @@ $sessao = $dadosFechamento['sessao'] ?? ($sessao ?? []);
 $duplicatas = $dadosFechamento['duplicatas'] ?? ($duplicatas ?? []);
 $subtotalDuplicatas = $dadosFechamento['subtotal_duplicatas'] ?? ($subtotalDuplicatas ?? 0.0);
 $vendas = $dadosFechamento['vendas'] ?? ($vendas ?? []);
-$subtotalVendas = $dadosFechamento['subtotal_vendas'] ?? ($subtotalVendas ?? 0.0);
+$vendasCantinaWeb = $dadosFechamento['vendas_cantina_web'] ?? [];
+$vendasBalcao = $dadosFechamento['vendas_balcao'] ?? [];
+$subtotalCantinaWeb = (float)($dadosFechamento['subtotal_cantina_web'] ?? 0.0);
+$subtotalBalcao = (float)($dadosFechamento['subtotal_balcao'] ?? 0.0);
+$subtotalVendas = (float)($dadosFechamento['subtotal_vendas'] ?? ($subtotalVendas ?? 0.0));
+
+// Fallback defensivo para segregar vendas caso não fornecidas previamente separadas
+if (empty($vendasCantinaWeb) && empty($vendasBalcao) && !empty($vendas)) {
+    foreach ($vendas as $v) {
+        $val = (float)($v['valor_pago'] ?? ($v['valor'] ?? 0));
+        if (($v['origem'] ?? '') === 'online' || ($v['tipo'] ?? '') === 'Saldo') {
+            $vendasCantinaWeb[] = $v;
+            $subtotalCantinaWeb += $val;
+        } else {
+            $vendasBalcao[] = $v;
+            $subtotalBalcao += $val;
+        }
+    }
+}
+if ($subtotalVendas <= 0.0) {
+    $subtotalVendas = $subtotalCantinaWeb + $subtotalBalcao;
+}
+
 $pixRecebimentos = $dadosFechamento['pix_recebimentos'] ?? ($pixRecebimentos ?? []);
 $totalPixRecebimentos = $dadosFechamento['total_pix_recebimentos'] ?? ($totalPixRecebimentos ?? 0.0);
 $resumoCaixa = $dadosFechamento['resumo_caixa'] ?? ($resumoCaixa ?? []);
@@ -296,13 +318,13 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         </tbody>
     </table>
 
-    <!-- SEÇÃO 2: VENDAS (NUTRE / CANTINA) -->
-    <div class="section-title">Vendas Nutre</div>
+    <!-- SEÇÃO 2: VENDAS CANTINA WEB (ONLINE) -->
+    <div class="section-title">Vendas Cantina Web</div>
     <table>
         <thead>
             <tr>
                 <th style="width: 36%;">Alimento</th>
-                <th style="width: 36%;">Pessoa</th>
+                <th style="width: 36%;">Aluno</th>
                 <th style="width: 10%;" class="text-right">PrcUnitário</th>
                 <th style="width: 6%;" class="text-center">Qtde</th>
                 <th style="width: 12%;" class="text-right">Vlr Pago</th>
@@ -310,36 +332,75 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             </tr>
         </thead>
         <tbody>
-            <?php if (empty($vendas)): ?>
+            <?php if (empty($vendasCantinaWeb)): ?>
                 <tr>
-                    <td colspan="6" class="text-center" style="color: #64748b; padding: 6px;">Nenhuma venda avulsa ou encomenda registrada nesta sessão.</td>
+                    <td colspan="6" class="text-center" style="color: #64748b; padding: 6px;">Nenhuma venda online do Cantina Web registrada nesta sessão.</td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($vendas as $v): ?>
+                <?php foreach ($vendasCantinaWeb as $v): ?>
                     <tr>
                         <td>
-                            <?php echo htmlspecialchars($v['alimento'] ?? ''); ?>
-                            <?php if (($v['origem'] ?? '') === 'online'): ?>
-                                <span class="tag-origem tag-online">Online</span>
-                            <?php endif; ?>
+                            <?php echo htmlspecialchars($v['alimento'] ?? ($v['produto_descricao'] ?? '')); ?>
+                            <span class="tag-origem tag-online">Online</span>
                         </td>
-                        <td><?php echo htmlspecialchars($v['pessoa'] ?? ''); ?></td>
-                        <td class="font-tabular text-right"><?php echo number_format((float)($v['preco_unitario'] ?? 0), 2, ',', '.'); ?></td>
+                        <td><?php echo htmlspecialchars($v['pessoa'] ?? ($v['cliente_ident'] ?? '')); ?></td>
+                        <td class="font-tabular text-right"><?php echo number_format((float)($v['preco_unitario'] ?? ($v['valor'] ?? 0)), 2, ',', '.'); ?></td>
                         <td class="font-tabular text-center"><?php echo (int)($v['quantidade'] ?? 1); ?></td>
-                        <td class="font-tabular text-right"><?php echo number_format((float)($v['valor_pago'] ?? 0), 2, ',', '.'); ?></td>
-                        <td class="text-center"><?php echo htmlspecialchars($v['tipo'] ?? 'Dinheiro'); ?></td>
+                        <td class="font-tabular text-right"><?php echo number_format((float)($v['valor_pago'] ?? ($v['valor'] ?? 0)), 2, ',', '.'); ?></td>
+                        <td class="text-center"><?php echo htmlspecialchars($v['tipo'] ?? 'Saldo'); ?></td>
                     </tr>
                 <?php endforeach; ?>
                 <tr class="row-subtotal">
-                    <td colspan="4">Subtotal</td>
-                    <td class="font-tabular text-right"><?php echo number_format($subtotalVendas, 2, ',', '.'); ?></td>
+                    <td colspan="4">Subtotal Cantina Web</td>
+                    <td class="font-tabular text-right"><?php echo number_format($subtotalCantinaWeb, 2, ',', '.'); ?></td>
                     <td></td>
                 </tr>
             <?php endif; ?>
         </tbody>
     </table>
 
-    <!-- SEÇÃO 3: RECEBIMENTO EM PIX -->
+    <!-- SEÇÃO 3: VENDAS PRESENCIAIS NO BALCÃO -->
+    <div class="section-title">Vendas Presenciais no Balcão</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 36%;">Alimento</th>
+                <th style="width: 36%;">Pessoa / Cliente</th>
+                <th style="width: 10%;" class="text-right">PrcUnitário</th>
+                <th style="width: 6%;" class="text-center">Qtde</th>
+                <th style="width: 12%;" class="text-right">Vlr Pago</th>
+                <th style="width: 10%;" class="text-center">Tipo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (empty($vendasBalcao)): ?>
+                <tr>
+                    <td colspan="6" class="text-center" style="color: #64748b; padding: 6px;">Nenhuma venda presencial no balcão registrada nesta sessão.</td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($vendasBalcao as $v): ?>
+                    <tr>
+                        <td>
+                            <?php echo htmlspecialchars($v['alimento'] ?? ($v['produto_descricao'] ?? '')); ?>
+                            <span class="tag-origem tag-balcao">Balcão</span>
+                        </td>
+                        <td><?php echo htmlspecialchars($v['pessoa'] ?? ($v['cliente_ident'] ?? 'Balcão')); ?></td>
+                        <td class="font-tabular text-right"><?php echo number_format((float)($v['preco_unitario'] ?? ($v['valor'] ?? 0)), 2, ',', '.'); ?></td>
+                        <td class="font-tabular text-center"><?php echo (int)($v['quantidade'] ?? 1); ?></td>
+                        <td class="font-tabular text-right"><?php echo number_format((float)($v['valor_pago'] ?? ($v['valor'] ?? 0)), 2, ',', '.'); ?></td>
+                        <td class="text-center"><?php echo htmlspecialchars($v['tipo'] ?? 'Dinheiro'); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                <tr class="row-subtotal">
+                    <td colspan="4">Subtotal Balcão</td>
+                    <td class="font-tabular text-right"><?php echo number_format($subtotalBalcao, 2, ',', '.'); ?></td>
+                    <td></td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+
+    <!-- SEÇÃO 4: RECEBIMENTO EM PIX -->
     <div class="section-title">Recebimento em Pix</div>
     <table>
         <thead>
@@ -372,7 +433,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         </tbody>
     </table>
 
-    <!-- SEÇÃO 4: RESUMO DO CAIXA -->
+    <!-- SEÇÃO 5: RESUMO DO CAIXA -->
     <div class="section-title">Resumo do Caixa - <?php echo htmlspecialchars($operadorTurno); ?></div>
     <div class="resumo-box">
         <table class="resumo-table">
