@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 20 — Nova Arquitetura de PDF (HTML+CSS+Gotenberg) & Migração Completa de Relatórios + Fechamento de Caixa Oficial
 * **Status da Fase 20:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 20 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
-* **Última Atualização:** 2026-09-30 09:50:00 (Reformulação completa da tela operacional de Abertura e Fechamento de Caixa `/operacional/caixa` com base na foto do sistema anterior Escolar Manager: Grid Oficial de alta densidade com 3 linhas x 4 colunas, botões Emitir e Fechar/Abrir Caixa, eliminação dos campos inexistentes de cheque e cartão, detalhamento analítico de Vendas Cantina Web online vs Balcão presencial e aprovação de 53/53 asserções em `tests/caixa_test.php` e 65/65 em `tests/fase20_test.php`).
+* **Última Atualização:** 2026-09-30 10:15:00 (Remoção definitiva de linhas de cartão e cheque do espelho de Fechamento de Caixa `app/views/relatorios/fechamento_caixa_pdf.php` e do modelo `SessaoCaixa.php`, mantendo estritamente dinheiro e Pix conforme regra de negócio da cantina. Baterias de testes `tests/fase20_test.php` com 71/71 asserções e `tests/caixa_test.php` com 53/53 asserções 100% aprovadas).
 
 
 
