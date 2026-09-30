@@ -404,9 +404,14 @@ class CaixaController extends Controller
     /**
      * Espelho HTML formatado para impressão A4 do Fechamento de Caixa
      */
-    public function espelhoHtml(array $params): void
+    public function espelhoHtml(array $params = []): void
     {
-        $id = (int)($params['id'] ?? 0);
+        $id = (int)($params['id'] ?? ($_GET['id'] ?? 0));
+        if ($id <= 0) {
+            $sessaoPadrao = SessaoCaixa::obterSessaoAberta() ?? SessaoCaixa::obterUltimaSessao(SessaoCaixa::inferirTurnoAtual());
+            $id = $sessaoPadrao ? (int)($sessaoPadrao['id'] ?? 0) : 0;
+        }
+
         $sessao = SessaoCaixa::buscarPorId($id);
 
         if (!$sessao) {
@@ -422,9 +427,14 @@ class CaixaController extends Controller
     /**
      * Emissão de PDF A4 timbrado do Fechamento de Caixa
      */
-    public function espelhoPdf(array $params): void
+    public function espelhoPdf(array $params = []): void
     {
-        $id = (int)($params['id'] ?? 0);
+        $id = (int)($params['id'] ?? ($_GET['id'] ?? 0));
+        if ($id <= 0) {
+            $sessaoPadrao = SessaoCaixa::obterSessaoAberta() ?? SessaoCaixa::obterUltimaSessao(SessaoCaixa::inferirTurnoAtual());
+            $id = $sessaoPadrao ? (int)($sessaoPadrao['id'] ?? 0) : 0;
+        }
+
         $sessao = SessaoCaixa::buscarPorId($id);
 
         if (!$sessao) {
@@ -444,6 +454,14 @@ class CaixaController extends Controller
 
         echo $pdfBinary;
         exit;
+    }
+
+    /**
+     * Emissão / Download de PDF de Fechamento de Caixa (compatibilidade com /operacional/caixa/fechamento/pdf?id={id})
+     */
+    public function fechamentoPdf(array $params = []): void
+    {
+        $this->espelhoPdf($params);
     }
 
     /**

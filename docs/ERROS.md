@@ -1245,3 +1245,23 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Adicionadas seções analíticas com abas detalhando `Vendas Cantina Web (Online)`, `Vendas Presenciais no Balcão` e `Recargas no Balcão`.
   5. Expandida a suíte `tests/caixa_test.php` de 38 para 53 asserções, validando todos os novos campos oficiais e a ausência absoluta de cheque e cartão.
 - Como evitar no futuro: Sempre coletar as imagens e leiautes reais do sistema anterior em uso pelos operadores da escola antes de desenhar telas operacionais do ERP, adaptando o design para a realidade concreta do modelo de negócio.
+
+---
+
+## 2026-09-30 - Erro 404 ao baixar PDF de fechamento de caixa e inoperância do botão Fechar no espelho A4
+
+- Sintoma:
+  1. Ao clicar em "Baixar em PDF (A4)" no menu do botão Emitir da tela do Caixa (`/operacional/caixa`), o navegador abria `http://localhost:8080/operacional/caixa/fechamento/pdf?id={id}` e exibia a tela de erro 404 (Página Não Encontrada).
+  2. Na tela de espelho HTML A4 (`/operacional/caixa/espelho/{id}`), ao clicar no botão "Fechar" no topo da página, a aba do navegador não fechava.
+- Causa:
+  1. A rota cadastrada em `index.php` estava restrita ao padrão de path parameter `/operacional/caixa/espelho/{id}/pdf`, enquanto o link gerado apontava para `/operacional/caixa/fechamento/pdf?id={id}`. Como não havia rota correspondente para `/operacional/caixa/fechamento/pdf` nem método que lesse `$_GET['id']` em query string, o roteador disparava 404.
+  2. O botão "Fechar" possuía apenas a diretiva inline `onclick="window.close()"`. Políticas de segurança de navegadores modernos (Chrome, Firefox, Safari) bloqueiam a execução de `window.close()` para janelas ou abas que não tenham sido explicitamente abertas por script JavaScript (`window.open`). Links HTML padrão com `target="_blank"` ou navegação direta sofrem bloqueio silencioso dessa API.
+- Solução aplicada:
+  1. Registradas as rotas `/operacional/caixa/fechamento/pdf` e `/operacional/caixa/fechamento/pdf/{id}` em `index.php`, ambas apontando para `CaixaController::fechamentoPdf`.
+  2. Implementado método `fechamentoPdf(array $params = [])` em `CaixaController.php` com suporte flexível a `$params['id']` e `$_GET['id']`, com fallback para a sessão atual em caso de omissão de identificador.
+  3. No menu suspenso do botão Emitir em `app/views/operacional/caixa.php`, o link de Visualização/Impressão foi equipado com `onclick="window.open(this.href, '_blank'); return false;"`, garantindo que a nova janela seja originada por script e autorizada a fechar programaticamente.
+  4. Na view `app/views/relatorios/fechamento_caixa_pdf.php`, criado o manipulador `fecharJanela()` que invoca `window.close()` e, caso a janela não seja fechada em 150ms devido a restrições do navegador, executa fallback inteligente via `history.back()` ou redirecionamento de retorno para `/operacional/caixa`.
+  5. Injetado `$baseUrl` defensivo em `PdfService::renderView()` e na view de fechamento, e criado teste de regressão `tests/fechamento_pdf_fix_test.php` com 100% de aprovação.
+- Como evitar no futuro:
+  1. Ao criar atalhos de download ou exportação em relatórios, registrar rotas tolerantes a parâmetros via path e via query string.
+  2. Para botões de fechar janela/documento em abas externas, sempre utilizar acionamento com `window.open` e prover fallback via JavaScript para redirecionamento caso o navegador restrinja `window.close()`.

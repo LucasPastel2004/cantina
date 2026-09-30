@@ -178,7 +178,7 @@ if ($dadosFechamento) {
                     </button>
                     <ul class="dropdown-menu shadow-sm" aria-labelledby="dropdownEmitirCaixa" style="font-size: 12.5px;">
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $sessaoIdAtual; ?>" target="_blank">
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $sessaoIdAtual; ?>" target="_blank" onclick="window.open(this.href, '_blank'); return false;">
                                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-primary">
                                     <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                                     <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>

@@ -266,6 +266,12 @@ $router->get('/operacional/caixa/espelho/{id}', [\App\Controllers\CaixaControlle
 $router->get('/operacional/caixa/espelho/{id}/pdf', [\App\Controllers\CaixaController::class, 'espelhoPdf'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
+$router->get('/operacional/caixa/fechamento/pdf', [\App\Controllers\CaixaController::class, 'fechamentoPdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/caixa/fechamento/pdf/{id}', [\App\Controllers\CaixaController::class, 'fechamentoPdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
 
 // 2.6. Gestão de Estoque, Importação de XML de NF-e e Registro de Perdas (Fase 14 — FSD Área 5 e Módulo 6)
 $router->get('/estoque', [\App\Controllers\EstoqueController::class, 'index'], [
@@ -421,6 +427,21 @@ $router->get('/relatorios/vendas-alimento', [\App\Controllers\RelatoriosControll
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 $router->get('/relatorios/vendas-alimento/pdf', [\App\Controllers\RelatoriosController::class, 'vendasAlimentoPdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/vendas-alimento/csv', [\App\Controllers\RelatoriosController::class, 'vendasAlimentoCsv'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/vendas-filtros', [\App\Controllers\RelatoriosController::class, 'vendasFiltros'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/vendas-filtros/pdf', [\App\Controllers\RelatoriosController::class, 'vendasFiltrosPdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/vendas-filtros/imprimir', [\App\Controllers\RelatoriosController::class, 'vendasFiltrosImprimir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/vendas-filtros/csv', [\App\Controllers\RelatoriosController::class, 'vendasFiltrosCsv'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 $router->get('/relatorios/desconto-folha', [\App\Controllers\RelatoriosController::class, 'descontoFolha'], [

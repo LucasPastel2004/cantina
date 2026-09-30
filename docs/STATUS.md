@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 20 — Nova Arquitetura de PDF (HTML+CSS+Gotenberg) & Migração Completa de Relatórios + Fechamento de Caixa Oficial
 * **Status da Fase 20:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 20 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
-* **Última Atualização:** 2026-09-30 10:45:00 (Aprimoramento da tela de Caixa Operacional `/operacional/caixa`: 1) Botão Emitir transformado em menu com opções de 'Visualizar / Imprimir (A4)' e 'Baixar em PDF (A4)'; 2) Botão e modal de recarga presencial atualizados para '+ Recarga' com suporte flexível a Dinheiro Físico e Pix no Balcão; 3) Remoção do histórico de caixas anteriores da visão do operador, segregando-o para os relatórios administrativos. Testes automatizados `tests/caixa_test.php` com 59/59 e `tests/recarga_dinheiro_post_test.php` com 22/22 100% aprovados).
+* **Última Atualização:** 2026-09-30 11:55:00 (Correção e robustez na emissão e fechamento do espelho/PDF de Caixa: 1) Resolução do erro 404 ao registrar rotas `/operacional/caixa/fechamento/pdf` e `/operacional/caixa/fechamento/pdf/{id}` com método `fechamentoPdf` e suporte total a query string `?id=...` no `CaixaController`; 2) Correção do botão 'Fechar' no espelho A4 impresso com fallback inteligente via JavaScript (`window.close()` com fallback para `history.back()` ou retorno ao caixa) e abertura explícita por script via `window.open` no menu de emissão; 3) Testes de regressão `tests/fechamento_pdf_fix_test.php`, `tests/caixa_test.php` e `tests/fase20_test.php` 100% aprovados).
 
 
 

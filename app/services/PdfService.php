@@ -132,6 +132,12 @@ class PdfService
             }
         }
 
+        if (!isset($_viewVars['baseUrl'])) {
+            $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+            $base = str_replace('\\', '/', $scriptDir);
+            $_viewVars['baseUrl'] = ($base === '/' || $base === '.') ? '' : rtrim($base, '/');
+        }
+
         extract($_viewVars, EXTR_OVERWRITE);
         ob_start();
         include $viewPath;

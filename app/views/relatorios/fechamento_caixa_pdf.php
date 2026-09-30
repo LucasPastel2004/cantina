@@ -13,6 +13,12 @@
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
+if (!isset($baseUrl)) {
+    $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+    $base = str_replace('\\', '/', $scriptDir);
+    $baseUrl = ($base === '/' || $base === '.') ? '' : rtrim($base, '/');
+}
+
 $sessao = $dadosFechamento['sessao'] ?? ($sessao ?? []);
 $duplicatas = $dadosFechamento['duplicatas'] ?? ($duplicatas ?? []);
 $subtotalDuplicatas = $dadosFechamento['subtotal_duplicatas'] ?? ($subtotalDuplicatas ?? 0.0);
@@ -223,10 +229,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
     <div class="no-print">
         <span><strong>Fechamento de Caixa</strong> — Sessão #<?php echo $controleStr; ?> (<?php echo htmlspecialchars($operadorTurno); ?>)</span>
         <div>
-            <button onclick="window.print()" style="padding: 5px 12px; font-weight: bold; background: #1d4ed8; color: #fff; border: 1px solid #1e40af; cursor: pointer; border-radius: 3px;">
+            <button type="button" onclick="window.print()" style="padding: 5px 12px; font-weight: bold; background: #1d4ed8; color: #fff; border: 1px solid #1e40af; cursor: pointer; border-radius: 3px;">
                 Imprimir Documento
             </button>
-            <button onclick="window.close()" style="padding: 5px 10px; background: #fff; border: 1px solid #cbd5e1; cursor: pointer; border-radius: 3px; margin-left: 6px;">
+            <button type="button" onclick="fecharJanela()" style="padding: 5px 10px; background: #fff; border: 1px solid #cbd5e1; cursor: pointer; border-radius: 3px; margin-left: 6px;">
                 Fechar
             </button>
         </div>
@@ -479,5 +485,22 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
     </div>
 </div>
 
+<script>
+function fecharJanela() {
+    window.close();
+    // Fallback defensivo: se a janela não puder ser fechada por ter sido aberta diretamente ou bloqueada
+    setTimeout(function() {
+        if (!window.closed) {
+            if (window.opener) {
+                window.close();
+            } else if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '<?php echo $baseUrl; ?>/operacional/caixa';
+            }
+        }
+    }, 150);
+}
+</script>
 </body>
 </html>
