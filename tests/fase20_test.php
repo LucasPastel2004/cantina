@@ -251,6 +251,12 @@ class Fase20Test
         $this->assert(str_contains($html, 'Fundo de Caixa'), "Card contábil de Fundo de Caixa presente.");
         $this->assert(str_contains($html, 'Entradas'), "Card contábil de Entradas presente.");
         $this->assert(str_contains($html, 'Saldo de Caixa'), "Card contábil de Saldo Final presente.");
+        $this->assert(str_contains($html, 'Em Dinheiro'), "Resumo do caixa discrimina Em Dinheiro.");
+        $this->assert(str_contains($html, 'Em Pix'), "Resumo do caixa discrimina Em Pix.");
+        $this->assert(!str_contains($html, 'Em Cartão'), "Resumo do caixa NÃO contém 'Em Cartão'.");
+        $this->assert(!str_contains($html, 'Em Cheque'), "Resumo do caixa NÃO contém 'Em Cheque'.");
+        $this->assert(!str_contains($html, 'Crédito'), "Resumo do caixa NÃO contém menção a 'Crédito'.");
+        $this->assert(!str_contains($html, 'Débito'), "Resumo do caixa NÃO contém menção a 'Débito'.");
 
         // Gera o PDF
         $pdf = PdfService::gerarRelatorioFechamentoCaixaPdf($dadosMock['sessao'], $dadosMock);

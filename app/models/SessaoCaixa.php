@@ -1021,29 +1021,21 @@ class SessaoCaixa extends Model
             'fundo' => [
                 'dinheiro' => $fundoTroco,
                 'pix'      => 0.0,
-                'cartao'   => 0.0,
-                'cheque'   => 0.0,
                 'total'    => $fundoTroco
             ],
             'entradas' => [
                 'dinheiro' => $totalDinheiroEntradas,
                 'pix'      => $totalPixEntradas,
-                'cartao'   => 0.0,
-                'cheque'   => 0.0,
                 'total'    => $totalEntradas
             ],
             'saidas' => [
                 'dinheiro' => 0.0,
                 'pix'      => 0.0,
-                'cartao'   => 0.0,
-                'cheque'   => 0.0,
                 'total'    => 0.0
             ],
             'saldo' => [
                 'dinheiro' => $saldoCaixaDinheiro,
                 'pix'      => $saldoCaixaPix,
-                'cartao'   => 0.0,
-                'cheque'   => 0.0,
                 'total'    => $saldoCaixaTotal
             ],
             'fundo_caixa'    => $fundoTroco,

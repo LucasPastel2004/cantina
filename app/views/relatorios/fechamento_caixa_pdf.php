@@ -55,11 +55,11 @@ $fechadoEm = !empty($sessao['fechado_em']) ? date('d/m/Y H:i', strtotime($sessao
 $fundoCaixa = (float)($sessao['fundo_troco_inicial'] ?? 0.0);
 $emissaoDataHora = date('d/m/Y H:i');
 
-// Totais do Resumo
-$fundo = $resumoCaixa['fundo'] ?? ['dinheiro' => $fundoCaixa, 'pix' => 0.0, 'cartao' => 0.0, 'cheque' => 0.0, 'total' => $fundoCaixa];
-$entradas = $resumoCaixa['entradas'] ?? ['dinheiro' => 0.0, 'pix' => 0.0, 'cartao' => 0.0, 'cheque' => 0.0, 'total' => 0.0];
-$saidas = $resumoCaixa['saidas'] ?? ['dinheiro' => 0.0, 'pix' => 0.0, 'cartao' => 0.0, 'cheque' => 0.0, 'total' => 0.0];
-$saldo = $resumoCaixa['saldo'] ?? ['dinheiro' => 0.0, 'pix' => 0.0, 'cartao' => 0.0, 'cheque' => 0.0, 'total' => 0.0];
+// Totais do Resumo (exclusivamente dinheiro e Pix)
+$fundo = $resumoCaixa['fundo'] ?? ['dinheiro' => $fundoCaixa, 'pix' => 0.0, 'total' => $fundoCaixa];
+$entradas = $resumoCaixa['entradas'] ?? ['dinheiro' => 0.0, 'pix' => 0.0, 'total' => 0.0];
+$saidas = $resumoCaixa['saidas'] ?? ['dinheiro' => 0.0, 'pix' => 0.0, 'total' => 0.0];
+$saldo = $resumoCaixa['saldo'] ?? ['dinheiro' => 0.0, 'pix' => 0.0, 'total' => 0.0];
 $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
 ?>
 <!DOCTYPE html>
@@ -453,40 +453,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
                     <td class="font-tabular"><strong>Em Dinheiro <?php echo number_format((float)($saldo['dinheiro'] ?? 0), 2, ',', '.'); ?></strong></td>
                 </tr>
                 <tr>
-                    <td class="font-tabular">--</td>
+                    <td class="font-tabular"></td>
                     <td class="font-tabular">Em Pix <?php echo number_format((float)($entradas['pix'] ?? 0), 2, ',', '.'); ?></td>
                     <td class="font-tabular">Em Pix <?php echo number_format((float)($saidas['pix'] ?? 0), 2, ',', '.'); ?></td>
                     <td class="font-tabular"><strong>Em Pix <?php echo number_format((float)($saldo['pix'] ?? 0), 2, ',', '.'); ?></strong></td>
-                </tr>
-                <tr>
-                    <td class="font-tabular">--</td>
-                    <td class="font-tabular">Em Cartão 0,00</td>
-                    <td class="font-tabular">Em Cartão --</td>
-                    <td class="font-tabular">Em Cartão 0,00</td>
-                </tr>
-                <tr>
-                    <td class="font-tabular">--</td>
-                    <td class="font-tabular" style="padding-left: 12px;">Em Crédito À vista 0,00</td>
-                    <td class="font-tabular">--</td>
-                    <td class="font-tabular">--</td>
-                </tr>
-                <tr>
-                    <td class="font-tabular">--</td>
-                    <td class="font-tabular" style="padding-left: 12px;">Em Crédito Parcelado 0,00</td>
-                    <td class="font-tabular">--</td>
-                    <td class="font-tabular">--</td>
-                </tr>
-                <tr>
-                    <td class="font-tabular">--</td>
-                    <td class="font-tabular" style="padding-left: 12px;">Em Débito 0,00</td>
-                    <td class="font-tabular">--</td>
-                    <td class="font-tabular">--</td>
-                </tr>
-                <tr>
-                    <td class="font-tabular">--</td>
-                    <td class="font-tabular">Em Cheque 0,00</td>
-                    <td class="font-tabular">Em Cheque 0,00</td>
-                    <td class="font-tabular">Em Cheque 0,00</td>
                 </tr>
             </tbody>
         </table>
