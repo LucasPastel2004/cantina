@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 21 — Painel de Filtros Avançados e Relatório Oficial de Vendas por Período / Alimento
 * **Status da Fase 21:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 21 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
-* **Última Atualização:** 2026-09-30 12:35:00 (Ajuste visual da versão de impressão e espelho oficial A4: 1) Simulação realista de folha física de papel A4 em tela (`max-width: 200mm`, fundo `#cbd5e1`, sombra elegante e margens padronizadas); 2) Eliminação de menções a software de terceiros e tokens residuais no rodapé, substituindo pela identidade oficial do Colégio Monteiro Lobato • Sistema Cantina Web; 3) Barra de controle de impressão com navegação direta de retorno aos filtros; 4) Suíte `tests/fase21_test.php` expandida com 95 asserções 100% aprovadas).
+* **Última Atualização:** 2026-09-30 12:46:00 (Implementação integral e dinâmica de todas as 15 possibilidades do relatório de vendas e alunos: 1) Suporte a emissão por alimento e/ou aluno, agrupamento por série/turma com banners e subtotais, quebra de página A4 por turma, detalhamento linha a linha de compras por aluno, consolidação geral do período e ordenações dinâmicas por maior/menor consumo ou nome; 2) Todos os 15 cenários de filtros testados e validados com compilação de PDFs reais de 25 KB a 113 KB via Gotenberg Engine; 3) Suítes `tests/fase21_test.php` e `tests/test_todas_possibilidades.php` 100% aprovadas).
 
 
 

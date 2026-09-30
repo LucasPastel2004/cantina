@@ -1617,18 +1617,36 @@ class RelatoriosController extends Controller
             if ($tipoPessoa === 'Aluno' && !empty($reg['pessoa_identificador'])) {
                 $alunoKey = $reg['pessoa_identificador'];
                 if (!isset($alunosConsolidados[$alunoKey])) {
+                    $serie = trim($reg['pessoa_serie'] ?? '');
+                    $turma = trim($reg['pessoa_turma'] ?? '');
+                    $serieTurma = trim("{$serie} {$turma}");
+                    if (empty($serieTurma) || $serieTurma === '- -' || $serieTurma === '-') {
+                        $serieTurma = 'Turma Não Informada';
+                    }
+
                     $alunosConsolidados[$alunoKey] = [
                         'aluno_id'      => (int)$reg['aluno_id'],
                         'matricula'     => $reg['pessoa_identificador'],
                         'nome'          => $reg['pessoa_nome'],
-                        'serie'         => $reg['pessoa_serie'],
-                        'turma'         => $reg['pessoa_turma'],
+                        'serie'         => $serie,
+                        'turma'         => $turma,
+                        'serie_turma'   => $serieTurma,
                         'quantidade'    => 0,
-                        'total_consumo' => 0.0
+                        'total_consumo' => 0.0,
+                        'compras'       => []
                     ];
                 }
                 $alunosConsolidados[$alunoKey]['quantidade']    += $qtd;
                 $alunosConsolidados[$alunoKey]['total_consumo'] += $subtotal;
+                $alunosConsolidados[$alunoKey]['compras'][] = [
+                    'data_fmt'        => $dataFmt,
+                    'hora_venda'      => substr($reg['hora_venda'] ?? '', 0, 5),
+                    'produto_nome'    => $reg['produto_nome'],
+                    'quantidade'      => $qtd,
+                    'preco_unitario'  => (float)$reg['preco_unitario'],
+                    'subtotal'        => $subtotal,
+                    'forma_pagamento' => $reg['forma_pagamento'] ?? 'Saldo'
+                ];
             }
         }
 
@@ -1706,13 +1724,40 @@ class RelatoriosController extends Controller
         }
         unset($itemG);
 
-        // Ordenação dos alunos (se aplicável)
+        // Ordenação dos alunos (por consumo ou alfabética por nome)
+        $ordenarConsumoAluno = ($filtros['ordenar_consumo_aluno'] ?? 'nao') === 'sim';
         $listaAlunos = array_values($alunosConsolidados);
-        usort($listaAlunos, function($a, $b) use ($ordenarPor) {
-            return ($ordenarPor === 'DESC') 
-                ? ($b['total_consumo'] <=> $a['total_consumo']) 
-                : ($a['total_consumo'] <=> $b['total_consumo']);
-        });
+        if ($ordenarConsumoAluno) {
+            usort($listaAlunos, function($a, $b) use ($ordenarPor) {
+                return ($ordenarPor === 'DESC') 
+                    ? ($b['total_consumo'] <=> $a['total_consumo']) 
+                    : ($a['total_consumo'] <=> $b['total_consumo']);
+            });
+        } else {
+            usort($listaAlunos, function($a, $b) {
+                return strcoll(mb_strtolower($a['nome'], 'UTF-8'), mb_strtolower($b['nome'], 'UTF-8'));
+            });
+        }
+
+        // Agrupamento por série/turma
+        $turmasAgrupadas = [];
+        foreach ($listaAlunos as $al) {
+            $turmaKey = !empty($al['serie_turma']) ? $al['serie_turma'] : 'Turma Não Informada';
+            if (!isset($turmasAgrupadas[$turmaKey])) {
+                $turmasAgrupadas[$turmaKey] = [
+                    'turma_nome'       => $turmaKey,
+                    'serie'            => $al['serie'],
+                    'turma'            => $al['turma'],
+                    'alunos'           => [],
+                    'total_quantidade' => 0,
+                    'total_consumo'    => 0.0
+                ];
+            }
+            $turmasAgrupadas[$turmaKey]['alunos'][] = $al;
+            $turmasAgrupadas[$turmaKey]['total_quantidade'] += (int)$al['quantidade'];
+            $turmasAgrupadas[$turmaKey]['total_consumo']    += (float)$al['total_consumo'];
+        }
+        ksort($turmasAgrupadas, SORT_NATURAL | SORT_FLAG_CASE);
 
         $periodoFmt = date('d/m/Y', strtotime($dataInicio)) . ' a ' . date('d/m/Y', strtotime($dataFim));
         $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', strtotime($dataFim));
@@ -1738,6 +1783,7 @@ class RelatoriosController extends Controller
             'alimentos_consolidados'   => $listaAlimentosGeral,
             'grupos_tipo_pessoa'       => $gruposTipoPessoa,
             'alunos'                   => $listaAlunos,
+            'turmas'                   => array_values($turmasAgrupadas),
             'totais'                   => [
                 'faturamento_total'    => $faturamentoGeral,
                 'quantidade_total'     => $quantidadeGeral,

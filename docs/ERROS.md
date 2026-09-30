@@ -1297,3 +1297,25 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Adicionada barra de ações superior com botão `← Voltar aos Filtros`, `Imprimir Documento` e `Fechar Janela`.
   5. Expandida a suíte `tests/fase21_test.php` para 95 asserções (todas 100% aprovadas), incluindo verificações automáticas de ausência de referências a terceiros e presença do rodapé institucional.
 - Como evitar no futuro: Em espelhos e relatórios destinados à impressão ou visualização documental, sempre aplicar o contêiner de folha A4 com largura fixa (`200mm`) no modo tela e reset em `@media print`, garantindo que identidades institucionais de sistemas legados de referência sejam sempre substituídas pela identidade do cliente final.
+
+---
+
+## 2026-09-30 - Ausência de alteração no PDF ao ligar/desligar parâmetros e opções de formatação
+
+- Sintoma: O usuário reportou que ao alternar opções nos parâmetros de emissão e formatação da tela de filtros (como "Emitir vendas por aluno", "Agrupar por série/turma", "Quebrar página por turma", "Ordenar consumo", "Emitir vendas por alimento"), o PDF gerado ou a tela de impressão continuava com a mesma aparência fixa sem refletir as opções escolhidas.
+- Causa:
+  1. A view `app/views/relatorios/vendas_alimento_pdf.php` lia apenas 6 dos 15 parâmetros disponíveis nos filtros, ignorando completamente `$emitirAlim`, `$agruparAlim`, `$ordenarAlim`, `$agruparAluno`, `$agruparTurma`, `$quebrarTurma` e `$ordConsumo`.
+  2. A tabela de alimentos era renderizada de forma incondicional, mesmo que o usuário desmarcasse "Emitir vendas por alimento".
+  3. A seção de alunos utilizava uma tabela simples e fixa, sem agrupar por turma com banners/subtotais, sem suporte a detalhamento de itens individuais de compras por aluno, e sem CSS de quebra de página por turma.
+  4. O método `RelatoriosController::obterDadosVendasAvancadas()` não estruturava o array auxiliar de turmas (`$turmas`) nem armazenava os itens individuais de compra de cada aluno para quando o detalhamento estivesse ativado.
+- Solução aplicada:
+  1. No controller `RelatoriosController.php`, enriquecido o método `obterDadosVendasAvancadas()` com consolidação por série/turma (`$turmas`), agregação de compras individuais por aluno (`$aluno['compras']`), e suporte à ordenação flexível (por maior/menor consumo ou ordem alfabética por nome).
+  2. Na view `app/views/relatorios/vendas_alimento_pdf.php`, implementado suporte dinâmico a todas as combinações:
+     - Título adaptativo do cabeçalho institucional;
+     - Condicional para tabela de alimentos (`$emitirAlim`) com modo agrupado por dia ou modo consolidado do período (`$agruparPer`);
+     - Demonstrativo de alunos agrupado por série/turma com banners de turma (`TURMA: 1º ANO A`) e subtotais por turma (`$agruparTurma`);
+     - Quebras de página físicas e lógicas (`page-break-before: always; break-before: page;`) antes de cada turma (`$quebrarTurma`);
+     - Modo consolidado ou detalhado linha a linha das compras do aluno (`$agruparAluno`);
+     - Mensagem explicativa caso o usuário desmarque ambas as seções.
+  3. Criada a suíte `tests/test_todas_possibilidades.php` testando e validando 15 cenários distintos com compilação real de PDFs de 25 KB a 113 KB via Gotenberg, todos aprovados com 100% de sucesso.
+- Como evitar no futuro: Ao disponibilizar um painel de filtros com múltiplos toggles de formatação, assegurar que cada um dos parâmetros possua lógica explícita tanto no backend quanto no template de saída, criando testes de regressão que alterem os toggles e verifiquem a presença das classes e dados resultantes.
