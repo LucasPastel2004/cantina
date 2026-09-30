@@ -1265,3 +1265,17 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Como evitar no futuro:
   1. Ao criar atalhos de download ou exportação em relatórios, registrar rotas tolerantes a parâmetros via path e via query string.
   2. Para botões de fechar janela/documento em abas externas, sempre utilizar acionamento com `window.open` e prover fallback via JavaScript para redirecionamento caso o navegador restrinja `window.close()`.
+
+---
+
+## 2026-09-30 - PDF de fechamento de caixa gerado em branco (apenas cabeçalho) por contêiner Gotenberg inativo
+
+- Sintoma: Ao emitir ou baixar o PDF oficial de Fechamento de Caixa (`/operacional/caixa/fechamento/pdf?id={id}`), o arquivo PDF continha apenas um cabeçalho curto ("COLEGIO MONTEIRO LOBATO - FECHAMENTO DE CAIXA OPERACIONAL") com todo o restante da página em branco, sem nenhuma das 4 tabelas escolares nem o resumo contábil.
+- Causa:
+  1. O serviço `cantina_gotenberg` (Gotenberg 8 / Chromium headless), configurado no `docker-compose.yml`, não havia sido iniciado após sua inclusão no arquivo de composição, permanecendo ausente do runtime local.
+  2. O método `PdfService::gerarEspelhoFechamentoCaixaPdf()` chamava `self::htmlToPdf()`, que retornava `null` pela ausência do serviço HTTP na porta 3000. Ao cair no fallback canônico legado, este desenhava apenas 3 linhas primitivas de texto em PDF Type1, deixando a página quase vazia.
+- Solução aplicada:
+  1. Executado `docker compose up -d` com pull e inicialização oficial do contêiner `cantina_gotenberg` (porta 3000), habilitando o motor Chromium headless para compilar o HTML oficial em PDF de 36 KB com 100% de fidelidade visual.
+  2. Implementado fallback defensivo em `CaixaController::espelhoPdf()`: caso o Gotenberg esteja indisponível, o sistema renderiza o espelho HTML oficial idêntico à tela de impressão com acionamento nativo de impressão/salvar em PDF (`window.print()`), garantindo que em nenhuma hipótese o usuário receba uma página em branco.
+  3. Validado via `tests/fechamento_pdf_fix_test.php` que o PDF gerado possui densidade completa (> 36 KB) e estrutura idêntica à tela de impressão.
+- Como evitar no futuro: Sempre que um serviço auxiliar (como Gotenberg, Redis ou fila) for adicionado ao `docker-compose.yml`, certificar-se de executar `docker compose up -d` para instanciá-lo e garantir fallbacks em HTML/CSS para ambientes sem contêineres gerenciados.

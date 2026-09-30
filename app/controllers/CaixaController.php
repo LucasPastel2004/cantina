@@ -444,15 +444,25 @@ class CaixaController extends Controller
         }
 
         $pdfBinary = PdfService::gerarEspelhoFechamentoCaixaPdf($sessao);
-        $filename = "fechamento_caixa_{$id}_" . date('Ymd_His') . ".pdf";
 
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: inline; filename="' . $filename . '"');
-        header('Content-Length: ' . strlen($pdfBinary));
-        header('Cache-Control: private, max-age=0, must-revalidate');
-        header('Pragma: public');
+        // Se o PDF foi gerado pelo Chromium do Gotenberg (> 10KB com todas as tabelas)
+        if (!empty($pdfBinary) && strlen($pdfBinary) > 10000) {
+            $filename = "fechamento_caixa_{$id}_" . date('Ymd_His') . ".pdf";
 
-        echo $pdfBinary;
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="' . $filename . '"');
+            header('Content-Length: ' . strlen($pdfBinary));
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+
+            echo $pdfBinary;
+            exit;
+        }
+
+        // Fallback robusto para ambientes sem Gotenberg ativo:
+        // Renderiza o espelho HTML oficial idêntico à tela de impressão com acionamento nativo de impressão / salvar PDF
+        $html = PdfService::gerarEspelhoFechamentoCaixaHtml($sessao);
+        echo str_replace('</body>', '<script>window.onload = function() { window.print(); };</script></body>', $html);
         exit;
     }
 

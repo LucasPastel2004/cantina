@@ -99,11 +99,13 @@ class FechamentoPdfFixTest
             // ou testamos via reflection / simulação dos dados.
             $sessao = SessaoCaixa::buscarPorId($this->sessaoId);
             $pdf = \App\Services\PdfService::gerarEspelhoFechamentoCaixaPdf($sessao);
-            $this->assert(str_starts_with($pdf, '%PDF-1.4'), "PDF binário gerado começa com %PDF-1.4");
-            $this->assert(str_contains($pdf, '%%EOF'), "PDF binário contém marcador %%EOF");
         } finally {
             ob_end_clean();
         }
+
+        $this->assert(str_starts_with($pdf, '%PDF-1.4'), "PDF binário gerado começa com %PDF-1.4");
+        $this->assert(str_contains($pdf, '%%EOF'), "PDF binário contém marcador %%EOF");
+        $this->assert(strlen($pdf) > 20000, "PDF oficial contém todas as tabelas e dados renderizados via Chromium (" . strlen($pdf) . " bytes)");
     }
 
     private function testarHtmlEspelhoEBotaoFechar(): void
