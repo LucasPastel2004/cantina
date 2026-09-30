@@ -103,12 +103,15 @@ $baseUrl = $baseUrl ?? '';
                     </div>
                     <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Vendas por Alimento & Curva ABC</h2>
                     <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
-                        Totalização de faturamento por produto e categoria, preço médio ponderado, percentual de participação e classificação ABC (Classes A, B e C).
+                        Parametrização dinâmica com toggles (Sim/Não), agrupamento de consumo por período, ordenação por mais/menos vendidos, Curva ABC e espelho oficial A4 / CSV.
                     </p>
                 </div>
-                <div class="d-flex gap-2 pt-3 border-top mt-auto">
-                    <a href="<?php echo $baseUrl; ?>/relatorios/vendas-alimento" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
-                        Abrir Relatório & Curva ABC
+                <div class="d-flex gap-2 pt-3 border-top mt-auto flex-wrap">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/vendas-filtros" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
+                        Filtros de Vendas
+                    </a>
+                    <a href="<?php echo $baseUrl; ?>/relatorios/vendas-alimento" class="btn btn-enterprise btn-secondary btn-sm text-center fw-medium">
+                        Curva ABC
                     </a>
                 </div>
             </div>

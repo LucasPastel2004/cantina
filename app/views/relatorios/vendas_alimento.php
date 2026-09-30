@@ -23,7 +23,15 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
             Totalização comercial de alimentos e produtos, ticket médio ponderado e classificação analítica Curva ABC.
         </p>
     </div>
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <a href="<?php echo $baseUrl; ?>/relatorios/vendas-filtros?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&turno=<?php echo urlencode($turno); ?>&categoria_id=<?php echo (int)$categoriaId; ?>&tipo=<?php echo urlencode($tipo); ?>" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Abrir painel de filtros avançados com toggles e agrupamentos">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/></svg>
+            Filtros Avançados
+        </a>
+        <a href="<?php echo $baseUrl; ?>/relatorios/vendas-alimento/csv?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&turno=<?php echo urlencode($turno); ?>&categoria_id=<?php echo (int)$categoriaId; ?>&tipo=<?php echo urlencode($tipo); ?>" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar dados em formato CSV para Excel">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/><path d="M4 11.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5z"/></svg>
+            Exportar CSV
+        </a>
         <a href="<?php echo $baseUrl; ?>/relatorios/vendas-alimento/pdf?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&turno=<?php echo urlencode($turno); ?>&categoria_id=<?php echo (int)$categoriaId; ?>&tipo=<?php echo urlencode($tipo); ?>" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Relatório Oficial em PDF A4 Timbrado">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
             Exportar PDF (A4 Timbrado)

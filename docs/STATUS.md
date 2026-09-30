@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 20 — Nova Arquitetura de PDF (HTML+CSS+Gotenberg) & Migração Completa de Relatórios + Fechamento de Caixa Oficial
-* **Status da Fase 20:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 20 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
-* **Última Atualização:** 2026-09-30 11:55:00 (Correção e robustez na emissão e fechamento do espelho/PDF de Caixa: 1) Resolução do erro 404 ao registrar rotas `/operacional/caixa/fechamento/pdf` e `/operacional/caixa/fechamento/pdf/{id}` com método `fechamentoPdf` e suporte total a query string `?id=...` no `CaixaController`; 2) Correção do botão 'Fechar' no espelho A4 impresso com fallback inteligente via JavaScript (`window.close()` com fallback para `history.back()` ou retorno ao caixa) e abertura explícita por script via `window.open` no menu de emissão; 3) Testes de regressão `tests/fechamento_pdf_fix_test.php`, `tests/caixa_test.php` e `tests/fase20_test.php` 100% aprovados).
+* **Fase Atual:** Fase 21 — Painel de Filtros Avançados e Relatório Oficial de Vendas por Período / Alimento
+* **Status da Fase 21:** Concluída [x] (100% Homologada)
+* **Status Geral do Projeto:** 21 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
+* **Última Atualização:** 2026-09-30 12:00:00 (Conclusão integral da Fase 21: Painel de Filtros Avançados e Relatório Oficial de Vendas por Período / Alimento: 1) View `app/views/relatorios/vendas_filtros.php` desenvolvida com fidelidade aos toggles Sim/Não de `Filtros de vendas.pdf`, abas e botões rápidos de datas; 2) Motor de agregação `obterDadosVendasAvancadas` no `RelatoriosController` com unificação de vendas online e balcão, agrupamento diário, Curva ABC e filtros avançados; 3) View oficial `app/views/relatorios/vendas_alimento_pdf.php` espelhando `relatorio de vendas por período.pdf` (cabeçalho sóbrio escolar, 'PERÍODO ENTRE DATAS :', 'Total do dia :' e 'Total do período :'); 4) Exportação CSV com UTF-8 BOM e delimitador ';'; 5) Suíte oficial `tests/fase21_test.php` com 92/92 asserções e auditoria global `tests/verification_audit.php` com 51/51 suítes 100% aprovadas).
 
 
 
@@ -942,12 +942,35 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 21 — Painel de Filtros Avançados e Relatório Oficial de Vendas por Período / Alimento
-* [ ] Interface de filtros dinâmicos de vendas com toggles Sim/Não (`app/views/relatorios/vendas_filtros.php`) conforme `Filtros de vendas.pdf`.
-* [ ] Processamento dos filtros dinâmicos no `app/controllers/RelatoriosController.php`.
-* [ ] View e emissão do PDF oficial "Relatório de Emissão de Vendas da Cantina por Alimento" (`app/views/relatorios/vendas_alimento_pdf.php`) conforme `relatorio de vendas por período.pdf`.
-* [ ] Exportação dos dados filtrados para planilha CSV.
-* [ ] Bateria de testes automatizados `tests/fase21_test.php`.
+### [x] Fase 21 — Painel de Filtros Avançados e Relatório Oficial de Vendas por Período / Alimento
+* [x] **Interface e Filtros Dinâmicos Estilo Escolar Manager:**
+  * View `app/views/relatorios/vendas_filtros.php` implementada com todas as opções e toggles Sim/Não conforme `docs/alterações sistema guideline/Filtros de vendas.pdf`:
+    * Toggle `agrupar_alimento` (Sim/Não) e ordenação por Mais Vendidos / Menos Vendidos;
+    * Toggle `incluir_estornos` (Sim/Não) com tratamento analítico no faturamento líquido e identificação visual de itens estornados;
+    * Toggle `agrupar_periodo` (Sim/Não) e `agrupar_tipo_pessoa` (Sim/Não);
+    * Toggles de detalhamento: `emitir_observacao`, `emitir_forma_pagamento`, `emitir_horario`, `emitir_vendas_alimento`, `emitir_vendas_aluno`, `agrupar_vendas_aluno`, `agrupar_serie_turma`, `quebrar_pagina_turma` e ordenações por consumo do aluno;
+    * Abas funcionais no topo ("Filtro & Parâmetros" e "Opções de Agrupamento");
+    * Botões rápidos de período: "Hoje", "Ontem", "Este Mês" e "Mês Anterior";
+    * Dropdown corporativo "Emitir" com opções "Visualizar / Imprimir (A4)", "Baixar em PDF (A4)" e "Exportar Planilha (CSV)".
+* [x] **Motor de Agregação e Processamento no Backend:**
+  * Métodos `vendasFiltros()`, `vendasFiltrosPdf()`, `vendasFiltrosImprimir()`, `vendasFiltrosCsv()`, `vendasAlimentoCsv()` e `obterDadosVendasAvancadas()` implementados no `app/controllers/RelatoriosController.php`;
+  * Unificação de dados transacionais de pedidos agendados/entregues (`pedidos` + `itens_pedido`) e vendas avulsas de balcão (`vendas_balcao` + `itens_venda_balcao`);
+  * Agrupamento diário com data formatada `dd/mm/aaaa`, consolidação de subtotais diários (`total_dia` / `subtotal`) e quantidade diária;
+  * Classificação automática por Curva ABC (classes A, B e C) com base no faturamento acumulado e participação percentual;
+  * Segregação por tipo de pessoa (Aluno, Funcionário, Consumidor Avulso) e consolidação nominal por aluno.
+* [x] **Espelho A4 Oficial e Impressão Timbrada:**
+  * View `app/views/relatorios/vendas_alimento_pdf.php` atualizada para espelhar fielmente o layout de `docs/alterações sistema guideline/relatorio de vendas por período.pdf`:
+    * Cabeçalho escolar oficial com `COLÉGIO MONTEIRO LOBATO`, data/hora de emissão e `PERÍODO ENTRE DATAS : dd/mm/aaaa - dd/mm/aaaa`;
+    * Tabela com colunas `Data`, `Alimento`, `Quantidade`, `Valor Unitário` e `Valor Total`;
+    * Linhas divisórias de consolidação com `Total do dia : dd/mm/aaaa :` e `Total do período :`;
+    * Rodapé oficial da aplicação com paginação e emissor.
+* [x] **Exportação para Planilha CSV:**
+  * Suporte a exportação nativa em CSV com UTF-8 BOM (`\xEF\xBB\xBF`) e delimitador `;`, compatível com Microsoft Excel;
+  * Cabeçalho padronizado e linha de consolidação geral no rodapé (`TOTAL DO PERÍODO`).
+* [x] **Roteamento e Testes Automatizados:**
+  * 5 novas rotas registradas em `index.php` protegidas por RBAC (`ROLE_ADMINISTRADOR`);
+  * Criação da suíte oficial `tests/fase21_test.php` com **92 de 92 asserções aprovadas com 100% de sucesso**;
+  * Execução da auditoria global de verificação (`tests/verification_audit.php`): **51 de 51 suítes automatizadas e 219 arquivos PHP aprovados com 100% de sucesso**.
 
 ---
 
@@ -979,12 +1002,11 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Executar a **Fase 21 — Painel de Filtros Avançados e Relatório Oficial de Vendas por Período / Alimento**:
-1. Construir a interface de filtros dinâmicos de vendas com toggles Sim/Não (`app/views/relatorios/vendas_filtros.php`) conforme `Filtros de vendas.pdf`;
-2. Implementar o processamento dos filtros dinâmicos no `app/controllers/RelatoriosController.php`;
-3. Desenvolver a view e a emissão do PDF oficial "Relatório de Emissão de Vendas da Cantina por Alimento" (`app/views/relatorios/vendas_alimento_pdf.php`) conforme `relatorio de vendas por período.pdf`;
-4. Disponibilizar a exportação dos dados apurados para planilha CSV;
-5. Validar todas as rotas e regras com a nova suíte `tests/fase21_test.php` e regressão global.
+Executar a **Fase 22 — Extrato Analítico de Consumo do Aluno (Filtros, PDF A4 e Portal da Família)**:
+1. Construir a tela de filtro com opções "Emitir apenas saldo do Aluno" e "Considerar saldo apenas no período" conforme `filtro Extrato Consumo Aluno.pdf`;
+2. Desenvolver a view e emissão do PDF A4 oficial "Extrato de Consumo do Aluno" com saldo progressivo linha a linha, créditos, débitos e total gasto conforme `Relatório Extrato Consumo Aluno.pdf`;
+3. Disponibilizar o extrato analítico no Portal da Família (`app/views/portal/extrato.php`) com opções de visualização na tela e download do PDF A4;
+4. Validar todas as regras de saldo, paginação e permissões familiares com a nova suíte `tests/fase22_test.php` e regressão global.
 
 
 

@@ -303,6 +303,181 @@ class RelatoriosController extends Controller
     }
 
     /**
+     * Exportação CSV Oficial de Vendas por Alimento (Fase 21)
+     */
+    public function vendasAlimentoCsv(): void
+    {
+        $this->vendasFiltrosCsv();
+    }
+
+    /**
+     * Painel de Filtros Avançados de Vendas da Cantina (Fase 21 — Conforme Filtros de vendas.pdf)
+     */
+    public function vendasFiltros(): void
+    {
+        $filtros = $this->extrairFiltrosVendas();
+        $dadosRelatorio = $this->obterDadosVendasAvancadas($filtros);
+        $categorias = Categoria::listarTodas(true);
+
+        $this->render('relatorios/vendas_filtros', [
+            'pageTitle'      => 'Filtros de Vendas & Relatório por Alimento',
+            'activeMenu'     => 'relatorios',
+            'user'           => Auth::user(),
+            'filtros'        => $filtros,
+            'categorias'     => $categorias,
+            'dadosRelatorio' => $dadosRelatorio
+        ], 'admin');
+    }
+
+    /**
+     * Emissão do PDF Oficial do Relatório de Vendas (Fase 21 — Conforme relatorio de vendas por período.pdf)
+     */
+    public function vendasFiltrosPdf(): void
+    {
+        $filtros = $this->extrairFiltrosVendas();
+        $dadosRelatorio = $this->obterDadosVendasAvancadas($filtros);
+        $usuario = Auth::user();
+        $dadosRelatorio['operador'] = $usuario['nome'] ?? 'Administração Geral';
+
+        $pdfBinario = PdfService::gerarRelatorioVendasAlimentoPdf($dadosRelatorio);
+        $nomeArquivo = 'relatorio_vendas_' . str_replace('-', '', $filtros['data_inicio']) . '_' . str_replace('-', '', $filtros['data_fim']) . '.pdf';
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+        header('Content-Length: ' . strlen($pdfBinario));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
+        echo $pdfBinario;
+        exit;
+    }
+
+    /**
+     * Espelho HTML para Visualização e Impressão Direta (window.print)
+     */
+    public function vendasFiltrosImprimir(): void
+    {
+        $filtros = $this->extrairFiltrosVendas();
+        $dadosRelatorio = $this->obterDadosVendasAvancadas($filtros);
+        $usuario = Auth::user();
+        $dadosRelatorio['operador'] = $usuario['nome'] ?? 'Administração Geral';
+
+        $html = PdfService::renderView('relatorios/vendas_alimento_pdf', ['dadosVendas' => $dadosRelatorio]);
+
+        header('Content-Type: text/html; charset=UTF-8');
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
+        echo $html;
+        exit;
+    }
+
+    /**
+     * Exportação CSV Oficial dos Dados Filtrados de Vendas
+     */
+    public function vendasFiltrosCsv(): void
+    {
+        $filtros = $this->extrairFiltrosVendas();
+        $dadosRelatorio = $this->obterDadosVendasAvancadas($filtros);
+
+        $csv = "\xEF\xBB\xBF"; // UTF-8 BOM para Excel
+        
+        $emitirObs = ($filtros['emitir_observacao'] === 'sim');
+        $emitirForma = ($filtros['emitir_forma_pagamento'] === 'sim');
+        $emitirHorario = ($filtros['emitir_horario'] === 'sim');
+        $agruparTipo = ($filtros['agrupar_tipo_pessoa'] === 'sim');
+
+        // Cabeçalho CSV
+        $cabecalho = ["DATA"];
+        if ($emitirHorario) $cabecalho[] = "HORARIO";
+        if ($agruparTipo) $cabecalho[] = "TIPO_PESSOA";
+        $cabecalho[] = "ALIMENTO";
+        $cabecalho[] = "CATEGORIA";
+        $cabecalho[] = "QUANTIDADE";
+        $cabecalho[] = "VALOR_UNITARIO_RS";
+        $cabecalho[] = "VALOR_TOTAL_RS";
+        if ($emitirForma) $cabecalho[] = "FORMA_PAGAMENTO";
+        if ($emitirObs) $cabecalho[] = "OBSERVACAO";
+
+        $csv .= implode(';', $cabecalho) . "\r\n";
+
+        // Linhas de dados
+        $itens = $dadosRelatorio['itens'] ?? [];
+        foreach ($itens as $item) {
+            $linha = [];
+            $linha[] = $item['data_fmt'] ?? ($item['data_venda'] ?? '-');
+            if ($emitirHorario) $linha[] = $item['hora_venda'] ?? '-';
+            if ($agruparTipo) $linha[] = str_replace(';', ' ', $item['tipo_pessoa'] ?? 'Aluno');
+            $linha[] = str_replace(';', ' ', $item['descricao'] ?? ($item['produto_nome'] ?? '-'));
+            $linha[] = str_replace(';', ' ', $item['categoria_nome'] ?? '-');
+            $linha[] = (int)($item['quantidade'] ?? ($item['quantidade_total'] ?? 0));
+            $linha[] = number_format((float)($item['preco_unitario'] ?? ($item['preco_medio'] ?? 0.0)), 2, ',', '');
+            $linha[] = number_format((float)($item['subtotal'] ?? ($item['valor_total'] ?? 0.0)), 2, ',', '');
+            if ($emitirForma) $linha[] = str_replace(';', ' ', $item['forma_pagamento'] ?? '-');
+            if ($emitirObs) $linha[] = str_replace([';', "\r", "\n"], ' ', $item['observacao'] ?? '-');
+
+            $csv .= implode(';', $linha) . "\r\n";
+        }
+
+        // Totais do período no CSV
+        $totalFat = number_format((float)($dadosRelatorio['totais']['faturamento_total'] ?? 0.0), 2, ',', '');
+        $totalQtd = (int)($dadosRelatorio['totais']['quantidade_total'] ?? 0);
+        $csv .= "TOTAL DO PERIODO;;;;;{$totalQtd};;{$totalFat}\r\n";
+
+        $nomeArquivo = 'vendas_cantina_' . str_replace('-', '', $filtros['data_inicio']) . '_' . str_replace('-', '', $filtros['data_fim']) . '.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+        header('Content-Length: ' . strlen($csv));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
+        echo $csv;
+        exit;
+    }
+
+    /**
+     * Extrai e sanitiza os parâmetros de filtros de vendas da requisição
+     */
+    private function extrairFiltrosVendas(): array
+    {
+        $hoje = date('Y-m-d');
+        $inicioPadrao = trim((string)$this->input('data_inicio', ''));
+        if (empty($inicioPadrao)) {
+            $inicioPadrao = $hoje;
+        }
+
+        $fimPadrao = trim((string)$this->input('data_fim', ''));
+        if (empty($fimPadrao)) {
+            $fimPadrao = $hoje;
+        }
+
+        return [
+            'data_inicio'             => $inicioPadrao,
+            'data_fim'                => $fimPadrao,
+            'turno'                   => trim((string)$this->input('turno', '')),
+            'categoria_id'            => (int)$this->input('categoria_id', 0),
+            'tipo'                    => trim((string)$this->input('tipo', '')),
+            'emitir_observacao'       => trim((string)$this->input('emitir_observacao', 'nao')),
+            'emitir_forma_pagamento'  => trim((string)$this->input('emitir_forma_pagamento', 'nao')),
+            'incluir_estornos'        => trim((string)$this->input('incluir_estornos', 'nao')),
+            'agrupar_tipo_pessoa'     => trim((string)$this->input('agrupar_tipo_pessoa', 'nao')),
+            'agrupar_periodo'         => trim((string)$this->input('agrupar_periodo', 'sim')),
+            'emitir_horario'          => trim((string)$this->input('emitir_horario', 'nao')),
+            'emitir_vendas_alimento'  => trim((string)$this->input('emitir_vendas_alimento', 'sim')),
+            'agrupar_alimento'        => trim((string)$this->input('agrupar_alimento', 'sim')),
+            'ordenar_alimentos'       => trim((string)$this->input('ordenar_alimentos', 'mais_vendidos')),
+            'emitir_vendas_aluno'     => trim((string)$this->input('emitir_vendas_aluno', 'nao')),
+            'agrupar_vendas_aluno'    => trim((string)$this->input('agrupar_vendas_aluno', 'nao')),
+            'agrupar_serie_turma'     => trim((string)$this->input('agrupar_serie_turma', 'nao')),
+            'quebrar_pagina_turma'    => trim((string)$this->input('quebrar_pagina_turma', 'nao')),
+            'ordenar_consumo_aluno'   => trim((string)$this->input('ordenar_consumo_aluno', 'nao')),
+            'ordenar_por'             => trim((string)$this->input('ordenar_por', 'maior_consumo')),
+            'aba_ativa'               => trim((string)$this->input('aba', 'filtro'))
+        ];
+    }
+
+    /**
      * Relatório de Desconto em Folha para RH (FSD Tela 8.3 & Seção 22.4)
      */
     public function descontoFolha(): void
@@ -1139,5 +1314,438 @@ class RelatoriosController extends Controller
             ]
         ];
     }
+
+    /**
+     * Consolida dados analíticos avançados de vendas com suporte a todos os filtros e leiautes
+     * Conforme docs/alterações sistema guideline/Filtros de vendas.pdf e relatorio de vendas por período.pdf
+     */
+    private function obterDadosVendasAvancadas(array $filtros): array
+    {
+        $pdo = \App\Core\Model::getPdo();
+
+        $dataInicio = $filtros['data_inicio'] ?? date('Y-m-d');
+        $dataFim    = $filtros['data_fim'] ?? date('Y-m-d');
+        $turno      = $filtros['turno'] ?? '';
+        $categoriaId = (int)($filtros['categoria_id'] ?? 0);
+        $tipo       = $filtros['tipo'] ?? '';
+        $incluirEstornos = ($filtros['incluir_estornos'] ?? 'nao') === 'sim';
+        $agruparPeriodo  = ($filtros['agrupar_periodo'] ?? 'sim') === 'sim';
+        $agruparAlimento = ($filtros['agrupar_alimento'] ?? 'sim') === 'sim';
+        $ordenarAlimentos = ($filtros['ordenar_alimentos'] ?? 'mais_vendidos') === 'menos_vendidos' ? 'ASC' : 'DESC';
+        $agruparTipoPessoa = ($filtros['agrupar_tipo_pessoa'] ?? 'nao') === 'sim';
+        $emitirVendasAluno = ($filtros['emitir_vendas_aluno'] ?? 'nao') === 'sim';
+        $ordenarPor = ($filtros['ordenar_por'] ?? 'maior_consumo') === 'menor_consumo' ? 'ASC' : 'DESC';
+
+        $params = [
+            'ini1' => $dataInicio, 'fim1' => $dataFim,
+            'ini2' => $dataInicio, 'fim2' => $dataFim
+        ];
+
+        // Filtro de status
+        $statusPedidos = $incluirEstornos 
+            ? "('agendado', 'editado', 'entregue', 'estornado', 'cancelado')"
+            : "('agendado', 'editado', 'entregue')";
+
+        $statusBalcao = $incluirEstornos 
+            ? "('concluida', 'estornada')"
+            : "('concluida')";
+
+        // Filtro de turno
+        $whereTurno1 = "";
+        $whereTurno2 = "";
+        if (!empty($turno) && in_array($turno, ['matutino', 'vespertino'], true)) {
+            $whereTurno1 = " AND p.turno_consumo = :turno1";
+            $whereTurno2 = " AND sc.turno = :turno2";
+            $params['turno1'] = $turno;
+            $params['turno2'] = $turno;
+        }
+
+        // Filtro de categoria
+        $whereCat1 = "";
+        $whereCat2 = "";
+        if ($categoriaId > 0) {
+            $whereCat1 = " AND pr.categoria_id = :cat1";
+            $whereCat2 = " AND pr2.categoria_id = :cat2";
+            $params['cat1'] = $categoriaId;
+            $params['cat2'] = $categoriaId;
+        }
+
+        // Filtro de tipo de produto
+        $whereTipo1 = "";
+        $whereTipo2 = "";
+        if (!empty($tipo)) {
+            $whereTipo1 = " AND pr.tipo = :tipo1";
+            $whereTipo2 = " AND pr2.tipo = :tipo2";
+            $params['tipo1'] = $tipo;
+            $params['tipo2'] = $tipo;
+        }
+
+        // Consulta unificada de todas as movimentações de venda de produtos
+        $sql = "
+            SELECT 
+                'online' AS origem,
+                p.id AS venda_id,
+                p.data_consumo AS data_venda,
+                TIME(p.created_at) AS hora_venda,
+                p.turno_consumo AS turno,
+                p.status AS status_venda,
+                'Saldo Cantina Web' AS forma_pagamento,
+                'Aluno' AS tipo_pessoa,
+                a.id AS aluno_id,
+                COALESCE(a.nome, 'Aluno') AS pessoa_nome,
+                COALESCE(a.matricula, '-') AS pessoa_identificador,
+                COALESCE(t.serie, '-') AS pessoa_serie,
+                COALESCE(t.nome_turma, '-') AS pessoa_turma,
+                COALESCE(p.motivo_estorno, '') AS observacao,
+                ip.produto_id,
+                pr.codigo_interno,
+                pr.descricao AS produto_nome,
+                COALESCE(c.nome, 'Geral') AS categoria_nome,
+                pr.tipo AS produto_tipo,
+                ip.quantidade,
+                ip.preco_unitario,
+                ip.subtotal
+            FROM itens_pedido ip
+            INNER JOIN pedidos p ON p.id = ip.pedido_id
+            LEFT JOIN alunos a ON a.id = p.aluno_id
+            LEFT JOIN turmas t ON t.id = a.turma_id
+            INNER JOIN produtos pr ON pr.id = ip.produto_id
+            LEFT JOIN categorias c ON c.id = pr.categoria_id
+            WHERE p.data_consumo BETWEEN :ini1 AND :fim1
+              AND p.status IN {$statusPedidos}
+              {$whereTurno1}
+              {$whereCat1}
+              {$whereTipo1}
+
+            UNION ALL
+
+            SELECT 
+                'balcao' AS origem,
+                vb.id AS venda_id,
+                DATE(vb.created_at) AS data_venda,
+                TIME(vb.created_at) AS hora_venda,
+                sc.turno AS turno,
+                vb.status AS status_venda,
+                CASE 
+                    WHEN vb.tipo_venda = 'desconto_folha' THEN 'Desconto em Folha'
+                    WHEN vb.tipo_venda = 'pix' THEN 'Pix Balcão'
+                    WHEN vb.tipo_venda = 'dinheiro' THEN 'Dinheiro Balcão'
+                    ELSE 'Balcão'
+                END AS forma_pagamento,
+                CASE 
+                    WHEN vb.colaborador_id IS NOT NULL THEN 'Funcionário'
+                    WHEN vb.aluno_id IS NOT NULL THEN 'Aluno'
+                    ELSE 'Consumidor Avulso'
+                END AS tipo_pessoa,
+                vb.aluno_id,
+                CASE 
+                    WHEN vb.colaborador_id IS NOT NULL THEN col.nome
+                    WHEN vb.aluno_id IS NOT NULL THEN a2.nome
+                    ELSE 'Consumidor Avulso'
+                END AS pessoa_nome,
+                CASE 
+                    WHEN vb.colaborador_id IS NOT NULL THEN col.matricula_funcional
+                    WHEN vb.aluno_id IS NOT NULL THEN a2.matricula
+                    ELSE '-'
+                END AS pessoa_identificador,
+                CASE 
+                    WHEN vb.aluno_id IS NOT NULL THEN t2.serie
+                    ELSE '-'
+                END AS pessoa_serie,
+                CASE 
+                    WHEN vb.aluno_id IS NOT NULL THEN t2.nome_turma
+                    ELSE '-'
+                END AS pessoa_turma,
+                COALESCE(vb.motivo_estorno, '') AS observacao,
+                ivb.produto_id,
+                pr2.codigo_interno,
+                pr2.descricao AS produto_nome,
+                COALESCE(c2.nome, 'Geral') AS categoria_nome,
+                pr2.tipo AS produto_tipo,
+                ivb.quantidade,
+                ivb.preco_unitario,
+                ivb.subtotal
+            FROM itens_venda_balcao ivb
+            INNER JOIN vendas_balcao vb ON vb.id = ivb.venda_balcao_id
+            INNER JOIN sessoes_caixa sc ON sc.id = vb.sessao_caixa_id
+            LEFT JOIN colaboradores col ON col.id = vb.colaborador_id
+            LEFT JOIN alunos a2 ON a2.id = vb.aluno_id
+            LEFT JOIN turmas t2 ON t2.id = a2.turma_id
+            INNER JOIN produtos pr2 ON pr2.id = ivb.produto_id
+            LEFT JOIN categorias c2 ON c2.id = pr2.categoria_id
+            WHERE DATE(vb.created_at) BETWEEN :ini2 AND :fim2
+              AND vb.status IN {$statusBalcao}
+              {$whereTurno2}
+              {$whereCat2}
+              {$whereTipo2}
+
+            ORDER BY data_venda ASC, hora_venda ASC
+        ";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $registrosBrutos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Processamento analítico e agregação
+        $faturamentoGeral = 0.0;
+        $quantidadeGeral  = 0;
+
+        // Estrutura de agrupamento por dia conforme relatorio de vendas por período.pdf
+        $diasAgrupados = [];
+        $alimentosConsolidados = [];
+        $alunosConsolidados = [];
+        $gruposTipoPessoa = [
+            'Aluno' => ['titulo' => 'Alunos', 'itens' => [], 'total' => 0.0, 'quantidade' => 0],
+            'Funcionário' => ['titulo' => 'Funcionários / Colaboradores', 'itens' => [], 'total' => 0.0, 'quantidade' => 0],
+            'Consumidor Avulso' => ['titulo' => 'Consumidores Avulsos', 'itens' => [], 'total' => 0.0, 'quantidade' => 0]
+        ];
+
+        foreach ($registrosBrutos as $reg) {
+            $dataVenda = $reg['data_venda'];
+            $dataFmt   = date('d/m/Y', strtotime($dataVenda));
+            $prodId    = (int)$reg['produto_id'];
+            $qtd       = (int)$reg['quantidade'];
+            $subtotal  = (float)$reg['subtotal'];
+            $tipoPessoa = $reg['tipo_pessoa'] ?? 'Aluno';
+
+            $faturamentoGeral += $subtotal;
+            $quantidadeGeral  += $qtd;
+
+            // 1. Agrupamento por dia (para o relatório oficial)
+            if (!isset($diasAgrupados[$dataVenda])) {
+                $diasAgrupados[$dataVenda] = [
+                    'data'             => $dataVenda,
+                    'data_fmt'         => $dataFmt,
+                    'alimentos'        => [],
+                    'total_dia'        => 0.0,
+                    'subtotal'         => 0.0,
+                    'qtd_dia'          => 0,
+                    'quantidade_total' => 0
+                ];
+            }
+
+            if ($agruparAlimento) {
+                if (!isset($diasAgrupados[$dataVenda]['alimentos'][$prodId])) {
+                    $diasAgrupados[$dataVenda]['alimentos'][$prodId] = [
+                        'produto_id'       => $prodId,
+                        'codigo_interno'   => $reg['codigo_interno'],
+                        'descricao'        => mb_strtoupper($reg['produto_nome'], 'UTF-8'),
+                        'produto_nome'     => $reg['produto_nome'],
+                        'categoria_nome'   => $reg['categoria_nome'],
+                        'quantidade'       => 0,
+                        'quantidade_total' => 0,
+                        'subtotal'         => 0.0,
+                        'valor_total'      => 0.0,
+                        'formas_pagamento' => [],
+                        'observacoes'      => []
+                    ];
+                }
+                $diasAgrupados[$dataVenda]['alimentos'][$prodId]['quantidade']       += $qtd;
+                $diasAgrupados[$dataVenda]['alimentos'][$prodId]['quantidade_total'] += $qtd;
+                $diasAgrupados[$dataVenda]['alimentos'][$prodId]['subtotal']         += $subtotal;
+                $diasAgrupados[$dataVenda]['alimentos'][$prodId]['valor_total']      += $subtotal;
+                if (!empty($reg['forma_pagamento']) && !in_array($reg['forma_pagamento'], $diasAgrupados[$dataVenda]['alimentos'][$prodId]['formas_pagamento'], true)) {
+                    $diasAgrupados[$dataVenda]['alimentos'][$prodId]['formas_pagamento'][] = $reg['forma_pagamento'];
+                }
+                if (!empty($reg['observacao']) && !in_array($reg['observacao'], $diasAgrupados[$dataVenda]['alimentos'][$prodId]['observacoes'], true)) {
+                    $diasAgrupados[$dataVenda]['alimentos'][$prodId]['observacoes'][] = $reg['observacao'];
+                }
+            } else {
+                // Não agrupado por alimento dentro do dia: mantém linha individual
+                $diasAgrupados[$dataVenda]['alimentos'][] = [
+                    'produto_id'       => $prodId,
+                    'codigo_interno'   => $reg['codigo_interno'],
+                    'descricao'        => mb_strtoupper($reg['produto_nome'], 'UTF-8'),
+                    'produto_nome'     => $reg['produto_nome'],
+                    'categoria_nome'   => $reg['categoria_nome'],
+                    'quantidade'       => $qtd,
+                    'quantidade_total' => $qtd,
+                    'preco_unitario'   => (float)$reg['preco_unitario'],
+                    'subtotal'         => $subtotal,
+                    'valor_total'      => $subtotal,
+                    'hora_venda'       => substr($reg['hora_venda'], 0, 5),
+                    'forma_pagamento'  => $reg['forma_pagamento'],
+                    'tipo_pessoa'      => $tipoPessoa,
+                    'pessoa_nome'      => $reg['pessoa_nome'],
+                    'observacao'       => $reg['observacao']
+                ];
+            }
+
+            $diasAgrupados[$dataVenda]['total_dia']        += $subtotal;
+            $diasAgrupados[$dataVenda]['subtotal']         += $subtotal;
+            $diasAgrupados[$dataVenda]['qtd_dia']          += $qtd;
+            $diasAgrupados[$dataVenda]['quantidade_total'] += $qtd;
+
+            // 2. Consolidação geral de alimentos no período
+            if (!isset($alimentosConsolidados[$prodId])) {
+                $alimentosConsolidados[$prodId] = [
+                    'produto_id'       => $prodId,
+                    'codigo'           => $reg['codigo_interno'],
+                    'codigo_interno'   => $reg['codigo_interno'],
+                    'descricao'        => mb_strtoupper($reg['produto_nome'], 'UTF-8'),
+                    'produto_nome'     => $reg['produto_nome'],
+                    'categoria_nome'   => $reg['categoria_nome'],
+                    'tipo'             => $reg['produto_tipo'],
+                    'quantidade_total' => 0,
+                    'quantidade'       => 0,
+                    'faturamento_total'=> 0.0,
+                    'subtotal'         => 0.0,
+                    'valor_total'      => 0.0,
+                    'data_fmt'         => $dataFmt,
+                    'forma_pagamento'  => $reg['forma_pagamento'],
+                    'observacao'       => $reg['observacao']
+                ];
+            }
+            $alimentosConsolidados[$prodId]['quantidade_total'] += $qtd;
+            $alimentosConsolidados[$prodId]['quantidade']       += $qtd;
+            $alimentosConsolidados[$prodId]['faturamento_total']+= $subtotal;
+            $alimentosConsolidados[$prodId]['subtotal']         += $subtotal;
+            $alimentosConsolidados[$prodId]['valor_total']      += $subtotal;
+
+            // 3. Agrupamento por tipo de pessoa
+            if (!isset($gruposTipoPessoa[$tipoPessoa])) {
+                $gruposTipoPessoa[$tipoPessoa] = [
+                    'titulo' => $tipoPessoa,
+                    'itens'  => [],
+                    'total'  => 0.0,
+                    'quantidade' => 0
+                ];
+            }
+            $gruposTipoPessoa[$tipoPessoa]['total']      += $subtotal;
+            $gruposTipoPessoa[$tipoPessoa]['quantidade'] += $qtd;
+
+            // 4. Consolidação por aluno (quando aplicável)
+            if ($tipoPessoa === 'Aluno' && !empty($reg['pessoa_identificador'])) {
+                $alunoKey = $reg['pessoa_identificador'];
+                if (!isset($alunosConsolidados[$alunoKey])) {
+                    $alunosConsolidados[$alunoKey] = [
+                        'aluno_id'      => (int)$reg['aluno_id'],
+                        'matricula'     => $reg['pessoa_identificador'],
+                        'nome'          => $reg['pessoa_nome'],
+                        'serie'         => $reg['pessoa_serie'],
+                        'turma'         => $reg['pessoa_turma'],
+                        'quantidade'    => 0,
+                        'total_consumo' => 0.0
+                    ];
+                }
+                $alunosConsolidados[$alunoKey]['quantidade']    += $qtd;
+                $alunosConsolidados[$alunoKey]['total_consumo'] += $subtotal;
+            }
+        }
+
+        // Ordenação dos alimentos de cada dia e cálculo de preço unitário
+        $itensPlano = [];
+        foreach ($diasAgrupados as $dataKey => &$dia) {
+            if ($agruparAlimento) {
+                // Transforma o mapa de IDs em array indexado
+                $listaAlimentosDia = array_values($dia['alimentos']);
+                foreach ($listaAlimentosDia as &$alDia) {
+                    $alDia['preco_unitario'] = ($alDia['quantidade'] > 0) ? ($alDia['subtotal'] / $alDia['quantidade']) : 0.0;
+                    $alDia['forma_pagamento']= implode(', ', $alDia['formas_pagamento'] ?? []);
+                    $alDia['observacao']     = implode(', ', array_filter($alDia['observacoes'] ?? []));
+                    $alDia['data_fmt']       = $dia['data_fmt'];
+                    $alDia['data_venda']     = $dia['data'];
+                }
+                unset($alDia);
+
+                // Ordenação conforme o parâmetro: mais vendidos ou menos vendidos
+                usort($listaAlimentosDia, function($a, $b) use ($ordenarAlimentos) {
+                    $cmp = ($ordenarAlimentos === 'DESC') 
+                        ? ($b['quantidade'] <=> $a['quantidade']) 
+                        : ($a['quantidade'] <=> $b['quantidade']);
+                    if ($cmp !== 0) return $cmp;
+                    return ($ordenarAlimentos === 'DESC') 
+                        ? ($b['subtotal'] <=> $a['subtotal']) 
+                        : ($a['subtotal'] <=> $b['subtotal']);
+                });
+
+                $dia['alimentos'] = $listaAlimentosDia;
+
+                foreach ($listaAlimentosDia as $itemAl) {
+                    $itensPlano[] = $itemAl;
+                }
+            } else {
+                foreach ($dia['alimentos'] as $itemAl) {
+                    $itemAl['data_fmt'] = $dia['data_fmt'];
+                    $itemAl['data_venda'] = $dia['data'];
+                    $itensPlano[] = $itemAl;
+                }
+            }
+        }
+        unset($dia);
+
+        // Preço médio e classificação Curva ABC para a consolidação geral
+        $acumuladoPercentual = 0.0;
+        $listaAlimentosGeral = array_values($alimentosConsolidados);
+        usort($listaAlimentosGeral, function($a, $b) use ($ordenarAlimentos) {
+            $cmp = ($ordenarAlimentos === 'DESC') 
+                ? ($b['quantidade_total'] <=> $a['quantidade_total']) 
+                : ($a['quantidade_total'] <=> $b['quantidade_total']);
+            if ($cmp !== 0) return $cmp;
+            return ($ordenarAlimentos === 'DESC') 
+                ? ($b['faturamento_total'] <=> $a['faturamento_total']) 
+                : ($a['faturamento_total'] <=> $b['faturamento_total']);
+        });
+
+        foreach ($listaAlimentosGeral as &$itemG) {
+            $fat = (float)$itemG['faturamento_total'];
+            $qtd = (int)$itemG['quantidade_total'];
+            $itemG['preco_medio'] = ($qtd > 0) ? ($fat / $qtd) : 0.0;
+            $itemG['preco_unitario'] = $itemG['preco_medio'];
+
+            $partPercent = ($faturamentoGeral > 0) ? ($fat / $faturamentoGeral) * 100.0 : 0.0;
+            $acumuladoPercentual += $partPercent;
+
+            if ($acumuladoPercentual <= 70.01) {
+                $itemG['classe_abc'] = 'A';
+            } elseif ($acumuladoPercentual <= 90.01) {
+                $itemG['classe_abc'] = 'B';
+            } else {
+                $itemG['classe_abc'] = 'C';
+            }
+            $itemG['participacao_percentual'] = $partPercent;
+        }
+        unset($itemG);
+
+        // Ordenação dos alunos (se aplicável)
+        $listaAlunos = array_values($alunosConsolidados);
+        usort($listaAlunos, function($a, $b) use ($ordenarPor) {
+            return ($ordenarPor === 'DESC') 
+                ? ($b['total_consumo'] <=> $a['total_consumo']) 
+                : ($a['total_consumo'] <=> $b['total_consumo']);
+        });
+
+        $periodoFmt = date('d/m/Y', strtotime($dataInicio)) . ' a ' . date('d/m/Y', strtotime($dataFim));
+        $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', strtotime($dataFim));
+
+        $catNome = 'Todas as Categorias';
+        if ($categoriaId > 0) {
+            $catObj = Categoria::buscarPorId($categoriaId);
+            if ($catObj) {
+                $catNome = $catObj['nome'];
+            }
+        }
+
+        return [
+            'periodo'                  => $periodoFmt,
+            'periodo_oficial'          => $periodoOficial,
+            'data_inicio'              => $dataInicio,
+            'data_fim'                 => $dataFim,
+            'turno'                    => !empty($turno) ? ucfirst($turno) : 'Todos os Turnos',
+            'categoria'                => $catNome,
+            'filtros'                  => $filtros,
+            'dias'                     => $diasAgrupados,
+            'itens'                    => !empty($itensPlano) ? $itensPlano : $listaAlimentosGeral,
+            'alimentos_consolidados'   => $listaAlimentosGeral,
+            'grupos_tipo_pessoa'       => $gruposTipoPessoa,
+            'alunos'                   => $listaAlunos,
+            'totais'                   => [
+                'faturamento_total'    => $faturamentoGeral,
+                'quantidade_total'     => $quantidadeGeral,
+                'ticket_medio'         => ($quantidadeGeral > 0) ? ($faturamentoGeral / $quantidadeGeral) : 0.0
+            ]
+        ];
+    }
 }
+
 
