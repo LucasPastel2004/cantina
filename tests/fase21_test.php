@@ -406,6 +406,9 @@ class Fase21Test
         $this->assert(str_contains($htmlOutput, "COXINHA TRADICIONAL"), "HTML gerado contém o produto renderizado.");
         $this->assert(str_contains($htmlOutput, "Total do dia :"), "HTML gerado contém o total do dia formatado.");
         $this->assert(str_contains($htmlOutput, "Total do período :"), "HTML gerado contém o total do período formatado.");
+        $this->assert(!str_contains($htmlOutput, "Escolar Manager"), "HTML gerado NÃO contém referências à Escolar Manager.");
+        $this->assert(!str_contains($htmlOutput, "footer-token"), "HTML gerado NÃO contém tokens residuais ou IPs.");
+        $this->assert(str_contains($htmlOutput, "Colégio Monteiro Lobato"), "HTML gerado contém rodapé institucional do Colégio Monteiro Lobato.");
     }
 
     /**

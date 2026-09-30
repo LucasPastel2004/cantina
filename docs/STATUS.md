@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 21 — Painel de Filtros Avançados e Relatório Oficial de Vendas por Período / Alimento
 * **Status da Fase 21:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 21 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
-* **Última Atualização:** 2026-09-30 12:10:00 (Fidelidade visual total na emissão de PDF do Fechamento de Caixa: 1) Inicialização e ativação do serviço Docker Gotenberg (`cantina_gotenberg` na porta 3000) provendo renderização com motor Chromium headless; 2) Geração de PDF binário oficial de 36 KB idêntico à tela de impressão com todas as 4 seções escolares, tabelas e dados contábeis; 3) Implementação de fallback inteligente em `CaixaController::espelhoPdf`: caso o Gotenberg esteja indisponível em servidores compartilhados, exibe o espelho HTML A4 completo com acionamento nativo de impressão/salvar em PDF (`window.print()`), impedindo terminantemente a exibição de páginas em branco; 4) Suítes `tests/fechamento_pdf_fix_test.php` e `tests/caixa_test.php` 100% verdes).
+* **Última Atualização:** 2026-09-30 12:35:00 (Ajuste visual da versão de impressão e espelho oficial A4: 1) Simulação realista de folha física de papel A4 em tela (`max-width: 200mm`, fundo `#cbd5e1`, sombra elegante e margens padronizadas); 2) Eliminação de menções a software de terceiros e tokens residuais no rodapé, substituindo pela identidade oficial do Colégio Monteiro Lobato • Sistema Cantina Web; 3) Barra de controle de impressão com navegação direta de retorno aos filtros; 4) Suíte `tests/fase21_test.php` expandida com 95 asserções 100% aprovadas).
 
 
 
@@ -963,14 +963,15 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Cabeçalho escolar oficial com `COLÉGIO MONTEIRO LOBATO`, data/hora de emissão e `PERÍODO ENTRE DATAS : dd/mm/aaaa - dd/mm/aaaa`;
     * Tabela com colunas `Data`, `Alimento`, `Quantidade`, `Valor Unitário` e `Valor Total`;
     * Linhas divisórias de consolidação com `Total do dia : dd/mm/aaaa :` e `Total do período :`;
-    * Rodapé oficial da aplicação com paginação e emissor.
+    * Simulação visual de folha A4 em tela (`max-width: 200mm; background: #ffffff; padding: 12mm 15mm; margin: 0 auto; box-shadow: ...`) sobre fundo cinza neutro;
+    * Rodapé institucional limpo e autêntico: `Colégio Monteiro Lobato • Sistema Cantina Web` com numeração de página, sem referências a softwares terceiros nem tokens residuais;
+    * Barra superior de controle com atalhos de `Voltar aos Filtros`, `Imprimir Documento` e `Fechar Janela`.
 * [x] **Exportação para Planilha CSV:**
   * Suporte a exportação nativa em CSV com UTF-8 BOM (`\xEF\xBB\xBF`) e delimitador `;`, compatível com Microsoft Excel;
   * Cabeçalho padronizado e linha de consolidação geral no rodapé (`TOTAL DO PERÍODO`).
 * [x] **Roteamento e Testes Automatizados:**
   * 5 novas rotas registradas em `index.php` protegidas por RBAC (`ROLE_ADMINISTRADOR`);
-  * Criação da suíte oficial `tests/fase21_test.php` com **92 de 92 asserções aprovadas com 100% de sucesso**;
-  * Execução da auditoria global de verificação (`tests/verification_audit.php`): **51 de 51 suítes automatizadas e 219 arquivos PHP aprovados com 100% de sucesso**.
+  * Suíte oficial `tests/fase21_test.php` expandida com **95 de 95 asserções aprovadas com 100% de sucesso**.
 
 ---
 

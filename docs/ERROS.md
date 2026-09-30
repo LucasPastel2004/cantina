@@ -1279,3 +1279,21 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Implementado fallback defensivo em `CaixaController::espelhoPdf()`: caso o Gotenberg esteja indisponível, o sistema renderiza o espelho HTML oficial idêntico à tela de impressão com acionamento nativo de impressão/salvar em PDF (`window.print()`), garantindo que em nenhuma hipótese o usuário receba uma página em branco.
   3. Validado via `tests/fechamento_pdf_fix_test.php` que o PDF gerado possui densidade completa (> 36 KB) e estrutura idêntica à tela de impressão.
 - Como evitar no futuro: Sempre que um serviço auxiliar (como Gotenberg, Redis ou fila) for adicionado ao `docker-compose.yml`, certificar-se de executar `docker compose up -d` para instanciá-lo e garantir fallbacks em HTML/CSS para ambientes sem contêineres gerenciados.
+
+---
+
+## 2026-09-30 - Leiaute esticado na visualização de tela/impressão e menção indevida à empresa terceira no rodapé do relatório de vendas
+
+- Sintoma:
+  1. Ao abrir a versão de impressão/visualização na tela (`/relatorios/vendas-alimento` ou via botão "Visualizar / Imprimir A4"), o relatório esticava horizontalmente em monitores widescreen (1920px), gerando lacunas vazias de centenas de pixels entre os nomes dos alimentos e as colunas de quantidade/valores, prejudicando o aspecto visual de documento físico.
+  2. No rodapé do arquivo PDF e da tela de impressão, constavam referências indesejadas a software terceiro ("Escolar Manager Softwares Para Gestão Escolar • www.escolarmanager.com.br") e uma linha com token e IPs fictícios.
+- Causa:
+  1. A view `app/views/relatorios/vendas_alimento_pdf.php` utilizava `.container { width: 100%; margin: 0 auto; }` sem delimitação de largura de folha A4 para visualização em navegadores desktop (`@media screen`), o que provocava distorção e estiramento da tabela em telas largas.
+  2. O rodapé do arquivo havia herdado de forma literal textos do modelo de referência da empresa anterior de gestão escolar em vez de adotar a identidade institucional exclusiva do Colégio Monteiro Lobato.
+- Solução aplicada:
+  1. Implementada a simulação de folha física de papel A4 para visualização na tela (`@media screen`) com `width: 200mm; max-width: calc(100% - 32px); min-height: 280mm; background: #ffffff; padding: 12mm 15mm; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.15);`, sobre fundo neutro ardósia (`#cbd5e1`), reproduzindo com fidelidade uma folha física de documento escolar.
+  2. Em `@media print`, resetados `width: 100%`, `padding: 0` e `box-shadow: none`, assegurando impressão física e exportação via navegador milimétrica e fiel ao tamanho A4 padrão.
+  3. Removida categoricamente toda referência à "Escolar Manager", sites de terceiros e tokens técnicos residuais, substituindo por rodapé institucional oficial: `Colégio Monteiro Lobato • Sistema Cantina Web` com paginação `1/1`.
+  4. Adicionada barra de ações superior com botão `← Voltar aos Filtros`, `Imprimir Documento` e `Fechar Janela`.
+  5. Expandida a suíte `tests/fase21_test.php` para 95 asserções (todas 100% aprovadas), incluindo verificações automáticas de ausência de referências a terceiros e presença do rodapé institucional.
+- Como evitar no futuro: Em espelhos e relatórios destinados à impressão ou visualização documental, sempre aplicar o contêiner de folha A4 com largura fixa (`200mm`) no modo tela e reset em `@media print`, garantindo que identidades institucionais de sistemas legados de referência sejam sempre substituídas pela identidade do cliente final.

@@ -9,6 +9,12 @@
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
+if (!isset($baseUrl)) {
+    $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+    $base = str_replace('\\', '/', $scriptDir);
+    $baseUrl = ($base === '/' || $base === '.') ? '' : rtrim($base, '/');
+}
+
 $dados = $dadosVendas ?? ($dados ?? []);
 $periodoOficial = $dados['periodo_oficial'] ?? ($dados['periodo'] ?? (date('d/m/Y') . ' - ' . date('d/m/Y')));
 $dias = $dados['dias'] ?? [];
@@ -33,11 +39,11 @@ $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Relatório de Emissão de Vendas da Cantina por Alimento</title>
+    <title>Relatório de Emissão de Vendas da Cantina por Alimento — Colégio Monteiro Lobato</title>
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 12mm 12mm 12mm;
+            margin: 10mm 12mm 10mm 12mm;
             @bottom-right {
                 content: "1/1";
                 font-family: Arial, sans-serif;
@@ -53,56 +59,110 @@ $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
         body {
             font-family: "Segoe UI", Arial, Helvetica, sans-serif;
             color: #000000;
-            background: #ffffff;
             margin: 0;
             padding: 0;
             font-size: 8.5pt;
             line-height: 1.35;
-        }
-        .container {
-            width: 100%;
-            margin: 0 auto;
         }
         .font-tabular {
             font-variant-numeric: tabular-nums;
             font-feature-settings: 'tnum' 1, 'zero' 1;
         }
 
-        /* Barra de Ações para Navegador (Oculta na Impressão) */
+        /* Barra de Ações para Navegador (Oculta na Impressão e no PDF) */
         .no-print {
-            background: #f8fafc;
+            background: #ffffff;
             border: 1px solid #cbd5e1;
-            padding: 8px 14px;
-            margin-bottom: 15px;
+            padding: 10px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 11px;
-            border-radius: 4px;
+            border-radius: 6px;
         }
-        .no-print button {
+        .no-print button, .no-print a {
             cursor: pointer;
-            padding: 5px 14px;
+            padding: 6px 14px;
             font-size: 11px;
             font-weight: 600;
-            border-radius: 3px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
         }
         .btn-print-action {
             background: #1d4ed8;
-            color: #ffffff;
+            color: #ffffff !important;
             border: 1px solid #1e40af;
+        }
+        .btn-print-action:hover {
+            background: #1e40af;
+        }
+        .btn-back-action {
+            background: #ffffff;
+            color: #1d4ed8 !important;
+            border: 1px solid #cbd5e1;
+            margin-right: 6px;
+        }
+        .btn-back-action:hover {
+            background: #f1f5f9;
         }
         .btn-close-action {
             background: #ffffff;
-            color: #334155;
+            color: #475569 !important;
             border: 1px solid #cbd5e1;
             margin-left: 6px;
         }
-        @media print {
-            .no-print { display: none !important; }
+        .btn-close-action:hover {
+            background: #f1f5f9;
         }
 
-        /* Cabeçalho Fiel ao Relatório Oficial Escolar Manager */
+        /* Visualização de Folha A4 em Tela */
+        @media screen {
+            body {
+                background-color: #cbd5e1;
+                padding: 24px 0 40px 0;
+            }
+            .no-print {
+                width: 200mm;
+                max-width: calc(100% - 32px);
+                margin: 0 auto 16px auto;
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            }
+            .container {
+                width: 200mm;
+                max-width: calc(100% - 32px);
+                min-height: 280mm;
+                margin: 0 auto;
+                background: #ffffff;
+                padding: 12mm 15mm 15mm 15mm;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
+                border-radius: 2px;
+            }
+        }
+
+        /* Impressão Direta (Física / Browser Print / PDF) */
+        @media print {
+            body {
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 8pt;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+        }
+
+        /* Cabeçalho Oficial Escolar */
         .school-header {
             margin-bottom: 8px;
             line-height: 1.25;
@@ -176,16 +236,16 @@ $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
         }
         .row-total-periodo td {
             border-top: 1px solid #000000;
-            border-bottom: 1px double #000000;
+            border-bottom: 2px solid #000000;
             font-weight: bold;
             padding: 4px 4px;
             color: #000000;
             font-size: 8.5pt;
         }
 
-        /* Rodapé Oficial da Empresa de Software / Escola */
-        .footer-escolar {
-            margin-top: 12px;
+        /* Rodapé Institucional do Colégio */
+        .footer-relatorio {
+            margin-top: 16px;
             padding-top: 4px;
             border-top: 1px solid #000000;
             display: flex;
@@ -194,31 +254,29 @@ $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
             font-size: 7.5pt;
             color: #000000;
         }
-        .footer-escolar .brand {
+        .footer-relatorio .brand {
             font-weight: normal;
         }
-        .footer-escolar .brand strong {
+        .footer-relatorio .brand strong {
             font-weight: bold;
         }
-        .footer-escolar .page-num {
+        .footer-relatorio .page-num {
             font-weight: normal;
-        }
-        .footer-token {
-            font-size: 6.5pt;
-            color: #475569;
-            margin-top: 2px;
         }
     </style>
 </head>
 <body>
 <div class="container">
 
-    <!-- Barra de Controle de Impressão (Aparece apenas na tela) -->
+    <!-- Barra de Controle de Impressão (Apenas na Visualização em Tela) -->
     <div class="no-print">
         <div>
             <strong>Relatório de Emissão de Vendas</strong> &bull; Período: <?php echo htmlspecialchars($periodoOficial); ?>
         </div>
         <div>
+            <a href="<?php echo htmlspecialchars($baseUrl); ?>/relatorios/vendas-filtros" class="btn-back-action">
+                &larr; Voltar aos Filtros
+            </a>
             <button type="button" class="btn-print-action" onclick="window.print()">
                 Imprimir Documento
             </button>
@@ -228,7 +286,7 @@ $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
         </div>
     </div>
 
-    <!-- Cabeçalho Oficial Idêntico a relatorio de vendas por período.pdf -->
+    <!-- Cabeçalho Oficial do Colégio Monteiro Lobato -->
     <div class="school-header">
         <div class="school-name">COLÉGIO MONTEIRO LOBATO</div>
         <div class="report-emission-date font-tabular"><?php echo $emissao; ?></div>
@@ -245,17 +303,17 @@ $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
                     <th style="width: 10%;" class="text-center">Horário</th>
                 <?php endif; ?>
                 <?php if ($agruparTipo): ?>
-                    <th style="width: 15%;">Tipo Pessoa</th>
+                    <th style="width: 14%;">Tipo Pessoa</th>
                 <?php endif; ?>
-                <th style="width: 44%;">Alimento</th>
+                <th style="<?php echo ($emitirHora || $agruparTipo || $emitirForma || $emitirObs) ? 'width: 32%;' : 'width: 44%;'; ?>">Alimento</th>
                 <th style="width: 12%;" class="text-right">Quantidade</th>
                 <th style="width: 15%;" class="text-right">Valor Unitário</th>
                 <th style="width: 15%;" class="text-right">Valor Total</th>
                 <?php if ($emitirForma): ?>
-                    <th style="width: 15%;">Forma Pagto</th>
+                    <th style="width: 14%;">Forma Pagto</th>
                 <?php endif; ?>
                 <?php if ($emitirObs): ?>
-                    <th style="width: 18%;">Observação</th>
+                    <th style="width: 16%;">Observação</th>
                 <?php endif; ?>
             </tr>
         </thead>
@@ -291,7 +349,7 @@ $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
                         </tr>
                     <?php endforeach; ?>
 
-                    <!-- Total do Dia Conforme o PDF de Referência -->
+                    <!-- Total do Dia Conforme o Espelho Oficial -->
                     <?php if ($agruparPer): ?>
                         <tr class="row-total-dia">
                             <td colspan="<?php echo 2 + ($emitirHora ? 1 : 0) + ($agruparTipo ? 1 : 0); ?>">Total do dia :</td>
@@ -305,7 +363,7 @@ $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
 
                 <?php endforeach; ?>
 
-                <!-- Total do Período Conforme o PDF de Referência -->
+                <!-- Total do Período Conforme o Espelho Oficial -->
                 <tr class="row-total-periodo">
                     <td colspan="<?php echo 2 + ($emitirHora ? 1 : 0) + ($agruparTipo ? 1 : 0); ?>">Total do período :</td>
                     <td class="text-right font-tabular"><?php echo $qtdTotal; ?></td>
@@ -347,17 +405,14 @@ $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
         </table>
     <?php endif; ?>
 
-    <!-- Rodapé Oficial com Identificação do Sistema -->
-    <div class="footer-escolar">
+    <!-- Rodapé Institucional com Identificação Oficial -->
+    <div class="footer-relatorio">
         <div class="brand">
-            <strong>Escolar Manager</strong> Softwares Para Gestão Escolar &bull; www.escolarmanager.com.br
+            <strong>Colégio Monteiro Lobato</strong> &bull; Sistema Cantina Web
         </div>
         <div class="page-num font-tabular">
             1/1
         </div>
-    </div>
-    <div class="footer-token font-tabular">
-        MONTEIRO LOBATO - OPERACIONAL,WEB-CANTINA,PROD/SERVER,10.32.133.3:177.70.13.180,<?php echo strtoupper(substr(md5($periodoOficial . $fatTotal), 0, 12)); ?>
     </div>
 
 </div>
