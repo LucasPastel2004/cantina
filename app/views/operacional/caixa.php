@@ -3,7 +3,8 @@
  * Cantina Web — Colégio Monteiro Lobato
  * View Operacional: Gestão de Caixa e Prestação de Contas do Turno
  * 
- * Conforme docs/FSD.md (Área 4, Área 6, Módulo 7) e docs/DESIGN.md (Anti-Slop Enterprise)
+ * Conforme docs/FSD.md (Área 4, Área 6, Módulo 7), docs/DESIGN.md (Anti-Slop Enterprise)
+ * e modelo oficial do sistema anterior (Escolar Manager).
  */
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
@@ -13,32 +14,87 @@ $turnoAtual = $turnoAtual ?? 'matutino';
 $sessaoAberta = $sessaoAberta ?? null;
 $ultimaSessao = $ultimaSessao ?? null;
 $totais = $totais ?? null;
+$dadosFechamento = $dadosFechamento ?? null;
 $historico = $historico ?? [];
 $caixaAberto = ($sessaoAberta !== null);
 $csrfToken = \App\Core\Session::generateCsrfToken();
 
-$fundo = (float)($totais['fundo_troco_inicial'] ?? 0.0);
-$avulso = (float)($totais['total_dinheiro_avulso'] ?? 0.0);
-$recargas = (float)($totais['total_dinheiro_recargas'] ?? 0.0);
-$pix = (float)($totais['total_pix_balcao'] ?? 0.0);
-$esperadoGaveta = (float)($totais['total_esperado_gaveta'] ?? 0.0);
-$totalFaturado = (float)($totais['total_geral_faturado'] ?? 0.0);
+$sessaoAtual = $sessaoAberta ?? $ultimaSessao ?? null;
+$sessaoIdAtual = $sessaoAtual['id'] ?? null;
 
 $sessaoOutroTurno = $sessaoOutroTurno ?? null;
 $outroTurnoNome = $outroTurnoNome ?? '';
 $avisoAtrasoFechamento = $avisoAtrasoFechamento ?? false;
 $horarioLimiteTurno = $horarioLimiteTurno ?? '11:00';
 
-$statusTurnoTexto = 'Aguardando Abertura';
-$statusTurnoCor = '#64748b';
-if ($caixaAberto) {
-    $statusTurnoTexto = 'Aberto (#' . $sessaoAberta['id'] . ')';
-    $statusTurnoCor = '#16a34a';
-} elseif ($ultimaSessao !== null && ($ultimaSessao['status'] ?? '') === 'fechado') {
-    $statusTurnoTexto = 'Encerrado / Fechado (#' . $ultimaSessao['id'] . ')';
-    $statusTurnoCor = '#0284c7';
+// Determinação do Operador e Turno em formato oficial em maiúsculas (Ex: DIVINO - MATUTINO)
+$operadorNome = 'NENHUM OPERADOR';
+if ($sessaoAtual && !empty($sessaoAtual['operador_nome'])) {
+    $operadorNome = mb_strtoupper($sessaoAtual['operador_nome'], 'UTF-8');
+} elseif (!empty($_SESSION['usuario']['nome'])) {
+    $operadorNome = mb_strtoupper($_SESSION['usuario']['nome'], 'UTF-8');
+}
+$turnoNomeUpper = mb_strtoupper($turnoAtual, 'UTF-8');
+$operadorTurnoDisplay = $sessaoAtual ? "{$operadorNome} - {$turnoNomeUpper}" : "— - {$turnoNomeUpper}";
+
+// Situação da Sessão
+$situacaoTexto = $caixaAberto ? 'Caixa aberto' : 'Caixa fechado';
+$situacaoBulletCor = $caixaAberto ? '#16a34a' : '#64748b';
+
+// Extração contábil dos campos do Grid Oficial
+$fundoCaixaValor = 0.0;
+$dataHoraAberturaStr = '—';
+$entradaDinheiro = 0.0;
+$entradaPix = 0.0;
+$totalSaidas = 0.0;
+$totalEntradas = 0.0;
+$totalCaixa = 0.0;
+$esperadoGaveta = 0.0;
+
+if ($dadosFechamento) {
+    $fundoCaixaValor = (float)($dadosFechamento['resumo']['fundo']['dinheiro'] ?? 0.0);
+    $entradaDinheiro = (float)($dadosFechamento['resumo']['entradas']['dinheiro'] ?? 0.0);
+    $entradaPix = (float)($dadosFechamento['resumo']['entradas']['pix'] ?? 0.0);
+    $totalSaidas = (float)($dadosFechamento['resumo']['saidas']['total'] ?? 0.0);
+    $totalEntradas = (float)($dadosFechamento['resumo']['entradas']['total'] ?? ($entradaDinheiro + $entradaPix));
+    $totalCaixa = (float)($dadosFechamento['resumo']['saldo']['total'] ?? ($fundoCaixaValor + $totalEntradas - $totalSaidas));
+    $esperadoGaveta = (float)($dadosFechamento['resumo']['saldo']['dinheiro'] ?? ($fundoCaixaValor + $entradaDinheiro));
+    if (!empty($dadosFechamento['sessao']['aberto_em'])) {
+        $dataHoraAberturaStr = date('d/m/Y, H:i', strtotime($dadosFechamento['sessao']['aberto_em']));
+    }
+} elseif ($totais) {
+    $fundoCaixaValor = (float)($totais['fundo_troco_inicial'] ?? 0.0);
+    $entradaDinheiro = (float)(($totais['total_dinheiro_avulso'] ?? 0.0) + ($totais['total_dinheiro_recargas'] ?? 0.0));
+    $entradaPix = (float)($totais['total_pix_balcao'] ?? 0.0);
+    $totalSaidas = 0.0;
+    $totalEntradas = $entradaDinheiro + $entradaPix;
+    $esperadoGaveta = (float)($totais['total_esperado_gaveta'] ?? ($fundoCaixaValor + $entradaDinheiro));
+    $totalCaixa = $fundoCaixaValor + $totalEntradas - $totalSaidas;
+    if ($sessaoAtual && !empty($sessaoAtual['aberto_em'])) {
+        $dataHoraAberturaStr = date('d/m/Y, H:i', strtotime($sessaoAtual['aberto_em']));
+    }
+} elseif ($sessaoAtual) {
+    $fundoCaixaValor = (float)($sessaoAtual['fundo_troco_inicial'] ?? 0.0);
+    $entradaDinheiro = (float)(($sessaoAtual['total_dinheiro_avulso'] ?? 0.0) + ($sessaoAtual['total_dinheiro_recargas'] ?? 0.0));
+    $entradaPix = (float)($sessaoAtual['total_pix_balcao'] ?? 0.0);
+    $totalSaidas = 0.0;
+    $totalEntradas = $entradaDinheiro + $entradaPix;
+    $esperadoGaveta = $fundoCaixaValor + $entradaDinheiro;
+    $totalCaixa = $fundoCaixaValor + $totalEntradas - $totalSaidas;
+    if (!empty($sessaoAtual['aberto_em'])) {
+        $dataHoraAberturaStr = date('d/m/Y, H:i', strtotime($sessaoAtual['aberto_em']));
+    }
 }
 ?>
+
+<!-- Migalha de Pão (Breadcrumb) Institucional -->
+<nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb mb-1" style="font-size: 11.5px; color: #64748b;">
+        <li class="breadcrumb-item"><a href="<?php echo $baseUrl; ?>/operacional/pdv" class="text-decoration-none text-secondary">Financeiro</a></li>
+        <li class="breadcrumb-item text-secondary">Caixa</li>
+        <li class="breadcrumb-item active text-dark font-semibold" aria-current="page">Abertura/fechamento de caixa</li>
+    </ol>
+</nav>
 
 <!-- Cabeçalho da Página e Alternador de Turno -->
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -46,15 +102,15 @@ if ($caixaAberto) {
         <div class="d-flex align-items-center gap-2 mb-1">
             <h1 class="h5 font-weight-bold text-dark mb-0">Gestão de Caixa e Prestação de Contas</h1>
             <span class="badge bg-white text-dark border" style="font-size: 11px; font-weight: 600; border-color: #cbd5e1 !important;">
-                <span style="color: <?php echo $statusTurnoCor; ?>;">●</span> <?php echo $statusTurnoTexto; ?> — Turno <?php echo ucfirst($turnoAtual); ?>
+                <span style="color: <?php echo $situacaoBulletCor; ?>;">●</span> <?php echo $situacaoTexto; ?> — Turno <?php echo ucfirst($turnoAtual); ?>
             </span>
         </div>
         <p class="text-secondary text-microcopy mb-0">
-            Abertura com Fundo de Troco, conciliação física de gaveta e fechamento às 11:00 (matutino) e 16:00 (vespertino).
+            Abertura, conciliação de gaveta física, faturamento Cantina Web e prestação de contas do turno.
         </p>
     </div>
 
-    <!-- Alternador de Turno e Ações Principais -->
+    <!-- Alternador de Turno -->
     <div class="d-flex align-items-center gap-2 flex-wrap">
         <div class="btn-group btn-group-sm" role="group" aria-label="Seletor de Turno">
             <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=matutino" 
@@ -66,27 +122,6 @@ if ($caixaAberto) {
                 Vespertino (Tarde)
             </a>
         </div>
-
-        <?php if ($caixaAberto): ?>
-            <button type="button" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#modalRecargaDinheiro">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                </svg>
-                Recarga em Dinheiro
-            </button>
-            <a href="<?php echo $baseUrl; ?>/operacional/caixa/detalhes/<?php echo $sessaoAberta['id']; ?>" class="btn btn-enterprise btn-primary btn-sm" title="Extrato Analítico das Operações">
-                Extrato da Sessão
-            </a>
-        <?php else: ?>
-            <button type="button" class="btn btn-enterprise btn-secondary btn-sm" disabled title="Caixa fechado: Abra a sessão do turno para receber recargas presenciais em dinheiro">
-                + Recarga em Dinheiro (Caixa Fechado)
-            </button>
-        <?php endif; ?>
-
-        <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="btn btn-enterprise btn-primary btn-sm" title="Ir para o Terminal do PDV">
-            ← Voltar ao PDV
-        </a>
     </div>
 </div>
 
@@ -119,232 +154,420 @@ if ($caixaAberto) {
     </div>
 <?php endif; ?>
 
-<!-- Stat-Strip Executiva da Sessão -->
-<div class="stat-strip mb-4">
-    <div class="stat-strip-item">
-        <span class="stat-strip-label">Status do Turno</span>
-        <span class="stat-strip-value">
-            <?php if ($caixaAberto): ?>
-                <span class="status-indicator status-active"><span class="bullet">●</span> Aberto (#<?php echo $sessaoAberta['id']; ?>)</span>
-            <?php elseif ($ultimaSessao !== null && ($ultimaSessao['status'] ?? '') === 'fechado'): ?>
-                <span class="status-indicator" style="color: #0284c7;"><span class="bullet" style="color: #0284c7;">●</span> Encerrado</span>
+<!-- ========================================================================
+     PAINEL INSTITUCIONAL: ABERTURA / FECHAMENTO DE CAIXA (MODELO ESCOLAR MANAGER)
+     ======================================================================== -->
+<div class="card-enterprise mb-4">
+    <!-- Barra Superior de Ferramentas / Ações do Caixa -->
+    <div class="card-enterprise-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 px-3">
+        <div class="d-flex align-items-center gap-2">
+            <!-- Botão Emitir com Ícone de Impressora -->
+            <?php if ($sessaoIdAtual): ?>
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa/fechamento/pdf?id=<?php echo $sessaoIdAtual; ?>" 
+                   target="_blank" 
+                   class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1 font-semibold"
+                   title="Emitir Relatório Oficial de Fechamento de Caixa (A4 Timbrado)">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                    </svg>
+                    Emitir
+                </a>
             <?php else: ?>
-                <span class="status-indicator status-inactive"><span class="bullet">●</span> Não Aberto</span>
+                <button type="button" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1" disabled title="Nenhuma sessão disponível para emissão">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                    </svg>
+                    Emitir
+                </button>
             <?php endif; ?>
-        </span>
+
+            <!-- Ações Primárias de Caixa: Abrir ou Fechar -->
+            <?php if ($caixaAberto): ?>
+                <button type="button" class="btn btn-enterprise btn-danger btn-sm d-inline-flex align-items-center gap-1 font-semibold" data-bs-toggle="modal" data-bs-target="#modalFecharCaixa">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M5 8a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 8z"/>
+                    </svg>
+                    Fechar caixa
+                </button>
+            <?php else: ?>
+                <button type="button" class="btn btn-enterprise btn-success btn-sm d-inline-flex align-items-center gap-1 font-semibold" data-bs-toggle="modal" data-bs-target="#modalAbrirCaixa">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>
+                    </svg>
+                    Abrir caixa
+                </button>
+            <?php endif; ?>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <?php if ($caixaAberto): ?>
+                <button type="button" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1 font-semibold" data-bs-toggle="modal" data-bs-target="#modalRecargaDinheiro">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                    + Recarga em Dinheiro
+                </button>
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa/detalhes/<?php echo $sessaoAberta['id']; ?>" class="btn btn-enterprise btn-secondary btn-sm font-semibold" title="Extrato Analítico das Operações">
+                    Extrato da Sessão
+                </a>
+            <?php else: ?>
+                <button type="button" class="btn btn-enterprise btn-secondary btn-sm" disabled title="Caixa fechado: Abra o caixa para realizar recargas presenciais em dinheiro">
+                    + Recarga em Dinheiro
+                </button>
+            <?php endif; ?>
+
+            <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="btn btn-enterprise btn-secondary btn-sm font-semibold" title="Ir para o PDV de Balcão">
+                ← Voltar ao PDV
+            </a>
+        </div>
     </div>
-    <div class="stat-strip-item">
-        <span class="stat-strip-label">Fundo de Troco</span>
-        <span class="stat-strip-value font-tabular">
-            R$ <?php echo number_format($fundo, 2, ',', '.'); ?>
-        </span>
-    </div>
-    <div class="stat-strip-item">
-        <span class="stat-strip-label">Vendas Dinheiro</span>
-        <span class="stat-strip-value font-tabular text-success">
-            R$ <?php echo number_format($avulso, 2, ',', '.'); ?>
-        </span>
-    </div>
-    <div class="stat-strip-item">
-        <span class="stat-strip-label">Recargas Dinheiro</span>
-        <span class="stat-strip-value font-tabular">
-            R$ <?php echo number_format($recargas, 2, ',', '.'); ?>
-        </span>
-    </div>
-    <div class="stat-strip-item">
-        <span class="stat-strip-label">Pix no Balcão</span>
-        <span class="stat-strip-value font-tabular text-primary">
-            R$ <?php echo number_format($pix, 2, ',', '.'); ?>
-        </span>
-    </div>
-    <div class="stat-strip-item" style="border-right: none;">
-        <span class="stat-strip-label">Esperado na Gaveta</span>
-        <span class="stat-strip-value font-tabular fw-bold" style="color: #0f172a;">
-            R$ <?php echo number_format($esperadoGaveta, 2, ',', '.'); ?>
-        </span>
+
+    <!-- Grid Institucional de Campos do Caixa -->
+    <div class="card-enterprise-body p-3">
+        <!-- Linha 1: Operador, Situação, Fundo de caixa, Data e hora de abertura -->
+        <div class="row g-2 mb-2">
+            <div class="col-12 col-md-4">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Operador</label>
+                <input type="text" class="form-control form-control-sm bg-light text-dark font-semibold" 
+                       value="<?php echo htmlspecialchars($operadorTurnoDisplay, ENT_QUOTES, 'UTF-8'); ?>" readonly>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Situação</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light" style="color: <?php echo $situacaoBulletCor; ?>; font-size: 14px; border-right: none;">●</span>
+                    <input type="text" class="form-control form-control-sm bg-light font-semibold" 
+                           value="<?php echo $situacaoTexto; ?>" readonly 
+                           style="color: <?php echo $caixaAberto ? '#16a34a' : '#475569'; ?>; border-left: none;">
+                </div>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Fundo de caixa</label>
+                <input type="text" class="form-control form-control-sm bg-light font-tabular text-end font-semibold text-dark" 
+                       value="R$ <?php echo number_format($fundoCaixaValor, 2, ',', '.'); ?>" readonly>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Data e hora de abertura</label>
+                <input type="text" class="form-control form-control-sm bg-light font-tabular text-center text-dark font-semibold" 
+                       value="<?php echo $dataHoraAberturaStr; ?>" readonly>
+            </div>
+        </div>
+
+        <!-- Linha 2: Entrada dinheiro, Entrada pix, Total saídas -->
+        <div class="row g-2 mb-2">
+            <div class="col-12 col-md-4">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Entrada dinheiro</label>
+                <input type="text" class="form-control form-control-sm bg-light font-tabular text-end font-semibold text-success" 
+                       value="R$ <?php echo number_format($entradaDinheiro, 2, ',', '.'); ?>" readonly>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Entrada pix</label>
+                <input type="text" class="form-control form-control-sm bg-light font-tabular text-end font-semibold text-primary" 
+                       value="R$ <?php echo number_format($entradaPix, 2, ',', '.'); ?>" readonly>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Total saídas</label>
+                <input type="text" class="form-control form-control-sm bg-light font-tabular text-end text-muted font-semibold" 
+                       value="R$ <?php echo number_format($totalSaidas, 2, ',', '.'); ?>" readonly>
+            </div>
+        </div>
+
+        <!-- Linha 3: Total entradas, Total caixa -->
+        <div class="row g-2">
+            <div class="col-12 col-md-6">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Total entradas</label>
+                <input type="text" class="form-control form-control-sm bg-light font-tabular text-end font-bold text-dark" 
+                       style="font-size: 13.5px;"
+                       value="R$ <?php echo number_format($totalEntradas, 2, ',', '.'); ?>" readonly>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label font-11 font-semibold text-secondary mb-1">Total caixa</label>
+                <input type="text" class="form-control form-control-sm bg-light font-tabular text-end font-bold text-dark" 
+                       style="font-size: 13.5px;"
+                       value="R$ <?php echo number_format($totalCaixa, 2, ',', '.'); ?>" readonly>
+            </div>
+        </div>
     </div>
 </div>
 
-<?php if (!$caixaAberto): ?>
-    <!-- ====================================================================
-         CENÁRIO 1: CAIXA FECHADO — CARD DE ABERTURA DO TURNO
-         ==================================================================== -->
-    <div class="row g-4 mb-4">
-        <div class="col-12 col-lg-7">
-            <div class="card-enterprise">
-                <div class="card-enterprise-header d-flex justify-content-between align-items-center">
-                    <span class="font-weight-bold text-dark">Abrir Caixa do Turno <?php echo ucfirst($turnoAtual); ?></span>
-                    <span class="code-tag">Controle de Gaveta</span>
-                </div>
-                <div class="card-enterprise-body p-4">
-                    <p class="font-13 text-secondary mb-4">
-                        Para iniciar o atendimento no <strong>PDV de Balcão</strong> e aceitar pagamentos em dinheiro ou Pix, é obrigatório registrar a abertura da sessão e declarar o Fundo de Troco alocado fisicamente na gaveta.
-                    </p>
-
-                    <form action="<?php echo $baseUrl; ?>/operacional/caixa/abrir" method="POST">
-                        <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
-                        <input type="hidden" name="turno" value="<?php echo htmlspecialchars($turnoAtual, ENT_QUOTES, 'UTF-8'); ?>">
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-12 col-md-6">
-                                <label class="form-label font-12 font-semibold">Turno de Operação</label>
-                                <input type="text" class="form-control form-control-sm font-semibold bg-light" 
-                                       value="<?php echo ($turnoAtual === 'matutino') ? 'Matutino (Encerra às 11:00)' : 'Vespertino (Encerra às 16:00)'; ?>" readonly>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label font-12 font-semibold">Fundo de Troco Inicial (Gaveta)</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">R$</span>
-                                    <input type="text" name="fundo_troco_inicial" class="form-control font-tabular input-money font-semibold" value="50,00" required autofocus>
-                                </div>
-                                <div class="form-text font-11 text-muted">Cédulas e moedas físicas colocadas na gaveta.</div>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label font-12 font-semibold">Observações de Abertura (Opcional)</label>
-                            <input type="text" name="observacoes" class="form-control form-control-sm" placeholder="Ex: Notas de R$ 5 e R$ 10 conferidas pelo operador...">
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2">
-                            <button type="submit" class="btn btn-enterprise btn-success px-4">
-                                Confirmar Abertura de Caixa
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+<!-- ========================================================================
+     DETALHAMENTO ANALÍTICO: VENDAS CANTINA WEB (ONLINE) E BALCÃO (PRESENCIAL)
+     ======================================================================== -->
+<?php if ($dadosFechamento && (!empty($dadosFechamento['vendas_online']) || !empty($dadosFechamento['vendas_balcao']) || !empty($dadosFechamento['recargas']))): ?>
+    <div class="card-enterprise mb-4">
+        <div class="card-enterprise-header d-flex justify-content-between align-items-center py-2 px-3">
+            <span class="font-weight-bold text-dark">Discriminação das Vendas do Turno</span>
+            <span class="text-microcopy">
+                Cantina Web (Online) + Presencial no Balcão
+            </span>
         </div>
+        <div class="card-enterprise-body p-3">
+            <ul class="nav nav-tabs nav-tabs-enterprise mb-3" id="abasVendas" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active font-12 font-semibold" id="tab-online-tab" data-bs-toggle="tab" data-bs-target="#tab-online" type="button" role="tab">
+                        Vendas Cantina Web (Online) 
+                        <span class="badge bg-light text-dark border ms-1 font-tabular"><?php echo count($dadosFechamento['vendas_online'] ?? []); ?></span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link font-12 font-semibold" id="tab-balcao-tab" data-bs-toggle="tab" data-bs-target="#tab-balcao" type="button" role="tab">
+                        Vendas Presenciais no Balcão 
+                        <span class="badge bg-light text-dark border ms-1 font-tabular"><?php echo count($dadosFechamento['vendas_balcao'] ?? []); ?></span>
+                    </button>
+                </li>
+                <?php if (!empty($dadosFechamento['recargas'])): ?>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link font-12 font-semibold" id="tab-recargas-tab" data-bs-toggle="tab" data-bs-target="#tab-recargas" type="button" role="tab">
+                            Recargas no Balcão 
+                            <span class="badge bg-light text-dark border ms-1 font-tabular"><?php echo count($dadosFechamento['recargas']); ?></span>
+                        </button>
+                    </li>
+                <?php endif; ?>
+            </ul>
 
-        <div class="col-12 col-lg-5">
-            <div class="card-enterprise h-100">
-                <div class="card-enterprise-header">
-                    <span class="font-weight-bold text-dark">Regras Operacionais de Fechamento</span>
+            <div class="tab-content" id="abasVendasContent">
+                <!-- Aba 1: Vendas Cantina Web -->
+                <div class="tab-pane fade show active" id="tab-online" role="tabpanel">
+                    <?php if (empty($dadosFechamento['vendas_online'])): ?>
+                        <p class="text-muted text-center py-3 font-12 mb-0">Nenhum pedido online agendado para este turno.</p>
+                    <?php else: ?>
+                        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                            <table class="table table-enterprise table-sm mb-0" style="font-size: 11.5px;">
+                                <thead>
+                                    <tr>
+                                        <th>Alimento / Produto</th>
+                                        <th>Aluno / Turma</th>
+                                        <th class="text-end">Preço Unit.</th>
+                                        <th class="text-center">Qtd.</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-center">Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($dadosFechamento['vendas_online'] as $vo): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($vo['alimento'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td><?php echo htmlspecialchars($vo['pessoa'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td class="text-end font-tabular">R$ <?php echo number_format($vo['preco_unitario'], 2, ',', '.'); ?></td>
+                                            <td class="text-center font-tabular"><?php echo $vo['quantidade']; ?></td>
+                                            <td class="text-end font-tabular font-semibold">R$ <?php echo number_format($vo['valor_pago'], 2, ',', '.'); ?></td>
+                                            <td class="text-center"><span class="badge bg-white text-dark border px-1" style="font-size: 10px;"><?php echo $vo['tipo']; ?></span></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
                 </div>
-                <div class="card-enterprise-body p-4 font-13 text-secondary" style="line-height: 1.6;">
-                    <div class="d-flex align-items-start gap-2 mb-3">
-                        <span class="badge bg-light border text-dark font-tabular">11:00</span>
-                        <div><strong>Fechamento Matutino:</strong> O caixa da manhã deve ser conciliado e encerrado pontualmente às 11:00, antes da preparação para o turno vespertino.</div>
-                    </div>
-                    <div class="d-flex align-items-start gap-2 mb-3">
-                        <span class="badge bg-light border text-dark font-tabular">16:00</span>
-                        <div><strong>Fechamento Vespertino:</strong> O caixa da tarde deve ser encerrado às 16:00 com emissão do espelho A4 para conferência do gerente.</div>
-                    </div>
-                    <div class="d-flex align-items-start gap-2">
-                        <span class="badge bg-light border text-dark">Trava</span>
-                        <div><strong>Prevenção de Erros:</strong> Não é permitida mais de uma sessão aberta simultaneamente no mesmo turno.</div>
-                    </div>
+
+                <!-- Aba 2: Vendas Balcão -->
+                <div class="tab-pane fade" id="tab-balcao" role="tabpanel">
+                    <?php if (empty($dadosFechamento['vendas_balcao'])): ?>
+                        <p class="text-muted text-center py-3 font-12 mb-0">Nenhuma venda presencial direta registrada no balcão neste turno.</p>
+                    <?php else: ?>
+                        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                            <table class="table table-enterprise table-sm mb-0" style="font-size: 11.5px;">
+                                <thead>
+                                    <tr>
+                                        <th>Alimento / Produto</th>
+                                        <th>Pessoa / Identificação</th>
+                                        <th class="text-end">Preço Unit.</th>
+                                        <th class="text-center">Qtd.</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-center">Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($dadosFechamento['vendas_balcao'] as $vb): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($vb['alimento'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td><?php echo htmlspecialchars($vb['pessoa'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td class="text-end font-tabular">R$ <?php echo number_format($vb['preco_unitario'], 2, ',', '.'); ?></td>
+                                            <td class="text-center font-tabular"><?php echo $vb['quantidade']; ?></td>
+                                            <td class="text-end font-tabular font-semibold">R$ <?php echo number_format($vb['valor_pago'], 2, ',', '.'); ?></td>
+                                            <td class="text-center"><span class="badge bg-white text-dark border px-1" style="font-size: 10px;"><?php echo $vb['tipo']; ?></span></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
                 </div>
+
+                <!-- Aba 3: Recargas no Balcão -->
+                <?php if (!empty($dadosFechamento['recargas'])): ?>
+                    <div class="tab-pane fade" id="tab-recargas" role="tabpanel">
+                        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                            <table class="table table-enterprise table-sm mb-0" style="font-size: 11.5px;">
+                                <thead>
+                                    <tr>
+                                        <th>Horário</th>
+                                        <th>Responsável</th>
+                                        <th>Tipo / Forma</th>
+                                        <th class="text-end">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($dadosFechamento['recargas'] as $rec): ?>
+                                        <tr>
+                                            <td class="font-tabular text-secondary"><?php echo date('H:i', strtotime($rec['criado_em'])); ?></td>
+                                            <td><?php echo htmlspecialchars($rec['responsavel_nome'] ?? 'Responsável', ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td>
+                                                <span class="badge bg-white text-dark border px-1" style="font-size: 10px;">
+                                                    <?php echo ($rec['tipo_transacao'] === 'recarga_dinheiro') ? 'Dinheiro (Gaveta)' : 'Pix'; ?>
+                                                </span>
+                                            </td>
+                                            <td class="text-end font-tabular font-semibold text-success">R$ <?php echo number_format((float)$rec['valor'], 2, ',', '.'); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
+<?php endif; ?>
 
-<?php else: ?>
-    <!-- ====================================================================
-         CENÁRIO 2: CAIXA ABERTO — PAINEL DE APURAÇÃO E FECHAMENTO
-         ==================================================================== -->
-    <div class="row g-4 mb-4">
-        <!-- Coluna 1: Demonstrativo de Apuração da Sessão -->
-        <div class="col-12 col-lg-6">
-            <div class="card-enterprise">
-                <div class="card-enterprise-header d-flex justify-content-between align-items-center">
-                    <span class="font-weight-bold text-dark">Demonstrativo da Sessão #<?php echo $sessaoAberta['id']; ?></span>
-                    <span class="code-tag">Aberto em <?php echo date('d/m/Y H:i', strtotime($sessaoAberta['aberto_em'])); ?></span>
+<!-- ========================================================================
+     MODAL DE ABERTURA DE CAIXA
+     ======================================================================== -->
+<div class="modal fade" id="modalAbrirCaixa" tabindex="-1" aria-labelledby="modalAbrirCaixaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-enterprise" style="border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);">
+            <div class="modal-header card-enterprise-header d-flex justify-content-between align-items-center py-3 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="font-weight-bold text-dark" id="modalAbrirCaixaLabel">Abrir Caixa do Turno <?php echo ucfirst($turnoAtual); ?></span>
                 </div>
-                <div class="card-enterprise-body p-3">
-                    <table class="table table-enterprise table-sm mb-3">
-                        <tbody>
-                            <tr>
-                                <td class="text-secondary">Operador Responsável</td>
-                                <td class="text-end font-semibold"><?php echo htmlspecialchars($sessaoAberta['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-                            </tr>
-                            <tr>
-                                <td class="text-secondary">Fundo de Troco Inicial</td>
-                                <td class="text-end font-tabular">R$ <?php echo number_format($fundo, 2, ',', '.'); ?></td>
-                            </tr>
-                            <tr>
-                                <td class="text-secondary">(+) Vendas em Espécie no PDV</td>
-                                <td class="text-end font-tabular text-success">+ R$ <?php echo number_format($avulso, 2, ',', '.'); ?></td>
-                            </tr>
-                            <tr>
-                                <td class="text-secondary">(+) Recargas em Espécie no Balcão</td>
-                                <td class="text-end font-tabular text-success">+ R$ <?php echo number_format($recargas, 2, ',', '.'); ?></td>
-                            </tr>
-                            <tr style="background: #f8fafc; font-weight: 700;">
-                                <td style="color: #0f172a;">(=) Total em Dinheiro Esperado na Gaveta</td>
-                                <td class="text-end font-tabular" style="font-size: 15px; color: #0f172a;">
-                                    R$ <?php echo number_format($esperadoGaveta, 2, ',', '.'); ?>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-secondary">Entradas em Pix no Balcão (Conta Bancária)</td>
-                                <td class="text-end font-tabular text-primary">R$ <?php echo number_format($pix, 2, ',', '.'); ?></td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light border">
-                        <span class="font-12 text-secondary">Total Faturado no Balcão:</span>
-                        <span class="font-tabular font-semibold font-14 text-dark">R$ <?php echo number_format($totalFaturado, 2, ',', '.'); ?></span>
-                    </div>
-                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-        </div>
+            <form action="<?php echo $baseUrl; ?>/operacional/caixa/abrir" method="POST">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+                    <input type="hidden" name="turno" value="<?php echo htmlspecialchars($turnoAtual, ENT_QUOTES, 'UTF-8'); ?>">
 
-        <!-- Coluna 2: Formulário de Fechamento de Caixa -->
-        <div class="col-12 col-lg-6">
-            <div class="card-enterprise">
-                <div class="card-enterprise-header d-flex justify-content-between align-items-center">
-                    <span class="font-weight-bold text-dark">Prestação de Contas e Fechamento de Caixa</span>
-                    <span class="status-indicator status-danger"><span class="bullet">●</span> Encerramento</span>
-                </div>
-                <div class="card-enterprise-body p-4">
                     <p class="font-12 text-secondary mb-3">
-                        Conte as notas e moedas físicas existentes na gaveta e insira o valor exato apurado para confronto com o sistema.
+                        Inicie o expediente da cantina. Caso haja cédulas ou moedas de troco físico na gaveta, declare o valor abaixo.
                     </p>
 
-                    <form action="<?php echo $baseUrl; ?>/operacional/caixa/fechar" method="POST" onsubmit="return confirmarFechamento();">
-                        <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
-                        <input type="hidden" name="sessao_id" value="<?php echo (int)$sessaoAberta['id']; ?>">
-                        <input type="hidden" id="valorEsperadoGaveta" value="<?php echo $esperadoGaveta; ?>">
-
-                        <div class="mb-3">
-                            <label class="form-label font-12 font-semibold">Valor em Dinheiro Contado Fisicamente na Gaveta</label>
-                            <div class="input-group">
-                                <span class="input-group-text font-bold">R$</span>
-                                <input type="text" name="total_informado_gaveta" id="inputTotalInformado" 
-                                       class="form-control form-control-lg font-tabular font-bold input-money" 
-                                       placeholder="0,00" required autofocus 
-                                       oninput="calcularQuebraSobra();" onkeyup="calcularQuebraSobra();" onchange="calcularQuebraSobra();">
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label font-11 font-semibold text-secondary">Turno de Operação</label>
+                            <input type="text" class="form-control form-control-sm font-semibold bg-light" 
+                                   value="<?php echo ($turnoAtual === 'matutino') ? 'Matutino (Manhã)' : 'Vespertino (Tarde)'; ?>" readonly>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label font-11 font-semibold text-secondary">Fundo de Troco Inicial (Gaveta)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">R$</span>
+                                <input type="text" name="fundo_troco_inicial" class="form-control font-tabular input-money font-semibold" value="0,00" required autofocus>
                             </div>
-                            <div class="form-text font-11 text-muted">Inclua o fundo de troco inicial na contagem das cédulas.</div>
+                            <div class="form-text font-11 text-muted">Padrão R$ 0,00 (caso não utilize troco físico).</div>
                         </div>
+                    </div>
 
-                        <!-- Card Dinâmico de Quebra / Sobra de Caixa -->
-                        <div id="boxDiferencaCaixa" class="p-3 mb-3 rounded border bg-light d-none">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="font-12 font-semibold" id="labelDiferenca">Diferença de Caixa:</span>
-                                <span class="font-16 font-bold font-tabular" id="valorDiferenca">R$ 0,00</span>
-                            </div>
-                            <div class="font-11 mt-1 text-muted" id="msgDiferenca"></div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label font-12 font-semibold">Observações / Justificativa Operacional</label>
-                            <textarea name="observacoes" class="form-control form-control-sm" rows="2" 
-                                      placeholder="Caso haja quebra ou sobra de caixa, registre aqui a justificativa para a gerência..."></textarea>
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2">
-                            <button type="submit" class="btn btn-enterprise btn-danger px-4">
-                                Encerrar Sessão de Caixa e Emitir Espelho
-                            </button>
-                        </div>
-                    </form>
+                    <div class="mb-2">
+                        <label class="form-label font-11 font-semibold text-secondary">Observações de Abertura (Opcional)</label>
+                        <input type="text" name="observacoes" class="form-control form-control-sm font-12" placeholder="Ex: Abertura do turno matutino sem troco inicial...">
+                    </div>
                 </div>
-            </div>
+                <div class="modal-footer card-enterprise-footer py-2 px-4 d-flex justify-content-between">
+                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-enterprise btn-success btn-sm px-3">
+                        Confirmar Abertura de Caixa
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+
+<!-- ========================================================================
+     MODAL DE FECHAMENTO DE CAIXA
+     ======================================================================== -->
+<?php if ($caixaAberto): ?>
+<div class="modal fade" id="modalFecharCaixa" tabindex="-1" aria-labelledby="modalFecharCaixaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content card-enterprise" style="border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);">
+            <div class="modal-header card-enterprise-header d-flex justify-content-between align-items-center py-3 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="font-weight-bold text-dark" id="modalFecharCaixaLabel">Fechamento de Caixa — Turno <?php echo ucfirst($turnoAtual); ?> (#<?php echo (int)$sessaoAberta['id']; ?>)</span>
+                    <span class="badge bg-danger text-white font-11">Encerramento</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form action="<?php echo $baseUrl; ?>/operacional/caixa/fechar" method="POST" onsubmit="return confirmarFechamento();">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+                    <input type="hidden" name="sessao_id" value="<?php echo (int)$sessaoAberta['id']; ?>">
+                    <input type="hidden" id="valorEsperadoGaveta" value="<?php echo $esperadoGaveta; ?>">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-4">
+                            <div class="p-2 border rounded bg-light">
+                                <span class="font-11 text-secondary d-block">Fundo de Troco:</span>
+                                <span class="font-tabular font-semibold text-dark font-13">R$ <?php echo number_format($fundoCaixaValor, 2, ',', '.'); ?></span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="p-2 border rounded bg-light">
+                                <span class="font-11 text-secondary d-block">Entradas Dinheiro:</span>
+                                <span class="font-tabular font-semibold text-success font-13">+ R$ <?php echo number_format($entradaDinheiro, 2, ',', '.'); ?></span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="p-2 border rounded bg-light">
+                                <span class="font-11 text-secondary d-block">Esperado na Gaveta:</span>
+                                <span class="font-tabular font-bold text-dark font-14">= R$ <?php echo number_format($esperadoGaveta, 2, ',', '.'); ?></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-12 font-semibold text-secondary">Valor em Dinheiro Contado Fisicamente na Gaveta</label>
+                        <div class="input-group">
+                            <span class="input-group-text font-bold">R$</span>
+                            <input type="text" name="total_informado_gaveta" id="inputTotalInformado" 
+                                   class="form-control form-control-lg font-tabular font-bold input-money" 
+                                   placeholder="0,00" required autofocus 
+                                   oninput="calcularQuebraSobra();" onkeyup="calcularQuebraSobra();" onchange="calcularQuebraSobra();">
+                        </div>
+                        <div class="form-text font-11 text-muted">Informe as cédulas e moedas físicas presentes na gaveta. Se não houver dinheiro físico, informe 0,00.</div>
+                    </div>
+
+                    <!-- Card Dinâmico de Quebra / Sobra de Caixa -->
+                    <div id="boxDiferencaCaixa" class="p-3 mb-3 rounded border bg-light d-none">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="font-12 font-semibold" id="labelDiferenca">Diferença de Caixa:</span>
+                            <span class="font-16 font-bold font-tabular" id="valorDiferenca">R$ 0,00</span>
+                        </div>
+                        <div class="font-11 mt-1 text-muted" id="msgDiferenca"></div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label font-11 font-semibold text-secondary">Observações / Justificativa Operacional (Opcional)</label>
+                        <textarea name="observacoes" class="form-control form-control-sm font-12" rows="2" 
+                                  placeholder="Caso haja diferença ou observações sobre o encerramento do turno, registre aqui..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer card-enterprise-footer py-2 px-4 d-flex justify-content-between">
+                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-enterprise btn-danger btn-sm px-3 font-semibold">
+                        Encerrar Sessão de Caixa e Emitir Espelho
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <?php endif; ?>
 
 <!-- ========================================================================

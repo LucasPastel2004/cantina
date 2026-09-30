@@ -38,6 +38,13 @@ class CaixaController extends Controller
         $ultimaSessao = SessaoCaixa::obterUltimaSessao($turno);
         $totais = $sessaoAberta ? SessaoCaixa::obterTotaisEsperados($sessaoAberta) : null;
         
+        $dadosFechamento = null;
+        if ($sessaoAberta) {
+            $dadosFechamento = SessaoCaixa::obterDadosFechamentoOficial((int)$sessaoAberta['id']);
+        } elseif ($ultimaSessao && ($ultimaSessao['status'] ?? '') === 'fechado') {
+            $dadosFechamento = SessaoCaixa::obterDadosFechamentoOficial((int)$ultimaSessao['id']);
+        }
+        
         // Paginação do Histórico com base na configuração global
         $paginaAtual    = max(1, (int)($_GET['pagina'] ?? 1));
         $itensPorPagina = Configuracao::getItensPorPagina();
@@ -57,9 +64,9 @@ class CaixaController extends Controller
         $avisoAtrasoFechamento = ($sessaoAberta && $horarioAtual > $horarioLimiteTurno);
 
         $this->render('operacional/caixa', [
-            'title'                 => 'Gestão de Caixa e Prestação de Contas — Cantina Web',
-            'pageTitle'             => 'Gestão de Caixa e Prestação de Contas',
-            'pageHeading'           => 'Gestão de Caixa e Prestação de Contas',
+            'title'                 => 'Abertura/Fechamento de Caixa — Cantina Web',
+            'pageTitle'             => 'Abertura/Fechamento de Caixa',
+            'pageHeading'           => 'Abertura/Fechamento de Caixa',
             'activeMenu'            => 'caixa',
             'turnoAtual'            => $turno,
             'turnoAtivo'            => ucfirst($turno),
@@ -67,6 +74,7 @@ class CaixaController extends Controller
             'sessaoAberta'          => $sessaoAberta,
             'ultimaSessao'          => $ultimaSessao,
             'totais'                => $totais,
+            'dadosFechamento'       => $dadosFechamento,
             'historico'             => $historico,
             'paginaAtual'           => $paginaAtual,
             'totalPaginas'          => $totalPaginas,

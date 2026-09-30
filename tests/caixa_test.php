@@ -226,6 +226,20 @@ class CaixaTest
         $this->assert(str_contains($content, 'total_informado_gaveta'), "View contém campo de contagem física de gaveta");
         $this->assert(str_contains($content, 'calcularQuebraSobra()'), "View contém script interativo de cálculo de quebra/sobra");
         $this->assert(str_contains($content, 'Histórico de Sessões de Caixa'), "View contém tabela de histórico de sessões");
+
+        // Asserções do Grid Oficial Institucional (Escolar Manager)
+        $this->assert(str_contains($content, 'Operador'), "View contém campo oficial 'Operador'");
+        $this->assert(str_contains($content, 'Situação'), "View contém campo oficial 'Situação'");
+        $this->assert(str_contains($content, 'Fundo de caixa'), "View contém campo oficial 'Fundo de caixa'");
+        $this->assert(str_contains($content, 'Data e hora de abertura'), "View contém campo oficial 'Data e hora de abertura'");
+        $this->assert(str_contains($content, 'Entrada dinheiro'), "View contém campo oficial 'Entrada dinheiro'");
+        $this->assert(str_contains($content, 'Entrada pix'), "View contém campo oficial 'Entrada pix'");
+        $this->assert(str_contains($content, 'Total saídas'), "View contém campo oficial 'Total saídas'");
+        $this->assert(str_contains($content, 'Total entradas'), "View contém campo oficial 'Total entradas'");
+        $this->assert(str_contains($content, 'Total caixa'), "View contém campo oficial 'Total caixa'");
+        $this->assert(str_contains($content, 'Emitir'), "View contém botão de ação rápida 'Emitir' relatório");
+        $this->assert(!str_contains(strtolower($content), 'entrada cheque'), "View NÃO contém campo 'entrada cheque'");
+        $this->assert(!str_contains(strtolower($content), 'entrada cartão'), "View NÃO contém campo 'entrada cartão'");
     }
 
     private function testarRenderizacaoControllerIndex(): void
@@ -252,6 +266,9 @@ class CaixaTest
         $this->assert(str_contains($output, 'Matutino (Manhã)'), "HTML renderizou seletor de turno matutino");
         $this->assert(str_contains($output, 'Vespertino (Tarde)'), "HTML renderizou seletor de turno vespertino");
         $this->assert(str_contains($output, 'Histórico de Sessões de Caixa'), "HTML renderizou seção de histórico");
+        $this->assert(str_contains($output, 'Entrada dinheiro'), "HTML renderizou campo 'Entrada dinheiro'");
+        $this->assert(str_contains($output, 'Entrada pix'), "HTML renderizou campo 'Entrada pix'");
+        $this->assert(str_contains($output, 'Total caixa'), "HTML renderizou campo 'Total caixa'");
 
         Auth::logout();
     }

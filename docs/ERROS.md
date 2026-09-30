@@ -1231,3 +1231,17 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Causa: O método `renderView(string $view, array $dados)` recebia a matriz com o nome de variável local `$dados` e executava `extract($dados, EXTR_SKIP)`. Quando o array continha uma chave com o mesmo nome (`$dados['dados'] = ...`), o sinalizador `EXTR_SKIP` instruía o PHP a não sobrescrever a variável de escopo local existente `$dados`, ignorando silenciosamente a chave e impossibilitando o acesso aos dados dentro da view incluída.
 - Solução aplicada: Renomeado o parâmetro formal da função para um identificador com prefixo restrito (`$_viewVars`), isolando o escopo e utilizando `extract($_viewVars, EXTR_OVERWRITE)` para garantir que todas as variáveis passadas pelo chamador sejam desempacotadas sem conflitos de escopo local.
 - Como evitar no futuro: Em motores de renderização que utilizam `extract()`, adotar parâmetros com nomes prefixados ou protegidos (ex: `$_viewVars`, `$_viewData`) e `EXTR_OVERWRITE`, garantindo que nenhuma chave de dados fornecida pelos controllers ou services sofra colisão com variáveis de controle do método.
+
+---
+
+## 2026-09-30 - Alinhamento da view operacional de abertura/fechamento de caixa com o padrão oficial Escolar Manager
+
+- Sintoma: A view operacional de Caixa (`app/views/operacional/caixa.php`) apresentava defasagem em relação ao modelo real da escola (sistema anterior Escolar Manager), exibindo stat-strip genérica com foco desproporcional em conferência complexa de gaveta e sem os campos oficiais consolidados de Operador, Situação, Fundo de caixa, Data/hora de abertura, Entradas em dinheiro/pix, Saídas e Totais.
+- Causa: Falta de espelhamento exato do formulário institucional escolar anterior. Além disso, a cantina opera com 99% das vendas e recargas de forma online via Cantina Web, sendo o caixa físico uma exceção pontual no balcão que não aceita cheque nem máquina física de cartão de crédito/débito.
+- Solução aplicada:
+  1. Reformulado o painel principal de `app/views/operacional/caixa.php` para adotar o Grid Oficial em alta densidade (3 linhas x 4 colunas) com inputs estilizados readonly: `Operador` (em maiúsculas com turno), `Situação` (com indicador verde/cinza), `Fundo de caixa` (com padrão R$ 0,00), `Data e hora de abertura`, `Entrada dinheiro`, `Entrada pix`, `Total saídas`, `Total entradas` e `Total caixa`.
+  2. Removidos terminantemente campos inexistentes no modelo da escola (`entrada cheque` e `entrada cartão`).
+  3. Adicionado botão institucional `🖨 Emitir` na barra de ferramentas para visualização e impressão direta do espelho oficial A4 de Fechamento de Caixa (`/operacional/caixa/fechamento/pdf?id={id}`).
+  4. Adicionadas seções analíticas com abas detalhando `Vendas Cantina Web (Online)`, `Vendas Presenciais no Balcão` e `Recargas no Balcão`.
+  5. Expandida a suíte `tests/caixa_test.php` de 38 para 53 asserções, validando todos os novos campos oficiais e a ausência absoluta de cheque e cartão.
+- Como evitar no futuro: Sempre coletar as imagens e leiautes reais do sistema anterior em uso pelos operadores da escola antes de desenhar telas operacionais do ERP, adaptando o design para a realidade concreta do modelo de negócio.
