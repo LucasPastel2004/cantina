@@ -31,6 +31,7 @@ class Auditoria extends Model
     public const ACAO_ABERTURA_CAIXA        = 'abertura_caixa';
     public const ACAO_FECHAMENTO_CAIXA      = 'fechamento_caixa';
     public const ACAO_RECARGA_DINHEIRO_BALCAO = 'recarga_dinheiro_balcao';
+    public const ACAO_RECARGA_PIX_BALCAO     = 'recarga_pix_balcao';
 
     /**
      * Registra uma ação na trilha de auditoria

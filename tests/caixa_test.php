@@ -225,7 +225,15 @@ class CaixaTest
         $this->assert(str_contains($content, 'fundo_troco_inicial'), "View contém campo de Fundo de Troco");
         $this->assert(str_contains($content, 'total_informado_gaveta'), "View contém campo de contagem física de gaveta");
         $this->assert(str_contains($content, 'calcularQuebraSobra()'), "View contém script interativo de cálculo de quebra/sobra");
-        $this->assert(str_contains($content, 'Histórico de Sessões de Caixa'), "View contém tabela de histórico de sessões");
+        $this->assert(!str_contains($content, 'Histórico de Sessões de Caixa'), "View operacional NÃO expõe tabela de histórico de sessões anteriores");
+
+        // Asserções do Dropdown Emitir e Ações de Recarga
+        $this->assert(str_contains($content, 'dropdownEmitirCaixa'), "View contém menu dropdown no botão Emitir");
+        $this->assert(str_contains($content, 'Visualizar / Imprimir (A4)'), "Dropdown Emitir contém opção de Visualizar / Imprimir A4");
+        $this->assert(str_contains($content, 'Baixar em PDF (A4)'), "Dropdown Emitir contém opção de Baixar em PDF A4");
+        $this->assert(str_contains($content, '+ Recarga'), "View contém botão '+ Recarga'");
+        $this->assert(str_contains($content, 'formaPagamentoPix'), "Modal de recarga suporta opção Pix no Balcão");
+        $this->assert(str_contains($content, 'formaPagamentoDinheiro'), "Modal de recarga suporta opção Dinheiro Físico");
 
         // Asserções do Grid Oficial Institucional (Escolar Manager)
         $this->assert(str_contains($content, 'Operador'), "View contém campo oficial 'Operador'");
@@ -265,7 +273,7 @@ class CaixaTest
         $this->assert(str_contains($output, 'Gestão de Caixa e Prestação de Contas'), "HTML contém título da tela");
         $this->assert(str_contains($output, 'Matutino (Manhã)'), "HTML renderizou seletor de turno matutino");
         $this->assert(str_contains($output, 'Vespertino (Tarde)'), "HTML renderizou seletor de turno vespertino");
-        $this->assert(str_contains($output, 'Histórico de Sessões de Caixa'), "HTML renderizou seção de histórico");
+        $this->assert(!str_contains($output, 'Histórico de Sessões de Caixa'), "HTML NÃO renderiza seção de histórico de sessões na tela operacional");
         $this->assert(str_contains($output, 'Entrada dinheiro'), "HTML renderizou campo 'Entrada dinheiro'");
         $this->assert(str_contains($output, 'Entrada pix'), "HTML renderizou campo 'Entrada pix'");
         $this->assert(str_contains($output, 'Total caixa'), "HTML renderizou campo 'Total caixa'");

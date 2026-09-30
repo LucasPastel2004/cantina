@@ -117,8 +117,29 @@ $informadoExato = 250.0;
 $diferencaExata = round($informadoExato - $esperadoGaveta, 2);
 $assertCustom($diferencaExata === 0.0, "Conferência exata com R$ 250 contados e R$ 250 esperados é exatamente R$ 0,00");
 
+// 6. Teste de Recarga no Balcão com Pix
+$_POST['csrf_token'] = \App\Core\Session::generateCsrfToken();
+$_POST['responsavel_id'] = (string)$respId;
+$_POST['forma_pagamento'] = 'pix';
+$_POST['valor'] = '75,00';
+$_POST['observacoes'] = 'Teste recarga Pix balcao';
+
+ob_start();
+$controller->recargaDinheiro();
+$outputPix = ob_get_clean();
+$jsonPix = json_decode($outputPix, true);
+
+$assertCustom($jsonPix !== null && $jsonPix['sucesso'] === true, "Recarga com forma_pagamento 'pix' processada com sucesso");
+$assertCustom(($jsonPix['forma_pagamento'] ?? '') === 'pix', "JSON retorna forma_pagamento === 'pix'");
+$assertCustom((float)($jsonPix['valor_creditado'] ?? 0) === 75.00, "Valor creditado via Pix confere com R$ 75,00");
+
+// Verificar se dados do comprovante térmico são recuperáveis para Pix
+$dadosComprovantePix = \App\Models\SessaoCaixa::buscarDadosRecarga((int)$jsonPix['transacao_id']);
+$assertCustom($dadosComprovantePix !== null, "buscarDadosRecarga localiza transação recarga_pix");
+$assertCustom(($dadosComprovantePix['tipo_transacao'] ?? '') === 'recarga_pix', "tipo_transacao gravada é 'recarga_pix'");
+
 // Limpeza das transações criadas neste teste específico
-$txsParaExcluir = array_filter([$resultado1['transacao_id'] ?? null, $jsonVirgula['transacao_id'] ?? null, $jsonPonto['transacao_id'] ?? null]);
+$txsParaExcluir = array_filter([$resultado1['transacao_id'] ?? null, $jsonVirgula['transacao_id'] ?? null, $jsonPonto['transacao_id'] ?? null, $jsonPix['transacao_id'] ?? null]);
 if (!empty($txsParaExcluir)) {
     $idsIn = implode(',', $txsParaExcluir);
     $pdo->exec("DELETE FROM transacoes_carteira WHERE id IN ({$idsIn})");

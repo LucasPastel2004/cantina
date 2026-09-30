@@ -161,18 +161,41 @@ if ($dadosFechamento) {
     <!-- Barra Superior de Ferramentas / Ações do Caixa -->
     <div class="card-enterprise-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 px-3">
         <div class="d-flex align-items-center gap-2">
-            <!-- Botão Emitir com Ícone de Impressora -->
+            <!-- Botão Emitir com Opções de Visualizar/Imprimir e Baixar PDF -->
             <?php if ($sessaoIdAtual): ?>
-                <a href="<?php echo $baseUrl; ?>/operacional/caixa/fechamento/pdf?id=<?php echo $sessaoIdAtual; ?>" 
-                   target="_blank" 
-                   class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1 font-semibold"
-                   title="Emitir Relatório Oficial de Fechamento de Caixa (A4 Timbrado)">
-                    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-                    </svg>
-                    Emitir
-                </a>
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1 font-semibold dropdown-toggle" 
+                            type="button" 
+                            id="dropdownEmitirCaixa" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false" 
+                            title="Emitir Relatório Oficial de Fechamento de Caixa">
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                            <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                        </svg>
+                        Emitir
+                    </button>
+                    <ul class="dropdown-menu shadow-sm" aria-labelledby="dropdownEmitirCaixa" style="font-size: 12.5px;">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $sessaoIdAtual; ?>" target="_blank">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-primary">
+                                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                                </svg>
+                                <span>Visualizar / Imprimir (A4)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?php echo $baseUrl; ?>/operacional/caixa/fechamento/pdf?id=<?php echo $sessaoIdAtual; ?>" target="_blank">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-danger">
+                                    <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 1.5l3 3H9.5v-3zM4.5 9h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0-4h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1 0-1z"/>
+                                </svg>
+                                <span>Baixar em PDF (A4)</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             <?php else: ?>
                 <button type="button" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1" disabled title="Nenhuma sessão disponível para emissão">
                     <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
@@ -209,14 +232,14 @@ if ($dadosFechamento) {
                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
                     </svg>
-                    + Recarga em Dinheiro
+                    + Recarga
                 </button>
                 <a href="<?php echo $baseUrl; ?>/operacional/caixa/detalhes/<?php echo $sessaoAberta['id']; ?>" class="btn btn-enterprise btn-secondary btn-sm font-semibold" title="Extrato Analítico das Operações">
                     Extrato da Sessão
                 </a>
             <?php else: ?>
-                <button type="button" class="btn btn-enterprise btn-secondary btn-sm" disabled title="Caixa fechado: Abra o caixa para realizar recargas presenciais em dinheiro">
-                    + Recarga em Dinheiro
+                <button type="button" class="btn btn-enterprise btn-secondary btn-sm" disabled title="Caixa fechado: Abra o caixa para realizar recargas presenciais">
+                    + Recarga
                 </button>
             <?php endif; ?>
 
@@ -570,164 +593,6 @@ if ($dadosFechamento) {
 </div>
 <?php endif; ?>
 
-<!-- ========================================================================
-     FILTRO E HISTÓRICO DE SESSÕES DE CAIXA
-     ======================================================================== -->
-<div class="card-enterprise mb-3">
-    <div class="card-enterprise-body p-3">
-        <form action="<?php echo $baseUrl; ?>/operacional/caixa" method="GET" class="row g-2 align-items-end">
-            <input type="hidden" name="turno" value="<?php echo htmlspecialchars($turnoAtual, ENT_QUOTES, 'UTF-8'); ?>">
-            
-            <div class="col-12 col-md-3">
-                <label class="form-label font-11 font-semibold text-secondary mb-1">Filtrar Histórico por Turno</label>
-                <select name="filtro_turno" class="form-select form-select-sm font-12">
-                    <option value="" <?php echo empty($filtroTurno) ? 'selected' : ''; ?>>Todos os Turnos</option>
-                    <option value="matutino" <?php echo (($filtroTurno ?? '') === 'matutino') ? 'selected' : ''; ?>>Matutino (Manhã)</option>
-                    <option value="vespertino" <?php echo (($filtroTurno ?? '') === 'vespertino') ? 'selected' : ''; ?>>Vespertino (Tarde)</option>
-                </select>
-            </div>
-            <div class="col-12 col-md-3">
-                <label class="form-label font-11 font-semibold text-secondary mb-1">Data Início</label>
-                <input type="date" name="data_inicio" class="form-control form-control-sm font-tabular font-12" value="<?php echo htmlspecialchars($dataInicio ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-            </div>
-            <div class="col-12 col-md-3">
-                <label class="form-label font-11 font-semibold text-secondary mb-1">Data Fim</label>
-                <input type="date" name="data_fim" class="form-control form-control-sm font-tabular font-12" value="<?php echo htmlspecialchars($dataFim ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-            </div>
-            <div class="col-12 col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-fill">
-                    Filtrar
-                </button>
-                <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo $turnoAtual; ?>" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
-                    Limpar
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card-enterprise mb-4">
-    <div class="card-enterprise-header d-flex justify-content-between align-items-center">
-        <div>
-            <span class="font-weight-bold text-dark">Histórico de Sessões de Caixa</span>
-            <span class="text-microcopy ms-2">Registros e conciliações de gaveta</span>
-        </div>
-        <span class="text-muted small">
-            Exibindo <span class="font-tabular fw-semibold"><?php echo count($historico); ?></span> de <span class="font-tabular fw-semibold"><?php echo $totalRegistros ?? count($historico); ?></span> sessões
-            <?php if (!empty($totalPaginas) && $totalPaginas > 1): ?>
-                (Pág. <span class="font-tabular"><?php echo $paginaAtual; ?></span> de <span class="font-tabular"><?php echo $totalPaginas; ?></span>)
-            <?php endif; ?>
-        </span>
-    </div>
-    <div class="card-enterprise-body p-0">
-        <div class="table-responsive" style="overflow-x: auto;">
-            <table class="table table-enterprise table-sm mb-0 align-middle" style="font-size: 11.5px; white-space: nowrap;">
-                <thead>
-                    <tr>
-                        <th style="min-width: 50px; width: 5%;">Sessão</th>
-                        <th style="min-width: 60px; width: 6%;">Turno</th>
-                        <th style="min-width: 100px;">Operador</th>
-                        <th style="min-width: 75px; width: 8%;">Abertura</th>
-                        <th style="min-width: 75px; width: 8%;">Fechamento</th>
-                        <th class="text-end" style="min-width: 65px; width: 7%;">Fundo</th>
-                        <th class="text-end" style="min-width: 70px; width: 8%;">PDV Din.</th>
-                        <th class="text-end" style="min-width: 70px; width: 8%;">Recargas</th>
-                        <th class="text-end" style="min-width: 60px; width: 7%;">Pix</th>
-                        <th class="text-end" style="min-width: 70px; width: 8%;">Gaveta</th>
-                        <th class="text-end" style="min-width: 70px; width: 8%;">Diferença</th>
-                        <th class="text-center" style="min-width: 70px; width: 7%;">Status</th>
-                        <th class="text-end" style="min-width: 120px; width: 12%;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($historico)): ?>
-                        <tr>
-                            <td colspan="13" class="text-center py-4 text-muted">
-                                Nenhuma sessão de caixa encontrada para os filtros aplicados.
-                            </td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($historico as $s): ?>
-                            <?php 
-                                $dif = ($s['diferenca_quebra_sobra'] !== null) ? (float)$s['diferenca_quebra_sobra'] : null;
-                                $isFechado = ($s['status'] === 'fechado');
-                                $recargasSessao = (float)($s['total_dinheiro_recargas'] ?? 0.0);
-                                $abertoStr = date('d/m/Y H:i', strtotime($s['aberto_em']));
-                                $abertoCurto = date('d/m H:i', strtotime($s['aberto_em']));
-                                $fechadoStr = !empty($s['fechado_em']) ? date('d/m/Y H:i', strtotime($s['fechado_em'])) : null;
-                                $fechadoCurto = !empty($s['fechado_em']) ? date('d/m H:i', strtotime($s['fechado_em'])) : null;
-                            ?>
-                            <tr>
-                                <td class="font-tabular font-semibold">#<?php echo $s['id']; ?></td>
-                                <td>
-                                    <span class="badge bg-white text-dark border px-1" style="font-size: 10px;">
-                                        <?php echo ($s['turno'] === 'matutino') ? 'Manhã' : 'Tarde'; ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="d-inline-block text-truncate" style="max-width: 160px;" title="<?php echo htmlspecialchars($s['operador_nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?>">
-                                        <?php echo htmlspecialchars($s['operador_nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?>
-                                    </span>
-                                </td>
-                                <td class="font-tabular text-secondary" title="<?php echo $abertoStr; ?>"><?php echo $abertoCurto; ?></td>
-                                <td class="font-tabular text-secondary">
-                                    <?php if ($fechadoCurto): ?>
-                                        <span title="<?php echo $fechadoStr; ?>"><?php echo $fechadoCurto; ?></span>
-                                    <?php else: ?>
-                                        <span class="text-muted">—</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-end font-tabular">R$ <?php echo number_format((float)$s['fundo_troco_inicial'], 2, ',', '.'); ?></td>
-                                <td class="text-end font-tabular">R$ <?php echo number_format((float)$s['total_dinheiro_avulso'], 2, ',', '.'); ?></td>
-                                <td class="text-end font-tabular text-success font-semibold">R$ <?php echo number_format($recargasSessao, 2, ',', '.'); ?></td>
-                                <td class="text-end font-tabular">R$ <?php echo number_format((float)$s['total_pix_balcao'], 2, ',', '.'); ?></td>
-                                <td class="text-end font-tabular font-semibold">
-                                    <?php echo ($s['total_informado_gaveta'] !== null) ? 'R$ ' . number_format((float)$s['total_informado_gaveta'], 2, ',', '.') : '—'; ?>
-                                </td>
-                                <td class="text-end font-tabular">
-                                    <?php if ($dif === null): ?>
-                                        <span class="text-muted">—</span>
-                                    <?php elseif ($dif == 0.0): ?>
-                                        <span class="text-success font-semibold">R$ 0,00</span>
-                                    <?php elseif ($dif > 0): ?>
-                                        <span class="text-success font-semibold">+<?php echo number_format($dif, 2, ',', '.'); ?></span>
-                                    <?php else: ?>
-                                        <span class="text-danger font-semibold">-<?php echo number_format(abs($dif), 2, ',', '.'); ?></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-center">
-                                    <?php if ($isFechado): ?>
-                                        <span class="status-indicator status-inactive" style="font-size: 11px;"><span class="bullet">●</span> Fechado</span>
-                                    <?php else: ?>
-                                        <span class="status-indicator status-active" style="font-size: 11px;"><span class="bullet">●</span> Aberto</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <a href="<?php echo $baseUrl; ?>/operacional/caixa/detalhes/<?php echo $s['id']; ?>" 
-                                           class="btn btn-enterprise btn-secondary px-2 py-0" style="font-size: 11px;" title="Extrato Analítico Detalhado">
-                                            Extrato
-                                        </a>
-                                        <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $s['id']; ?>" 
-                                           class="btn btn-enterprise btn-secondary px-2 py-0" target="_blank" style="font-size: 11px;" title="Visualizar Espelho A4">
-                                            Espelho
-                                        </a>
-                                        <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $s['id']; ?>/pdf" 
-                                           class="btn btn-enterprise btn-secondary px-2 py-0" style="font-size: 11px;" title="Baixar PDF A4">
-                                            PDF
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-        <!-- Paginação Dinâmica Conforme Configuração Oficial -->
-        <?php require __DIR__ . '/../partials/pagination.php'; ?>
-    </div>
-</div>
 
 <!-- ========================================================================
      MODAL DE RECARGA PRESENCIAL EM DINHEIRO NO BALCÃO (Tela 5.4 do FSD)
@@ -737,7 +602,7 @@ if ($dadosFechamento) {
         <div class="modal-content card-enterprise" style="border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);">
             <div class="modal-header card-enterprise-header d-flex justify-content-between align-items-center py-3 px-4">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="font-weight-bold text-dark" id="modalRecargaDinheiroLabel">Recarga Presencial em Dinheiro (Balcão)</span>
+                    <span class="font-weight-bold text-dark" id="modalRecargaDinheiroLabel">Recarga Presencial (Balcão)</span>
                     <span class="badge bg-white text-dark border" style="font-size: 11px;">
                         Turno <?php echo ucfirst($turnoAtual); ?> — Caixa #<?php echo (int)($sessaoAberta['id'] ?? 0); ?>
                     </span>
@@ -807,11 +672,38 @@ if ($dadosFechamento) {
                     </div>
                 </div>
 
-                <!-- ETAPA 3: VALOR EM DINHEIRO DA RECARGA -->
+                <!-- ETAPA 2 E 3: FORMA DE PAGAMENTO E VALOR DA RECARGA -->
                 <div id="recargaEtapaValor" class="d-none">
                     <hr class="my-3 text-muted">
+
+                    <div class="mb-3">
+                        <label class="form-label font-12 font-semibold text-secondary mb-2">
+                            2. Forma de Pagamento no Balcão
+                        </label>
+                        <div class="row g-2">
+                            <div class="col-12 col-sm-6">
+                                <label class="border rounded p-2 d-flex align-items-center gap-2 bg-white w-100" style="cursor: pointer;" for="formaPagamentoDinheiro">
+                                    <input class="form-check-input mt-0" type="radio" name="recarga_forma_pagamento" id="formaPagamentoDinheiro" value="dinheiro" checked>
+                                    <div>
+                                        <div class="font-12 font-semibold text-dark">Dinheiro Físico</div>
+                                        <div class="font-11 text-muted">Recebido em espécie na gaveta do caixa</div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label class="border rounded p-2 d-flex align-items-center gap-2 bg-white w-100" style="cursor: pointer;" for="formaPagamentoPix">
+                                    <input class="form-check-input mt-0" type="radio" name="recarga_forma_pagamento" id="formaPagamentoPix" value="pix">
+                                    <div>
+                                        <div class="font-12 font-semibold text-dark">Pix no Balcão</div>
+                                        <div class="font-11 text-muted">Transferência/chave confirmada no balcão</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <label class="form-label font-12 font-semibold text-secondary">
-                        2. Valor em Dinheiro Recebido no Balcão
+                        3. Valor da Recarga
                     </label>
 
                     <div class="row g-3 align-items-center mb-3">
@@ -822,7 +714,7 @@ if ($dadosFechamento) {
                                        placeholder="0,00" required>
                             </div>
                             <div class="form-text font-11 text-muted">
-                                O valor será creditado imediatamente na carteira familiar e somado à gaveta do caixa.
+                                O valor será creditado imediatamente na carteira familiar e computado na prestação de contas.
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
@@ -839,7 +731,7 @@ if ($dadosFechamento) {
                     <div class="mb-3">
                         <label class="form-label font-11 font-semibold text-secondary">Observações da Recarga (Opcional)</label>
                         <input type="text" id="recargaInputObservacoes" class="form-control form-control-sm font-12" 
-                               placeholder="Ex: Entregue em cédulas de R$ 50 pelo responsável na entrada...">
+                               placeholder="Ex: Pagamento confirmado pelo responsável...">
                     </div>
                 </div>
 
@@ -852,7 +744,7 @@ if ($dadosFechamento) {
                             </svg>
                         </div>
                     </div>
-                    <h5 class="font-weight-bold text-dark mb-1">Recarga em Dinheiro Confirmada!</h5>
+                    <h5 class="font-weight-bold text-dark mb-1">Recarga Confirmada!</h5>
                     <p class="font-13 text-secondary mb-3" id="recargaMsgSucessoTexto">
                         O crédito foi adicionado com sucesso à carteira familiar.
                     </p>
@@ -863,7 +755,11 @@ if ($dadosFechamento) {
                             <span class="font-semibold text-dark" id="recargaResumoNome">—</span>
                         </div>
                         <div class="d-flex justify-content-between font-12 mb-1">
-                            <span class="text-secondary">Valor Recebido em Espécie:</span>
+                            <span class="text-secondary">Forma de Pagamento:</span>
+                            <span class="font-semibold text-dark" id="recargaResumoForma">Dinheiro Físico</span>
+                        </div>
+                        <div class="d-flex justify-content-between font-12 mb-1">
+                            <span class="text-secondary">Valor Creditado:</span>
                             <span class="font-tabular font-bold text-success font-13" id="recargaResumoValor">+ R$ 0,00</span>
                         </div>
                         <div class="d-flex justify-content-between font-12 mb-1">
@@ -904,7 +800,7 @@ if ($dadosFechamento) {
                     Cancelar
                 </button>
                 <button type="button" class="btn btn-enterprise btn-primary btn-sm px-4" id="recargaBtnConfirmarRecarga" disabled>
-                    Confirmar Recarga em Dinheiro
+                    Confirmar Recarga
                 </button>
             </div>
         </div>
@@ -1169,9 +1065,13 @@ function confirmarFechamento() {
         btnConfirmar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registrando Recarga...';
 
         try {
+            const formaRadio = document.querySelector('input[name="recarga_forma_pagamento"]:checked');
+            const formaPagamento = formaRadio ? formaRadio.value : 'dinheiro';
+
             const formData = new FormData();
             formData.append('csrf_token', '<?php echo $csrfToken; ?>');
             formData.append('responsavel_id', responsavelSelecionado.id);
+            formData.append('forma_pagamento', formaPagamento);
             formData.append('valor', valor.toFixed(2));
             formData.append('observacoes', inputObs.value.trim());
 
@@ -1192,12 +1092,12 @@ function confirmarFechamento() {
             } else {
                 mostrarErro(data.mensagem || data.message || 'Falha ao registrar recarga.');
                 btnConfirmar.disabled = false;
-                btnConfirmar.innerHTML = 'Confirmar Recarga em Dinheiro';
+                btnConfirmar.innerHTML = 'Confirmar Recarga';
             }
         } catch (err) {
             mostrarErro('Erro de conexão ao processar recarga. Verifique a rede.');
             btnConfirmar.disabled = false;
-            btnConfirmar.innerHTML = 'Confirmar Recarga em Dinheiro';
+            btnConfirmar.innerHTML = 'Confirmar Recarga';
         }
     });
 
@@ -1210,6 +1110,13 @@ function confirmarFechamento() {
         const nomeResp = data.responsavel_nome || (data.dados ? data.dados.responsavel_nome : (responsavelSelecionado ? responsavelSelecionado.nome : '—'));
         const valorCred = data.valor_creditado ?? (data.dados ? data.dados.valor : 0);
         const novoSaldo = data.novo_saldo ?? (data.dados ? data.dados.saldo_resultante : 0);
+        const formaPagamento = data.forma_pagamento || (document.querySelector('input[name="recarga_forma_pagamento"]:checked')?.value === 'pix' ? 'pix' : 'dinheiro');
+        const formaTexto = (formaPagamento === 'pix') ? 'Pix no Balcão' : 'Dinheiro Físico';
+
+        const resumoFormaEl = document.getElementById('recargaResumoForma');
+        if (resumoFormaEl) {
+            resumoFormaEl.textContent = formaTexto;
+        }
 
         document.getElementById('recargaResumoNome').textContent = nomeResp;
         document.getElementById('recargaResumoValor').textContent = '+ R$ ' + parseFloat(valorCred).toLocaleString('pt-BR', { minimumFractionDigits: 2 });

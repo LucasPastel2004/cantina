@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 20 — Nova Arquitetura de PDF (HTML+CSS+Gotenberg) & Migração Completa de Relatórios + Fechamento de Caixa Oficial
 * **Status da Fase 20:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 20 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
-* **Última Atualização:** 2026-09-30 10:15:00 (Remoção definitiva de linhas de cartão e cheque do espelho de Fechamento de Caixa `app/views/relatorios/fechamento_caixa_pdf.php` e do modelo `SessaoCaixa.php`, mantendo estritamente dinheiro e Pix conforme regra de negócio da cantina. Baterias de testes `tests/fase20_test.php` com 71/71 asserções e `tests/caixa_test.php` com 53/53 asserções 100% aprovadas).
+* **Última Atualização:** 2026-09-30 10:45:00 (Aprimoramento da tela de Caixa Operacional `/operacional/caixa`: 1) Botão Emitir transformado em menu com opções de 'Visualizar / Imprimir (A4)' e 'Baixar em PDF (A4)'; 2) Botão e modal de recarga presencial atualizados para '+ Recarga' com suporte flexível a Dinheiro Físico e Pix no Balcão; 3) Remoção do histórico de caixas anteriores da visão do operador, segregando-o para os relatórios administrativos. Testes automatizados `tests/caixa_test.php` com 59/59 e `tests/recarga_dinheiro_post_test.php` com 22/22 100% aprovados).
 
 
 
@@ -929,9 +929,15 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * `app/views/tickets/cupom_pdv_80mm.php`: Comprovante de venda balcão em bobina contínua 80mm com `Comprovante de Venda #ID` e vínculo do estudante;
   * `app/views/relatorios/recarga_dinheiro_pdf.php`: Comprovante térmico de recarga em dinheiro com título institucional `COMPROVANTE DE RECARGA — Carteira Familiar`;
   * `app/views/relatorios/desconto_folha_pdf.php`, `desconto_folha_individual_pdf.php`, `med_negativados_pdf.php`, `vendas_alimento_pdf.php`, `extrato_aluno_pdf.php`: Todos migrados e compatíveis com a nova arquitetura.
+* [x] **Aprimoramentos de Caixa Operacional e Recargas Presenciais (Balcão):**
+  * Botão de ação rápida `Emitir` no topo da tela `/operacional/caixa` evoluído para dropdown com opções claras: "Visualizar / Imprimir (A4)" (espelho HTML com `window.print`) e "Baixar em PDF (A4)" (download direto de PDF A4 timbrado);
+  * Botão de recarga atualizado para `+ Recarga`, abrindo modal flexível com seleção entre **Dinheiro Físico** (espécie somada à gaveta do caixa) e **Pix no Balcão** (transferência/chave confirmada pelo operador);
+  * Backend (`SessaoCaixa::registrarRecargaBalcao` e `CaixaController::recargaDinheiro`) parametrizado para registrar créditos atômicos com os tipos oficiais (`recarga_dinheiro` ou `recarga_pix`), incrementando os totais de sessão respectivos (`total_dinheiro_recargas` ou `total_pix_balcao`) e gerando comprovante térmico personalizado em bobina 80mm;
+  * Remoção do painel e tabela de histórico de sessões anteriores da tela operacional (`/operacional/caixa`), preservando a segregação de funções e restringindo a listagem histórica aos relatórios gerenciais/administrativos;
+  * Testes automatizados `tests/caixa_test.php` (59 asserções) e `tests/recarga_dinheiro_post_test.php` (22 asserções) 100% aprovados.
 * [x] **Retrocompatibilidade e Homologação Global:**
   * Preservação de todos os métodos legados em `PdfService.php` (`gerarRelatorioCorte`, `gerarTicket80mm`, `gerarCupomPDV80mm`, `gerarRelatorioDescontoFolha`, etc.) como wrappers sem quebra de contrato;
-  * Criação da suíte oficial `tests/fase20_test.php` com 59 asserções executadas e 100% aprovadas;
+  * Criação da suíte oficial `tests/fase20_test.php` com 71 asserções executadas e 100% aprovadas;
   * Execução da auditoria global de verificação (`tests/verification_audit.php`): **49 de 49 suítes automatizadas aprovadas com 100% de sucesso**.
 
 ---

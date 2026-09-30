@@ -472,20 +472,22 @@ class SessaoCaixa extends Model
     }
 
     /**
-     * Registra uma recarga presencial em dinheiro no balcão da cantina
+     * Registra uma recarga presencial no balcão da cantina (Dinheiro ou Pix)
      * Conforme Tela 5.4 e Área 6 do docs/FSD.md
      * 
      * @param int $responsavelId ID do titular da conta
-     * @param float $valor Valor em espécie recebido
+     * @param float $valor Valor recebido
+     * @param string $formaPagamento 'dinheiro' ou 'pix'
      * @param int $operadorId ID do operador logado
      * @param string|null $observacoes Observações opcionais
      * @param string $ipOrigem IP de origem do operador
      * @return array Dados da transação gerada
      * @throws \DomainException|\InvalidArgumentException
      */
-    public static function registrarRecargaDinheiro(
+    public static function registrarRecargaBalcao(
         int $responsavelId,
         float $valor,
+        string $formaPagamento,
         int $operadorId,
         ?string $observacoes = null,
         string $ipOrigem = '127.0.0.1'
@@ -493,6 +495,8 @@ class SessaoCaixa extends Model
         if ($valor <= 0) {
             throw new \InvalidArgumentException('O valor da recarga deve ser maior que zero.');
         }
+
+        $formaPagamento = (strtolower(trim($formaPagamento)) === 'pix') ? 'pix' : 'dinheiro';
 
         $turno = self::inferirTurnoAtual();
         $sessaoAberta = self::obterSessaoAberta($turno);
@@ -502,7 +506,7 @@ class SessaoCaixa extends Model
         }
 
         if (!$sessaoAberta) {
-            throw new \DomainException('Operação bloqueada: Não há sessão de caixa aberta para o turno corrente. Abra o caixa antes de receber valores em dinheiro.');
+            throw new \DomainException('Operação bloqueada: Não há sessão de caixa aberta para o turno corrente. Abra o caixa antes de efetuar recargas no balcão.');
         }
 
         $sessaoId = (int)$sessaoAberta['id'];
@@ -516,39 +520,75 @@ class SessaoCaixa extends Model
         }
 
         try {
-            // 1. Incrementa total_dinheiro_recargas na sessão de caixa
-            self::incrementarTotais($sessaoId, 0.0, 0.0, $valor);
+            if ($formaPagamento === 'pix') {
+                // 1. Incrementa total_pix_balcao na sessão de caixa
+                self::incrementarTotais($sessaoId, 0.0, $valor, 0.0);
 
-            // 2. Credita o saldo na carteira familiar via TransacaoCarteira
-            $descricao = "Recarga em Dinheiro no Balcão (Sessão #{$sessaoId})";
-            if (!empty($observacoes)) {
-                $descricao .= " - " . trim($observacoes);
+                // 2. Credita o saldo na carteira familiar via TransacaoCarteira
+                $descricao = "Recarga Pix no Balcão (Sessão #{$sessaoId})";
+                if (!empty($observacoes)) {
+                    $descricao .= " - " . trim($observacoes);
+                }
+
+                $transacao = TransacaoCarteira::creditar(
+                    $responsavelId,
+                    $valor,
+                    TransacaoCarteira::TIPO_RECARGA_PIX,
+                    $descricao,
+                    (string)$sessaoId,
+                    null,
+                    $operadorId
+                );
+
+                // 3. Auditoria de negócio
+                $justificativa = "Recarga presencial via Pix no balcão no valor de R$ " . number_format($valor, 2, ',', '.') . " creditada na conta do responsável #{$responsavelId} (Sessão de Caixa #{$sessaoId}).";
+                if (!empty($observacoes)) {
+                    $justificativa .= " Obs: " . trim($observacoes);
+                }
+
+                Auditoria::registrar(
+                    $operadorId,
+                    Auditoria::ACAO_RECARGA_PIX_BALCAO,
+                    'transacoes_carteira',
+                    (int)$transacao['id'],
+                    $justificativa,
+                    $ipOrigem
+                );
+            } else {
+                // 1. Incrementa total_dinheiro_recargas na sessão de caixa
+                self::incrementarTotais($sessaoId, 0.0, 0.0, $valor);
+
+                // 2. Credita o saldo na carteira familiar via TransacaoCarteira
+                $descricao = "Recarga em Dinheiro no Balcão (Sessão #{$sessaoId})";
+                if (!empty($observacoes)) {
+                    $descricao .= " - " . trim($observacoes);
+                }
+
+                $transacao = TransacaoCarteira::creditar(
+                    $responsavelId,
+                    $valor,
+                    TransacaoCarteira::TIPO_RECARGA_DINHEIRO,
+                    $descricao,
+                    (string)$sessaoId,
+                    null,
+                    $operadorId
+                );
+
+                // 3. Auditoria de negócio
+                $justificativa = "Recarga presencial em dinheiro no valor de R$ " . number_format($valor, 2, ',', '.') . " creditada na conta do responsável #{$responsavelId} (Sessão de Caixa #{$sessaoId}).";
+                if (!empty($observacoes)) {
+                    $justificativa .= " Obs: " . trim($observacoes);
+                }
+
+                Auditoria::registrar(
+                    $operadorId,
+                    Auditoria::ACAO_RECARGA_DINHEIRO_BALCAO,
+                    'transacoes_carteira',
+                    (int)$transacao['id'],
+                    $justificativa,
+                    $ipOrigem
+                );
             }
-
-            $transacao = TransacaoCarteira::creditar(
-                $responsavelId,
-                $valor,
-                TransacaoCarteira::TIPO_RECARGA_DINHEIRO,
-                $descricao,
-                (string)$sessaoId,
-                null,
-                $operadorId
-            );
-
-            // 3. Auditoria de negócio
-            $justificativa = "Recarga presencial em dinheiro no valor de R$ " . number_format($valor, 2, ',', '.') . " creditada na conta do responsável #{$responsavelId} (Sessão de Caixa #{$sessaoId}).";
-            if (!empty($observacoes)) {
-                $justificativa .= " Obs: " . trim($observacoes);
-            }
-
-            Auditoria::registrar(
-                $operadorId,
-                Auditoria::ACAO_RECARGA_DINHEIRO_BALCAO,
-                'transacoes_carteira',
-                (int)$transacao['id'],
-                $justificativa,
-                $ipOrigem
-            );
 
             if ($iniciouTransacao) {
                 $pdo->commit();
@@ -563,6 +603,8 @@ class SessaoCaixa extends Model
                 'responsavel_id'   => $responsavelId,
                 'responsavel_nome' => $resp['nome'] ?? 'Responsável',
                 'responsavel_cpf'  => $resp['cpf'] ?? '',
+                'forma_pagamento'  => $formaPagamento,
+                'tipo_transacao'   => ($formaPagamento === 'pix') ? TransacaoCarteira::TIPO_RECARGA_PIX : TransacaoCarteira::TIPO_RECARGA_DINHEIRO,
                 'valor'            => $valor,
                 'saldo_anterior'   => $transacao['saldo_anterior'],
                 'saldo_resultante' => $transacao['saldo_resultante'],
@@ -575,6 +617,26 @@ class SessaoCaixa extends Model
             }
             throw $e;
         }
+    }
+
+    /**
+     * Registra uma recarga presencial em dinheiro no balcão da cantina (alias retrocompatível)
+     * 
+     * @param int $responsavelId ID do titular da conta
+     * @param float $valor Valor em espécie recebido
+     * @param int $operadorId ID do operador logado
+     * @param string|null $observacoes Observações opcionais
+     * @param string $ipOrigem IP de origem do operador
+     * @return array Dados da transação gerada
+     */
+    public static function registrarRecargaDinheiro(
+        int $responsavelId,
+        float $valor,
+        int $operadorId,
+        ?string $observacoes = null,
+        string $ipOrigem = '127.0.0.1'
+    ): array {
+        return self::registrarRecargaBalcao($responsavelId, $valor, 'dinheiro', $operadorId, $observacoes, $ipOrigem);
     }
 
     /**
@@ -721,7 +783,7 @@ class SessaoCaixa extends Model
             FROM transacoes_carteira tc
             INNER JOIN responsaveis r ON r.id = tc.responsavel_id
             LEFT JOIN usuarios u ON u.id = tc.operador_id
-            WHERE tc.tipo_transacao = 'recarga_dinheiro'
+            WHERE tc.tipo_transacao IN ('recarga_dinheiro', 'recarga_pix')
               AND tc.referencia_id = :sessao_id
             ORDER BY tc.id DESC
         ");
@@ -739,7 +801,7 @@ class SessaoCaixa extends Model
     }
 
     /**
-     * Busca os dados consolidados de uma recarga em dinheiro para emissão de comprovante térmico
+     * Busca os dados consolidados de uma recarga (dinheiro ou pix no balcão) para emissão de comprovante térmico
      * 
      * @param int $transacaoId
      * @return array|null
@@ -757,7 +819,7 @@ class SessaoCaixa extends Model
             INNER JOIN responsaveis r ON r.id = tc.responsavel_id
             LEFT JOIN usuarios u ON u.id = tc.operador_id
             LEFT JOIN sessoes_caixa sc ON sc.id = CAST(tc.referencia_id AS UNSIGNED)
-            WHERE tc.id = :id AND tc.tipo_transacao = 'recarga_dinheiro'
+            WHERE tc.id = :id AND tc.tipo_transacao IN ('recarga_dinheiro', 'recarga_pix')
             LIMIT 1
         ");
         $stmt->execute(['id' => $transacaoId]);

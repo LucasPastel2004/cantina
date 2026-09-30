@@ -116,7 +116,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         </div>
         <div class="line" style="margin-top: 2px;">
             <span>Forma Pagamento:</span>
-            <span>DINHEIRO (BALCÃO)</span>
+            <span><?php echo (($dados['tipo_transacao'] ?? '') === 'recarga_pix' || ($dados['forma_pagamento'] ?? '') === 'pix') ? 'PIX (BALCÃO)' : 'DINHEIRO (BALCÃO)'; ?></span>
         </div>
     </div>
 

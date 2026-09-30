@@ -286,6 +286,11 @@ class CaixaController extends Controller
         }
 
         $responsavelId = (int)($_POST['responsavel_id'] ?? 0);
+        $formaPagamento = trim((string)($_POST['forma_pagamento'] ?? 'dinheiro'));
+        if (strtolower($formaPagamento) !== 'pix') {
+            $formaPagamento = 'dinheiro';
+        }
+
         $valorRaw = trim((string)($_POST['valor'] ?? '0'));
         if (str_contains($valorRaw, ',')) {
             $valorLimpo = str_replace('.', '', $valorRaw);
@@ -313,7 +318,7 @@ class CaixaController extends Controller
         }
 
         if ($valor <= 0) {
-            $msg = 'Informe um valor válido e positivo para a recarga em dinheiro.';
+            $msg = 'Informe um valor válido e positivo para a recarga.';
             if ($isAjax) {
                 $this->json([
                     'success'  => false,
@@ -332,9 +337,10 @@ class CaixaController extends Controller
             $operadorId = Auth::id() ?? 1;
             $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
-            $resultado = SessaoCaixa::registrarRecargaDinheiro($responsavelId, $valor, $operadorId, $observacoes, $ip);
+            $resultado = SessaoCaixa::registrarRecargaBalcao($responsavelId, $valor, $formaPagamento, $operadorId, $observacoes, $ip);
 
-            $msgSucesso = "Recarga em dinheiro de R$ " . number_format($valor, 2, ',', '.') . " realizada com sucesso para {$resultado['responsavel_nome']}! Novo saldo: R$ " . number_format($resultado['saldo_resultante'], 2, ',', '.');
+            $formaLabel = ($formaPagamento === 'pix') ? 'Pix' : 'dinheiro';
+            $msgSucesso = "Recarga em {$formaLabel} de R$ " . number_format($valor, 2, ',', '.') . " realizada com sucesso para {$resultado['responsavel_nome']}! Novo saldo: R$ " . number_format($resultado['saldo_resultante'], 2, ',', '.');
 
             if ($isAjax) {
                 $this->json([
@@ -343,6 +349,7 @@ class CaixaController extends Controller
                     'message'            => $msgSucesso,
                     'mensagem'           => $msgSucesso,
                     'transacao_id'       => $resultado['transacao_id'],
+                    'forma_pagamento'    => $resultado['forma_pagamento'],
                     'comprovante_url'    => '/operacional/caixa/comprovante-recarga/' . $resultado['transacao_id'],
                     'comprovante_pdf'    => '/operacional/caixa/comprovante-recarga/' . $resultado['transacao_id'] . '/pdf',
                     'responsavel_nome'   => $resultado['responsavel_nome'],
@@ -363,7 +370,7 @@ class CaixaController extends Controller
                     'mensagem' => $e->getMessage()
                 ], 400);
             } else {
-                Session::setFlash('danger', 'Erro ao registrar recarga em dinheiro: ' . $e->getMessage());
+                Session::setFlash('danger', 'Erro ao registrar recarga: ' . $e->getMessage());
                 $this->redirect('/operacional/caixa');
             }
         }
