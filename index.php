@@ -133,7 +133,13 @@ $router->get('/portal/recarga/status/{txid}', [\App\Controllers\CarteiraControll
 $router->post('/portal/recarga/simular/{txid}', [\App\Controllers\CarteiraController::class, 'simularPagamento'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
 ]);
-$router->get('/portal/extrato', [\App\Controllers\CarteiraController::class, 'index'], [
+$router->get('/portal/extrato', [\App\Controllers\PortalController::class, 'extrato'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->get('/portal/extrato/pdf', [\App\Controllers\PortalController::class, 'extratoPdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->get('/portal/extrato/imprimir', [\App\Controllers\PortalController::class, 'extratoImprimir'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
 ]);
 $router->get('/portal/perfil', [\App\Controllers\PortalController::class, 'perfil'], [
@@ -489,6 +495,12 @@ $router->get('/operacional/extrato-aluno/imprimir', [\App\Controllers\Relatorios
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 $router->get('/relatorios/extrato-aluno/imprimir', [\App\Controllers\RelatoriosController::class, 'extratoAlunoImprimir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/operacional/extrato-aluno/csv', [\App\Controllers\RelatoriosController::class, 'extratoAlunoCsv'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/relatorios/extrato-aluno/csv', [\App\Controllers\RelatoriosController::class, 'extratoAlunoCsv'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 $router->get('/relatorios/buscar-alunos-ajax', [\App\Controllers\RelatoriosController::class, 'buscarAlunosAjax'], [

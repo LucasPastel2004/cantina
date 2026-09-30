@@ -1,500 +1,604 @@
 <?php
 /**
  * Cantina Web — Colégio Monteiro Lobato
- * View: Extrato Analítico de Consumo e Recargas do Aluno
+ * View: Emissão de Extrato de Consumo do Aluno (Cantina)
  * 
- * Conforme docs/FSD.md (Área 6, Módulo 8, Tela 8.5 & Seção 22.1), docs/DESIGN.md e skill design-taste-frontend
+ * Conforme docs/alterações sistema guideline/filtro Extrato Consumo Aluno.pdf,
+ * Relatório Extrato Consumo Aluno.pdf, FSD Área 6 e docs/DESIGN.md
  */
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
 $aluno = $dadosExtrato['aluno'] ?? null;
+$turmas = $turmas ?? [];
+$turmaId = (int)($turmaId ?? 0);
+$dataInicio = $dataInicio ?? date('Y-m-01');
+$dataFim = $dataFim ?? date('Y-m-d');
+$apenasSaldo = !empty($apenasSaldo);
+$saldoApenasPeriodo = !empty($saldoApenasPeriodo);
+$abaAtiva = $abaAtiva ?? 'filtros';
+
+$saldoInicial = (float)($dadosExtrato['saldo_inicial'] ?? 0.0);
+$saldoAtual = (float)($dadosExtrato['saldo_atual'] ?? ($aluno['saldo_atual'] ?? ($aluno['responsavel_saldo'] ?? 0.0)));
+$totalRecargas = (float)($dadosExtrato['total_recargas'] ?? 0.0);
+$totalGasto = (float)($dadosExtrato['total_gasto'] ?? ($dadosExtrato['total_consumo'] ?? 0.0));
+$totalLanches = (int)($dadosExtrato['total_lanches'] ?? 0);
+$linhas = $dadosExtrato['linhas'] ?? ($dadosExtrato['movimentacoes'] ?? []);
 ?>
 
 <div class="container-fluid px-2 pb-5" style="max-width: 1400px; margin: 0 auto;">
 
+<!-- Topbar da Página -->
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-        <h1 class="h5 font-weight-bold text-dark mb-1">Extrato Analítico do Aluno</h1>
+        <h1 class="h5 font-weight-bold text-dark mb-1">Emissão de Extrato de Consumo do Aluno (Cantina)</h1>
         <p class="text-secondary text-microcopy mb-0">
-            Consulta transparente de recargas, saldo familiar compartilhado e histórico de consumo individual por período.
+            Consulta transparente de recargas, saldo familiar compartilhado e histórico de consumo individual por período com saldo progressivo.
         </p>
     </div>
-    <?php if ($aluno): ?>
-        <div class="d-flex align-items-center gap-2">
-            <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno/imprimir?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" target="_blank" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Visualizar espelho para impressão contínua ou A4">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
-                Imprimir Extrato
-            </a>
-            <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno/pdf?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Extrato em PDF A4 Timbrado Oficial">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
-                Exportar PDF (A4)
-            </a>
-        </div>
-    <?php endif; ?>
+    <div class="d-flex align-items-center gap-2">
+        <?php if ($aluno): ?>
+            <!-- Menu Dropdown Corporativo Emitir -->
+            <div class="dropdown">
+                <button class="btn btn-enterprise btn-primary btn-sm dropdown-toggle d-inline-flex align-items-center gap-1.5" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="btnDropdownEmitir">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+                    Emitir
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="btnDropdownEmitir" style="font-size: 13px;">
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
+                           href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno/imprimir?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&apenas_saldo=<?php echo $apenasSaldo ? 'sim' : 'nao'; ?>&saldo_apenas_periodo=<?php echo $saldoApenasPeriodo ? 'sim' : 'nao'; ?>" 
+                           target="_blank" 
+                           onclick="window.open(this.href, '_blank'); return false;">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-primary"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+                            Visualizar / Imprimir (A4)
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
+                           href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno/pdf?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&apenas_saldo=<?php echo $apenasSaldo ? 'sim' : 'nao'; ?>&saldo_apenas_periodo=<?php echo $saldoApenasPeriodo ? 'sim' : 'nao'; ?>">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-danger"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                            Baixar em PDF (A4)
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
+                           href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno/csv?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&apenas_saldo=<?php echo $apenasSaldo ? 'sim' : 'nao'; ?>&saldo_apenas_periodo=<?php echo $saldoApenasPeriodo ? 'sim' : 'nao'; ?>">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-success"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/><path d="M4.5 12.5h7v-1h-7v1zm0-2h7v-1h-7v1zm0-2h7v-1h-7v1z"/></svg>
+                            Exportar Planilha (CSV)
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        <?php endif; ?>
+    </div>
 </div>
 
-<!-- Filtros de Seleção de Aluno e Período de Datas -->
+<!-- Card de Filtros e Opções de Leiaute (Estilo Escolar Manager / filtro Extrato Consumo Aluno.pdf) -->
 <div class="card-enterprise card-overflow-visible mb-4" style="overflow: visible !important; position: relative; z-index: 30;">
-    <div class="card-enterprise-body" style="overflow: visible !important;">
-        <form action="<?php echo $baseUrl; ?>/operacional/extrato-aluno" method="GET" class="row g-3 align-items-end" id="formExtratoAluno" style="position: relative; overflow: visible !important;">
-            <div class="col-12 col-md-5" style="position: relative; z-index: 40;">
-                <label for="inputBuscaAluno" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">
-                    Localizar Aluno (Nome ou Matrícula)
-                </label>
-                <div class="search-input-wrapper position-relative" style="position: relative;">
-                    <span class="search-icon">
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
-                    </span>
-                    <input type="text" id="inputBuscaAluno" class="form-control form-control-sm" style="padding-left: 46px !important;" placeholder="Digite para buscar aluno..." autocomplete="off" value="<?php echo htmlspecialchars($aluno['nome'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                    <input type="hidden" name="aluno_id" id="hiddenAlunoId" value="<?php echo (int)($alunoId ?? 0); ?>">
+    <!-- Abas: Filtros vs Leiaute -->
+    <div class="card-enterprise-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
+        <ul class="nav nav-tabs card-header-tabs m-0 border-0" id="tabsExtrato">
+            <li class="nav-item">
+                <a class="nav-link <?php echo ($abaAtiva === 'filtros') ? 'active font-weight-bold text-primary' : 'text-secondary'; ?> py-2 px-3 d-inline-flex align-items-center gap-1.5" 
+                   href="#tab-filtros" 
+                   onclick="alternarAba('filtros'); return false;" 
+                   id="tab-filtros">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/></svg>
+                    Filtros
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo ($abaAtiva === 'leiaute') ? 'active font-weight-bold text-primary' : 'text-secondary'; ?> py-2 px-3 d-inline-flex align-items-center gap-1.5" 
+                   href="#tab-leiaute" 
+                   onclick="alternarAba('leiaute'); return false;" 
+                   id="tab-leiaute">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.886 2.215 2.214-.885L4.5 11.5h-.5a.5.5 0 0 1-.5-.5v-.5h-.5a.5.5 0 0 1-.5-.5v-.5h-.454l-.454-.454z"/></svg>
+                    Leiaute
+                </a>
+            </li>
+        </ul>
+        <span class="text-secondary text-microcopy d-none d-md-block">
+            Padrão de emissão: Sistema Cantina Web
+        </span>
+    </div>
 
-                    <!-- Dropdown flutuante de Autocomplete (flutua livremente para fora da caixa sobre a página) -->
-                    <div id="autocompleteDropdown" class="list-group position-absolute rounded shadow-lg d-none" 
-                         style="top: calc(100% + 4px); left: 0; right: 0; width: 100%; z-index: 1080; max-height: 280px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2), 0 8px 10px -6px rgba(15, 23, 42, 0.12) !important;">
+    <div class="card-enterprise-body" style="overflow: visible !important;">
+        <form action="<?php echo $baseUrl; ?>/relatorios/extrato-aluno" method="GET" id="formExtratoAluno" style="position: relative; overflow: visible !important;">
+            <input type="hidden" name="aba" id="inputAbaAtiva" value="<?php echo htmlspecialchars($abaAtiva); ?>">
+
+            <!-- Conteúdo da Aba Filtros -->
+            <div id="secao-filtros" style="<?php echo ($abaAtiva === 'leiaute') ? 'display: none;' : 'display: block;'; ?>">
+                <div class="row g-3 align-items-end">
+                    <!-- Localizar Aluno com Autocomplete -->
+                    <div class="col-12 col-md-5" style="position: relative; z-index: 40;">
+                        <label for="aluno_busca" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">
+                            Localizar Aluno (Nome ou Matrícula)
+                        </label>
+                        <div class="search-input-wrapper position-relative" style="position: relative;">
+                            <span class="search-icon">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+                            </span>
+                            <input type="text" id="aluno_busca" name="aluno_busca" class="form-control form-control-sm" style="padding-left: 36px !important;" placeholder="Digite para buscar aluno..." autocomplete="off" value="<?php echo htmlspecialchars($aluno['nome'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                            <input type="hidden" name="aluno_id" id="hiddenAlunoId" value="<?php echo (int)($alunoId ?? 0); ?>">
+
+                            <!-- Dropdown flutuante de Autocomplete -->
+                            <div id="autocompleteDropdown" class="list-group position-absolute rounded shadow-lg d-none" 
+                                 style="top: calc(100% + 4px); left: 0; right: 0; width: 100%; z-index: 1080; max-height: 280px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2), 0 8px 10px -6px rgba(15, 23, 42, 0.12) !important;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filtro Opcional de Turma -->
+                    <div class="col-12 col-md-3">
+                        <label for="selectTurma" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Turma (Opcional)</label>
+                        <select name="turma_id" id="selectTurma" class="form-select form-select-sm">
+                            <option value="">Todas as Turmas...</option>
+                            <?php foreach ($turmas as $t): ?>
+                                <option value="<?php echo (int)$t['id']; ?>" <?php echo ($turmaId === (int)$t['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($t['serie'] . ' ' . $t['nome_turma'] . ' (' . ucfirst($t['turno']) . ')'); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- Período: Data Inicial -->
+                    <div class="col-6 col-md-2">
+                        <label for="dataInicio" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Data Inicial</label>
+                        <input type="date" name="data_inicio" id="dataInicio" class="form-control form-control-sm font-tabular" value="<?php echo htmlspecialchars($dataInicio, ENT_QUOTES, 'UTF-8'); ?>">
+                    </div>
+
+                    <!-- Período: Data Final -->
+                    <div class="col-6 col-md-2">
+                        <label for="dataFim" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Data Final</label>
+                        <input type="date" name="data_fim" id="dataFim" class="form-control form-control-sm font-tabular" value="<?php echo htmlspecialchars($dataFim, ENT_QUOTES, 'UTF-8'); ?>">
+                    </div>
+                </div>
+
+                <!-- Botões Rápidos de Período -->
+                <div class="d-flex align-items-center gap-1.5 mt-3 pt-2 border-top flex-wrap">
+                    <span class="text-secondary text-microcopy me-1">Atalhos de Período:</span>
+                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2" style="font-size: 11px;" data-periodo="hoje" onclick="definirPeriodo('hoje')">Hoje</button>
+                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2" style="font-size: 11px;" data-periodo="semana" onclick="definirPeriodo('semana')">Esta Semana</button>
+                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2" style="font-size: 11px;" data-periodo="mes" onclick="definirPeriodo('mes_atual')">Este Mês</button>
+                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2" style="font-size: 11px;" data-periodo="mes_anterior" onclick="definirPeriodo('mes_anterior')">Mês Anterior</button>
+                </div>
+            </div>
+
+            <!-- Conteúdo da Aba Leiaute (Conforme filtro Extrato Consumo Aluno.pdf) -->
+            <div id="secao-leiaute" style="<?php echo ($abaAtiva === 'leiaute') ? 'display: block;' : 'display: none;'; ?>">
+                <div class="row g-4">
+                    <!-- Opção 1: Emitir apenas saldo do Aluno -->
+                    <div class="col-12 col-md-6">
+                        <div class="p-3 border rounded bg-light h-100">
+                            <label class="form-label text-microcopy text-uppercase font-weight-bold text-secondary d-block mb-1">
+                                Emitir apenas saldo do Aluno
+                            </label>
+                            <p class="text-muted text-microcopy mb-2">
+                                Se marcado como <strong>Sim</strong>, omite a listagem analítica dos itens consumidos e emite um demonstrativo executivo com o saldo inicial, créditos, total consumido e saldo atual.
+                            </p>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="apenas_saldo" id="apenasSaldoSim" value="sim" <?php echo $apenasSaldo ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary btn-sm" for="apenasSaldoSim">Sim</label>
+
+                                <input type="radio" class="btn-check" name="apenas_saldo" id="apenasSaldoNao" value="nao" <?php echo !$apenasSaldo ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary btn-sm" for="apenasSaldoNao">Não</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opção 2: Considerar saldo apenas no período -->
+                    <div class="col-12 col-md-6">
+                        <div class="p-3 border rounded bg-light h-100">
+                            <label class="form-label text-microcopy text-uppercase font-weight-bold text-secondary d-block mb-1">
+                                Considerar saldo apenas no período
+                            </label>
+                            <p class="text-muted text-microcopy mb-2">
+                                Se marcado como <strong>Sim</strong>, inicializa o saldo inicial em R$ 0,00 e apura estritamente as movimentações do período selecionado, sem carregar o saldo anterior histórico.
+                            </p>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="saldo_apenas_periodo" id="saldoApenasPeriodoSim" value="sim" <?php echo $saldoApenasPeriodo ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary btn-sm" for="saldoApenasPeriodoSim">Sim</label>
+
+                                <input type="radio" class="btn-check" name="saldo_apenas_periodo" id="saldoApenasPeriodoNao" value="nao" <?php echo !$saldoApenasPeriodo ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary btn-sm" for="saldoApenasPeriodoNao">Não</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-6 col-md-3">
-                <label for="dataInicio" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Data Inicial</label>
-                <input type="date" name="data_inicio" id="dataInicio" class="form-control form-control-sm font-tabular" value="<?php echo htmlspecialchars($dataInicio, ENT_QUOTES, 'UTF-8'); ?>">
-            </div>
-
-            <div class="col-6 col-md-3">
-                <label for="dataFim" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Data Final</label>
-                <input type="date" name="data_fim" id="dataFim" class="form-control form-control-sm font-tabular" value="<?php echo htmlspecialchars($dataFim, ENT_QUOTES, 'UTF-8'); ?>">
-            </div>
-
-            <div class="col-12 col-md-1 d-flex">
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100">
-                    Filtrar
+            <!-- Botão de Submissão do Formulário -->
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                <div class="text-secondary text-microcopy">
+                    <?php if ($aluno): ?>
+                        Visualizando: <strong><?php echo htmlspecialchars($aluno['nome']); ?></strong> (Matrícula: <?php echo htmlspecialchars($aluno['matricula']); ?>)
+                    <?php else: ?>
+                        Nenhum aluno carregado. Digite o nome ou matrícula e selecione no dropdown.
+                    <?php endif; ?>
+                </div>
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5 px-3">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+                    Filtrar / Carregar Extrato
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<?php if ($aluno): ?>
-    <!-- Banner de Perfil e Identificação do Aluno -->
+<?php if (!$aluno): ?>
+    <!-- Estado Inicial / Nenhum Aluno Selecionado -->
+    <div class="card-enterprise p-5 text-center">
+        <div class="text-secondary mb-3">
+            <svg width="48" height="48" viewBox="0 0 16 16" fill="currentColor" class="text-muted"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/></svg>
+        </div>
+        <h2 class="h6 font-weight-bold text-dark mb-1">Localize um Aluno para Emitir o Extrato</h2>
+        <p class="text-secondary text-microcopy mb-0" style="max-width: 480px; margin: 0 auto;">
+            Utilize a caixa de busca acima para digitar o nome ou número de matrícula do estudante. Em seguida, clique sobre o aluno sugerido para carregar os lançamentos com saldo progressivo linha a linha.
+        </p>
+    </div>
+<?php else: ?>
+    <!-- 1. Banner de Identificação do Aluno -->
     <div class="card-enterprise mb-4">
-        <div class="card-enterprise-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="card-enterprise-body d-flex align-items-center justify-content-between flex-wrap gap-3 p-3">
             <div class="d-flex align-items-center gap-3">
-                <?php if (!empty($aluno['foto_url'])): ?>
-                    <img src="<?php echo htmlspecialchars($aluno['foto_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="Foto do aluno" class="rounded-circle border" style="width: 52px; height: 52px; object-fit: cover;">
-                <?php else: ?>
-                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-secondary font-weight-bold font-tabular" style="width: 52px; height: 52px; font-size: 18px;">
-                        <?php echo htmlspecialchars(strtoupper(substr($aluno['nome'] ?? 'A', 0, 1)), ENT_QUOTES, 'UTF-8'); ?>
-                    </div>
-                <?php endif; ?>
+                <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-primary font-weight-bold font-tabular" style="width: 48px; height: 48px; font-size: 16px;">
+                    <?php echo htmlspecialchars(strtoupper(substr($aluno['nome'] ?? 'A', 0, 1)), ENT_QUOTES, 'UTF-8'); ?>
+                </div>
                 <div>
-                    <div class="d-flex align-items-center gap-2">
-                        <h2 class="h6 font-weight-bold text-dark mb-0"><?php echo htmlspecialchars($aluno['nome'], ENT_QUOTES, 'UTF-8'); ?></h2>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h2 class="h6 font-weight-bold text-dark mb-0"><?php echo htmlspecialchars(mb_strtoupper($aluno['nome'], 'UTF-8')); ?></h2>
                         <span class="code-tag font-tabular" style="font-size: 11px;">
-                            Matrícula: <?php echo htmlspecialchars($aluno['matricula'], ENT_QUOTES, 'UTF-8'); ?>
+                            Matrícula: <?php echo htmlspecialchars($aluno['matricula']); ?>
                         </span>
                         <span class="code-tag font-tabular" style="font-size: 11px;">
-                            <?php echo htmlspecialchars(($aluno['serie'] ?? '') . ' ' . ($aluno['nome_turma'] ?? ''), ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars(ucfirst($aluno['turno'] ?? 'matutino'), ENT_QUOTES, 'UTF-8'); ?>)
+                            <?php echo htmlspecialchars(($aluno['serie'] ?? '') . ' ' . ($aluno['nome_turma'] ?? '')); ?> (<?php echo htmlspecialchars(ucfirst($aluno['turma_turno'] ?? ($aluno['turno'] ?? 'matutino'))); ?>)
                         </span>
                     </div>
                     <div class="text-secondary text-microcopy mt-1">
-                        Responsável Titular: <strong class="text-dark"><?php echo htmlspecialchars($aluno['responsavel_nome'] ?? 'Não informado', ENT_QUOTES, 'UTF-8'); ?></strong> 
+                        Responsável: <strong class="text-dark"><?php echo htmlspecialchars($aluno['responsavel_nome'] ?? 'Não informado'); ?></strong>
                         <?php if (!empty($aluno['responsavel_whatsapp'])): ?>
-                            • WhatsApp: <span class="font-tabular"><?php echo htmlspecialchars($aluno['responsavel_whatsapp'], ENT_QUOTES, 'UTF-8'); ?></span>
+                            &bull; WhatsApp: <span class="font-tabular"><?php echo htmlspecialchars($aluno['responsavel_whatsapp']); ?></span>
                         <?php endif; ?>
                     </div>
-                    <?php if (!empty($aluno['alergenos_resumo'])): ?>
-                        <div class="mt-1 d-flex align-items-center gap-1.5">
-                            <span class="code-tag font-tabular" style="font-size: 10px;">
-                                Restrições / Alérgenos: <?php echo htmlspecialchars($aluno['alergenos_resumo'], ENT_QUOTES, 'UTF-8'); ?>
-                            </span>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
 
             <div class="text-end">
                 <span class="text-microcopy text-uppercase font-weight-bold text-secondary d-block">Saldo Atual da Carteira</span>
-                <span class="font-tabular h5 font-weight-bold <?php echo ($dadosExtrato['saldo_atual'] < 0) ? 'text-danger' : 'text-dark'; ?> mb-0">
-                    R$ <?php echo number_format($dadosExtrato['saldo_atual'], 2, ',', '.'); ?>
+                <span class="font-tabular h5 font-weight-bold text-primary mb-0">
+                    R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
                 </span>
-                <span class="text-microcopy text-secondary d-block">Compartilhado entre dependentes</span>
+                <span class="text-microcopy text-muted d-block">Saldo integrado familiar</span>
             </div>
         </div>
     </div>
 
-    <!-- Stat-Strip: Resumo do Período -->
+    <!-- 2. Stat-Strip: Resumo do Período -->
     <div class="stat-strip mb-4">
         <div class="stat-item">
-            <span class="stat-label">Total Recarregado no Período</span>
-            <span class="stat-value font-tabular text-success">
-                R$ <?php echo number_format($dadosExtrato['total_recargas'], 2, ',', '.'); ?>
-            </span>
-            <span class="text-secondary text-microcopy mt-1 font-tabular">
-                <?php echo (int)($dadosExtrato['total_registros_recargas'] ?? count($dadosExtrato['recargas'])); ?> recarga(s) efetuada(s)
-            </span>
-        </div>
-
-        <div class="stat-item">
-            <span class="stat-label">Total Consumido no Período</span>
+            <span class="stat-label">Saldo Inicial</span>
             <span class="stat-value font-tabular text-dark">
-                R$ <?php echo number_format($dadosExtrato['total_consumo'], 2, ',', '.'); ?>
+                R$ <?php echo number_format($saldoInicial, 2, ',', '.'); ?>
             </span>
             <span class="text-secondary text-microcopy mt-1 font-tabular">
-                Pedidos agendados + vendas no balcão
+                <?php echo $saldoApenasPeriodo ? 'Período isolado (R$ 0,00)' : 'Anterior a ' . date('d/m/Y', strtotime($dataInicio)); ?>
             </span>
         </div>
 
         <div class="stat-item">
-            <span class="stat-label">Lanches / Itens Consumidos</span>
+            <span class="stat-label">Total Recarregado</span>
+            <span class="stat-value font-tabular text-success">
+                R$ <?php echo number_format($totalRecargas, 2, ',', '.'); ?>
+            </span>
+            <span class="text-secondary text-microcopy mt-1 font-tabular">
+                Créditos aportados no período
+            </span>
+        </div>
+
+        <div class="stat-item">
+            <span class="stat-label">Total Consumido</span>
+            <span class="stat-value font-tabular text-danger">
+                R$ <?php echo number_format($totalGasto, 2, ',', '.'); ?>
+            </span>
+            <span class="text-secondary text-microcopy mt-1 font-tabular">
+                <?php echo $totalLanches; ?> lanche(s) consumido(s)
+            </span>
+        </div>
+
+        <div class="stat-item">
+            <span class="stat-label">Saldo Atual</span>
             <span class="stat-value font-tabular text-primary">
-                <?php echo (int)$dadosExtrato['total_lanches']; ?> <small class="text-muted" style="font-size: 13px; font-weight: normal;">un</small>
+                R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
             </span>
             <span class="text-secondary text-microcopy mt-1 font-tabular">
-                <?php echo (int)($dadosExtrato['total_registros_consumo'] ?? count($dadosExtrato['consumo'])); ?> atendimento(s) no total
-            </span>
-        </div>
-
-        <div class="stat-item">
-            <span class="stat-label">Período Selecionado</span>
-            <span class="stat-value font-tabular text-dark" style="font-size: 16px;">
-                <?php echo htmlspecialchars($dadosExtrato['periodo'], ENT_QUOTES, 'UTF-8'); ?>
-            </span>
-            <span class="text-secondary text-microcopy mt-1 font-tabular">
-                Filtro temporal ativo
+                Disponível na carteira
             </span>
         </div>
     </div>
 
-    <!-- Seção 1: Recargas da Carteira Familiar no Período -->
-    <div class="card-enterprise mb-4" id="secao-recargas">
-        <div class="card-enterprise-header d-flex justify-content-between align-items-center">
-            <h2 class="h6 font-weight-bold text-dark mb-0">Recargas de Saldo da Carteira Familiar no Período</h2>
-            <span class="badge bg-light text-secondary border font-tabular">
-                <?php echo (int)($dadosExtrato['total_registros_recargas'] ?? count($dadosExtrato['recargas'])); ?> registro(s)
-            </span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-enterprise table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th style="width: 140px;">Data / Hora</th>
-                        <th style="width: 180px;">Tipo de Operação</th>
-                        <th>Operador / Canal</th>
-                        <th>Referência / Transação</th>
-                        <th class="text-end" style="width: 140px;">Valor Creditado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($dadosExtrato['recargas'])): ?>
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-secondary text-microcopy">
-                                Nenhuma recarga de saldo registrada para esta família no período especificado.
-                            </td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($dadosExtrato['recargas'] as $r): ?>
-                            <tr>
-                                <td class="font-tabular">
-                                    <?php echo date('d/m/Y H:i', strtotime($r['created_at'])); ?>
-                                </td>
-                                <td>
-                                    <?php if ($r['tipo_transacao'] === 'recarga_pix'): ?>
-                                        <span class="code-tag font-tabular">Recarga Pix Dinâmico</span>
-                                    <?php elseif ($r['tipo_transacao'] === 'recarga_dinheiro'): ?>
-                                        <span class="code-tag font-tabular">Recarga Dinheiro Balcão</span>
-                                    <?php else: ?>
-                                        <span class="code-tag font-tabular"><?php echo htmlspecialchars($r['tipo_transacao'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php echo htmlspecialchars($r['operador_nome'] ?? 'Gateway Automatizado', ENT_QUOTES, 'UTF-8'); ?>
-                                </td>
-                                <td class="font-tabular text-secondary text-microcopy">
-                                    <?php echo htmlspecialchars($r['referencia_id'] ?? ('#TRX-' . $r['id']), ENT_QUOTES, 'UTF-8'); ?>
-                                </td>
-                                <td class="text-end font-tabular font-weight-bold text-success">
-                                    + R$ <?php echo number_format((float)$r['valor'], 2, ',', '.'); ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-        <?php 
-            $paginaAtual    = (int)($dadosExtrato['pagina_recargas'] ?? 1);
-            $totalPaginas   = (int)($dadosExtrato['total_paginas_recargas'] ?? 1);
-            $totalRegistros = (int)($dadosExtrato['total_registros_recargas'] ?? count($dadosExtrato['recargas']));
-            $itensPorPagina = (int)($dadosExtrato['itens_por_pagina'] ?? 20);
-            $paramNome      = 'pagina_recargas';
-            $anchor         = 'secao-recargas';
-            require __DIR__ . '/../partials/pagination.php';
-        ?>
-    </div>
-
-    <!-- Seção 2: Consumo Detalhado Linha a Linha -->
-    <div class="card-enterprise" id="secao-consumo">
-        <div class="card-enterprise-header d-flex justify-content-between align-items-center">
-            <h2 class="h6 font-weight-bold text-dark mb-0">Consumo Individual do Aluno Linha a Linha</h2>
-            <span class="badge bg-light text-secondary border font-tabular">
-                <?php echo (int)($dadosExtrato['total_registros_consumo'] ?? count($dadosExtrato['consumo'])); ?> atendimento(s)
-            </span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-enterprise table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th style="width: 120px;">Data</th>
-                        <th style="width: 100px;">Turno</th>
-                        <th style="width: 160px;">Canal de Compra</th>
-                        <th>Itens / Alimentos Consumidos</th>
-                        <th style="width: 110px;">Status</th>
-                        <th class="text-end" style="width: 130px;">Valor Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($dadosExtrato['consumo'])): ?>
-                        <tr>
-                            <td colspan="6" class="text-center py-4 text-secondary text-microcopy">
-                                Nenhum consumo registrado para este aluno no período especificado.
-                            </td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($dadosExtrato['consumo'] as $c): ?>
-                            <tr>
-                                <td class="font-tabular font-weight-bold text-dark">
-                                    <?php echo date('d/m/Y', strtotime($c['data_consumo'])); ?>
-                                </td>
-                                <td>
-                                    <span class="badge bg-light text-secondary border font-tabular">
-                                        <?php echo ucfirst($c['turno'] ?? 'matutino'); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php if ($c['canal'] === 'Agendamento Online'): ?>
-                                        <span class="code-tag font-tabular">
-                                             Online #PED-<?php echo (int)$c['referencia_id']; ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="code-tag font-tabular">
-                                            Balcão #VND-<?php echo (int)$c['referencia_id']; ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <span class="text-dark font-weight-bold"><?php echo htmlspecialchars($c['itens_descricao'] ?? 'Itens avulsos', ENT_QUOTES, 'UTF-8'); ?></span>
-                                    <span class="text-secondary text-microcopy d-block">
-                                        Total de <?php echo (int)$c['total_itens']; ?> unidade(s)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="status-indicator status-active">
-                                        <span class="bullet">●</span> <?php echo ucfirst($c['status'] ?? 'concluida'); ?>
-                                    </span>
-                                </td>
-                                <td class="text-end font-tabular font-weight-bold text-dark">
-                                    R$ <?php echo number_format((float)$c['valor_total'], 2, ',', '.'); ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-                <tfoot>
-                    <tr class="table-active font-weight-bold">
-                        <td colspan="5" class="text-end text-dark text-uppercase font-tabular">
-                            Total Consumido no Período:
-                        </td>
-                        <td class="text-end font-tabular text-dark" style="font-size: 14px;">
-                            R$ <?php echo number_format($dadosExtrato['total_consumo'], 2, ',', '.'); ?>
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-        <?php 
-            $paginaAtual    = (int)($dadosExtrato['pagina_consumo'] ?? 1);
-            $totalPaginas   = (int)($dadosExtrato['total_paginas_consumo'] ?? 1);
-            $totalRegistros = (int)($dadosExtrato['total_registros_consumo'] ?? count($dadosExtrato['consumo']));
-            $itensPorPagina = (int)($dadosExtrato['itens_por_pagina'] ?? 20);
-            $paramNome      = 'pagina_consumo';
-            $anchor         = 'secao-consumo';
-            require __DIR__ . '/../partials/pagination.php';
-        ?>
-    </div>
-
-<?php else: ?>
-    <!-- Empty State: Nenhum aluno selecionado -->
-    <div class="card-enterprise text-center py-5">
-        <div class="card-enterprise-body">
-            <div class="mb-3 text-secondary">
-                <svg width="48" height="48" viewBox="0 0 16 16" fill="currentColor" style="opacity: 0.4;">
-                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
-                </svg>
+    <!-- 3. Demonstrativo Sintético ou Tabela Analítica -->
+    <?php if ($apenasSaldo): ?>
+        <div class="card-enterprise p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="h6 font-weight-bold text-dark mb-0">Demonstrativo Sintético de Saldo do Aluno</h3>
+                <span class="code-tag font-tabular">Opção Ativa: Apenas Saldo</span>
             </div>
-            <h2 class="h6 font-weight-bold text-dark mb-1">Nenhum aluno selecionado</h2>
-            <p class="text-secondary text-microcopy mb-3" style="max-width: 480px; margin: 0 auto;">
-                Utilize o campo de busca acima digitando o nome ou matrícula do aluno para visualizar o extrato detalhado de recargas, saldo atual e consumo linha a linha.
+            <p class="text-secondary text-microcopy mb-4">
+                O extrato detalhado de itens individuais está oculto conforme a opção selecionada na aba <strong>Leiaute</strong>. Apenas os totais consolidados e o saldo oficial são emitidos.
             </p>
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light border rounded">
+                        <span class="text-microcopy text-uppercase text-secondary font-weight-bold d-block mb-1">Saldo Inicial</span>
+                        <span class="h6 font-weight-bold font-tabular text-dark mb-0">R$ <?php echo number_format($saldoInicial, 2, ',', '.'); ?></span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light border rounded">
+                        <span class="text-microcopy text-uppercase text-secondary font-weight-bold d-block mb-1">Total Recargas (+)</span>
+                        <span class="h6 font-weight-bold font-tabular text-success mb-0">R$ <?php echo number_format($totalRecargas, 2, ',', '.'); ?></span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light border rounded">
+                        <span class="text-microcopy text-uppercase text-secondary font-weight-bold d-block mb-1">Total Consumo (-)</span>
+                        <span class="h6 font-weight-bold font-tabular text-danger mb-0">R$ <?php echo number_format($totalGasto, 2, ',', '.'); ?></span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light border rounded" style="border-left: 3px solid #1d4ed8 !important;">
+                        <span class="text-microcopy text-uppercase text-secondary font-weight-bold d-block mb-1">Saldo Final</span>
+                        <span class="h6 font-weight-bold font-tabular text-primary mb-0">R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?></span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    <?php else: ?>
+        <!-- Tabela Analítica Oficial com Saldo Progressivo Linha a Linha -->
+        <div class="card-enterprise mb-4">
+            <div class="card-enterprise-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="h6 font-weight-bold text-dark mb-0">Extrato Analítico de Consumo e Recargas</h2>
+                    <span class="text-secondary text-microcopy">
+                        Período: <strong class="font-tabular"><?php echo date('d/m/Y', strtotime($dataInicio)); ?></strong> a <strong class="font-tabular"><?php echo date('d/m/Y', strtotime($dataFim)); ?></strong>
+                    </span>
+                </div>
+                <span class="badge bg-light text-secondary border font-tabular">
+                    <?php echo count($linhas); ?> lançamento(s)
+                </span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-enterprise table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">Data</th>
+                            <th style="width: 38%;">Descrição</th>
+                            <th class="text-center" style="width: 8%;">Qtd</th>
+                            <th class="text-end" style="width: 12%;">V. Unitário</th>
+                            <th class="text-end" style="width: 12%;">V. Total</th>
+                            <th class="text-center" style="width: 10%;">Forma Pgto</th>
+                            <th class="text-end" style="width: 12%;">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Linha de Saldo Inicial -->
+                        <tr style="background-color: #f8fafc; font-weight: 600;">
+                            <td class="font-tabular text-muted">-</td>
+                            <td><em>Saldo inicial</em></td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-end text-muted">-</td>
+                            <td class="text-end text-muted">-</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-end font-tabular text-dark">
+                                R$ <?php echo number_format($saldoInicial, 2, ',', '.'); ?>
+                            </td>
+                        </tr>
+
+                        <?php if (empty($linhas)): ?>
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-secondary text-microcopy">
+                                    Nenhum lançamento de consumo ou recarga registrado para este aluno no período especificado.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($linhas as $l): ?>
+                                <?php 
+                                    $isRec = ($l['tipo'] === 'recarga');
+                                    $bgClass = $isRec ? 'style="background-color: #f0fdf4;"' : '';
+                                ?>
+                                <tr <?php echo $bgClass; ?>>
+                                    <td class="font-tabular">
+                                        <?php echo htmlspecialchars($l['data_formatada'] ?? date('d/m/Y', strtotime($l['data']))); ?>
+                                    </td>
+                                    <td>
+                                        <strong><?php echo htmlspecialchars($l['descricao']); ?></strong>
+                                    </td>
+                                    <td class="text-center font-tabular">
+                                        <?php echo htmlspecialchars((string)$l['quantidade']); ?>
+                                    </td>
+                                    <td class="text-end font-tabular">
+                                        <?php 
+                                            if (is_numeric($l['valor_unitario'])) {
+                                                echo 'R$ ' . number_format((float)$l['valor_unitario'], 2, ',', '.');
+                                            } else {
+                                                echo htmlspecialchars((string)$l['valor_unitario']);
+                                            }
+                                        ?>
+                                    </td>
+                                    <td class="text-end font-tabular <?php echo $isRec ? 'text-success font-weight-bold' : ''; ?>">
+                                        R$ <?php echo number_format((float)$l['valor_total'], 2, ',', '.'); ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="code-tag font-tabular" style="font-size: 11px;">
+                                            <?php echo htmlspecialchars($l['forma_pagamento']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="text-end font-tabular font-weight-bold <?php echo ($l['saldo'] < 0) ? 'text-danger' : 'text-dark'; ?>">
+                                        R$ <?php echo number_format((float)$l['saldo'], 2, ',', '.'); ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr style="background-color: #f8fafc; font-weight: 800;">
+                            <td colspan="4">Total gasto no periodo</td>
+                            <td class="text-end font-tabular text-danger">
+                                R$ <?php echo number_format($totalGasto, 2, ',', '.'); ?>
+                            </td>
+                            <td colspan="2" class="text-end font-tabular text-primary">
+                                Saldo Atual: R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    <?php endif; ?>
 <?php endif; ?>
 
 </div>
 
 <script>
+// Controle das abas Filtros vs Leiaute
+function alternarAba(nomeAba) {
+    const tabFiltros = document.getElementById('tabLinkFiltros');
+    const tabLeiaute = document.getElementById('tabLinkLeiaute');
+    const secaoFiltros = document.getElementById('secao-filtros');
+    const secaoLeiaute = document.getElementById('secao-leiaute');
+    const inputAba = document.getElementById('inputAbaAtiva');
+
+    if (nomeAba === 'leiaute') {
+        tabFiltros.classList.remove('active', 'font-weight-bold', 'text-primary');
+        tabFiltros.classList.add('text-secondary');
+        tabLeiaute.classList.add('active', 'font-weight-bold', 'text-primary');
+        tabLeiaute.classList.remove('text-secondary');
+
+        secaoFiltros.style.display = 'none';
+        secaoLeiaute.style.display = 'block';
+        if (inputAba) inputAba.value = 'leiaute';
+    } else {
+        tabLeiaute.classList.remove('active', 'font-weight-bold', 'text-primary');
+        tabLeiaute.classList.add('text-secondary');
+        tabFiltros.classList.add('active', 'font-weight-bold', 'text-primary');
+        tabFiltros.classList.remove('text-secondary');
+
+        secaoLeiaute.style.display = 'none';
+        secaoFiltros.style.display = 'block';
+        if (inputAba) inputAba.value = 'filtros';
+    }
+}
+
+// Atalhos rápidos de período
+function definirPeriodo(tipo) {
+    const hoje = new Date();
+    const dataIni = document.getElementById('dataInicio');
+    const dataFim = document.getElementById('dataFim');
+    if (!dataIni || !dataFim) return;
+
+    function formatar(d) {
+        const ano = d.getFullYear();
+        const mes = String(d.getMonth() + 1).padStart(2, '0');
+        const dia = String(d.getDate()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}`;
+    }
+
+    if (tipo === 'hoje') {
+        dataIni.value = formatar(hoje);
+        dataFim.value = formatar(hoje);
+    } else if (tipo === 'semana') {
+        const diaSemana = hoje.getDay(); // 0 = Domingo, 1 = Segunda
+        const diffSegunda = (diaSemana === 0 ? -6 : 1) - diaSemana;
+        const segunda = new Date(hoje);
+        segunda.setDate(hoje.getDate() + diffSegunda);
+        dataIni.value = formatar(segunda);
+        dataFim.value = formatar(hoje);
+    } else if (tipo === 'mes_atual') {
+        const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        dataIni.value = formatar(primeiroDia);
+        dataFim.value = formatar(hoje);
+    } else if (tipo === 'mes_anterior') {
+        const primeiroDiaAnt = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+        const ultimoDiaAnt = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+        dataIni.value = formatar(primeiroDiaAnt);
+        dataFim.value = formatar(ultimoDiaAnt);
+    }
+}
+
+// Autocomplete de Alunos
 document.addEventListener('DOMContentLoaded', function() {
-    const inputBusca = document.getElementById('inputBuscaAluno');
-    const hiddenId = document.getElementById('hiddenAlunoId');
+    const inputBusca = document.getElementById('aluno_busca') || document.getElementById('inputBuscaAluno');
+    const hiddenAlunoId = document.getElementById('hiddenAlunoId');
     const dropdown = document.getElementById('autocompleteDropdown');
+    const selectTurma = document.getElementById('selectTurma');
     const form = document.getElementById('formExtratoAluno');
+
+    if (!inputBusca || !dropdown) return;
+
     let debounceTimer = null;
-    let itemAtivoIndex = -1;
-    let alunosAtuais = [];
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
+    inputBusca.addEventListener('input', function() {
+        const termo = this.value.trim();
+        clearTimeout(debounceTimer);
 
-    function fecharDropdown() {
-        dropdown.innerHTML = '';
-        dropdown.classList.add('d-none');
-        itemAtivoIndex = -1;
-        alunosAtuais = [];
-    }
+        if (termo.length < 2) {
+            dropdown.classList.add('d-none');
+            dropdown.innerHTML = '';
+            return;
+        }
 
-    function destacarItem(index) {
-        const itens = dropdown.querySelectorAll('.autocomplete-aluno-item');
-        itens.forEach((el, idx) => {
-            if (idx === index) {
-                el.classList.add('active');
-                el.style.backgroundColor = '#f1f5f9';
-                el.scrollIntoView({ block: 'nearest' });
-            } else {
-                el.classList.remove('active');
-                el.style.backgroundColor = '#ffffff';
-            }
-        });
-    }
-
-    function selecionarAluno(aluno) {
-        if (!aluno) return;
-        hiddenId.value = aluno.id;
-        inputBusca.value = aluno.nome;
-        fecharDropdown();
-        form.submit();
-    }
-
-    if (inputBusca && dropdown) {
-        inputBusca.addEventListener('input', function() {
-            clearTimeout(debounceTimer);
-            const termo = inputBusca.value.trim();
-
-            if (termo.length < 2) {
-                fecharDropdown();
-                return;
-            }
-
-            // Exibe imediatamente o estado de carregamento flutuante
-            dropdown.innerHTML = '<div class="p-3 text-secondary text-microcopy text-center">' +
-                '<span class="spinner-border spinner-border-sm me-2 text-primary" role="status"></span> Localizando alunos...</div>';
-            dropdown.classList.remove('d-none');
-
-            debounceTimer = setTimeout(() => {
-                fetch('<?php echo $baseUrl; ?>/relatorios/buscar-alunos-ajax?q=' + encodeURIComponent(termo))
-                    .then(r => r.json())
-                    .then(data => {
-                        dropdown.innerHTML = '';
-                        itemAtivoIndex = -1;
-                        alunosAtuais = data.alunos || [];
-
-                        if (alunosAtuais.length > 0) {
-                            alunosAtuais.forEach((aluno, idx) => {
-                                const item = document.createElement('div');
-                                item.className = 'autocomplete-aluno-item d-flex justify-content-between align-items-center py-2 px-3 border-bottom';
-                                item.style.cursor = 'pointer';
-                                item.style.backgroundColor = '#ffffff';
-                                item.style.transition = 'background-color 0.15s ease';
-                                item.setAttribute('data-idx', idx);
-                                item.innerHTML = `
-                                    <div class="text-truncate me-2">
-                                        <div class="font-weight-semibold text-dark" style="font-size: 13px;">${escapeHtml(aluno.nome)}</div>
-                                        <div class="text-secondary text-microcopy font-tabular">Matrícula: ${escapeHtml(aluno.matricula)} • ${escapeHtml(aluno.turma)} (${escapeHtml(aluno.turno)})</div>
-                                    </div>
-                                    <span class="code-tag font-tabular flex-shrink-0">${escapeHtml(aluno.saldo_fmt)}</span>
-                                `;
-
-                                item.addEventListener('mouseenter', function() {
-                                    itemAtivoIndex = idx;
-                                    destacarItem(idx);
-                                });
-
-                                item.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    selecionarAluno(aluno);
-                                });
-
-                                dropdown.appendChild(item);
-                            });
-                            dropdown.classList.remove('d-none');
-                        } else {
-                            dropdown.innerHTML = '<div class="p-3 text-secondary text-microcopy text-center">Nenhum aluno localizado para "<strong>' + escapeHtml(termo) + '</strong>".</div>';
-                            dropdown.classList.remove('d-none');
-                        }
-                    })
-                    .catch(() => {
-                        dropdown.innerHTML = '<div class="p-3 text-danger text-microcopy text-center">Erro ao comunicar com o servidor.</div>';
+        debounceTimer = setTimeout(function() {
+            const url = '<?php echo $baseUrl; ?>/relatorios/buscar-alunos-ajax?q=' + encodeURIComponent(termo);
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    dropdown.innerHTML = '';
+                    if (!data.sucesso || !data.alunos || data.alunos.length === 0) {
+                        dropdown.innerHTML = '<div class="p-2 text-muted text-microcopy text-center">Nenhum aluno encontrado</div>';
                         dropdown.classList.remove('d-none');
+                        return;
+                    }
+
+                    data.alunos.forEach(aluno => {
+                        const item = document.createElement('a');
+                        item.href = '#';
+                        item.className = 'list-group-item list-group-item-action py-2 px-3 d-flex justify-content-between align-items-center';
+                        item.style.fontSize = '12px';
+                        item.innerHTML = `
+                            <div>
+                                <strong class="text-dark">${aluno.nome}</strong>
+                                <span class="text-secondary text-microcopy d-block">Matrícula: ${aluno.matricula} &bull; ${aluno.turma || ''}</span>
+                            </div>
+                            <span class="badge bg-light text-primary border font-tabular">R$ ${parseFloat(aluno.saldo_atual || 0).toFixed(2).replace('.', ',')}</span>
+                        `;
+
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            inputBusca.value = aluno.nome;
+                            hiddenAlunoId.value = aluno.id;
+                            dropdown.classList.add('d-none');
+                            form.submit();
+                        });
+
+                        dropdown.appendChild(item);
                     });
-            }, 200);
-        });
 
-        // Navegação por teclado no dropdown
-        inputBusca.addEventListener('keydown', function(e) {
-            if (dropdown.classList.contains('d-none') || alunosAtuais.length === 0) {
-                if (e.key === 'Escape') fecharDropdown();
-                return;
-            }
+                    dropdown.classList.remove('d-none');
+                })
+                .catch(err => {
+                    console.error('Erro na busca de alunos:', err);
+                });
+        }, 250);
+    });
 
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                itemAtivoIndex = (itemAtivoIndex + 1) % alunosAtuais.length;
-                destacarItem(itemAtivoIndex);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                itemAtivoIndex = (itemAtivoIndex - 1 + alunosAtuais.length) % alunosAtuais.length;
-                destacarItem(itemAtivoIndex);
-            } else if (e.key === 'Enter') {
-                if (itemAtivoIndex >= 0 && itemAtivoIndex < alunosAtuais.length) {
-                    e.preventDefault();
-                    selecionarAluno(alunosAtuais[itemAtivoIndex]);
-                }
-            } else if (e.key === 'Escape') {
-                e.preventDefault();
-                fecharDropdown();
-            }
-        });
-
-        // Reabrir ao focar se já houver resultados carregados
-        inputBusca.addEventListener('focus', function() {
-            const termo = inputBusca.value.trim();
-            if (termo.length >= 2 && dropdown.children.length > 0) {
-                dropdown.classList.remove('d-none');
-            }
-        });
-
-        // Fechar dropdown ao clicar fora
-        document.addEventListener('click', function(e) {
-            if (!inputBusca.contains(e.target) && !dropdown.contains(e.target)) {
-                fecharDropdown();
-            }
-        });
-    }
+    // Fecha dropdown ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!inputBusca.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('d-none');
+        }
+    });
 });
 </script>

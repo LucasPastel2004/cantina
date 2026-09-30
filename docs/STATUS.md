@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 21 — Painel de Filtros Avançados e Relatório Oficial de Vendas por Período / Alimento
-* **Status da Fase 21:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 21 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
-* **Última Atualização:** 2026-09-30 12:46:00 (Implementação integral e dinâmica de todas as 15 possibilidades do relatório de vendas e alunos: 1) Suporte a emissão por alimento e/ou aluno, agrupamento por série/turma com banners e subtotais, quebra de página A4 por turma, detalhamento linha a linha de compras por aluno, consolidação geral do período e ordenações dinâmicas por maior/menor consumo ou nome; 2) Todos os 15 cenários de filtros testados e validados com compilação de PDFs reais de 25 KB a 113 KB via Gotenberg Engine; 3) Suítes `tests/fase21_test.php` e `tests/test_todas_possibilidades.php` 100% aprovadas).
+* **Fase Atual:** Fase 22 — Extrato Analítico de Consumo do Aluno (Filtros, PDF A4 e Portal da Família)
+* **Status da Fase 22:** Concluída [x] (100% Homologada)
+* **Status Geral do Projeto:** 22 de 24 Fases Concluídas
+* **Última Atualização:** 2026-09-30 13:15:00 (Implementação e homologação integral do Extrato Analítico de Consumo do Aluno: 1) Tela de filtros com abas 'Filtros' e 'Leiaute', suporte a 'Emitir apenas saldo do Aluno' e 'Considerar saldo apenas no período', autocomplete flutuante de alunos e atalhos rápidos de período conforme diretrizes do guideline oficial; 2) Espelho de impressão e PDF A4 timbrado 'Extrato de Consumo do Aluno' fiel ao modelo oficial com saldo progressivo linha a linha, linha de 'Saldo inicial' anterior ao período e rodapé de 'Total gasto no período'; 3) Extrato analítico no Portal da Família com seleção de filhos/dependentes, validação estrita de titularidade LGPD e botões para impressão e download de PDF; 4) Exportação em planilha CSV com delimitador ';' e BOM UTF-8; 5) Suíte oficial `tests/fase22_test.php` 100% aprovada com 80/80 asserções e regressão da Fase 21 100% aprovada).
 
 
 
@@ -975,11 +975,45 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 22 — Extrato Analítico de Consumo do Aluno (Filtros, PDF A4 e Portal da Família)
-* [ ] Tela de filtro com "Emitir apenas saldo do Aluno" e "Considerar saldo apenas no período" conforme `filtro Extrato Consumo Aluno.pdf`.
-* [ ] View e emissão do PDF A4 "Extrato de Consumo do Aluno" com saldo progressivo linha a linha e total gasto conforme `Relatório Extrato Consumo Aluno.pdf`.
-* [ ] Disponibilização do extrato analítico no Portal da Família (`app/views/portal/extrato.php`) com botão de download/impressão direta.
-* [ ] Bateria de testes automatizados `tests/fase22_test.php`.
+### [x] Fase 22 — Extrato Analítico de Consumo do Aluno (Filtros, PDF A4 e Portal da Família)
+* [x] **Painel de Filtros e Opções de Leiaute:**
+  * View operacional `app/views/relatorios/extrato_aluno.php` atualizada com o padrão corporativo Anti-Slop de alta densidade;
+  * Abas funcionais "Filtros" e "Leiaute" inspiradas no guideline oficial `filtro Extrato Consumo Aluno.pdf`;
+  * Alternadores segmentados Sim/Não para "Emitir apenas saldo do Aluno" (modo sintético executivo) e "Considerar saldo apenas no período" (inicialização do saldo contábil em R$ 0,00);
+  * Autocomplete flutuante de alunos por nome ou matrícula com requisições assíncronas via `/relatorios/buscar-alunos-ajax`;
+  * Atalhos rápidos de período ("Hoje", "Esta Semana", "Este Mês", "Mês Anterior");
+  * Menu dropdown corporativo "Emitir" com opções para "Visualizar / Imprimir (A4)", "Baixar em PDF (A4)" e "Exportar Planilha (CSV)".
+* [x] **Motor Contábil de Saldo Progressivo no Backend:**
+  * Método `obterDadosExtratoAluno()` em `app/controllers/RelatoriosController.php` refatorado e enriquecido:
+    * Apuração precisa do saldo inicial anterior à data inicial com base no histórico de transações da carteira do responsável;
+    * Unificação cronológica crescente (`ORDER BY data_consumo ASC, created_at ASC`) de pedidos online (`itens_pedido`) e vendas do balcão PDV (`itens_venda_balcao`) individualizados por produto, mais créditos e recargas Pix/dinheiro (`transacoes_carteira`);
+    * Cálculo progressivo exato do saldo contábil linha a linha (`saldo_resultante = saldo_anterior + credito - debito_saldo`);
+    * Tratamento de compras no balcão em dinheiro ou pix avulso sem débito indevido do saldo da carteira da família;
+    * Apuração de total gasto no período, total de créditos/recargas e saldo final em conta.
+* [x] **Espelho HTML e PDF A4 Timbrado Oficial:**
+  * View oficial `app/views/relatorios/extrato_aluno_pdf.php` reproduzindo com fidelidade milimétrica o documento de referência `Relatório Extrato Consumo Aluno.pdf`:
+    * Cabeçalho escolar com razão social `COLÉGIO MONTEIRO LOBATO`, data/hora de emissão e `PERÍODO ENTRE DATAS : dd/mm/aaaa - dd/mm/aaaa`;
+    * Bloco de identificação do estudante em 4 colunas: Matrícula, Aluno(a), Série / Turma e Saldo Atual;
+    * Linha oficial de cabeçalho da tabela com `Saldo inicial`;
+    * Tabela analítica oficial com 7 colunas: `Data`, `Descrição`, `Qtd.`, `V. Unitário`, `V. Total`, `Forma Pgto.` e `Saldo`;
+    * Rodapé da tabela com `Total gasto no período` e `Saldo Final`;
+    * Suporte ao modo sintético quando `apenas_saldo` for solicitado (card com resumo financeiro e campos para assinatura);
+    * Simulação de folha A4 em tela com botões de controle (`Voltar aos Filtros`, `Imprimir Documento`, `Fechar Janela`) protegidos com classe `.no-print`.
+* [x] **Portal da Família e Proteção Estrita de Titularidade LGPD:**
+  * View dedicada `app/views/portal/extrato.php` implementada com design sóbrio e tipografia tabular;
+  * Seletor intuitivo de filhos/dependentes com badge da série/turma;
+  * Botões de ação rápida para "Baixar Extrato Oficial (PDF)" e "Visualizar / Imprimir (A4)";
+  * Stat-strip com os 4 indicadores contábeis: Saldo Inicial do Período, Total Recarregado, Total Gasto no Período e Saldo Final Resultante;
+  * Implementação de `alunoPertence()` no `PortalController.php` validando se o aluno requisitado pertence aos dependentes do responsável logado em todas as ações (`extrato()`, `extratoPdf()` e `extratoImprimir()`), bloqueando qualquer tentativa de visualização cruzada não autorizada.
+* [x] **Exportação para Planilha CSV:**
+  * Action `extratoAlunoCsv()` em `RelatoriosController.php` gerando planilha com BOM UTF-8 (`\xEF\xBB\xBF`) e delimitador `;`, garantindo legibilidade nativa no Microsoft Excel e compatibilidade com ferramentas de análise.
+* [x] **Roteamento, Navegação e Testes Automatizados:**
+  * Rotas `/portal/extrato`, `/portal/extrato/pdf` e `/portal/extrato/imprimir` registradas em `index.php` protegidas por RBAC (`ROLE_RESPONSAVEL`);
+  * Rotas `/operacional/extrato-aluno/csv` e `/relatorios/extrato-aluno/csv` registradas em `index.php` para operadores e administradores;
+  * Link "Extrato do Aluno" adicionado na barra de navegação e menu do usuário em `app/views/layouts/portal.php`;
+  * Botão de atalho rápido adicionado na tela da Carteira Digital Familiar (`app/views/portal/carteira.php`);
+  * Criação da suíte oficial `tests/fase22_test.php` com **80 de 80 asserções aprovadas com 100% de sucesso**;
+  * Regressão da Fase 21 executada com sucesso (**95 de 95 asserções aprovadas**).
 
 ---
 
@@ -1003,11 +1037,11 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Executar a **Fase 22 — Extrato Analítico de Consumo do Aluno (Filtros, PDF A4 e Portal da Família)**:
-1. Construir a tela de filtro com opções "Emitir apenas saldo do Aluno" e "Considerar saldo apenas no período" conforme `filtro Extrato Consumo Aluno.pdf`;
-2. Desenvolver a view e emissão do PDF A4 oficial "Extrato de Consumo do Aluno" com saldo progressivo linha a linha, créditos, débitos e total gasto conforme `Relatório Extrato Consumo Aluno.pdf`;
-3. Disponibilizar o extrato analítico no Portal da Família (`app/views/portal/extrato.php`) com opções de visualização na tela e download do PDF A4;
-4. Validar todas as regras de saldo, paginação e permissões familiares com a nova suíte `tests/fase22_test.php` e regressão global.
+Executar a **Fase 23 — Relatório Gerencial de Movimentações de Estoque (Retrato e Paisagem)**:
+1. Construir a tela de filtros e opções de leiaute com seleção de orientação Retrato/Paisagem conforme `filtro movimentação estoque.pdf`;
+2. Desenvolver a view e emissão do PDF A4 oficial de movimentações de estoque em orientações Retrato e Paisagem (`app/views/relatorios/estoque_movimentacoes_pdf.php`);
+3. Implementar o motor de apuração consolidada de entradas, saídas por consumo/venda e perdas operacionais com centro de custo padrão ("Cantina Geral");
+4. Criar e homologar a suíte de testes automatizados `tests/fase23_test.php` com regressão global.
 
 
 

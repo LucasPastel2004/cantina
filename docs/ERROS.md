@@ -1319,3 +1319,17 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - Mensagem explicativa caso o usuário desmarque ambas as seções.
   3. Criada a suíte `tests/test_todas_possibilidades.php` testando e validando 15 cenários distintos com compilação real de PDFs de 25 KB a 113 KB via Gotenberg, todos aprovados com 100% de sucesso.
 - Como evitar no futuro: Ao disponibilizar um painel de filtros com múltiplos toggles de formatação, assegurar que cada um dos parâmetros possua lógica explícita tanto no backend quanto no template de saída, criando testes de regressão que alterem os toggles e verifiquem a presença das classes e dados resultantes.
+
+---
+
+## 2026-09-30 - Coluna incorreta vb.tipo_pagamento em vendas_balcao e tratamento de compras em dinheiro no extrato do aluno
+
+- Sintoma: Erro `PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'vb.tipo_pagamento' in 'field list'` ao emitir o extrato analítico do aluno para períodos contendo vendas de balcão, além de divergência contábil no saldo progressivo caso compras pagas em dinheiro ou Pix avulso no balcão fossem debitadas do saldo familiar.
+- Causa:
+  1. O schema oficial da tabela `vendas_balcao` (migration 020) nomeia a coluna de pagamento como `forma_pagamento` (com valores `dinheiro`, `pix_balcao`, `desconto_folha`), e o SQL de unificação em `RelatoriosController::obterDadosExtratoAluno` referenciou erroneamente `vb.tipo_pagamento`.
+  2. No cálculo do saldo progressivo da carteira escolar, apenas os lançamentos pagos via carteira familiar (`forma_pagamento === 'Saldo'`) debitam o montante depositado pelos pais. Compras pagas em espécie no balcão (dinheiro ou pix avulso) configuram histórico de consumo do aluno, mas não deduzem os créditos da carteira da família.
+- Solução aplicada:
+  1. Corrigida a projeção SQL em `RelatoriosController.php` para referenciar estritamente `vb.forma_pagamento`.
+  2. Ajustada a fórmula de progressão contábil para debitar o saldo progressivo apenas quando `forma_pagamento === 'Saldo'`, preservando a integridade da carteira digital compartilhada e a exatidão do total gasto no período.
+  3. Criada e homologada a suíte `tests/fase22_test.php` com 80 de 80 asserções aprovadas com sucesso, cobrindo cálculo contábil, opções da aba Leiaute, espelho A4 e proteção LGPD no Portal da Família.
+- Como evitar no futuro: Sempre consultar os schemas das migrações do banco de dados antes de redigir queries analíticas e distinguir contabilmente compras debitadas de carteiras pré-pagas de compras quitadas em espécie no ato da entrega.

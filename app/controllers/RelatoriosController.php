@@ -116,12 +116,20 @@ class RelatoriosController extends Controller
     public function extratoAluno(): void
     {
         $alunoId = (int)$this->input('aluno_id', 0);
+        $turmaId = (int)$this->input('turma_id', 0);
         $dataInicio = trim((string)$this->input('data_inicio', date('Y-m-01')));
         $dataFim = trim((string)$this->input('data_fim', date('Y-m-d')));
 
+        $apenasSaldo = ($this->input('apenas_saldo', 'nao') === 'sim');
+        $saldoApenasPeriodo = ($this->input('saldo_apenas_periodo', 'nao') === 'sim');
+        $abaAtiva = trim((string)$this->input('aba', 'filtros'));
+        if (!in_array($abaAtiva, ['filtros', 'leiaute'], true)) {
+            $abaAtiva = 'filtros';
+        }
+
         $paginaRecargas = max(1, (int)$this->input('pagina_recargas', (int)$this->input('pagina', 1)));
         $paginaConsumo  = max(1, (int)$this->input('pagina_consumo', 1));
-        $itensPorPagina = 20;
+        $itensPorPagina = 50;
 
         $dadosExtrato = null;
         if ($alunoId > 0) {
@@ -129,21 +137,30 @@ class RelatoriosController extends Controller
                 $alunoId,
                 $dataInicio,
                 $dataFim,
+                $apenasSaldo,
+                $saldoApenasPeriodo,
                 $paginaRecargas,
                 $paginaConsumo,
                 $itensPorPagina,
-                true
+                false
             );
         }
 
+        $turmas = \App\Models\Turma::listarTodas();
+
         $this->render('relatorios/extrato_aluno', [
-            'pageTitle'    => 'Extrato Analítico do Aluno',
-            'activeMenu'   => 'extrato_aluno',
-            'user'         => Auth::user(),
-            'alunoId'      => $alunoId,
-            'dataInicio'   => $dataInicio,
-            'dataFim'      => $dataFim,
-            'dadosExtrato' => $dadosExtrato
+            'pageTitle'           => 'Extrato Analítico do Aluno',
+            'activeMenu'          => 'extrato_aluno',
+            'user'                => Auth::user(),
+            'alunoId'             => $alunoId,
+            'turmaId'             => $turmaId,
+            'turmas'              => $turmas,
+            'dataInicio'          => $dataInicio,
+            'dataFim'             => $dataFim,
+            'apenasSaldo'         => $apenasSaldo,
+            'saldoApenasPeriodo'  => $saldoApenasPeriodo,
+            'abaAtiva'            => $abaAtiva,
+            'dadosExtrato'        => $dadosExtrato
         ], 'admin');
     }
 
@@ -155,6 +172,8 @@ class RelatoriosController extends Controller
         $alunoId = (int)$this->input('aluno_id', 0);
         $dataInicio = trim((string)$this->input('data_inicio', date('Y-m-01')));
         $dataFim = trim((string)$this->input('data_fim', date('Y-m-d')));
+        $apenasSaldo = ($this->input('apenas_saldo', 'nao') === 'sim');
+        $saldoApenasPeriodo = ($this->input('saldo_apenas_periodo', 'nao') === 'sim');
 
         if ($alunoId <= 0) {
             Session::setFlash('danger', 'Selecione um aluno para gerar o extrato em PDF.');
@@ -162,7 +181,7 @@ class RelatoriosController extends Controller
             return;
         }
 
-        $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim, 1, 1, 20, false);
+        $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim, $apenasSaldo, $saldoApenasPeriodo, 1, 1, 50, false);
         if (!$dadosExtrato) {
             Session::setFlash('danger', 'Aluno não localizado.');
             $this->redirect('/relatorios/extrato-aluno');
@@ -194,6 +213,8 @@ class RelatoriosController extends Controller
         $alunoId = (int)$this->input('aluno_id', 0);
         $dataInicio = trim((string)$this->input('data_inicio', date('Y-m-01')));
         $dataFim = trim((string)$this->input('data_fim', date('Y-m-d')));
+        $apenasSaldo = ($this->input('apenas_saldo', 'nao') === 'sim');
+        $saldoApenasPeriodo = ($this->input('saldo_apenas_periodo', 'nao') === 'sim');
 
         if ($alunoId <= 0) {
             Session::setFlash('danger', 'Selecione um aluno para imprimir o extrato.');
@@ -201,7 +222,7 @@ class RelatoriosController extends Controller
             return;
         }
 
-        $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim, 1, 1, 20, false);
+        $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim, $apenasSaldo, $saldoApenasPeriodo, 1, 1, 50, false);
         if (!$dadosExtrato) {
             Session::setFlash('danger', 'Aluno não localizado.');
             $this->redirect('/relatorios/extrato-aluno');
@@ -212,6 +233,77 @@ class RelatoriosController extends Controller
         $dadosExtrato['operador'] = $usuario['nome'] ?? 'Atendimento Cantina';
 
         echo PdfService::gerarEspelhoExtratoConsumoAlunoHtml($dadosExtrato);
+        exit;
+    }
+
+    /**
+     * Exportação em Planilha CSV do Extrato do Aluno
+     */
+    public function extratoAlunoCsv(): void
+    {
+        $alunoId = (int)$this->input('aluno_id', 0);
+        $dataInicio = trim((string)$this->input('data_inicio', date('Y-m-01')));
+        $dataFim = trim((string)$this->input('data_fim', date('Y-m-d')));
+        $apenasSaldo = ($this->input('apenas_saldo', 'nao') === 'sim');
+        $saldoApenasPeriodo = ($this->input('saldo_apenas_periodo', 'nao') === 'sim');
+
+        if ($alunoId <= 0) {
+            Session::setFlash('danger', 'Selecione um aluno para exportar o extrato em planilha.');
+            $this->redirect('/relatorios/extrato-aluno');
+            return;
+        }
+
+        $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim, $apenasSaldo, $saldoApenasPeriodo, 1, 1, 50, false);
+        if (!$dadosExtrato) {
+            Session::setFlash('danger', 'Aluno não localizado.');
+            $this->redirect('/relatorios/extrato-aluno');
+            return;
+        }
+
+        $matricula = preg_replace('/[^A-Za-z0-9]/', '', $dadosExtrato['aluno']['matricula'] ?? 'aluno');
+        $nomeArquivo = 'extrato_aluno_' . $matricula . '_' . date('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $out = fopen('php://output', 'w');
+        fputs($out, "\xEF\xBB\xBF"); // UTF-8 BOM para Excel
+        $delimitador = ';';
+
+        fputcsv($out, ['COLÉGIO MONTEIRO LOBATO - EXTRATO DE CONSUMO DO ALUNO'], $delimitador);
+        fputcsv($out, ['Período:', $dadosExtrato['periodo']], $delimitador);
+        fputcsv($out, ['Aluno:', $dadosExtrato['aluno']['nome'], 'Matrícula:', $dadosExtrato['aluno']['matricula'], 'Turma:', ($dadosExtrato['aluno']['serie'] ?? '') . ' ' . ($dadosExtrato['aluno']['nome_turma'] ?? '')], $delimitador);
+        fputcsv($out, ['Saldo Atual:', 'R$ ' . number_format($dadosExtrato['saldo_atual'], 2, ',', '.')], $delimitador);
+        fputcsv($out, [], $delimitador);
+
+        if ($apenasSaldo) {
+            fputcsv($out, ['Resumo Financeiro do Aluno'], $delimitador);
+            fputcsv($out, ['Saldo Inicial:', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')], $delimitador);
+            fputcsv($out, ['Total Recarregado no Período:', number_format($dadosExtrato['total_recargas'], 2, ',', '.')], $delimitador);
+            fputcsv($out, ['Total Gasto no Período:', number_format($dadosExtrato['total_gasto'], 2, ',', '.')], $delimitador);
+            fputcsv($out, ['Saldo Atual da Carteira:', number_format($dadosExtrato['saldo_atual'], 2, ',', '.')], $delimitador);
+        } else {
+            fputcsv($out, ['Data', 'Descrição', 'Qtd', 'V. Unitário (R$)', 'V. Total (R$)', 'Forma Pagamento', 'Saldo (R$)'], $delimitador);
+            fputcsv($out, ['', 'Saldo inicial', '', '', '', '', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')], $delimitador);
+
+            foreach ($dadosExtrato['linhas'] as $l) {
+                fputcsv($out, [
+                    $l['data_formatada'] ?? '',
+                    $l['descricao'] ?? '',
+                    $l['quantidade'] ?? '',
+                    is_numeric($l['valor_unitario']) ? number_format((float)$l['valor_unitario'], 2, ',', '.') : $l['valor_unitario'],
+                    is_numeric($l['valor_total']) ? number_format((float)$l['valor_total'], 2, ',', '.') : $l['valor_total'],
+                    $l['forma_pagamento'] ?? '',
+                    is_numeric($l['saldo']) ? number_format((float)$l['saldo'], 2, ',', '.') : ''
+                ], $delimitador);
+            }
+
+            fputcsv($out, ['', 'Total gasto no periodo', '', '', number_format($dadosExtrato['total_gasto'], 2, ',', '.'), '', ''], $delimitador);
+        }
+
+        fclose($out);
         exit;
     }
 
@@ -852,65 +944,71 @@ class RelatoriosController extends Controller
     // =========================================================================
 
     /**
-     * Consolida dados completos para o Extrato do Aluno com paginação de 20 itens por página
+     * Consolida dados completos para o Extrato do Aluno com cálculo de saldo progressivo linha a linha
+     * Conforme FSD Tela 8.5 & Seção 22.1 e Relatório Extrato Consumo Aluno.pdf
      */
-    private function obterDadosExtratoAluno(
+    public function obterDadosExtratoAluno(
         int $alunoId, 
         string $dataInicio, 
         string $dataFim, 
+        bool $apenasSaldo = false,
+        bool $saldoApenasPeriodo = false,
         int $paginaRecargas = 1, 
         int $paginaConsumo = 1, 
-        int $porPagina = 20, 
-        bool $paginar = true
+        int $porPagina = 50, 
+        bool $paginar = false
     ): ?array
     {
-        $aluno = Aluno::buscarPorId($alunoId);
+        $pdo = \App\Core\Model::getPdo();
+
+        // 1. Localiza Aluno com Turma e Responsável
+        $sqlAluno = "
+            SELECT 
+                a.*,
+                t.nome_turma,
+                t.serie,
+                t.turno AS turma_turno,
+                r.nome AS responsavel_nome,
+                r.cpf AS responsavel_cpf,
+                r.whatsapp AS responsavel_whatsapp,
+                r.saldo_atual AS responsavel_saldo
+            FROM alunos a
+            LEFT JOIN turmas t ON t.id = a.turma_id
+            LEFT JOIN responsaveis r ON r.id = a.responsavel_id
+            WHERE a.id = :id
+        ";
+        $stmtA = $pdo->prepare($sqlAluno);
+        $stmtA->execute(['id' => $alunoId]);
+        $aluno = $stmtA->fetch(\PDO::FETCH_ASSOC);
+
         if (!$aluno) {
             return null;
         }
 
-        $pdo = \App\Core\Model::getPdo();
+        $respId = (int)($aluno['responsavel_id'] ?? 0);
+        $saldoAtual = (float)($aluno['responsavel_saldo'] ?? 0.0);
 
-        // 1. Recargas de Saldo da Carteira Familiar no Período
-        $sqlRecargas = "
-            SELECT 
-                tc.*,
-                u.nome AS operador_nome
-            FROM transacoes_carteira tc
-            LEFT JOIN usuarios u ON u.id = tc.operador_id
-            WHERE (tc.aluno_id = :aluno_id OR tc.responsavel_id = :resp_id)
-              AND tc.tipo_transacao IN ('recarga_pix', 'recarga_dinheiro', 'estorno_cancelamento', 'estorno_balcao')
-              AND DATE(tc.created_at) BETWEEN :data_ini AND :data_fim
-            ORDER BY tc.created_at DESC
-        ";
-        $stmtRec = $pdo->prepare($sqlRecargas);
-        $stmtRec->execute([
-            'aluno_id' => $alunoId,
-            'resp_id'  => (int)$aluno['responsavel_id'],
-            'data_ini' => $dataInicio,
-            'data_fim' => $dataFim
-        ]);
-        $recargas = $stmtRec->fetchAll(\PDO::FETCH_ASSOC);
-
-        // 2. Consumo Detalhado (Pedidos Agendados/Entregues)
+        // 2. Itens individuais de Pedidos Online Agendados / Entregues
         $sqlPedidos = "
             SELECT 
+                ip.id AS item_id,
                 p.id AS referencia_id,
                 p.data_consumo,
-                p.turno_consumo AS turno,
-                p.status,
-                p.valor_total,
                 p.created_at,
-                'Agendamento Online' AS canal,
-                GROUP_CONCAT(CONCAT(ip.quantidade, 'x ', pr.descricao) SEPARATOR ', ') AS itens_descricao,
-                COALESCE(SUM(ip.quantidade), 0) AS total_itens
+                pr.descricao AS produto_nome,
+                ip.quantidade,
+                ip.preco_unitario,
+                ip.subtotal AS valor_total,
+                'Saldo' AS forma_pagamento,
+                'consumo' AS tipo,
+                p.status,
+                'Agendamento Online' AS canal
             FROM pedidos p
             INNER JOIN itens_pedido ip ON ip.pedido_id = p.id
             INNER JOIN produtos pr ON pr.id = ip.produto_id
             WHERE p.aluno_id = :aluno_id
               AND p.status IN ('agendado', 'editado', 'entregue')
               AND p.data_consumo BETWEEN :data_ini AND :data_fim
-            GROUP BY p.id, p.data_consumo, p.turno_consumo, p.status, p.valor_total, p.created_at
         ";
         $stmtPed = $pdo->prepare($sqlPedidos);
         $stmtPed->execute([
@@ -920,25 +1018,31 @@ class RelatoriosController extends Controller
         ]);
         $pedidos = $stmtPed->fetchAll(\PDO::FETCH_ASSOC);
 
-        // 3. Consumo Detalhado (Vendas de Balcão PDV)
+        // 3. Itens individuais de Vendas de Balcão (PDV)
         $sqlBalcao = "
             SELECT 
+                ivb.id AS item_id,
                 vb.id AS referencia_id,
                 DATE(vb.created_at) AS data_consumo,
-                sc.turno,
-                'concluida' AS status,
-                vb.valor_total,
                 vb.created_at,
-                'PDV Balcão' AS canal,
-                GROUP_CONCAT(CONCAT(ivb.quantidade, 'x ', pr.descricao) SEPARATOR ', ') AS itens_descricao,
-                COALESCE(SUM(ivb.quantidade), 0) AS total_itens
+                pr.descricao AS produto_nome,
+                ivb.quantidade,
+                ivb.preco_unitario,
+                ivb.subtotal AS valor_total,
+                CASE 
+                    WHEN vb.forma_pagamento = 'dinheiro' THEN 'Dinheiro'
+                    WHEN vb.forma_pagamento = 'pix_balcao' THEN 'Pix'
+                    ELSE 'Saldo'
+                END AS forma_pagamento,
+                'consumo' AS tipo,
+                'concluida' AS status,
+                'PDV Balcão' AS canal
             FROM vendas_balcao vb
-            INNER JOIN sessoes_caixa sc ON sc.id = vb.sessao_caixa_id
             INNER JOIN itens_venda_balcao ivb ON ivb.venda_balcao_id = vb.id
             INNER JOIN produtos pr ON pr.id = ivb.produto_id
             WHERE vb.aluno_id = :aluno_id
+              AND (vb.status IS NULL OR vb.status = 'concluida')
               AND DATE(vb.created_at) BETWEEN :data_ini AND :data_fim
-            GROUP BY vb.id, vb.created_at, sc.turno, vb.valor_total
         ";
         $stmtBal = $pdo->prepare($sqlBalcao);
         $stmtBal->execute([
@@ -948,57 +1052,154 @@ class RelatoriosController extends Controller
         ]);
         $balcao = $stmtBal->fetchAll(\PDO::FETCH_ASSOC);
 
-        // Mescla e ordena o consumo por data mais recente
-        $consumo = array_merge($pedidos, $balcao);
-        usort($consumo, function($a, $b) {
-            $cmp = strcmp($b['data_consumo'], $a['data_consumo']);
+        // 4. Recargas e Créditos da Carteira no Período
+        $sqlRecargas = "
+            SELECT 
+                tc.id AS referencia_id,
+                DATE(tc.created_at) AS data_consumo,
+                tc.created_at,
+                CASE 
+                    WHEN tc.tipo_transacao IN ('recarga_pix', 'recarga_dinheiro') THEN 'Recarga'
+                    WHEN tc.tipo_transacao = 'estorno_cancelamento' THEN 'Estorno de Cancelamento'
+                    WHEN tc.tipo_transacao = 'estorno_balcao' THEN 'Estorno de Balcão'
+                    ELSE 'Ajuste de Saldo'
+                END AS produto_nome,
+                '~' AS quantidade,
+                '~' AS preco_unitario,
+                tc.valor AS valor_total,
+                CASE 
+                    WHEN tc.tipo_transacao = 'recarga_pix' THEN 'Pix'
+                    WHEN tc.tipo_transacao = 'recarga_dinheiro' THEN 'Dinheiro'
+                    WHEN tc.tipo_transacao LIKE '%estorno%' THEN 'Estorno'
+                    ELSE 'Saldo'
+                END AS forma_pagamento,
+                'recarga' AS tipo,
+                'concluida' AS status,
+                'Carteira Familiar' AS canal,
+                tc.tipo_transacao,
+                tc.descricao AS transacao_desc
+            FROM transacoes_carteira tc
+            WHERE (tc.aluno_id = :aluno_id OR tc.responsavel_id = :resp_id)
+              AND tc.tipo_transacao IN ('recarga_pix', 'recarga_dinheiro', 'estorno_cancelamento', 'estorno_balcao', 'ajuste_manual')
+              AND DATE(tc.created_at) BETWEEN :data_ini AND :data_fim
+        ";
+        $stmtRec = $pdo->prepare($sqlRecargas);
+        $stmtRec->execute([
+            'aluno_id' => $alunoId,
+            'resp_id'  => $respId,
+            'data_ini' => $dataInicio,
+            'data_fim' => $dataFim
+        ]);
+        $recargas = $stmtRec->fetchAll(\PDO::FETCH_ASSOC);
+
+        // 5. Mescla todas as movimentações e ordena cronologicamente crescente (ASC)
+        $movimentacoes = array_merge($pedidos, $balcao, $recargas);
+        usort($movimentacoes, function($a, $b) {
+            $cmp = strcmp($a['data_consumo'], $b['data_consumo']);
             if ($cmp !== 0) return $cmp;
-            return strcmp($b['created_at'], $a['created_at']);
+            // Recargas antes de consumo na mesma data
+            if ($a['tipo'] === 'recarga' && $b['tipo'] !== 'recarga') return -1;
+            if ($b['tipo'] === 'recarga' && $a['tipo'] !== 'recarga') return 1;
+            return strcmp($a['created_at'], $b['created_at']);
         });
 
-        // Totais consolidados em todo o período selecionado
+        // 6. Cálculo do Saldo Inicial anterior ao período
+        $saldoInicial = 0.0;
+        if ($saldoApenasPeriodo) {
+            $saldoInicial = 0.0;
+        } else {
+            // Busca última transação antes da data_inicio
+            $sqlSaldoAnt = "
+                SELECT saldo_resultante 
+                FROM transacoes_carteira 
+                WHERE responsavel_id = :resp_id 
+                  AND created_at < :data_ini_ts
+                ORDER BY created_at DESC, id DESC 
+                LIMIT 1
+            ";
+            $stmtAnt = $pdo->prepare($sqlSaldoAnt);
+            $stmtAnt->execute([
+                'resp_id'     => $respId,
+                'data_ini_ts' => $dataInicio . ' 00:00:00'
+            ]);
+            $rowAnt = $stmtAnt->fetch(\PDO::FETCH_ASSOC);
+            if ($rowAnt && isset($rowAnt['saldo_resultante'])) {
+                $saldoInicial = (float)$rowAnt['saldo_resultante'];
+            } else {
+                // Cálculo retroativo seguro
+                $sqlMovPosterior = "
+                    SELECT 
+                        COALESCE(SUM(CASE WHEN tipo_transacao IN ('recarga_pix', 'recarga_dinheiro', 'estorno_cancelamento', 'estorno_balcao', 'ajuste_manual') THEN valor ELSE 0 END), 0) AS total_cred,
+                        COALESCE(SUM(CASE WHEN tipo_transacao IN ('debito_pedido', 'debito_contestacao_med') THEN valor ELSE 0 END), 0) AS total_deb
+                    FROM transacoes_carteira
+                    WHERE responsavel_id = :resp_id
+                      AND created_at >= :data_ini_ts
+                ";
+                $stmtPost = $pdo->prepare($sqlMovPosterior);
+                $stmtPost->execute([
+                    'resp_id'     => $respId,
+                    'data_ini_ts' => $dataInicio . ' 00:00:00'
+                ]);
+                $rowPost = $stmtPost->fetch(\PDO::FETCH_ASSOC);
+                if ($rowPost) {
+                    $saldoInicial = max(0.0, $saldoAtual - (float)$rowPost['total_cred'] + (float)$rowPost['total_deb']);
+                } else {
+                    $saldoInicial = $saldoAtual;
+                }
+            }
+        }
+
+        // 7. Cálculo do Saldo Progressivo Linha a Linha e Totais
+        $saldoProg = $saldoInicial;
         $totalRecargas = 0.0;
-        foreach ($recargas as $r) {
-            $totalRecargas += (float)$r['valor'];
-        }
-
-        $totalConsumo = 0.0;
+        $totalGasto = 0.0;
         $totalLanches = 0;
-        foreach ($consumo as $c) {
-            $totalConsumo += (float)$c['valor_total'];
-            $totalLanches += (int)$c['total_itens'];
+
+        $linhas = [];
+        foreach ($movimentacoes as $m) {
+            $valor = (float)$m['valor_total'];
+            $ehCredito = ($m['tipo'] === 'recarga' || $m['forma_pagamento'] === 'Estorno');
+
+            if ($ehCredito) {
+                $saldoProg += $valor;
+                $totalRecargas += $valor;
+            } else {
+                if ($m['forma_pagamento'] === 'Saldo') {
+                    $saldoProg -= $valor;
+                }
+                $totalGasto += $valor;
+                $totalLanches += (int)($m['quantidade'] ?? 1);
+            }
+
+            $linhas[] = [
+                'data'            => $m['data_consumo'],
+                'data_formatada'  => date('d/m/Y', strtotime($m['data_consumo'])),
+                'created_at'      => $m['created_at'],
+                'tipo'            => $m['tipo'],
+                'descricao'       => mb_strtoupper($m['produto_nome'], 'UTF-8'),
+                'quantidade'      => $m['quantidade'],
+                'valor_unitario'  => $m['preco_unitario'],
+                'valor_total'     => $valor,
+                'forma_pagamento' => $m['forma_pagamento'],
+                'saldo'           => $saldoProg,
+                'canal'           => $m['canal'] ?? 'Cantina Web',
+                'status'          => $m['status'] ?? 'concluida'
+            ];
         }
 
+        // Se a opção da aba Leiaute "Emitir apenas saldo do Aluno" estiver ativa,
+        // suprime a listagem analítica detalhada dos itens conforme guideline oficial
+        if ($apenasSaldo) {
+            $linhas = [];
+        }
+
+        // Listas legadas agrupadas para manter retrocompatibilidade com telas antigas
+        $consumoAgrupado = array_merge($pedidos, $balcao);
         $totalRegistrosRecargas = count($recargas);
-        $totalRegistrosConsumo  = count($consumo);
+        $totalRegistrosConsumo  = count($consumoAgrupado);
 
-        $totalPaginasRecargas = (int)ceil($totalRegistrosRecargas / $porPagina);
-        if ($totalPaginasRecargas < 1) {
-            $totalPaginasRecargas = 1;
-        }
-
-        $totalPaginasConsumo = (int)ceil($totalRegistrosConsumo / $porPagina);
-        if ($totalPaginasConsumo < 1) {
-            $totalPaginasConsumo = 1;
-        }
-
-        if ($paginaRecargas > $totalPaginasRecargas && $totalRegistrosRecargas > 0) {
-            $paginaRecargas = $totalPaginasRecargas;
-        }
-        if ($paginaConsumo > $totalPaginasConsumo && $totalRegistrosConsumo > 0) {
-            $paginaConsumo = $totalPaginasConsumo;
-        }
-
-        $recargasPaginadas = $recargas;
-        $consumoPaginado   = $consumo;
-
-        if ($paginar) {
-            $offsetRecargas = ($paginaRecargas - 1) * $porPagina;
-            $recargasPaginadas = array_slice($recargas, $offsetRecargas, $porPagina);
-
-            $offsetConsumo = ($paginaConsumo - 1) * $porPagina;
-            $consumoPaginado = array_slice($consumo, $offsetConsumo, $porPagina);
-        }
+        $totalPaginasRecargas = (int)ceil(max(1, $totalRegistrosRecargas) / $porPagina);
+        $totalPaginasConsumo  = (int)ceil(max(1, $totalRegistrosConsumo) / $porPagina);
 
         $periodoFmt = date('d/m/Y', strtotime($dataInicio)) . ' a ' . date('d/m/Y', strtotime($dataFim));
 
@@ -1007,12 +1208,20 @@ class RelatoriosController extends Controller
             'periodo'                  => $periodoFmt,
             'data_inicio'              => $dataInicio,
             'data_fim'                 => $dataFim,
-            'saldo_atual'              => (float)($aluno['saldo_atual'] ?? 0.0),
+            'apenas_saldo'             => $apenasSaldo,
+            'saldo_apenas_periodo'     => $saldoApenasPeriodo,
+            'saldo_inicial'            => $saldoInicial,
+            'saldo_atual'              => $saldoAtual,
+            'saldo_final'              => $saldoProg,
             'total_recargas'           => $totalRecargas,
-            'total_consumo'            => $totalConsumo,
+            'total_consumo'            => $totalGasto,
+            'total_gasto'              => $totalGasto,
             'total_lanches'            => $totalLanches,
-            'recargas'                 => $recargasPaginadas,
-            'consumo'                  => $consumoPaginado,
+            'linhas'                   => $linhas,
+            'movimentacoes'            => $linhas,
+            'lancamentos'              => $linhas,
+            'recargas'                 => $recargas,
+            'consumo'                  => $consumoAgrupado,
             'pagina_recargas'          => $paginaRecargas,
             'pagina_consumo'           => $paginaConsumo,
             'total_paginas_recargas'   => $totalPaginasRecargas,

@@ -641,4 +641,165 @@ class PortalController extends Controller
         Session::setFlash('success', 'Sua senha de acesso foi alterada com sucesso!');
         $this->redirect('/portal/perfil');
     }
+
+    /**
+     * Tela dedicada de Extrato de Consumo e Recargas do Dependente no Portal da Família
+     */
+    public function extrato(): void
+    {
+        $usuario = Auth::user();
+        $respId  = (int)$usuario['id'];
+
+        $respModel = new Responsavel();
+        $respDb = $respModel->find($respId);
+        $saldoAtual = (float)($respDb['saldo_atual'] ?? $usuario['saldo'] ?? 0.00);
+        Session::set('_auth_saldo', $saldoAtual);
+
+        $dependentes = Aluno::listarPorResponsavel($respId, false);
+        if (empty($dependentes)) {
+            Session::setFlash('info', 'Nenhum dependente vinculado à sua conta familiar no momento.');
+            $this->redirect('/portal');
+            return;
+        }
+
+        // Seleciona o aluno solicitado ou o primeiro dependente
+        $alunoIdSolicitado = (int)$this->input('aluno_id', (int)$this->input('aluno', 0));
+        $alunoSelecionado  = null;
+
+        if ($alunoIdSolicitado > 0) {
+            if (!$this->alunoPertence($respId, $alunoIdSolicitado)) {
+                Session::setFlash('danger', 'Você não tem permissão para visualizar o extrato deste aluno.');
+                $this->redirect('/portal/extrato');
+                return;
+            }
+
+            foreach ($dependentes as $dep) {
+                if ((int)$dep['id'] === $alunoIdSolicitado) {
+                    $alunoSelecionado = $dep;
+                    break;
+                }
+            }
+        }
+
+        if (!$alunoSelecionado) {
+            $alunoSelecionado = $dependentes[0];
+        }
+
+        $dataInicio = trim((string)$this->input('data_inicio', date('Y-m-01')));
+        $dataFim    = trim((string)$this->input('data_fim', date('Y-m-d')));
+
+        $relCtrl = new RelatoriosController();
+        $dadosExtrato = $relCtrl->obterDadosExtratoAluno(
+            (int)$alunoSelecionado['id'],
+            $dataInicio,
+            $dataFim,
+            false,
+            false,
+            1,
+            1,
+            50,
+            false
+        );
+
+        $this->render('portal/extrato', [
+            'pageTitle'        => 'Extrato do Aluno — Portal da Família',
+            'activeMenu'       => 'extrato',
+            'usuario'          => $usuario,
+            'user'             => $usuario,
+            'responsavelNome'  => $respDb['nome'] ?? $usuario['nome'] ?? 'Responsável',
+            'saldoAtual'       => $saldoAtual,
+            'dependentes'      => $dependentes,
+            'alunoSelecionado' => $alunoSelecionado,
+            'dataInicio'       => $dataInicio,
+            'dataFim'          => $dataFim,
+            'dadosExtrato'     => $dadosExtrato
+        ], 'portal');
+    }
+
+    /**
+     * Valida se determinado aluno pertence aos dependentes do responsável
+     */
+    private function alunoPertence(int $responsavelId, int $alunoId): bool
+    {
+        $dependentes = Aluno::listarPorResponsavel($responsavelId, false);
+        foreach ($dependentes as $dep) {
+            if ((int)$dep['id'] === $alunoId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Download do PDF Oficial A4 do Extrato do Aluno pelo Responsável
+     */
+    public function extratoPdf(): void
+    {
+        $usuario = Auth::user();
+        $respId  = (int)$usuario['id'];
+
+        $alunoId = (int)$this->input('aluno_id', (int)$this->input('aluno', 0));
+        $dataInicio = trim((string)$this->input('data_inicio', date('Y-m-01')));
+        $dataFim    = trim((string)$this->input('data_fim', date('Y-m-d')));
+
+        if ($alunoId <= 0 || !$this->alunoPertence($respId, $alunoId)) {
+            Session::setFlash('danger', 'Você não tem permissão para visualizar o extrato deste aluno.');
+            $this->redirect('/portal/extrato');
+            return;
+        }
+
+        $relCtrl = new RelatoriosController();
+        $dadosExtrato = $relCtrl->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim, false, false, 1, 1, 50, false);
+        if (!$dadosExtrato) {
+            Session::setFlash('danger', 'Lançamentos não localizados para o aluno selecionado.');
+            $this->redirect('/portal/extrato');
+            return;
+        }
+
+        $dadosExtrato['operador'] = 'Portal da Família (Autoatendimento)';
+        $pdfBinario = \App\Services\PdfService::gerarExtratoConsumoAlunoPdf($dadosExtrato);
+        $matricula = preg_replace('/[^A-Za-z0-9]/', '', $dadosExtrato['aluno']['matricula'] ?? 'aluno');
+        $nomeArquivo = 'extrato_oficial_' . $matricula . '_' . date('Ymd_His') . '.pdf';
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+        header('Content-Length: ' . strlen($pdfBinario));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
+        echo $pdfBinario;
+        exit;
+    }
+
+    /**
+     * Espelho HTML de Impressão Direta do Extrato do Aluno no Portal da Família
+     */
+    public function extratoImprimir(): void
+    {
+        $usuario = Auth::user();
+        $respId  = (int)$usuario['id'];
+
+        $alunoId = (int)$this->input('aluno_id', (int)$this->input('aluno', 0));
+        $dataInicio = trim((string)$this->input('data_inicio', date('Y-m-01')));
+        $dataFim    = trim((string)$this->input('data_fim', date('Y-m-d')));
+
+        if ($alunoId <= 0 || !$this->alunoPertence($respId, $alunoId)) {
+            Session::setFlash('danger', 'Você não tem permissão para visualizar o extrato deste aluno.');
+            $this->redirect('/portal/extrato');
+            return;
+        }
+
+        $relCtrl = new RelatoriosController();
+        $dadosExtrato = $relCtrl->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim, false, false, 1, 1, 50, false);
+        if (!$dadosExtrato) {
+            Session::setFlash('danger', 'Lançamentos não localizados para o aluno selecionado.');
+            $this->redirect('/portal/extrato');
+            return;
+        }
+
+        $dadosExtrato['operador'] = 'Portal da Família (Autoatendimento)';
+        echo \App\Services\PdfService::gerarEspelhoExtratoConsumoAlunoHtml($dadosExtrato);
+        exit;
+    }
 }
+

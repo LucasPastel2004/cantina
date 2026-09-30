@@ -81,6 +81,7 @@ $isSaldoBaixo = ($saldoAtual < 15.00);
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="font-size: 13px;">
                     <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>/portal/perfil">Meus Dados</a></li>
                     <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>/portal/carteira">Extrato Financeiro</a></li>
+                    <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>/portal/extrato">Extrato do Aluno</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form action="<?php echo $baseUrl; ?>/logout" method="POST" class="m-0">
@@ -106,6 +107,11 @@ $isSaldoBaixo = ($saldoAtual < 15.00);
             <li class="portal-nav-item">
                 <a href="<?php echo $baseUrl; ?>/portal/carteira" class="portal-nav-link <?php echo ($activeMenu === 'carteira') ? 'active' : ''; ?>">
                     Carteira Familiar
+                </a>
+            </li>
+            <li class="portal-nav-item">
+                <a href="<?php echo $baseUrl; ?>/portal/extrato" class="portal-nav-link <?php echo ($activeMenu === 'extrato') ? 'active' : ''; ?>">
+                    Extrato do Aluno
                 </a>
             </li>
             <li class="portal-nav-item">
