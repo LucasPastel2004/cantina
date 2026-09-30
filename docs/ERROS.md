@@ -1222,3 +1222,12 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Adicionado fallback defensivo bidirecional em `EstornoVendasController::detalhesAjax()`: se um registro não for localizado como balcão, busca automaticamente em pedidos (e vice-versa), tolerando divergências de parâmetro.
   4. Adicionados fallbacks robustos na view `app/views/operacional/estorno_vendas.php` e sanitização com `escapeHtml` no modal de detalhes.
 - Como evitar no futuro: Em interfaces que unificam diferentes entidades de domínio (como Vendas Balcão e Pedidos Online) em uma mesma grade de consulta, definir um contrato rigoroso e idêntico de aliases de saída nas models e utilizar fallbacks defensivos nos endpoints AJAX.
+
+---
+
+## 2026-09-30 - Mascaramento de dados em views por colisão de variável no extract() do renderView
+
+- Sintoma: Variáveis passadas para templates de relatórios PDF com o nome `'dados'` (como `$dados['sessao']`, `$dados['duplicatas']`) apareciam vazias ou não eram inicializadas dentro do arquivo da view ao invocar `PdfService::renderView()`.
+- Causa: O método `renderView(string $view, array $dados)` recebia a matriz com o nome de variável local `$dados` e executava `extract($dados, EXTR_SKIP)`. Quando o array continha uma chave com o mesmo nome (`$dados['dados'] = ...`), o sinalizador `EXTR_SKIP` instruía o PHP a não sobrescrever a variável de escopo local existente `$dados`, ignorando silenciosamente a chave e impossibilitando o acesso aos dados dentro da view incluída.
+- Solução aplicada: Renomeado o parâmetro formal da função para um identificador com prefixo restrito (`$_viewVars`), isolando o escopo e utilizando `extract($_viewVars, EXTR_OVERWRITE)` para garantir que todas as variáveis passadas pelo chamador sejam desempacotadas sem conflitos de escopo local.
+- Como evitar no futuro: Em motores de renderização que utilizam `extract()`, adotar parâmetros com nomes prefixados ou protegidos (ex: `$_viewVars`, `$_viewData`) e `EXTR_OVERWRITE`, garantindo que nenhuma chave de dados fornecida pelos controllers ou services sofra colisão com variáveis de controle do método.

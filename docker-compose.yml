@@ -28,5 +28,12 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: cantina_gotenberg
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+
 volumes:
   db_data:

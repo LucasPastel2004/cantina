@@ -66,6 +66,13 @@ return [
         ],
     ],
 
+    // Configurações de Geração de PDF (Gotenberg / Fallback HTML Print)
+    'pdf' => [
+        'driver'        => 'gotenberg', // 'gotenberg' ou 'native_html'
+        'gotenberg_url' => 'http://gotenberg:3000', // Em Docker: 'http://gotenberg:3000', Local: 'http://localhost:3000'
+        'timeout'       => 15,
+    ],
+
     // Segurança das Migrações
     'security' => [
         'migration_token' => 'TOKEN_SECRETO_PARA_EXECUTAR_MIGRATIONS',

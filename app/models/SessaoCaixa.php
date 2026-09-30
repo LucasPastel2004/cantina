@@ -780,4 +780,261 @@ class SessaoCaixa extends Model
 
         return $dados;
     }
+
+    /**
+     * Retorna a estrutura oficial completa do Fechamento de Caixa A4
+     * com as 4 seções escolares (Duplicatas, Vendas com Online vs Balcão e funcionários unificados,
+     * Recebimento Pix de conferência bancária e Resumo Contábil do Caixa)
+     * Conforme docs/alterações sistema guideline/28 setembro matutino.pdf e 28 setembro vespertino.pdf
+     * 
+     * @param int|array $sessaoIdOuArray
+     * @return array
+     */
+    public static function obterDadosFechamentoOficial(int|array $sessaoIdOuArray): array
+    {
+        if (is_array($sessaoIdOuArray)) {
+            $sessao = $sessaoIdOuArray;
+            $sessaoId = (int)($sessao['id'] ?? 0);
+        } else {
+            $sessaoId = (int)$sessaoIdOuArray;
+            $sessao = self::buscarPorId($sessaoId) ?? [];
+        }
+
+        if (empty($sessao)) {
+            return [];
+        }
+
+        $pdo = self::getPdo();
+        $abertoEm = $sessao['aberto_em'] ?? date('Y-m-d 07:00:00');
+        $fechadoEm = $sessao['fechado_em'] ?? date('Y-m-d H:i:s');
+        $turno = strtolower($sessao['turno'] ?? 'matutino');
+        $dataRef = date('Y-m-d', strtotime($abertoEm));
+
+        // 1. DUPLICATAS / RECARGAS
+        $duplicatas = [];
+        $subtotalDuplicatas = 0.0;
+
+        $stmtDup = $pdo->prepare("
+            SELECT tc.*, r.nome AS responsavel_nome, r.cpf AS responsavel_cpf
+            FROM transacoes_carteira tc
+            INNER JOIN responsaveis r ON r.id = tc.responsavel_id
+            WHERE (
+                (tc.tipo_transacao = 'recarga_dinheiro' AND tc.referencia_id = :sessao_id)
+                OR (tc.tipo_transacao = 'recarga_pix' AND tc.created_at >= :aberto_em AND tc.created_at <= :fechado_em)
+            )
+            ORDER BY tc.id ASC
+        ");
+        $stmtDup->execute([
+            'sessao_id'  => (string)$sessaoId,
+            'aberto_em'  => $abertoEm,
+            'fechado_em' => $fechadoEm
+        ]);
+        $recargasRaw = $stmtDup->fetchAll(\PDO::FETCH_ASSOC);
+
+        $seqDup = 231917;
+        foreach ($recargasRaw as $rec) {
+            $vlr = (float)$rec['valor'];
+            $subtotalDuplicatas += $vlr;
+
+            $stmtAluno = $pdo->prepare("
+                SELECT matricula, nome FROM alunos WHERE responsavel_id = :resp_id AND deleted_at IS NULL ORDER BY id ASC LIMIT 1
+            ");
+            $stmtAluno->execute(['resp_id' => $rec['responsavel_id']]);
+            $aluno = $stmtAluno->fetch(\PDO::FETCH_ASSOC);
+
+            $alunoStr = $aluno 
+                ? "{$aluno['matricula']} - {$aluno['nome']}" 
+                : ($rec['responsavel_nome'] ?? 'Responsável');
+
+            $duplicatas[] = [
+                'numero'         => (string)($seqDup++),
+                'aluno'          => $alunoStr,
+                'referencia'     => date('m/Y', strtotime($rec['created_at'])),
+                'finalidade'     => 'CANTINA',
+                'vencimento'     => date('d/m/Y', strtotime($rec['created_at'])),
+                'valor_nominal'  => $vlr,
+                'multa'          => 0.0,
+                'juros'          => 0.0,
+                'desconto'       => 0.0,
+                'saldo_devedor'  => 0.0,
+                'valor_recebido' => $vlr,
+                'tipo'           => ($rec['tipo_transacao'] === 'recarga_pix') ? 'Pix' : 'Dinheiro'
+            ];
+        }
+
+        // 2. VENDAS (BALCÃO + ONLINE COM SEGREGAÇÃO E FUNCIONÁRIOS UNIFICADOS)
+        $vendasItens = [];
+        $subtotalVendas = 0.0;
+
+        $stmtVb = $pdo->prepare("
+            SELECT vb.id AS venda_id, vb.tipo_venda, vb.forma_pagamento, vb.colaborador_id,
+                   c.nome AS colaborador_nome, c.cargo AS colaborador_cargo,
+                   ivb.produto_id, ivb.quantidade, ivb.preco_unitario, ivb.subtotal,
+                   p.descricao AS produto_descricao
+            FROM vendas_balcao vb
+            INNER JOIN itens_venda_balcao ivb ON ivb.venda_balcao_id = vb.id
+            INNER JOIN produtos p ON p.id = ivb.produto_id
+            LEFT JOIN colaboradores c ON c.id = vb.colaborador_id
+            WHERE vb.sessao_caixa_id = :sessao_id AND vb.status = 'concluida'
+            ORDER BY vb.id ASC, ivb.id ASC
+        ");
+        $stmtVb->execute(['sessao_id' => $sessaoId]);
+        $itensBalcao = $stmtVb->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($itensBalcao as $ib) {
+            $sub = (float)$ib['subtotal'];
+            $subtotalVendas += $sub;
+
+            $pessoa = 'Balcão / Aluno';
+            if (!empty($ib['colaborador_nome'])) {
+                $cargo = !empty($ib['colaborador_cargo']) ? $ib['colaborador_cargo'] : 'Colaborador';
+                $pessoa = "{$ib['colaborador_nome']} - {$cargo}";
+            }
+
+            $tipoStr = 'Dinheiro';
+            if ($ib['forma_pagamento'] === 'pix') {
+                $tipoStr = 'Pix';
+            } elseif ($ib['tipo_venda'] === 'desconto_folha') {
+                $tipoStr = 'Folha';
+            }
+
+            $vendasItens[] = [
+                'origem'         => 'balcao',
+                'alimento'       => $ib['produto_descricao'],
+                'pessoa'         => $pessoa,
+                'preco_unitario' => (float)$ib['preco_unitario'],
+                'quantidade'     => (int)$ib['quantidade'],
+                'valor_pago'     => $sub,
+                'tipo'           => $tipoStr
+            ];
+        }
+
+        // Encomendas online
+        $stmtOnline = $pdo->prepare("
+            SELECT p.id AS pedido_id, p.data_consumo, p.turno_consumo,
+                   a.nome AS aluno_nome, a.matricula AS aluno_matricula,
+                   ip.produto_id, ip.quantidade, ip.preco_unitario, ip.subtotal,
+                   pr.descricao AS produto_descricao
+            FROM pedidos p
+            INNER JOIN alunos a ON a.id = p.aluno_id
+            INNER JOIN itens_pedido ip ON ip.pedido_id = p.id
+            INNER JOIN produtos pr ON pr.id = ip.produto_id
+            WHERE p.data_consumo = :data_consumo
+              AND p.turno_consumo = :turno
+              AND p.status IN ('agendado', 'editado', 'entregue')
+            ORDER BY a.nome ASC, ip.id ASC
+        ");
+        $stmtOnline->execute([
+            'data_consumo' => $dataRef,
+            'turno'        => $turno
+        ]);
+        $itensOnline = $stmtOnline->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($itensOnline as $io) {
+            $sub = (float)$io['subtotal'];
+            $subtotalVendas += $sub;
+
+            $vendasItens[] = [
+                'origem'         => 'online',
+                'alimento'       => $io['produto_descricao'],
+                'pessoa'         => "{$io['aluno_nome']} - Aluno (Online)",
+                'preco_unitario' => (float)$io['preco_unitario'],
+                'quantidade'     => (int)$io['quantidade'],
+                'valor_pago'     => $sub,
+                'tipo'           => 'Saldo'
+            ];
+        }
+
+        // 3. RECEBIMENTO EM PIX
+        $pixRecebimentos = [];
+        $totalPixRecebimentos = 0.0;
+
+        foreach ($recargasRaw as $rec) {
+            if ($rec['tipo_transacao'] === 'recarga_pix') {
+                $val = (float)$rec['valor'];
+                $totalPixRecebimentos += $val;
+                $pixRecebimentos[] = [
+                    'banco'      => 'NUBANK - CANTINA',
+                    'descricao'  => 'Credito transferência pix via pix',
+                    'observacao' => 'via pix',
+                    'valor'      => $val
+                ];
+            }
+        }
+
+        $stmtPixBalcao = $pdo->prepare("
+            SELECT valor_total FROM vendas_balcao
+            WHERE sessao_caixa_id = :sessao_id AND forma_pagamento = 'pix' AND status = 'concluida'
+        ");
+        $stmtPixBalcao->execute(['sessao_id' => $sessaoId]);
+        while ($row = $stmtPixBalcao->fetch(\PDO::FETCH_ASSOC)) {
+            $val = (float)$row['valor_total'];
+            $totalPixRecebimentos += $val;
+            $pixRecebimentos[] = [
+                'banco'      => 'NUBANK - CANTINA',
+                'descricao'  => 'Credito transferência pix',
+                'observacao' => 'venda balcão',
+                'valor'      => $val
+            ];
+        }
+
+        // 4. RESUMO DO CAIXA
+        $fundoTroco = (float)($sessao['fundo_troco_inicial'] ?? 0.0);
+        $dinheiroRecargas = (float)($sessao['total_dinheiro_recargas'] ?? 0.0);
+        $dinheiroAvulso = (float)($sessao['total_dinheiro_avulso'] ?? 0.0);
+        $totalDinheiroEntradas = $dinheiroRecargas + $dinheiroAvulso;
+        $totalPixEntradas = (float)($sessao['total_pix_balcao'] ?? 0.0) + $totalPixRecebimentos;
+        
+        $totalEntradas = $totalDinheiroEntradas + $totalPixEntradas;
+        $saldoCaixaDinheiro = $fundoTroco + $totalDinheiroEntradas;
+        $saldoCaixaPix = $totalPixEntradas;
+        $saldoCaixaTotal = $saldoCaixaDinheiro + $saldoCaixaPix;
+
+        $resumoCaixa = [
+            'fundo' => [
+                'dinheiro' => $fundoTroco,
+                'pix'      => 0.0,
+                'cartao'   => 0.0,
+                'cheque'   => 0.0,
+                'total'    => $fundoTroco
+            ],
+            'entradas' => [
+                'dinheiro' => $totalDinheiroEntradas,
+                'pix'      => $totalPixEntradas,
+                'cartao'   => 0.0,
+                'cheque'   => 0.0,
+                'total'    => $totalEntradas
+            ],
+            'saidas' => [
+                'dinheiro' => 0.0,
+                'pix'      => 0.0,
+                'cartao'   => 0.0,
+                'cheque'   => 0.0,
+                'total'    => 0.0
+            ],
+            'saldo' => [
+                'dinheiro' => $saldoCaixaDinheiro,
+                'pix'      => $saldoCaixaPix,
+                'cartao'   => 0.0,
+                'cheque'   => 0.0,
+                'total'    => $saldoCaixaTotal
+            ],
+            'fundo_caixa'    => $fundoTroco,
+            'total_entradas' => $totalEntradas,
+            'total_saidas'   => 0.0,
+            'saldo_atual'    => $saldoCaixaTotal
+        ];
+
+        return [
+            'sessao'                 => $sessao,
+            'duplicatas'             => $duplicatas,
+            'subtotal_duplicatas'    => $subtotalDuplicatas,
+            'vendas'                 => $vendasItens,
+            'subtotal_vendas'        => $subtotalVendas,
+            'pix_recebimentos'       => $pixRecebimentos,
+            'total_pix_recebimentos' => $totalPixRecebimentos,
+            'resumo_caixa'           => $resumoCaixa
+        ];
+    }
 }
+

@@ -136,6 +136,8 @@ class Fase12Test
         $this->pdo->exec("DELETE FROM logs_auditoria WHERE operador_id IN (SELECT id FROM usuarios WHERE usuario = 'operador-f12')");
         $this->pdo->exec("DELETE FROM usuarios WHERE usuario = 'operador-f12'");
         $this->pdo->exec("DELETE FROM responsaveis WHERE cpf = '12345678999'");
+        $this->pdo->exec("DELETE FROM tickets WHERE pedido_id IN (SELECT id FROM pedidos WHERE aluno_id IN (SELECT id FROM alunos WHERE turma_id IN (SELECT id FROM turmas WHERE nome_turma LIKE '%Teste F12%')))");
+        $this->pdo->exec("DELETE FROM alunos WHERE turma_id IN (SELECT id FROM turmas WHERE nome_turma LIKE '%Teste F12%')");
         $this->pdo->exec("DELETE FROM turmas WHERE nome_turma LIKE '%Teste F12%'");
 
         // 1. Cria 2 turmas com ordem de impressão definida
@@ -352,6 +354,7 @@ class Fase12Test
 
         if (!empty($this->turmasCriadas)) {
             $ids = implode(',', $this->turmasCriadas);
+            $this->pdo->exec("DELETE FROM alunos WHERE turma_id IN ({$ids})");
             $this->pdo->exec("DELETE FROM turmas WHERE id IN ({$ids})");
         }
 

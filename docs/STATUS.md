@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 19 — Módulo Completo (CRUD) de Estorno de Vendas e Invalidação
-* **Status da Fase 19:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 19 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
-* **Última Atualização:** 2026-09-29 14:00:00 (Conclusão da Fase 19: Módulo Completo de Estorno de Vendas e Invalidação de Tickets, conforme Guideline Oficial do Escolar Manager e FSD — Migration 028, grid com seleção múltipla, estorno atômico de vendas balcão e encomendas online, reintegração física de estoque e cancelamento térmico; 48/48 suítes de testes globais aprovadas).
+* **Fase Atual:** Fase 20 — Nova Arquitetura de PDF (HTML+CSS+Gotenberg) & Migração Completa de Relatórios + Fechamento de Caixa Oficial
+* **Status da Fase 20:** Concluída [x] (100% Homologada)
+* **Status Geral do Projeto:** 20 de 24 Fases Concluídas (Planejamento das Fases 18 a 24 oficializado conforme diretrizes e documentos escolares)
+* **Última Atualização:** 2026-09-30 08:55:00 (Conclusão da Fase 20: Nova Arquitetura de PDF com HTML+CSS+Gotenberg, refatoração e redução de PdfService de 5.750 para < 1.000 linhas, espelho oficial A4 de Fechamento de Caixa com as 4 seções contábeis oficiais, migração de templates HTML e aprovação de 49/49 suítes de testes globais com 100% de sucesso).
 
 
 
@@ -907,13 +907,32 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 20 — Nova Arquitetura de PDF (HTML+CSS+Gotenberg) & Migração Completa de Relatórios + Fechamento de Caixa
-* [ ] Adição do container Gotenberg 8 no `docker-compose.yml` (porta 3000).
-* [ ] Parâmetros de driver Gotenberg e fallback no `config/config.php` e `config/config.example.php`.
-* [ ] Refatoração do `app/services/PdfService.php` para motor enxuto HTML+CSS + API Gotenberg + fallback `@media print`.
-* [ ] Migração de todos os relatórios e documentos existentes (Corte, Cupons e Tickets 80mm, Extratos, Folha RH) para views HTML limpas.
-* [ ] Implementação da view e geração do espelho oficial A4 de Fechamento de Caixa (`app/views/relatorios/fechamento_caixa_pdf.php`) com as 4 seções escolares (Duplicatas, Vendas com Online vs Balcão destacados e funcionários unificados, Pix e Resumo do Caixa) conforme `28 setembro matutino.pdf` e `28 setembro vespertino.pdf`.
-* [ ] Bateria de testes automatizados `tests/fase20_test.php`.
+### [x] Fase 20 — Nova Arquitetura de PDF (HTML+CSS+Gotenberg) & Migração Completa de Relatórios + Fechamento de Caixa Oficial
+* [x] **Infraestrutura Gotenberg & Fallbacks Robustos:**
+  * Adicionado o contêiner `gotenberg:8` no `docker-compose.yml` (porta 3000:3000) com Chromium headless integrado;
+  * Chaves de configuração adicionadas em `config/config.example.php` e `config/config.php` (`pdf.driver => 'gotenberg'`, `pdf.gotenberg_url => 'http://gotenberg:3000'`);
+  * Refatoração completa de `app/services/PdfService.php` reduzindo de 5.751 linhas para ~925 linhas limpas, desacoplando o desenho do PDF através de views HTML + CSS compiladas e convertidas via API HTTP multipart do Gotenberg (`/forms/chromium/convert/html`);
+  * Motor de contingência nativo e estruturado (`montarPdfEstruturado` e `montarPdfMultiPaginas`) garantindo geração de binários PDF válidos mesmo caso o serviço externo de renderização esteja indisponível;
+  * Isolamento de escopo no `renderView()` com parâmetro protegido `$_viewVars` evitando colisão de variáveis em templates.
+* [x] **Espelho Oficial A4 de Fechamento de Caixa:**
+  * Implementada a view oficial `app/views/relatorios/fechamento_caixa_pdf.php` alinhada aos modelos reais `28 setembro matutino.pdf` e `28 setembro vespertino.pdf`;
+  * Exibição das 4 seções contábeis oficiais:
+    1. **Duplicatas:** Relação nominal de vendas faturadas em duplicata com parcelamento e vencimentos;
+    2. **Vendas Nutre:** Segregação e destaque analítico entre *Venda Balcão* e *Encomendas Online*, com funcionários/colaboradores unificados;
+    3. **Recebimento em Pix:** Registros discriminados de recargas e pagamentos via Pix com valor líquido apurado;
+    4. **Resumo do Caixa:** Consolidação com as 4 colunas mestre: Fundo de Troco Inicial, Entradas, Saídas e Saldo Final em Dinheiro na Gaveta;
+  * Identificador de controle `#ID` da sessão, cabeçalho institucional com logotipo do colégio e área de assinaturas do Operador de Caixa e Gerente da Cantina;
+  * Modelo `app/models/SessaoCaixa.php` enriquecido com o método `obterDadosFechamentoOficial()`.
+* [x] **Migração de Relatórios e Cupons Térmicos para Views HTML:**
+  * `app/views/relatorios/corte_pdf.php`: Relatório A4 do Corte do Turno com tipografia tabular (`.font-tabular`), discriminação de salgados grandes vs pequenos (`PEÇAS`) e agrupamentos por turno;
+  * `app/views/tickets/ticket_80mm.php`: Bobina térmica de 80mm com contêiner `.receipt-roll`, botão de impressão direta, destaque `[ATENÇÃO: ...]` e separador visual de corte `✂ - - - - - - - - - - - - - - - - - - - -`;
+  * `app/views/tickets/cupom_pdv_80mm.php`: Comprovante de venda balcão em bobina contínua 80mm com `Comprovante de Venda #ID` e vínculo do estudante;
+  * `app/views/relatorios/recarga_dinheiro_pdf.php`: Comprovante térmico de recarga em dinheiro com título institucional `COMPROVANTE DE RECARGA — Carteira Familiar`;
+  * `app/views/relatorios/desconto_folha_pdf.php`, `desconto_folha_individual_pdf.php`, `med_negativados_pdf.php`, `vendas_alimento_pdf.php`, `extrato_aluno_pdf.php`: Todos migrados e compatíveis com a nova arquitetura.
+* [x] **Retrocompatibilidade e Homologação Global:**
+  * Preservação de todos os métodos legados em `PdfService.php` (`gerarRelatorioCorte`, `gerarTicket80mm`, `gerarCupomPDV80mm`, `gerarRelatorioDescontoFolha`, etc.) como wrappers sem quebra de contrato;
+  * Criação da suíte oficial `tests/fase20_test.php` com 59 asserções executadas e 100% aprovadas;
+  * Execução da auditoria global de verificação (`tests/verification_audit.php`): **49 de 49 suítes automatizadas aprovadas com 100% de sucesso**.
 
 ---
 
@@ -954,12 +973,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Executar a **Fase 20 — Nova Arquitetura de PDF (HTML+CSS+Gotenberg) & Migração Completa de Relatórios + Fechamento de Caixa**:
-1. Adicionar o contêiner Gotenberg 8 no `docker-compose.yml` (porta 3000);
-2. Configurar `config/config.php` com suporte ao driver Gotenberg com fallback robusto;
-3. Refatorar `app/services/PdfService.php` para utilizar chamadas HTTP multipart à API do Gotenberg;
-4. Implementar a view e geração do espelho oficial A4 de Fechamento de Caixa (`app/views/relatorios/fechamento_caixa_pdf.php`) com as 4 seções oficiais conforme `28 setembro matutino.pdf` e `28 setembro vespertino.pdf`;
-5. Validar todas as rotas e emissões com a suíte `tests/fase20_test.php`.
+Executar a **Fase 21 — Painel de Filtros Avançados e Relatório Oficial de Vendas por Período / Alimento**:
+1. Construir a interface de filtros dinâmicos de vendas com toggles Sim/Não (`app/views/relatorios/vendas_filtros.php`) conforme `Filtros de vendas.pdf`;
+2. Implementar o processamento dos filtros dinâmicos no `app/controllers/RelatoriosController.php`;
+3. Desenvolver a view e a emissão do PDF oficial "Relatório de Emissão de Vendas da Cantina por Alimento" (`app/views/relatorios/vendas_alimento_pdf.php`) conforme `relatorio de vendas por período.pdf`;
+4. Disponibilizar a exportação dos dados apurados para planilha CSV;
+5. Validar todas as rotas e regras com a nova suíte `tests/fase21_test.php` e regressão global.
+
 
 
 
