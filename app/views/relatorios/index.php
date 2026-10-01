@@ -72,7 +72,7 @@ $baseUrl = $baseUrl ?? '';
 
     <!-- Diretório de Relatórios em Cards Corporativos com Padrão Visual Oficial -->
     <div class="row g-3 g-xl-4">
-        <!-- Relatório 1: Extrato Analítico do Aluno -->
+        <!-- Relatório 1: Extrato de Consumo do Aluno -->
         <div class="col-12 col-md-6 col-lg-4">
             <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
                 <div>
@@ -80,13 +80,13 @@ $baseUrl = $baseUrl ?? '';
                         <span class="text-microcopy text-uppercase fw-semibold text-secondary">Atendimento & Famílias</span>
                         <span class="code-tag font-tabular">PDF A4 + Cupom</span>
                     </div>
-                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Extrato Analítico do Aluno</h2>
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Extrato de Consumo do Aluno</h2>
                     <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
                         Histórico detalhado de recargas (Pix/Dinheiro) e consumo de itens linha a linha, com saldo da carteira, alérgenos e espelho para impressão imediata.
                     </p>
                 </div>
                 <div class="d-flex gap-2 pt-3 border-top mt-auto">
-                    <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
                         Acessar Extrato
                     </a>
                 </div>

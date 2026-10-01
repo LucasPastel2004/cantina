@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Fase 22 — Extrato Analítico de Consumo do Aluno (Filtros, PDF A4 e Portal da Família)
 * **Status da Fase 22:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 22 de 24 Fases Concluídas
-* **Última Atualização:** 2026-09-30 13:15:00 (Implementação e homologação integral do Extrato Analítico de Consumo do Aluno: 1) Tela de filtros com abas 'Filtros' e 'Leiaute', suporte a 'Emitir apenas saldo do Aluno' e 'Considerar saldo apenas no período', autocomplete flutuante de alunos e atalhos rápidos de período conforme diretrizes do guideline oficial; 2) Espelho de impressão e PDF A4 timbrado 'Extrato de Consumo do Aluno' fiel ao modelo oficial com saldo progressivo linha a linha, linha de 'Saldo inicial' anterior ao período e rodapé de 'Total gasto no período'; 3) Extrato analítico no Portal da Família com seleção de filhos/dependentes, validação estrita de titularidade LGPD e botões para impressão e download de PDF; 4) Exportação em planilha CSV com delimitador ';' e BOM UTF-8; 5) Suíte oficial `tests/fase22_test.php` 100% aprovada com 80/80 asserções e regressão da Fase 21 100% aprovada).
+* **Última Atualização:** 2026-10-01 08:15:00 (Refinamento da Fase 22 conforme solicitação do usuário: 1) Simplificação da view `app/views/relatorios/extrato_aluno.php` com remoção total das abas 'Filtros/Leiaute' e eliminação dos botões de alternância/toggles Sim/Não, adotando formulário de pesquisa direto e limpo com autocomplete flutuante e atalhos rápidos de período; 2) Centralização do Extrato na Central de Relatórios Gerenciais (`app/views/relatorios/index.php`) via Card dedicado 'Extrato de Consumo do Aluno' com link para `/relatorios/extrato-aluno`; 3) Remoção do link solto da seção Operacional da sidebar e ajuste de `activeMenu` para manter 'Relatórios Gerenciais' em destaque; 4) Suítes de testes `tests/fase22_test.php` e `tests/sidebar_visibility_test.php` 100% aprovadas).
 
 
 
@@ -977,12 +977,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ### [x] Fase 22 — Extrato Analítico de Consumo do Aluno (Filtros, PDF A4 e Portal da Família)
 * [x] **Painel de Filtros e Opções de Leiaute:**
-  * View operacional `app/views/relatorios/extrato_aluno.php` atualizada com o padrão corporativo Anti-Slop de alta densidade;
-  * Abas funcionais "Filtros" e "Leiaute" inspiradas no guideline oficial `filtro Extrato Consumo Aluno.pdf`;
-  * Alternadores segmentados Sim/Não para "Emitir apenas saldo do Aluno" (modo sintético executivo) e "Considerar saldo apenas no período" (inicialização do saldo contábil em R$ 0,00);
-  * Autocomplete flutuante de alunos por nome ou matrícula com requisições assíncronas via `/relatorios/buscar-alunos-ajax`;
-  * Atalhos rápidos de período ("Hoje", "Esta Semana", "Este Mês", "Mês Anterior");
-  * Menu dropdown corporativo "Emitir" com opções para "Visualizar / Imprimir (A4)", "Baixar em PDF (A4)" e "Exportar Planilha (CSV)".
+  * View operacional `app/views/relatorios/extrato_aluno.php` simplificada e limpa com o padrão corporativo Anti-Slop de alta densidade:
+    * Formulário direto de pesquisa sem abas ou alternadores visuais ("Filtros/Leiaute" e toggles Sim/Não removidos a pedido);
+    * Autocomplete flutuante de alunos por nome ou matrícula com requisições assíncronas via `/relatorios/buscar-alunos-ajax`;
+    * Filtro opcional por turma escolar;
+    * Atalhos rápidos de período ("Hoje", "Esta Semana", "Este Mês", "Mês Anterior");
+    * Menu dropdown corporativo "Emitir" com opções para "Visualizar / Imprimir (A4)", "Baixar em PDF (A4)" e "Exportar Planilha (CSV)";
+    * Card exclusivo e destacado na Central de Relatórios Gerenciais (`/relatorios`) apontando para `/relatorios/extrato-aluno`, com destaque do menu "Relatórios Gerenciais" na barra lateral e remoção do link da seção operacional.
 * [x] **Motor Contábil de Saldo Progressivo no Backend:**
   * Método `obterDadosExtratoAluno()` em `app/controllers/RelatoriosController.php` refatorado e enriquecido:
     * Apuração precisa do saldo inicial anterior à data inicial com base no histórico de transações da carteira do responsável;

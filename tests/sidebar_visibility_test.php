@@ -141,8 +141,8 @@ assertCondition(
     str_contains($htmlOperador, '/operacional/pdv') &&
     str_contains($htmlOperador, '/operacional/caixa') &&
     str_contains($htmlOperador, '/operacional/tickets') &&
-    str_contains($htmlOperador, '/operacional/extrato-aluno'),
-    'Módulos operacionais (Corte, PDV, Caixa, Tickets, Extrato) visíveis normalmente para Operador',
+    str_contains($htmlOperador, '/operacional/estornos'),
+    'Módulos operacionais (Corte, PDV, Caixa, Tickets, Estornos) visíveis normalmente para Operador',
     $testsPassed,
     $testsFailed
 );

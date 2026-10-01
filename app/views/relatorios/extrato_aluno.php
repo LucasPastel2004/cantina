@@ -48,7 +48,7 @@ $linhas = $dadosExtrato['linhas'] ?? ($dadosExtrato['movimentacoes'] ?? []);
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="btnDropdownEmitir" style="font-size: 13px;">
                     <li>
                         <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
-                           href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno/imprimir?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&apenas_saldo=<?php echo $apenasSaldo ? 'sim' : 'nao'; ?>&saldo_apenas_periodo=<?php echo $saldoApenasPeriodo ? 'sim' : 'nao'; ?>" 
+                           href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno/imprimir?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
                            target="_blank" 
                            onclick="window.open(this.href, '_blank'); return false;">
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-primary"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
@@ -57,7 +57,7 @@ $linhas = $dadosExtrato['linhas'] ?? ($dadosExtrato['movimentacoes'] ?? []);
                     </li>
                     <li>
                         <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
-                           href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno/pdf?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&apenas_saldo=<?php echo $apenasSaldo ? 'sim' : 'nao'; ?>&saldo_apenas_periodo=<?php echo $saldoApenasPeriodo ? 'sim' : 'nao'; ?>">
+                           href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno/pdf?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>">
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-danger"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
                             Baixar em PDF (A4)
                         </a>
@@ -65,7 +65,7 @@ $linhas = $dadosExtrato['linhas'] ?? ($dadosExtrato['movimentacoes'] ?? []);
                     <li><hr class="dropdown-divider my-1"></li>
                     <li>
                         <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
-                           href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno/csv?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&apenas_saldo=<?php echo $apenasSaldo ? 'sim' : 'nao'; ?>&saldo_apenas_periodo=<?php echo $saldoApenasPeriodo ? 'sim' : 'nao'; ?>">
+                           href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno/csv?aluno_id=<?php echo (int)$aluno['id']; ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>">
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-success"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/><path d="M4.5 12.5h7v-1h-7v1zm0-2h7v-1h-7v1zm0-2h7v-1h-7v1z"/></svg>
                             Exportar Planilha (CSV)
                         </a>
@@ -76,153 +76,71 @@ $linhas = $dadosExtrato['linhas'] ?? ($dadosExtrato['movimentacoes'] ?? []);
     </div>
 </div>
 
-<!-- Card de Filtros e Opções de Leiaute (Estilo Escolar Manager / filtro Extrato Consumo Aluno.pdf) -->
+<!-- Card de Filtros de Pesquisa -->
 <div class="card-enterprise card-overflow-visible mb-4" style="overflow: visible !important; position: relative; z-index: 30;">
-    <!-- Abas: Filtros vs Leiaute -->
-    <div class="card-enterprise-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
-        <ul class="nav nav-tabs card-header-tabs m-0 border-0" id="tabsExtrato">
-            <li class="nav-item">
-                <a class="nav-link <?php echo ($abaAtiva === 'filtros') ? 'active font-weight-bold text-primary' : 'text-secondary'; ?> py-2 px-3 d-inline-flex align-items-center gap-1.5" 
-                   href="#tab-filtros" 
-                   onclick="alternarAba('filtros'); return false;" 
-                   id="tab-filtros">
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/></svg>
-                    Filtros
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link <?php echo ($abaAtiva === 'leiaute') ? 'active font-weight-bold text-primary' : 'text-secondary'; ?> py-2 px-3 d-inline-flex align-items-center gap-1.5" 
-                   href="#tab-leiaute" 
-                   onclick="alternarAba('leiaute'); return false;" 
-                   id="tab-leiaute">
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.886 2.215 2.214-.885L4.5 11.5h-.5a.5.5 0 0 1-.5-.5v-.5h-.5a.5.5 0 0 1-.5-.5v-.5h-.454l-.454-.454z"/></svg>
-                    Leiaute
-                </a>
-            </li>
-        </ul>
-        <span class="text-secondary text-microcopy d-none d-md-block">
-            Padrão de emissão: Sistema Cantina Web
-        </span>
-    </div>
-
-    <div class="card-enterprise-body" style="overflow: visible !important;">
+    <div class="card-enterprise-body p-3" style="overflow: visible !important;">
         <form action="<?php echo $baseUrl; ?>/relatorios/extrato-aluno" method="GET" id="formExtratoAluno" style="position: relative; overflow: visible !important;">
-            <input type="hidden" name="aba" id="inputAbaAtiva" value="<?php echo htmlspecialchars($abaAtiva); ?>">
+            <div class="row g-3 align-items-end">
+                <!-- Localizar Aluno com Autocomplete -->
+                <div class="col-12 col-md-5" style="position: relative; z-index: 40;">
+                    <label for="aluno_busca" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">
+                        Localizar Aluno (Nome ou Matrícula)
+                    </label>
+                    <div class="search-input-wrapper position-relative" style="position: relative;">
+                        <span class="search-icon">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+                        </span>
+                        <input type="text" id="aluno_busca" name="aluno_busca" class="form-control form-control-sm" style="padding-left: 36px !important;" placeholder="Digite para buscar aluno..." autocomplete="off" value="<?php echo htmlspecialchars($aluno['nome'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="hidden" name="aluno_id" id="hiddenAlunoId" value="<?php echo (int)($alunoId ?? 0); ?>">
 
-            <!-- Conteúdo da Aba Filtros -->
-            <div id="secao-filtros" style="<?php echo ($abaAtiva === 'leiaute') ? 'display: none;' : 'display: block;'; ?>">
-                <div class="row g-3 align-items-end">
-                    <!-- Localizar Aluno com Autocomplete -->
-                    <div class="col-12 col-md-5" style="position: relative; z-index: 40;">
-                        <label for="aluno_busca" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">
-                            Localizar Aluno (Nome ou Matrícula)
-                        </label>
-                        <div class="search-input-wrapper position-relative" style="position: relative;">
-                            <span class="search-icon">
-                                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
-                            </span>
-                            <input type="text" id="aluno_busca" name="aluno_busca" class="form-control form-control-sm" style="padding-left: 36px !important;" placeholder="Digite para buscar aluno..." autocomplete="off" value="<?php echo htmlspecialchars($aluno['nome'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                            <input type="hidden" name="aluno_id" id="hiddenAlunoId" value="<?php echo (int)($alunoId ?? 0); ?>">
-
-                            <!-- Dropdown flutuante de Autocomplete -->
-                            <div id="autocompleteDropdown" class="list-group position-absolute rounded shadow-lg d-none" 
-                                 style="top: calc(100% + 4px); left: 0; right: 0; width: 100%; z-index: 1080; max-height: 280px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2), 0 8px 10px -6px rgba(15, 23, 42, 0.12) !important;">
-                            </div>
+                        <!-- Dropdown flutuante de Autocomplete -->
+                        <div id="autocompleteDropdown" class="list-group position-absolute rounded shadow-lg d-none" 
+                             style="top: calc(100% + 4px); left: 0; right: 0; width: 100%; z-index: 1080; max-height: 280px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2), 0 8px 10px -6px rgba(15, 23, 42, 0.12) !important;">
                         </div>
-                    </div>
-
-                    <!-- Filtro Opcional de Turma -->
-                    <div class="col-12 col-md-3">
-                        <label for="selectTurma" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Turma (Opcional)</label>
-                        <select name="turma_id" id="selectTurma" class="form-select form-select-sm">
-                            <option value="">Todas as Turmas...</option>
-                            <?php foreach ($turmas as $t): ?>
-                                <option value="<?php echo (int)$t['id']; ?>" <?php echo ($turmaId === (int)$t['id']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($t['serie'] . ' ' . $t['nome_turma'] . ' (' . ucfirst($t['turno']) . ')'); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <!-- Período: Data Inicial -->
-                    <div class="col-6 col-md-2">
-                        <label for="dataInicio" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Data Inicial</label>
-                        <input type="date" name="data_inicio" id="dataInicio" class="form-control form-control-sm font-tabular" value="<?php echo htmlspecialchars($dataInicio, ENT_QUOTES, 'UTF-8'); ?>">
-                    </div>
-
-                    <!-- Período: Data Final -->
-                    <div class="col-6 col-md-2">
-                        <label for="dataFim" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Data Final</label>
-                        <input type="date" name="data_fim" id="dataFim" class="form-control form-control-sm font-tabular" value="<?php echo htmlspecialchars($dataFim, ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                 </div>
 
-                <!-- Botões Rápidos de Período -->
-                <div class="d-flex align-items-center gap-1.5 mt-3 pt-2 border-top flex-wrap">
+                <!-- Filtro Opcional de Turma -->
+                <div class="col-12 col-md-3">
+                    <label for="selectTurma" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Turma (Opcional)</label>
+                    <select name="turma_id" id="selectTurma" class="form-select form-select-sm">
+                        <option value="">Todas as Turmas...</option>
+                        <?php foreach ($turmas as $t): ?>
+                            <option value="<?php echo (int)$t['id']; ?>" <?php echo ($turmaId === (int)$t['id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($t['serie'] . ' ' . $t['nome_turma'] . ' (' . ucfirst($t['turno']) . ')'); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Período: Data Inicial -->
+                <div class="col-6 col-md-2">
+                    <label for="dataInicio" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Data Inicial</label>
+                    <input type="date" name="data_inicio" id="dataInicio" class="form-control form-control-sm font-tabular" value="<?php echo htmlspecialchars($dataInicio, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+
+                <!-- Período: Data Final -->
+                <div class="col-6 col-md-2">
+                    <label for="dataFim" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Data Final</label>
+                    <input type="date" name="data_fim" id="dataFim" class="form-control form-control-sm font-tabular" value="<?php echo htmlspecialchars($dataFim, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
+
+            <!-- Botões Rápidos de Período e Botão de Filtrar -->
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-1.5 flex-wrap">
                     <span class="text-secondary text-microcopy me-1">Atalhos de Período:</span>
                     <button type="button" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2" style="font-size: 11px;" data-periodo="hoje" onclick="definirPeriodo('hoje')">Hoje</button>
                     <button type="button" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2" style="font-size: 11px;" data-periodo="semana" onclick="definirPeriodo('semana')">Esta Semana</button>
                     <button type="button" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2" style="font-size: 11px;" data-periodo="mes" onclick="definirPeriodo('mes_atual')">Este Mês</button>
                     <button type="button" class="btn btn-enterprise btn-secondary btn-sm py-0.5 px-2" style="font-size: 11px;" data-periodo="mes_anterior" onclick="definirPeriodo('mes_anterior')">Mês Anterior</button>
                 </div>
-            </div>
-
-            <!-- Conteúdo da Aba Leiaute (Conforme filtro Extrato Consumo Aluno.pdf) -->
-            <div id="secao-leiaute" style="<?php echo ($abaAtiva === 'leiaute') ? 'display: block;' : 'display: none;'; ?>">
-                <div class="row g-4">
-                    <!-- Opção 1: Emitir apenas saldo do Aluno -->
-                    <div class="col-12 col-md-6">
-                        <div class="p-3 border rounded bg-light h-100">
-                            <label class="form-label text-microcopy text-uppercase font-weight-bold text-secondary d-block mb-1">
-                                Emitir apenas saldo do Aluno
-                            </label>
-                            <p class="text-muted text-microcopy mb-2">
-                                Se marcado como <strong>Sim</strong>, omite a listagem analítica dos itens consumidos e emite um demonstrativo executivo com o saldo inicial, créditos, total consumido e saldo atual.
-                            </p>
-                            <div class="btn-group w-100" role="group">
-                                <input type="radio" class="btn-check" name="apenas_saldo" id="apenasSaldoSim" value="sim" <?php echo $apenasSaldo ? 'checked' : ''; ?>>
-                                <label class="btn btn-outline-primary btn-sm" for="apenasSaldoSim">Sim</label>
-
-                                <input type="radio" class="btn-check" name="apenas_saldo" id="apenasSaldoNao" value="nao" <?php echo !$apenasSaldo ? 'checked' : ''; ?>>
-                                <label class="btn btn-outline-primary btn-sm" for="apenasSaldoNao">Não</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Opção 2: Considerar saldo apenas no período -->
-                    <div class="col-12 col-md-6">
-                        <div class="p-3 border rounded bg-light h-100">
-                            <label class="form-label text-microcopy text-uppercase font-weight-bold text-secondary d-block mb-1">
-                                Considerar saldo apenas no período
-                            </label>
-                            <p class="text-muted text-microcopy mb-2">
-                                Se marcado como <strong>Sim</strong>, inicializa o saldo inicial em R$ 0,00 e apura estritamente as movimentações do período selecionado, sem carregar o saldo anterior histórico.
-                            </p>
-                            <div class="btn-group w-100" role="group">
-                                <input type="radio" class="btn-check" name="saldo_apenas_periodo" id="saldoApenasPeriodoSim" value="sim" <?php echo $saldoApenasPeriodo ? 'checked' : ''; ?>>
-                                <label class="btn btn-outline-primary btn-sm" for="saldoApenasPeriodoSim">Sim</label>
-
-                                <input type="radio" class="btn-check" name="saldo_apenas_periodo" id="saldoApenasPeriodoNao" value="nao" <?php echo !$saldoApenasPeriodo ? 'checked' : ''; ?>>
-                                <label class="btn btn-outline-primary btn-sm" for="saldoApenasPeriodoNao">Não</label>
-                            </div>
-                        </div>
-                    </div>
+                <div>
+                    <button type="submit" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5 px-3">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+                        Filtrar / Carregar Extrato
+                    </button>
                 </div>
-            </div>
-
-            <!-- Botão de Submissão do Formulário -->
-            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                <div class="text-secondary text-microcopy">
-                    <?php if ($aluno): ?>
-                        Visualizando: <strong><?php echo htmlspecialchars($aluno['nome']); ?></strong> (Matrícula: <?php echo htmlspecialchars($aluno['matricula']); ?>)
-                    <?php else: ?>
-                        Nenhum aluno carregado. Digite o nome ou matrícula e selecione no dropdown.
-                    <?php endif; ?>
-                </div>
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5 px-3">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
-                    Filtrar / Carregar Extrato
-                </button>
             </div>
         </form>
     </div>
@@ -463,35 +381,6 @@ $linhas = $dadosExtrato['linhas'] ?? ($dadosExtrato['movimentacoes'] ?? []);
 </div>
 
 <script>
-// Controle das abas Filtros vs Leiaute
-function alternarAba(nomeAba) {
-    const tabFiltros = document.getElementById('tabLinkFiltros');
-    const tabLeiaute = document.getElementById('tabLinkLeiaute');
-    const secaoFiltros = document.getElementById('secao-filtros');
-    const secaoLeiaute = document.getElementById('secao-leiaute');
-    const inputAba = document.getElementById('inputAbaAtiva');
-
-    if (nomeAba === 'leiaute') {
-        tabFiltros.classList.remove('active', 'font-weight-bold', 'text-primary');
-        tabFiltros.classList.add('text-secondary');
-        tabLeiaute.classList.add('active', 'font-weight-bold', 'text-primary');
-        tabLeiaute.classList.remove('text-secondary');
-
-        secaoFiltros.style.display = 'none';
-        secaoLeiaute.style.display = 'block';
-        if (inputAba) inputAba.value = 'leiaute';
-    } else {
-        tabLeiaute.classList.remove('active', 'font-weight-bold', 'text-primary');
-        tabLeiaute.classList.add('text-secondary');
-        tabFiltros.classList.add('active', 'font-weight-bold', 'text-primary');
-        tabFiltros.classList.remove('text-secondary');
-
-        secaoLeiaute.style.display = 'none';
-        secaoFiltros.style.display = 'block';
-        if (inputAba) inputAba.value = 'filtros';
-    }
-}
-
 // Atalhos rápidos de período
 function definirPeriodo(tipo) {
     const hoje = new Date();

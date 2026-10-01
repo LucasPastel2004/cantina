@@ -90,12 +90,6 @@ $isAdmin = ($userRole === 'administrador');
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="<?php echo $baseUrl; ?>/operacional/extrato-aluno" class="nav-link <?php echo ($activeMenu === 'extrato_aluno') ? 'active' : ''; ?>">
-                        <span class="nav-bullet">●</span>
-                        <span class="nav-label">Extrato do Aluno</span>
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a href="<?php echo $baseUrl; ?>/operacional/estornos" class="nav-link <?php echo ($activeMenu === 'estornos') ? 'active' : ''; ?>">
                         <span class="nav-bullet">●</span>
                         <span class="nav-label">Estorno de Vendas</span>

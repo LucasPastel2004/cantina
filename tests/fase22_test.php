@@ -127,26 +127,21 @@ class Fase22Test
     }
 
     /**
-     * 2. Validação da interface do filtro com abas Filtros e Leiaute
+     * 2. Validação da interface de filtros operacionais (modo direto sem abas e acesso via Hub)
      */
     private function testarFiltrosEAbasLayout(): void
     {
-        echo "2. Validando interface de filtros operacionais (abas e toggles do guideline)...\n";
+        echo "2. Validando interface de filtros operacionais (modo direto sem abas e acesso via Hub)...\n";
 
         $viewFile = __DIR__ . '/../app/views/relatorios/extrato_aluno.php';
         $this->assert(file_exists($viewFile), "Arquivo da view app/views/relatorios/extrato_aluno.php existe.");
 
         $viewContent = file_get_contents($viewFile);
 
-        // Abas
-        $this->assert(str_contains($viewContent, 'id="tab-filtros"'), "Aba Filtros presente na interface.");
-        $this->assert(str_contains($viewContent, 'id="tab-leiaute"'), "Aba Leiaute presente na interface.");
-
-        // Opções da aba Leiaute conforme guideline oficial
-        $this->assert(str_contains($viewContent, 'Emitir apenas saldo do Aluno'), "Texto 'Emitir apenas saldo do Aluno' presente.");
-        $this->assert(str_contains($viewContent, 'name="apenas_saldo"'), "Input apenas_saldo presente.");
-        $this->assert(str_contains($viewContent, 'Considerar saldo apenas no período'), "Texto 'Considerar saldo apenas no período' presente.");
-        $this->assert(str_contains($viewContent, 'name="saldo_apenas_periodo"'), "Input saldo_apenas_periodo presente.");
+        // Interface direta sem abas e sem toggles de leiaute (conforme refinamento do usuário)
+        $this->assert(!str_contains($viewContent, 'id="tab-filtros"'), "Abas removidas em favor de formulário direto e limpo.");
+        $this->assert(!str_contains($viewContent, 'id="tab-leiaute"'), "Aba Leiaute removida da interface.");
+        $this->assert(!str_contains($viewContent, 'name="apenas_saldo"'), "Toggles de leiaute suprimidos do formulário de filtros.");
 
         // Atalhos de período e autocomplete de alunos
         $this->assert(str_contains($viewContent, 'data-periodo="hoje"'), "Atalho de período 'Hoje' presente.");
@@ -154,6 +149,13 @@ class Fase22Test
         $this->assert(str_contains($viewContent, 'data-periodo="mes"'), "Atalho de período 'Este Mês' presente.");
         $this->assert(str_contains($viewContent, 'data-periodo="mes_anterior"'), "Atalho de período 'Mês Anterior' presente.");
         $this->assert(str_contains($viewContent, 'id="aluno_busca"'), "Campo de busca com autocomplete flutuante presente.");
+
+        // Validação da Sidebar e Hub de Relatórios Gerenciais
+        $hubView = file_get_contents(__DIR__ . '/../app/views/relatorios/index.php');
+        $this->assert(str_contains($hubView, 'Extrato de Consumo do Aluno') && str_contains($hubView, '/relatorios/extrato-aluno'), "Hub de Relatórios Gerenciais contém Card dedicado para Extrato de Consumo do Aluno.");
+
+        $sidebarView = file_get_contents(__DIR__ . '/../app/views/layouts/sidebar.php');
+        $this->assert(!str_contains($sidebarView, '/operacional/extrato-aluno'), "Item Extrato do Aluno removido da seção Operacional da sidebar.");
     }
 
     /**

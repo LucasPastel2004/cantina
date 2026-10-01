@@ -150,7 +150,7 @@ class RelatoriosController extends Controller
 
         $this->render('relatorios/extrato_aluno', [
             'pageTitle'           => 'Extrato Analítico do Aluno',
-            'activeMenu'          => 'extrato_aluno',
+            'activeMenu'          => 'relatorios',
             'user'                => Auth::user(),
             'alunoId'             => $alunoId,
             'turmaId'             => $turmaId,
