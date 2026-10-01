@@ -192,6 +192,9 @@ class PdfService
         if (isset($opcoes['paperHeight'])) {
             $postFields['paperHeight'] = (string)$opcoes['paperHeight'];
         }
+        if (isset($opcoes['landscape'])) {
+            $postFields['landscape'] = $opcoes['landscape'] ? 'true' : 'false';
+        }
 
         $ch = curl_init();
         curl_setopt_array($ch, [

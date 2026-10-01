@@ -119,6 +119,12 @@ $isAdmin = ($userRole === 'administrador');
                         <span class="nav-label">Lançamento de Perdas</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="nav-link <?php echo ($activeMenu === 'movimentacoes_estoque') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Movimentações</span>
+                    </a>
+                </li>
                 <?php if ($isAdmin): ?>
                 <li class="nav-item">
                     <a href="<?php echo $baseUrl; ?>/estoque/importar-xml" class="nav-link <?php echo ($activeMenu === 'xml') ? 'active' : ''; ?>">

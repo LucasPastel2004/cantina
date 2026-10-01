@@ -2000,6 +2000,467 @@ class RelatoriosController extends Controller
             ]
         ];
     }
+
+    /**
+     * Tela de Opções de Leiaute e Filtros de Movimentações de Estoque (Fase 23)
+     * Conforme docs/alterações sistema guideline/filtro movimentação estoque.pdf
+     */
+    public function estoqueFiltros(): void
+    {
+        $categorias = Categoria::listarTodas();
+        $produtos = \App\Models\Produto::listarTodos();
+
+        $dataInicio = $_GET['data_inicio'] ?? date('Y-m-01');
+        $dataFim    = $_GET['data_fim'] ?? date('Y-m-d');
+        $categoriaId = (int)($_GET['categoria_id'] ?? 0);
+        $produtoId   = (int)($_GET['produto_id'] ?? 0);
+        $tipoMov     = trim($_GET['tipo_movimentacao'] ?? '');
+        $motivoPerda = trim($_GET['motivo_perda'] ?? '');
+
+        $formatoLeiaute    = in_array(strtolower($_GET['formato_leiaute'] ?? ''), ['paisagem', 'retrato']) ? strtolower($_GET['formato_leiaute']) : 'retrato';
+        $agruparGrupo      = ($_GET['agrupar_grupo'] ?? 'ocultar') === 'mostrar' ? 'mostrar' : 'ocultar';
+        $agruparProduto    = ($_GET['agrupar_produto'] ?? 'ocultar') === 'mostrar' ? 'mostrar' : 'ocultar';
+        $quebraPagina      = ($_GET['quebra_pagina'] ?? 'ocultar') === 'mostrar' ? 'mostrar' : 'ocultar';
+
+        $this->render('relatorios/estoque_filtros', [
+            'title'             => 'Emissão de Movimentações de Estoque — Colégio Monteiro Lobato',
+            'activeMenu'        => 'movimentacoes_estoque',
+            'categorias'        => $categorias,
+            'produtos'          => $produtos,
+            'filtros'           => [
+                'data_inicio'          => $dataInicio,
+                'data_fim'             => $dataFim,
+                'categoria_id'         => $categoriaId,
+                'produto_id'           => $produtoId,
+                'tipo_movimentacao'    => $tipoMov,
+                'motivo_perda'         => $motivoPerda,
+                'formato_leiaute'      => $formatoLeiaute,
+                'agrupar_centro_custo' => 'ocultar',
+                'agrupar_grupo'        => $agruparGrupo,
+                'agrupar_produto'      => $agruparProduto,
+                'quebra_pagina'        => $quebraPagina,
+            ]
+        ], 'admin');
+    }
+
+    /**
+     * Visualização em tela / Espelho HTML A4 de Movimentações de Estoque
+     */
+    public function estoqueMovimentacoes(): void
+    {
+        $dados = $this->obterDadosMovimentacoesEstoqueAvancadas($_GET);
+        $dados['baseUrl'] = $this->getBaseUrl();
+
+        echo PdfService::renderView('relatorios/estoque_movimentacoes_pdf', $dados);
+        exit;
+    }
+
+    /**
+     * Alias direto para visualização e impressão
+     */
+    public function estoqueMovimentacoesImprimir(): void
+    {
+        $this->estoqueMovimentacoes();
+    }
+
+    /**
+     * Geração e download de PDF oficial (Retrato ou Paisagem via Gotenberg/Chromium)
+     */
+    public function estoqueMovimentacoesPdf(): void
+    {
+        $dados = $this->obterDadosMovimentacoesEstoqueAvancadas($_GET);
+        $dados['baseUrl'] = $this->getBaseUrl();
+
+        $formato = $dados['formato_leiaute'] ?? 'retrato';
+        $isLandscape = ($formato === 'paisagem');
+
+        $html = PdfService::renderView('relatorios/estoque_movimentacoes_pdf', $dados);
+
+        // Dispara compilação via Gotenberg com preferência CSS e parâmetro landscape explícito
+        $pdf = PdfService::htmlToPdf($html, [
+            'landscape'         => $isLandscape,
+            'preferCssPageSize' => 'true',
+            'printBackground'   => 'true'
+        ]);
+
+        if ($pdf !== null && str_starts_with($pdf, '%PDF')) {
+            $dataInicio = preg_replace('/[^0-9\-]/', '', $dados['data_inicio'] ?? date('Y-m-d'));
+            $dataFim    = preg_replace('/[^0-9\-]/', '', $dados['data_fim'] ?? date('Y-m-d'));
+            $filename   = "relatorio_movimentacoes_estoque_{$dataInicio}_{$dataFim}.pdf";
+
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="' . $filename . '"');
+            header('Content-Length: ' . strlen($pdf));
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+
+            echo $pdf;
+            exit;
+        }
+
+        // Fallback defensivo caso Gotenberg esteja indisponível: renderiza espelho HTML para impressão
+        echo $html;
+        exit;
+    }
+
+    /**
+     * Exportação analítica de movimentações de estoque em planilha CSV
+     */
+    public function estoqueMovimentacoesCsv(): void
+    {
+        $dados = $this->obterDadosMovimentacoesEstoqueAvancadas($_GET);
+
+        $dataInicio = preg_replace('/[^0-9\-]/', '', $dados['data_inicio'] ?? date('Y-m-d'));
+        $dataFim    = preg_replace('/[^0-9\-]/', '', $dados['data_fim'] ?? date('Y-m-d'));
+        $filename   = "movimentacoes_estoque_{$dataInicio}_{$dataFim}.csv";
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: max-age=0, no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+
+        $output = fopen('php://output', 'w');
+
+        // Emite BOM UTF-8 para correta interpretação de acentos no Excel
+        fwrite($output, "\xEF\xBB\xBF");
+
+        // Cabeçalho institucional do Colégio
+        fputcsv($output, ['COLÉGIO MONTEIRO LOBATO — SISTEMA CANTINA WEB'], ';');
+        fputcsv($output, ['RELATÓRIO GERENCIAL DE MOVIMENTAÇÕES DE ESTOQUE'], ';');
+        fputcsv($output, ['PERÍODO:', $dados['periodo_oficial'], 'CENTRO DE CUSTO:', 'Cantina Geral', 'EMISSÃO:', date('d/m/Y H:i:s')], ';');
+        fputcsv($output, [], ';');
+
+        // Linha de cabeçalho das colunas
+        fputcsv($output, [
+            'Data',
+            'Hora',
+            'Centro de Custo',
+            'Grupo / Categoria',
+            'Código',
+            'Produto',
+            'Tipo de Movimentação',
+            'Entrada (un)',
+            'Saída (un)',
+            'Operador Responsável',
+            'Documento / NF',
+            'Justificativa / Motivo'
+        ], ';');
+
+        foreach ($dados['movimentacoes'] as $m) {
+            fputcsv($output, [
+                $m['data_formatada'],
+                $m['hora_formatada'],
+                $m['centro_custo'],
+                $m['categoria_nome'],
+                $m['produto_codigo'],
+                $m['produto_descricao'],
+                $m['tipo_label'],
+                $m['qtd_entrada'] > 0 ? $m['qtd_entrada'] : '',
+                $m['qtd_saida'] > 0 ? $m['qtd_saida'] : '',
+                $m['operador_nome'],
+                $m['documento_ref'],
+                $m['justificativa_completa']
+            ], ';');
+        }
+
+        // Totais no rodapé da planilha
+        fputcsv($output, [], ';');
+        fputcsv($output, [
+            'TOTAIS DO PERÍODO',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            $dados['totais']['total_entradas'],
+            $dados['totais']['total_saidas'],
+            'Balanço Líquido:',
+            ($dados['totais']['balanco_periodo'] >= 0 ? '+' : '') . $dados['totais']['balanco_periodo'] . ' un',
+            ''
+        ], ';');
+
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Processa e consolida as movimentações de estoque conforme filtros e leiaute
+     * 
+     * @param array $filtros Parâmetros de requisição ($_GET)
+     * @return array Matriz estruturada com agrupamentos, subtotais e totais
+     */
+    public function obterDadosMovimentacoesEstoqueAvancadas(array $filtros = []): array
+    {
+        $dataInicio = $filtros['data_inicio'] ?? date('Y-m-01');
+        $dataFim    = $filtros['data_fim'] ?? date('Y-m-d');
+
+        if ($dataInicio > $dataFim) {
+            $tmp = $dataInicio;
+            $dataInicio = $dataFim;
+            $dataFim = $tmp;
+        }
+
+        $formatoLeiaute = in_array(strtolower($filtros['formato_leiaute'] ?? ''), ['paisagem', 'retrato']) ? strtolower($filtros['formato_leiaute']) : 'retrato';
+        $agruparGrupo   = ($filtros['agrupar_grupo'] ?? 'ocultar') === 'mostrar';
+        $agruparProduto = ($filtros['agrupar_produto'] ?? 'ocultar') === 'mostrar';
+        $quebraPagina   = ($filtros['quebra_pagina'] ?? 'ocultar') === 'mostrar';
+
+        $categoriaId = (int)($filtros['categoria_id'] ?? 0);
+        $produtoId   = (int)($filtros['produto_id'] ?? 0);
+        $tipoMov     = trim($filtros['tipo_movimentacao'] ?? '');
+        $motivoPerda = trim($filtros['motivo_perda'] ?? '');
+
+        $pdo = \App\Core\Model::getPdo();
+
+        $sql = "
+            SELECT 
+                em.id,
+                em.produto_id,
+                em.tipo_movimentacao,
+                em.quantidade,
+                em.motivo_perda,
+                em.nota_fiscal_id,
+                em.operador_id,
+                em.justificativa,
+                em.created_at,
+                p.codigo_interno AS produto_codigo,
+                p.descricao AS produto_descricao,
+                p.tipo AS produto_tipo,
+                p.estoque_atual AS produto_estoque_atual,
+                c.id AS categoria_id,
+                c.nome AS categoria_nome,
+                c.ordem_exibicao AS categoria_ordem,
+                u.nome AS operador_nome,
+                u.usuario AS operador_usuario,
+                nf.numero_nota,
+                nf.razao_social_emitente
+            FROM estoque_movimentacoes em
+            INNER JOIN produtos p ON p.id = em.produto_id
+            INNER JOIN categorias c ON c.id = p.categoria_id
+            INNER JOIN usuarios u ON u.id = em.operador_id
+            LEFT JOIN notas_fiscais_xml nf ON nf.id = em.nota_fiscal_id
+            WHERE DATE(em.created_at) >= :data_inicio 
+              AND DATE(em.created_at) <= :data_fim
+        ";
+
+        $params = [
+            'data_inicio' => $dataInicio,
+            'data_fim'    => $dataFim
+        ];
+
+        if ($categoriaId > 0) {
+            $sql .= " AND p.categoria_id = :categoria_id";
+            $params['categoria_id'] = $categoriaId;
+        }
+
+        if ($produtoId > 0) {
+            $sql .= " AND em.produto_id = :produto_id";
+            $params['produto_id'] = $produtoId;
+        }
+
+        if (!empty($tipoMov)) {
+            $sql .= " AND em.tipo_movimentacao = :tipo_mov";
+            $params['tipo_mov'] = $tipoMov;
+        }
+
+        if (!empty($motivoPerda)) {
+            $sql .= " AND em.motivo_perda = :motivo_perda";
+            $params['motivo_perda'] = $motivoPerda;
+        }
+
+        // Ordenação inteligente conforme opções de agrupamento
+        if ($agruparGrupo) {
+            $sql .= " ORDER BY c.ordem_exibicao ASC, c.nome ASC, p.descricao ASC, em.created_at ASC";
+        } elseif ($agruparProduto) {
+            $sql .= " ORDER BY p.descricao ASC, em.created_at ASC";
+        } else {
+            $sql .= " ORDER BY em.created_at ASC, em.id ASC";
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $linhas = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $tiposEntrada = ['entrada_fornecedor', 'entrada_xml', 'aproveitamento_sobra', 'entrada_estorno'];
+
+        $labelsTipo = [
+            'entrada_fornecedor'   => 'Entrada por Fornecedor (Corte)',
+            'entrada_xml'          => 'Entrada via NF-e (XML)',
+            'aproveitamento_sobra' => 'Aproveitamento de Sobra',
+            'entrada_estorno'      => 'Reintegração por Estorno',
+            'saida_venda_avulsa'   => 'Saída Venda Balcão (PDV)',
+            'saida_encomenda'      => 'Saída Encomenda Cantina Web',
+            'saida_perda'          => 'Baixa por Perda / Descarte'
+        ];
+
+        $labelsMotivo = [
+            'avaria'          => 'Avaria / Descarte',
+            'vencimento'      => 'Vencimento',
+            'sobra_producao'  => 'Sobra de Produção / Não Retirado',
+            'ajuste_contagem' => 'Ajuste de Contagem'
+        ];
+
+        $movimentacoes = [];
+        $totalEntradas = 0;
+        $totalSaidas   = 0;
+        $totalPerdas   = 0;
+        $totalVendas   = 0;
+
+        foreach ($linhas as $row) {
+            $isEntrada = in_array($row['tipo_movimentacao'], $tiposEntrada, true);
+            $qtd = (int)$row['quantidade'];
+
+            $qtdEntrada = $isEntrada ? $qtd : 0;
+            $qtdSaida   = !$isEntrada ? $qtd : 0;
+
+            if ($isEntrada) {
+                $totalEntradas += $qtd;
+            } else {
+                $totalSaidas += $qtd;
+                if ($row['tipo_movimentacao'] === 'saida_perda') {
+                    $totalPerdas += $qtd;
+                } else {
+                    $totalVendas += $qtd;
+                }
+            }
+
+            // Descrição e detalhamento do documento
+            $docRef = '—';
+            if (!empty($row['numero_nota'])) {
+                $docRef = 'NF ' . $row['numero_nota'];
+            } elseif ($row['tipo_movimentacao'] === 'saida_encomenda') {
+                $docRef = 'Cantina Web';
+            } elseif ($row['tipo_movimentacao'] === 'saida_venda_avulsa') {
+                $docRef = 'PDV Balcão';
+            } elseif ($row['tipo_movimentacao'] === 'entrada_estorno') {
+                $docRef = 'Estorno';
+            }
+
+            // Justificativa e motivo
+            $justCompleta = trim($row['justificativa'] ?? '');
+            if (!empty($row['motivo_perda'])) {
+                $motivoTxt = $labelsMotivo[$row['motivo_perda']] ?? ucfirst($row['motivo_perda']);
+                $justCompleta = 'Motivo: ' . $motivoTxt . (!empty($justCompleta) ? ' — ' . $justCompleta : '');
+            } elseif (empty($justCompleta) && !empty($row['razao_social_emitente'])) {
+                $justCompleta = $row['razao_social_emitente'];
+            }
+
+            $tipoLabel = $labelsTipo[$row['tipo_movimentacao']] ?? ucfirst(str_replace('_', ' ', $row['tipo_movimentacao']));
+
+            $movimentacoes[] = [
+                'id'                    => (int)$row['id'],
+                'data_hora'             => $row['created_at'],
+                'data_formatada'        => date('d/m/Y', strtotime($row['created_at'])),
+                'hora_formatada'        => date('H:i', strtotime($row['created_at'])),
+                'centro_custo'          => 'Cantina Geral',
+                'categoria_id'          => (int)$row['categoria_id'],
+                'categoria_nome'        => $row['categoria_nome'],
+                'produto_id'            => (int)$row['produto_id'],
+                'produto_codigo'        => $row['produto_codigo'],
+                'produto_descricao'     => $row['produto_descricao'],
+                'produto_tipo'          => $row['produto_tipo'],
+                'tipo_movimentacao'     => $row['tipo_movimentacao'],
+                'tipo_label'            => $tipoLabel,
+                'is_entrada'            => $isEntrada,
+                'qtd_entrada'           => $qtdEntrada,
+                'qtd_saida'             => $qtdSaida,
+                'operador_nome'         => $row['operador_nome'],
+                'documento_ref'         => $docRef,
+                'justificativa_completa'=> $justCompleta
+            ];
+        }
+
+        // Agrupamento por Categoria / Grupo
+        $gruposCategoria = [];
+        if ($agruparGrupo) {
+            foreach ($movimentacoes as $m) {
+                $catId = $m['categoria_id'];
+                if (!isset($gruposCategoria[$catId])) {
+                    $gruposCategoria[$catId] = [
+                        'categoria_id'   => $catId,
+                        'categoria_nome' => $m['categoria_nome'],
+                        'itens'          => [],
+                        'total_entradas' => 0,
+                        'total_saidas'   => 0,
+                        'balanco'        => 0
+                    ];
+                }
+                $gruposCategoria[$catId]['itens'][] = $m;
+                $gruposCategoria[$catId]['total_entradas'] += $m['qtd_entrada'];
+                $gruposCategoria[$catId]['total_saidas']   += $m['qtd_saida'];
+                $gruposCategoria[$catId]['balanco']        = $gruposCategoria[$catId]['total_entradas'] - $gruposCategoria[$catId]['total_saidas'];
+            }
+        }
+
+        // Agrupamento por Produto
+        $gruposProduto = [];
+        if ($agruparProduto) {
+            foreach ($movimentacoes as $m) {
+                $prodId = $m['produto_id'];
+                if (!isset($gruposProduto[$prodId])) {
+                    $gruposProduto[$prodId] = [
+                        'produto_id'        => $prodId,
+                        'produto_codigo'    => $m['produto_codigo'],
+                        'produto_descricao' => $m['produto_descricao'],
+                        'categoria_nome'    => $m['categoria_nome'],
+                        'itens'             => [],
+                        'total_entradas'    => 0,
+                        'total_saidas'      => 0,
+                        'balanco'           => 0
+                    ];
+                }
+                $gruposProduto[$prodId]['itens'][] = $m;
+                $gruposProduto[$prodId]['total_entradas'] += $m['qtd_entrada'];
+                $gruposProduto[$prodId]['total_saidas']   += $m['qtd_saida'];
+                $gruposProduto[$prodId]['balanco']        = $gruposProduto[$prodId]['total_entradas'] - $gruposProduto[$prodId]['total_saidas'];
+            }
+        }
+
+        $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', strtotime($dataFim));
+
+        $catNome = 'Todas as Categorias';
+        if ($categoriaId > 0) {
+            $catObj = Categoria::buscarPorId($categoriaId);
+            if ($catObj) {
+                $catNome = $catObj['nome'];
+            }
+        }
+
+        $prodNome = 'Todos os Produtos';
+        if ($produtoId > 0) {
+            $prodObj = \App\Models\Produto::buscarPorId($produtoId);
+            if ($prodObj) {
+                $prodNome = "[{$prodObj['codigo_interno']}] {$prodObj['descricao']}";
+            }
+        }
+
+        return [
+            'periodo_oficial'          => $periodoOficial,
+            'data_inicio'              => $dataInicio,
+            'data_fim'                 => $dataFim,
+            'categoria_filtro'         => $catNome,
+            'produto_filtro'           => $prodNome,
+            'centro_custo'             => 'Cantina Geral',
+            'formato_leiaute'          => $formatoLeiaute,
+            'agrupar_grupo'            => $agruparGrupo,
+            'agrupar_produto'          => $agruparProduto,
+            'quebra_pagina'            => $quebraPagina,
+            'filtros'                  => $filtros,
+            'movimentacoes'            => $movimentacoes,
+            'grupos_categoria'         => array_values($gruposCategoria),
+            'grupos_produto'           => array_values($gruposProduto),
+            'totais'                   => [
+                'total_entradas'       => $totalEntradas,
+                'total_saidas'         => $totalSaidas,
+                'total_vendas'         => $totalVendas,
+                'total_perdas'         => $totalPerdas,
+                'balanco_periodo'      => ($totalEntradas - $totalSaidas),
+                'total_movimentacoes'  => count($movimentacoes)
+            ]
+        ];
+    }
 }
+
 
 

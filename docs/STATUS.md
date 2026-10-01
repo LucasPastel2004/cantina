@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 22 — Extrato Analítico de Consumo do Aluno (Filtros, PDF A4 e Portal da Família)
-* **Status da Fase 22:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 22 de 24 Fases Concluídas
-* **Última Atualização:** 2026-10-01 08:15:00 (Refinamento da Fase 22 conforme solicitação do usuário: 1) Simplificação da view `app/views/relatorios/extrato_aluno.php` com remoção total das abas 'Filtros/Leiaute' e eliminação dos botões de alternância/toggles Sim/Não, adotando formulário de pesquisa direto e limpo com autocomplete flutuante e atalhos rápidos de período; 2) Centralização do Extrato na Central de Relatórios Gerenciais (`app/views/relatorios/index.php`) via Card dedicado 'Extrato de Consumo do Aluno' com link para `/relatorios/extrato-aluno`; 3) Remoção do link solto da seção Operacional da sidebar e ajuste de `activeMenu` para manter 'Relatórios Gerenciais' em destaque; 4) Suítes de testes `tests/fase22_test.php` e `tests/sidebar_visibility_test.php` 100% aprovadas).
+* **Fase Atual:** Fase 23 — Relatório Gerencial de Movimentações de Estoque (Retrato e Paisagem)
+* **Status da Fase 23:** Concluída [x] (100% Homologada)
+* **Status Geral do Projeto:** 23 de 24 Fases Concluídas
+* **Última Atualização:** 2026-10-01 10:15:00 (Conclusão e homologação da Fase 23: 1) View de filtros e opções de leiaute `app/views/relatorios/estoque_filtros.php` implementando abas 'Filtro' e 'Leiaute' com opções de orientação Retrato/Paisagem, agrupamento por grupo/produto, quebra de página e centro de custo Cantina Geral conforme `filtro movimentação estoque.pdf`; 2) View oficial de emissão A4 e PDF `app/views/relatorios/estoque_movimentacoes_pdf.php` com suporte nativo a Paisagem e Retrato, cabeçalho escolar, subtotais e consolidação; 3) Métodos `estoqueFiltros`, `estoqueMovimentacoes`, `estoqueMovimentacoesPdf`, `estoqueMovimentacoesImprimir`, `estoqueMovimentacoesCsv` e `obterDadosMovimentacoesEstoqueAvancadas` em `RelatoriosController.php`; 4) Suporte a landscape em `PdfService.php` para Gotenberg; 5) Card no Hub de Relatórios e link na Sidebar sob Estoque; 6) Suíte `tests/fase23_test.php` com 77 asserções 100% aprovadas e regressões homologadas).
 
 
 
@@ -1018,11 +1018,57 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 23 — Relatório Gerencial de Movimentações de Estoque (Retrato e Paisagem)
-* [ ] Tela de opções de leiaute com seleção de orientação Retrato/Paisagem e agrupamentos dinâmicos conforme `filtro movimentação estoque.pdf`.
-* [ ] View e emissão do PDF A4 em orientações Retrato e Paisagem (`app/views/relatorios/estoque_movimentacoes_pdf.php`).
-* [ ] Apuração consolidada de entradas, saídas e perdas justificadas com centro de custo único ("Cantina Geral").
-* [ ] Bateria de testes automatizados `tests/fase23_test.php`.
+### [x] Fase 23 — Relatório Gerencial de Movimentações de Estoque (Retrato e Paisagem)
+* [x] **Painel de Opções de Leiaute e Filtros (`app/views/relatorios/estoque_filtros.php`):**
+  * Título oficial: `Emissão de Movimentações de Estoque`;
+  * Abas funcionais no topo: `Filtro` e `Leiaute` conforme o modelo do sistema escolar de referência em `docs/alterações sistema guideline/filtro movimentação estoque.pdf`;
+  * Aba `Filtro`:
+    * Seleção de período entre datas (Data Inicial e Data Final) com botões de atalho rápido ("Hoje", "Ontem", "Esta Semana", "Este Mês", "Mês Anterior");
+    * Filtro por Grupo de Produtos / Categoria;
+    * Filtro por Produto Específico com busca dinâmica reativa associada à categoria;
+    * Filtro por Tipo de Movimentação (Todas, Entradas por Fornecedor/XML, Saídas por Venda Balcão, Saídas por Encomenda Cantina Web, Baixas por Perda, Reintegrações por Estorno);
+    * Filtro por Motivo de Perda (Avaria/Descarte, Vencimento, Sobra de Produção, Ajuste de Contagem);
+    * Centro de Custo fixo e informativo: `Cantina Geral` (Unidade Escolar Monteiro Lobato);
+  * Aba `Leiaute`:
+    * `Formato do leiaute`: botões segmentados corporativos `Paisagem` / `Retrato` com classe `.btn-escolar-segment`;
+    * `Agrupamento por centro de custo`: botões `Mostrar` / `Ocultar` (inativo em 'Ocultar', centro único 'Cantina Geral');
+    * `Agrupamento por grupo de produtos`: botões `Mostrar` / `Ocultar` para agrupamento por categoria com subtotais;
+    * `Agrupamento por produto`: botões `Mostrar` / `Ocultar` para consolidação analítica item a item;
+    * `Quebra de página`: botões `Mostrar` / `Ocultar` para inserção de quebra física de página A4 antes de cada grupo;
+  * Barra de ferramentas de emissão com dropdown oficial `Emitir`:
+    * `Visualizar / Imprimir (A4)`: abertura de espelho HTML oficial para impressão via browser;
+    * `Baixar em PDF (A4)`: download do relatório oficial em PDF binário compilado pelo Gotenberg (Chromium);
+    * `Exportar Planilha (CSV)`: exportação de dados analíticos para Microsoft Excel.
+* [x] **Motor de Agregação e Processamento no Backend (`RelatoriosController.php`):**
+  * Implementação dos métodos `estoqueFiltros()`, `estoqueMovimentacoes()`, `estoqueMovimentacoesPdf()`, `estoqueMovimentacoesImprimir()`, `estoqueMovimentacoesCsv()` e `obterDadosMovimentacoesEstoqueAvancadas()`;
+  * Tratamento de ordenação dinâmico conforme o agrupamento ativo (por ordem de categoria, descrição do produto ou cronológico geral);
+  * Classificação automática entre Entradas (`entrada_fornecedor`, `entrada_xml`, `aproveitamento_sobra`, `entrada_estorno`) e Saídas (`saida_venda_avulsa`, `saida_encomenda`, `saida_perda`);
+  * Apuração consolidada de total de entradas, total de saídas, total de perdas e balanço líquido do período;
+  * Estruturação de arrays agrupados `grupos_categoria` e `grupos_produto` com subtotais de entradas, saídas e variação de saldo.
+* [x] **Espelho A4 Oficial e Emissão de PDF (`app/views/relatorios/estoque_movimentacoes_pdf.php`):**
+  * Suporte milimétrico às duas orientações CSS:
+    * **Paisagem (Landscape):** `@page { size: A4 landscape; margin: 8mm 10mm; }`, `.sheet-container { width: 280mm; min-height: 195mm; }`, com coluna de Centro de Custo inclusa;
+    * **Retrato (Portrait):** `@page { size: A4 portrait; margin: 8mm 10mm; }`, `.sheet-container { width: 200mm; min-height: 280mm; }`;
+  * Cabeçalho escolar oficial com logotipo circular oficial do Colégio Monteiro Lobato em base64 Data-URI, razão social, emissão e centro de custo;
+  * Faixa de parâmetros contendo período, grupo de produtos, produto e formato selecionado;
+  * Suporte completo a 3 cenários de exibição:
+    1. Agrupado por Grupo/Categoria com banners azuis corporativos e subtotais;
+    2. Agrupado por Produto com código, categoria e balanço específico do item;
+    3. Cronológico geral com todas as colunas alinhadas;
+  * Quebras de página físicas e lógicas (`.page-break { page-break-before: always; break-before: page; }`);
+  * Caixa consolidada de fechamento no rodapé com 4 indicadores: Total Entradas, Saídas por Vendas, Baixas por Perdas e Balanço Líquido do Período;
+  * Barra de controle superior `.no-print` (`Voltar aos Filtros`, `Imprimir Documento`, `Fechar Janela` inteligente).
+* [x] **Ajuste de Infraestrutura em `app/services/PdfService.php`:**
+  * Adicionado suporte ao parâmetro `'landscape'` no envio multipart ao Gotenberg 8 (`/forms/chromium/convert/html`), garantindo que o Chromium renderize perfeitamente documentos A4 horizontais.
+* [x] **Navegação e Roteamento:**
+  * 5 novas rotas registradas em `index.php` protegidas por RBAC (`ROLE_ADMINISTRADOR` e `ROLE_OPERADOR`): `/relatorios/estoque-filtros`, `/relatorios/estoque-movimentacoes`, `/relatorios/estoque-movimentacoes/pdf`, `/relatorios/estoque-movimentacoes/imprimir`, `/relatorios/estoque-movimentacoes/csv`;
+  * Adicionado Card Oficial "Movimentações de Estoque" no Hub da Central de Relatórios (`app/views/relatorios/index.php`);
+  * Adicionado link "Movimentações" na seção "Estoque" do menu lateral (`app/views/layouts/sidebar.php`).
+* [x] **Testes Automatizados e Auditoria de Regressão:**
+  * Criação da suíte oficial `tests/fase23_test.php` com **77 de 77 asserções aprovadas com 100% de sucesso**;
+  * Validação de compilação real de PDFs em Retrato (90 KB) e Paisagem (90 KB) via contêiner Gotenberg Chromium;
+  * Validação de integridade do arquivo CSV (BOM UTF-8, delimitador `;`, centro de custo Cantina Geral);
+  * Regressão das suítes das Fases 20 (71/71), 21 (99/99) e 22 (79/79) executadas e 100% aprovadas.
 
 ---
 
@@ -1038,11 +1084,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-Executar a **Fase 23 — Relatório Gerencial de Movimentações de Estoque (Retrato e Paisagem)**:
-1. Construir a tela de filtros e opções de leiaute com seleção de orientação Retrato/Paisagem conforme `filtro movimentação estoque.pdf`;
-2. Desenvolver a view e emissão do PDF A4 oficial de movimentações de estoque em orientações Retrato e Paisagem (`app/views/relatorios/estoque_movimentacoes_pdf.php`);
-3. Implementar o motor de apuração consolidada de entradas, saídas por consumo/venda e perdas operacionais com centro de custo padrão ("Cantina Geral");
-4. Criar e homologar a suíte de testes automatizados `tests/fase23_test.php` com regressão global.
+Executar a **Fase 24 — Módulo Financeiro de Despesas, DRE Gerencial Completo e Painel de Gráficos Interativos** (Última Fase do Projeto):
+1. Criar a Migration 027 para a tabela `despesas_operacionais` (categorias, vencimento, pagamento, valor, status e soft delete);
+2. Construir o CRUD de lançamentos de despesas operacionais da cantina;
+3. Desenvolver o motor de DRE gerencial com apuração de CMV, deduções, margem de contribuição e resultado líquido do exercício conforme os modelos oficiais da escola;
+4. Implementar a tela comparativa do DRE mês a mês e exportações em PDF e CSV;
+5. Integrar biblioteca de gráficos interativos locais (`assets/js/chart.min.js` ou SVG nativo de alta densidade) e consolidar os testes automatizados da Fase 24.
+
 
 
 

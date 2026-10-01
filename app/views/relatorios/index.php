@@ -203,5 +203,29 @@ $baseUrl = $baseUrl ?? '';
                 </div>
             </div>
         </div>
+
+        <!-- Relatório 7: Movimentações de Estoque (Fase 23) -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Estoque & Logística</span>
+                        <span class="code-tag font-tabular">Paisagem / Retrato</span>
+                    </div>
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Movimentações de Estoque</h2>
+                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
+                        Demonstrativo analítico de entradas (fornecedor/XML), saídas (balcão/online) e perdas com opções de leiaute Paisagem/Retrato, agrupamento por grupo/produto e Centro de Custo Cantina Geral.
+                    </p>
+                </div>
+                <div class="d-flex gap-2 pt-3 border-top mt-auto flex-wrap">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
+                        Filtros & Leiaute
+                    </a>
+                    <a href="<?php echo $baseUrl; ?>/relatorios/estoque-movimentacoes/imprimir" class="btn btn-enterprise btn-secondary btn-sm text-center fw-medium" target="_blank" title="Visualizar / Imprimir Relatório Atual">
+                        Visualizar A4
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

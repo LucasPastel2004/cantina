@@ -518,6 +518,24 @@ $router->post('/operacional/estornos/gravar', [\App\Controllers\EstornoVendasCon
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
 
+// 4.4. Relatório Gerencial de Movimentações de Estoque (Fase 23 — FSD Área 5, Módulo 6 & Guideline Escolar Manager)
+$router->get('/relatorios/estoque-filtros', [\App\Controllers\RelatoriosController::class, 'estoqueFiltros'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/relatorios/estoque-movimentacoes', [\App\Controllers\RelatoriosController::class, 'estoqueMovimentacoes'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/relatorios/estoque-movimentacoes/pdf', [\App\Controllers\RelatoriosController::class, 'estoqueMovimentacoesPdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/relatorios/estoque-movimentacoes/imprimir', [\App\Controllers\RelatoriosController::class, 'estoqueMovimentacoesImprimir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/relatorios/estoque-movimentacoes/csv', [\App\Controllers\RelatoriosController::class, 'estoqueMovimentacoesCsv'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+
+
 // 5. Gestão de Contestações e Mecanismo Especial de Devolução - MED Pix (Fase 16 — Acesso exclusivo 'administrador')
 $router->get('/admin/contestacoes', [\App\Controllers\AdminController::class, 'contestacoes'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
