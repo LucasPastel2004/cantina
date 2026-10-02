@@ -38,6 +38,337 @@ $totais          = $totais ?? [
 ];
 
 $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
+
+// =============================================================================
+// MOTOR DE PAGINAÇÃO EM FOLHAS A4 FÍSICAS (VISUALIZAÇÃO EM TELA E IMPRESSÃO)
+// =============================================================================
+$limiteP1      = $isPaisagem ? 11 : 16;
+$limiteOutras  = $isPaisagem ? 14 : 20;
+$reservaTotais = $isPaisagem ? 3 : 4;
+
+$totalItens = count($movimentacoes);
+$paginas = [];
+
+if ($totalItens === 0) {
+    $paginas[] = [
+        'modo'        => 'vazio',
+        'is_primeira' => true,
+        'is_ultima'   => true,
+        'tem_totais'  => false
+    ];
+} elseif ($agruparGrupo) {
+    // -------------------------------------------------------------------------
+    // CENÁRIO 1: AGRUPADO POR GRUPO / CATEGORIA
+    // -------------------------------------------------------------------------
+    if ($quebraPagina) {
+        foreach ($gruposCategoria as $grp) {
+            $itensGrp = $grp['itens'];
+            $totalGrp = count($itensGrp);
+            $offset = 0;
+            $subPag = 0;
+
+            while ($offset < $totalGrp) {
+                $isPrimeiraRelatorio = empty($paginas);
+                $cap = $isPrimeiraRelatorio ? ($limiteP1 - 3) : ($limiteOutras - 3);
+                $restantes = $totalGrp - $offset;
+                $qtd = min($restantes, $cap);
+                $fatia = array_slice($itensGrp, $offset, $qtd);
+                $offset += $qtd;
+                $isUltimaFatia = ($offset >= $totalGrp);
+
+                $paginas[] = [
+                    'modo'               => 'categoria',
+                    'is_primeira'        => $isPrimeiraRelatorio,
+                    'is_ultima'          => false,
+                    'tem_totais'         => false,
+                    'categoria_nome'     => $grp['categoria_nome'],
+                    'is_continua'        => ($subPag > 0),
+                    'itens'              => $fatia,
+                    'tem_subtotal'       => $isUltimaFatia,
+                    'total_entradas'     => $grp['total_entradas'],
+                    'total_saidas'       => $grp['total_saidas'],
+                    'balanco'            => $grp['balanco'],
+                    'total_lancamentos'  => $totalGrp
+                ];
+                $subPag++;
+            }
+        }
+    } else {
+        $paginaAtual = [
+            'modo'         => 'categoria_continuo',
+            'is_primeira'  => true,
+            'is_ultima'    => false,
+            'tem_totais'   => false,
+            'blocos'       => []
+        ];
+        $itensNaPagina = 0;
+        $capAtual = $limiteP1;
+
+        foreach ($gruposCategoria as $grp) {
+            $bloco = [
+                'categoria_nome'    => $grp['categoria_nome'],
+                'itens'             => [],
+                'tem_subtotal'      => false,
+                'total_entradas'    => $grp['total_entradas'],
+                'total_saidas'      => $grp['total_saidas'],
+                'balanco'           => $grp['balanco'],
+                'total_lancamentos' => count($grp['itens']),
+                'is_continua'       => false
+            ];
+
+            if ($itensNaPagina + 3 > $capAtual) {
+                $paginas[] = $paginaAtual;
+                $paginaAtual = [
+                    'modo'        => 'categoria_continuo',
+                    'is_primeira' => false,
+                    'is_ultima'   => false,
+                    'tem_totais'  => false,
+                    'blocos'      => []
+                ];
+                $itensNaPagina = 0;
+                $capAtual = $limiteOutras;
+            }
+            $itensNaPagina += 2;
+
+            foreach ($grp['itens'] as $m) {
+                if ($itensNaPagina >= $capAtual) {
+                    $paginaAtual['blocos'][] = $bloco;
+                    $paginas[] = $paginaAtual;
+
+                    $paginaAtual = [
+                        'modo'        => 'categoria_continuo',
+                        'is_primeira' => false,
+                        'is_ultima'   => false,
+                        'tem_totais'  => false,
+                        'blocos'      => []
+                    ];
+                    $itensNaPagina = 2;
+                    $capAtual = $limiteOutras;
+
+                    $bloco = [
+                        'categoria_nome'    => $grp['categoria_nome'],
+                        'itens'             => [],
+                        'tem_subtotal'      => false,
+                        'total_entradas'    => $grp['total_entradas'],
+                        'total_saidas'      => $grp['total_saidas'],
+                        'balanco'           => $grp['balanco'],
+                        'total_lancamentos' => count($grp['itens']),
+                        'is_continua'       => true
+                    ];
+                }
+                $bloco['itens'][] = $m;
+                $itensNaPagina++;
+            }
+
+            $bloco['tem_subtotal'] = true;
+            $itensNaPagina += 1;
+            $paginaAtual['blocos'][] = $bloco;
+        }
+
+        if (!empty($paginaAtual['blocos'])) {
+            $paginas[] = $paginaAtual;
+        }
+    }
+
+    if (!empty($paginas)) {
+        $paginas[count($paginas) - 1]['tem_totais'] = true;
+        $paginas[count($paginas) - 1]['is_ultima']  = true;
+    }
+} elseif ($agruparProduto) {
+    // -------------------------------------------------------------------------
+    // CENÁRIO 2: AGRUPADO POR PRODUTO
+    // -------------------------------------------------------------------------
+    if ($quebraPagina) {
+        foreach ($gruposProduto as $pGrp) {
+            $itensGrp = $pGrp['itens'];
+            $totalGrp = count($itensGrp);
+            $offset = 0;
+            $subPag = 0;
+
+            while ($offset < $totalGrp) {
+                $isPrimeiraRelatorio = empty($paginas);
+                $cap = $isPrimeiraRelatorio ? ($limiteP1 - 3) : ($limiteOutras - 3);
+                $restantes = $totalGrp - $offset;
+                $qtd = min($restantes, $cap);
+                $fatia = array_slice($itensGrp, $offset, $qtd);
+                $offset += $qtd;
+                $isUltimaFatia = ($offset >= $totalGrp);
+
+                $paginas[] = [
+                    'modo'               => 'produto',
+                    'is_primeira'        => $isPrimeiraRelatorio,
+                    'is_ultima'          => false,
+                    'tem_totais'         => false,
+                    'produto_codigo'     => $pGrp['produto_codigo'],
+                    'produto_descricao'  => $pGrp['produto_descricao'],
+                    'categoria_nome'     => $pGrp['categoria_nome'],
+                    'is_continua'        => ($subPag > 0),
+                    'itens'              => $fatia,
+                    'tem_subtotal'       => $isUltimaFatia,
+                    'total_entradas'     => $pGrp['total_entradas'],
+                    'total_saidas'       => $pGrp['total_saidas'],
+                    'balanco'            => $pGrp['balanco'],
+                    'total_lancamentos'  => $totalGrp
+                ];
+                $subPag++;
+            }
+        }
+    } else {
+        $paginaAtual = [
+            'modo'         => 'produto_continuo',
+            'is_primeira'  => true,
+            'is_ultima'    => false,
+            'tem_totais'   => false,
+            'blocos'       => []
+        ];
+        $itensNaPagina = 0;
+        $capAtual = $limiteP1;
+
+        foreach ($gruposProduto as $pGrp) {
+            $bloco = [
+                'produto_codigo'    => $pGrp['produto_codigo'],
+                'produto_descricao' => $pGrp['produto_descricao'],
+                'categoria_nome'    => $pGrp['categoria_nome'],
+                'itens'             => [],
+                'tem_subtotal'      => false,
+                'total_entradas'    => $pGrp['total_entradas'],
+                'total_saidas'      => $pGrp['total_saidas'],
+                'balanco'           => $pGrp['balanco'],
+                'total_lancamentos' => count($pGrp['itens']),
+                'is_continua'       => false
+            ];
+
+            if ($itensNaPagina + 3 > $capAtual) {
+                $paginas[] = $paginaAtual;
+                $paginaAtual = [
+                    'modo'        => 'produto_continuo',
+                    'is_primeira' => false,
+                    'is_ultima'   => false,
+                    'tem_totais'  => false,
+                    'blocos'      => []
+                ];
+                $itensNaPagina = 0;
+                $capAtual = $limiteOutras;
+            }
+            $itensNaPagina += 2;
+
+            foreach ($pGrp['itens'] as $m) {
+                if ($itensNaPagina >= $capAtual) {
+                    $paginaAtual['blocos'][] = $bloco;
+                    $paginas[] = $paginaAtual;
+
+                    $paginaAtual = [
+                        'modo'        => 'produto_continuo',
+                        'is_primeira' => false,
+                        'is_ultima'   => false,
+                        'tem_totais'  => false,
+                        'blocos'      => []
+                    ];
+                    $itensNaPagina = 2;
+                    $capAtual = $limiteOutras;
+
+                    $bloco = [
+                        'produto_codigo'    => $pGrp['produto_codigo'],
+                        'produto_descricao' => $pGrp['produto_descricao'],
+                        'categoria_nome'    => $pGrp['categoria_nome'],
+                        'itens'             => [],
+                        'tem_subtotal'      => false,
+                        'total_entradas'    => $pGrp['total_entradas'],
+                        'total_saidas'      => $pGrp['total_saidas'],
+                        'balanco'           => $pGrp['balanco'],
+                        'total_lancamentos' => count($pGrp['itens']),
+                        'is_continua'       => true
+                    ];
+                }
+                $bloco['itens'][] = $m;
+                $itensNaPagina++;
+            }
+
+            $bloco['tem_subtotal'] = true;
+            $itensNaPagina += 1;
+            $paginaAtual['blocos'][] = $bloco;
+        }
+
+        if (!empty($paginaAtual['blocos'])) {
+            $paginas[] = $paginaAtual;
+        }
+    }
+
+    if (!empty($paginas)) {
+        $paginas[count($paginas) - 1]['tem_totais'] = true;
+        $paginas[count($paginas) - 1]['is_ultima']  = true;
+    }
+} else {
+    // -------------------------------------------------------------------------
+    // CENÁRIO 3: LISTAGEM GERAL CRONOLÓGICA (PAGINAÇÃO AUTOMÁTICA EM FOLHAS)
+    // -------------------------------------------------------------------------
+    if ($totalItens <= ($limiteP1 - $reservaTotais)) {
+        $paginas[] = [
+            'modo'        => 'geral',
+            'is_primeira' => true,
+            'is_ultima'   => true,
+            'tem_totais'  => true,
+            'itens'       => $movimentacoes
+        ];
+    } else {
+        $offset = 0;
+        $qtdP1 = min($totalItens, $limiteP1);
+        $paginas[] = [
+            'modo'        => 'geral',
+            'is_primeira' => true,
+            'is_ultima'   => false,
+            'tem_totais'  => false,
+            'itens'       => array_slice($movimentacoes, 0, $qtdP1)
+        ];
+        $offset += $qtdP1;
+
+        while ($offset < $totalItens) {
+            $restantes = $totalItens - $offset;
+            if ($restantes <= ($limiteOutras - $reservaTotais)) {
+                $paginas[] = [
+                    'modo'        => 'geral',
+                    'is_primeira' => false,
+                    'is_ultima'   => true,
+                    'tem_totais'  => true,
+                    'itens'       => array_slice($movimentacoes, $offset, $restantes)
+                ];
+                $offset += $restantes;
+                break;
+            } elseif ($restantes <= $limiteOutras) {
+                $qtd = (int)ceil($restantes / 2);
+                $paginas[] = [
+                    'modo'        => 'geral',
+                    'is_primeira' => false,
+                    'is_ultima'   => false,
+                    'tem_totais'  => false,
+                    'itens'       => array_slice($movimentacoes, $offset, $qtd)
+                ];
+                $offset += $qtd;
+
+                $paginas[] = [
+                    'modo'        => 'geral',
+                    'is_primeira' => false,
+                    'is_ultima'   => true,
+                    'tem_totais'  => true,
+                    'itens'       => array_slice($movimentacoes, $offset)
+                ];
+                $offset = $totalItens;
+                break;
+            } else {
+                $paginas[] = [
+                    'modo'        => 'geral',
+                    'is_primeira' => false,
+                    'is_ultima'   => false,
+                    'tem_totais'  => false,
+                    'itens'       => array_slice($movimentacoes, $offset, $limiteOutras)
+                ];
+                $offset += $limiteOutras;
+            }
+        }
+    }
+}
+
+$totalPaginas = count($paginas);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -63,12 +394,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            font-size: <?php echo $isPaisagem ? '10.5px' : '10px'; ?>;
+            font-size: <?php echo $isPaisagem ? '9.5px' : '9px'; ?>;
             line-height: 1.35;
             color: #0f172a;
             background-color: #cbd5e1;
             margin: 0;
-            padding: 20px 0;
+            padding: 20px 0 40px 0;
         }
 
         .font-tabular {
@@ -76,20 +407,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             font-feature-settings: "tnum" 1, "zero" 1;
         }
 
-        /* Simulação de Folha A4 no Navegador */
-        .sheet-container {
-            background-color: #ffffff;
-            width: <?php echo $isPaisagem ? '280mm' : '200mm'; ?>;
-            max-width: calc(100% - 32px);
-            min-height: <?php echo $isPaisagem ? '195mm' : '280mm'; ?>;
-            margin: 0 auto;
-            padding: 10mm 12mm;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            border-radius: 2px;
-            position: relative;
-        }
-
-        /* Barra de Ações Superior (Não sai na impressão) */
+        /* Barra de Ações Superior (visível somente na tela) */
         .no-print-bar {
             background-color: #1e293b;
             color: #ffffff;
@@ -97,8 +415,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: <?php echo $isPaisagem ? '280mm' : '200mm'; ?>;
-            margin: 0 auto 12px auto;
+            width: <?php echo $isPaisagem ? '280mm' : '200mm'; ?>;
+            max-width: calc(100% - 32px);
+            margin: 0 auto 16px auto;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
@@ -130,6 +449,29 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             color: #ffffff;
         }
 
+        /* Folha Física A4 Simulada (com quebra visual e estrutural) */
+        .sheet-container.page-sheet {
+            background-color: #ffffff;
+            width: <?php echo $isPaisagem ? '280mm' : '200mm'; ?>;
+            max-width: calc(100% - 32px);
+            min-height: <?php echo $isPaisagem ? '195mm' : '280mm'; ?>;
+            margin: 0 auto 24px auto;
+            padding: 10mm 12mm;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border-radius: 2px;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden; /* Previne rigorosamente qualquer transbordo lateral */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Conteúdo Principal da Folha */
+        .page-body {
+            flex: 1 1 auto;
+        }
+
         /* Cabeçalho Oficial do Colégio */
         .doc-header {
             display: flex;
@@ -138,6 +480,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             border-bottom: 2px solid #0f172a;
             padding-bottom: 8px;
             margin-bottom: 10px;
+        }
+        .doc-header.compact {
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #64748b;
         }
         .doc-brand {
             display: flex;
@@ -151,6 +498,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             object-fit: cover;
             box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08);
         }
+        .doc-logo-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
         .doc-titles h1 {
             font-size: 14px;
             font-weight: 800;
@@ -159,52 +512,64 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             text-transform: uppercase;
             letter-spacing: 0.02em;
         }
-        .doc-titles h2 {
+        .doc-titles.compact h1 {
             font-size: 12px;
+            font-weight: 700;
+        }
+        .doc-titles h2 {
+            font-size: 11px;
             font-weight: 700;
             color: #1d4ed8;
             margin: 2px 0 0 0;
             text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
         .doc-meta {
             text-align: right;
-            font-size: 9.5px;
-            color: #475569;
+            font-size: 8.5px;
+            color: #334155;
+            line-height: 1.35;
+        }
+        .doc-page-badge {
+            font-weight: 700;
+            color: #1d4ed8;
         }
 
-        /* Faixa de Parâmetros e Centro de Custo */
+        /* Faixa de Parâmetros */
         .params-strip {
             background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #cbd5e1;
             border-radius: 4px;
-            padding: 6px 10px;
-            margin-bottom: 12px;
+            padding: 5px 10px;
+            margin-bottom: 10px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
             flex-wrap: wrap;
-            gap: 8px;
-            font-size: 10px;
+            gap: 16px;
+            font-size: 8.5px;
         }
         .params-item {
-            display: inline-flex;
+            display: flex;
+            align-items: center;
             gap: 4px;
         }
         .params-label {
             font-weight: 700;
-            color: #334155;
+            color: #475569;
             text-transform: uppercase;
+            font-size: 8px;
         }
         .params-val {
+            font-weight: 600;
             color: #0f172a;
         }
 
         /* Tabelas Analíticas Oficiais (Estética Excel com Laterais e Linhas Pretas entre Itens) */
         .table-estoque {
-            width: 100%;
+            width: 100% !important;
+            table-layout: fixed !important; /* Bloqueia rigorosamente transbordos */
             border-collapse: collapse;
-            margin-bottom: 14px;
-            font-size: <?php echo $isPaisagem ? '9.5px' : '9px'; ?>;
+            margin-bottom: 10px;
+            font-size: <?php echo $isPaisagem ? '9px' : '8.5px'; ?>;
             border-left: 1px solid #000000;
             border-right: 1px solid #000000;
             border-top: 1px solid #000000;
@@ -215,12 +580,14 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             color: #0f172a;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 8.5px;
-            letter-spacing: 0.03em;
-            padding: 5px 6px;
+            font-size: 8px;
+            letter-spacing: 0.02em;
+            padding: 4px 5px;
             border-top: 1px solid #000000;
             border-bottom: 1px solid #000000;
             text-align: left;
+            overflow: hidden;
+            word-break: break-word;
         }
         .table-estoque th:first-child,
         .table-estoque td:first-child {
@@ -231,10 +598,15 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             border-right: 1px solid #000000;
         }
         .table-estoque td {
-            padding: 4px 6px;
+            padding: 3px 5px;
             border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
             vertical-align: middle;
             color: #0f172a;
+            overflow: hidden;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            hyphens: auto;
         }
         .table-estoque tr:hover td {
             background-color: #f8fafc;
@@ -242,7 +614,6 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         .text-center { text-align: center !important; }
         .text-right  { text-align: right !important; }
-        .text-nowrap { white-space: nowrap !important; }
 
         .qtd-entrada {
             color: #15803d;
@@ -259,23 +630,23 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             color: #0f172a;
             font-weight: 800;
             text-transform: uppercase;
-            font-size: 10.5px;
-            padding: 6px 8px;
+            font-size: 9.5px;
+            padding: 5px 8px;
             border-left: 4px solid #1d4ed8;
-            margin-top: 16px;
-            margin-bottom: 6px;
+            margin-top: 8px;
+            margin-bottom: 4px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         .group-subtotal {
             background-color: #f8fafc;
-            border-top: 1px solid #cbd5e1;
-            border-bottom: 2px solid #94a3b8;
+            border-top: 1px solid #000000;
+            border-bottom: 2px solid #000000;
             font-weight: 700;
         }
 
-        /* Quebras de Página */
+        /* Quebras de Página Físicas e Lógicas */
         .page-break {
             page-break-before: always !important;
             break-before: page !important;
@@ -284,11 +655,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         /* Resumo de Fechamento / Totais Gerais */
         .totais-box {
             background-color: #f8fafc;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #000000;
             border-radius: 4px;
-            padding: 10px 14px;
-            margin-top: 16px;
+            padding: 8px 12px;
+            margin-top: 10px;
             page-break-inside: avoid;
+            break-inside: avoid;
         }
         .totais-grid {
             display: grid;
@@ -297,14 +669,14 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             text-align: center;
         }
         .totais-item {
-            border-right: 1px solid #e2e8f0;
-            padding: 0 8px;
+            border-right: 1px solid #cbd5e1;
+            padding: 0 6px;
         }
         .totais-item:last-child {
             border-right: none;
         }
         .totais-label {
-            font-size: 8.5px;
+            font-size: 8px;
             text-transform: uppercase;
             font-weight: 700;
             color: #475569;
@@ -312,40 +684,68 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             display: block;
         }
         .totais-val {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 800;
         }
 
         /* Rodapé Oficial da Folha */
         .doc-footer {
-            margin-top: 20px;
-            padding-top: 8px;
+            margin-top: 12px;
+            padding-top: 6px;
             border-top: 1px solid #cbd5e1;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 8.5px;
+            font-size: 8px;
             color: #64748b;
-            page-break-inside: avoid;
+            flex-shrink: 0;
         }
 
         /* Reset em Impressão (@media print) */
         @media print {
             body {
-                background: transparent !important;
+                background: #ffffff !important;
                 padding: 0 !important;
+                margin: 0 !important;
             }
             .no-print-bar {
                 display: none !important;
             }
-            .sheet-container {
+            .sheet-container.page-sheet {
                 width: 100% !important;
                 max-width: 100% !important;
                 min-height: auto !important;
+                height: auto !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
                 border-radius: 0 !important;
+                display: block !important;
+                page-break-after: always !important;
+                break-after: page !important;
+            }
+            .sheet-container.page-sheet:last-child {
+                page-break-after: auto !important;
+                break-after: auto !important;
+            }
+            .page-body {
+                display: block !important;
+            }
+            .doc-footer {
+                margin-top: 10px !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            .table-estoque {
+                table-layout: fixed !important;
+                width: 100% !important;
+            }
+            thead {
+                display: table-header-group !important;
+            }
+            tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
     </style>
@@ -355,7 +755,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <!-- Barra de Controle Superior (visível somente na tela) -->
     <div class="no-print-bar">
         <div style="font-size: 12px; font-weight: 600;">
-            Relatório de Estoque • Orientação: <?php echo $isPaisagem ? 'Paisagem (Landscape)' : 'Retrato (Portrait)'; ?>
+            Relatório de Estoque • Orientação: <?php echo $isPaisagem ? 'Paisagem (Landscape)' : 'Retrato (Portrait)'; ?> • Total de Páginas: <?php echo $totalPaginas; ?>
         </div>
         <div style="display: flex; gap: 8px;">
             <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="btn-action">
@@ -370,83 +770,221 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         </div>
     </div>
 
-    <!-- Contêiner de Simulação da Folha Física A4 -->
-    <div class="sheet-container">
+    <!-- ITERAÇÃO DAS FOLHAS A4 (CADA UMA É UMA PÁGINA FÍSICA) -->
+    <?php foreach ($paginas as $indexPagina => $pag): 
+        $numPagina = $indexPagina + 1;
+        $isPrimeira = $pag['is_primeira'];
+        $isUltima   = $pag['is_ultima'];
+    ?>
+        <div class="sheet-container page-sheet <?php echo ($indexPagina > 0) ? 'page-break' : ''; ?>">
+            <div class="page-body">
 
-        <!-- Cabeçalho Oficial -->
-        <header class="doc-header">
-            <div class="doc-brand">
-                <?php if (!empty($logoDataUri)): ?>
-                    <img src="<?php echo $logoDataUri; ?>" alt="Logotipo do Colégio" class="doc-logo">
+                <!-- Cabeçalho Oficial do Colégio -->
+                <?php if ($isPrimeira): ?>
+                    <header class="doc-header">
+                        <div class="doc-brand">
+                            <?php if (!empty($logoDataUri)): ?>
+                                <img src="<?php echo $logoDataUri; ?>" alt="Logotipo do Colégio" class="doc-logo">
+                            <?php endif; ?>
+                            <div class="doc-titles">
+                                <h1>COLÉGIO MONTEIRO LOBATO</h1>
+                                <h2>RELATÓRIO DE MOVIMENTAÇÕES DE ESTOQUE</h2>
+                            </div>
+                        </div>
+                        <div class="doc-meta font-tabular">
+                            <div><strong>Emissão:</strong> <?php echo date('d/m/Y H:i:s'); ?></div>
+                            <div><strong>Centro de Custo:</strong> <?php echo htmlspecialchars($centroCusto, ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="doc-page-badge">Página <?php echo $numPagina; ?> de <?php echo $totalPaginas; ?></div>
+                        </div>
+                    </header>
+
+                    <!-- Faixa de Parâmetros e Filtros Aplicados -->
+                    <div class="params-strip font-tabular">
+                        <div class="params-item">
+                            <span class="params-label">Período:</span>
+                            <span class="params-val"><?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?></span>
+                        </div>
+                        <div class="params-item">
+                            <span class="params-label">Grupo / Categoria:</span>
+                            <span class="params-val"><?php echo htmlspecialchars($catFiltro, ENT_QUOTES, 'UTF-8'); ?></span>
+                        </div>
+                        <div class="params-item">
+                            <span class="params-label">Produto:</span>
+                            <span class="params-val"><?php echo htmlspecialchars($prodFiltro, ENT_QUOTES, 'UTF-8'); ?></span>
+                        </div>
+                        <div class="params-item">
+                            <span class="params-label">Formato:</span>
+                            <span class="params-val"><?php echo $isPaisagem ? 'Paisagem (A4)' : 'Retrato (A4)'; ?></span>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <header class="doc-header compact">
+                        <div class="doc-brand">
+                            <?php if (!empty($logoDataUri)): ?>
+                                <img src="<?php echo $logoDataUri; ?>" alt="Logotipo do Colégio" class="doc-logo-small">
+                            <?php endif; ?>
+                            <div class="doc-titles compact">
+                                <h1>COLÉGIO MONTEIRO LOBATO — RELATÓRIO DE ESTOQUE <span style="font-weight:normal; color:#475569; font-size:10px;">(Continuação)</span></h1>
+                            </div>
+                        </div>
+                        <div class="doc-meta font-tabular">
+                            <div><strong>Emissão:</strong> <?php echo date('d/m/Y H:i'); ?> | <strong>C. Custo:</strong> <?php echo htmlspecialchars($centroCusto, ENT_QUOTES, 'UTF-8'); ?> | <span class="doc-page-badge">Pág. <?php echo $numPagina; ?>/<?php echo $totalPaginas; ?></span></div>
+                        </div>
+                    </header>
                 <?php endif; ?>
-                <div class="doc-titles">
-                    <h1>COLÉGIO MONTEIRO LOBATO</h1>
-                    <h2>RELATÓRIO DE MOVIMENTAÇÕES DE ESTOQUE</h2>
-                </div>
-            </div>
-            <div class="doc-meta font-tabular">
-                <div><strong>Emissão:</strong> <?php echo date('d/m/Y H:i:s'); ?></div>
-                <div><strong>Centro de Custo:</strong> <?php echo htmlspecialchars($centroCusto, ENT_QUOTES, 'UTF-8'); ?></div>
-            </div>
-        </header>
 
-        <!-- Faixa de Parâmetros e Filtros Aplicados -->
-        <div class="params-strip font-tabular">
-            <div class="params-item">
-                <span class="params-label">Período:</span>
-                <span class="params-val"><?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?></span>
-            </div>
-            <div class="params-item">
-                <span class="params-label">Grupo / Categoria:</span>
-                <span class="params-val"><?php echo htmlspecialchars($catFiltro, ENT_QUOTES, 'UTF-8'); ?></span>
-            </div>
-            <div class="params-item">
-                <span class="params-label">Produto:</span>
-                <span class="params-val"><?php echo htmlspecialchars($prodFiltro, ENT_QUOTES, 'UTF-8'); ?></span>
-            </div>
-            <div class="params-item">
-                <span class="params-label">Formato:</span>
-                <span class="params-val"><?php echo $isPaisagem ? 'Paisagem (A4)' : 'Retrato (A4)'; ?></span>
-            </div>
-        </div>
+                <!-- CONTEÚDO DA PÁGINA CONFORME O MODO -->
+                <?php if ($pag['modo'] === 'vazio'): ?>
+                    <div style="padding: 40px; text-align: center; color: #64748b; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; margin: 20px 0;">
+                        <p style="font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #334155;">Não há movimentações de estoque registradas para o período e filtros selecionados.</p>
+                        <p style="font-size: 11px; margin: 0;">Altere a data inicial/final ou selecione outra categoria/produto para consultar.</p>
+                    </div>
 
-        <?php if (empty($movimentacoes)): ?>
-            <!-- Estado Vazio -->
-            <div style="padding: 40px; text-align: center; color: #64748b; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; margin: 20px 0;">
-                <p style="font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #334155;">Não há movimentações de estoque registradas para o período e filtros selecionados.</p>
-                <p style="font-size: 11px; margin: 0;">Altere a data inicial/final ou selecione outra categoria/produto para consultar.</p>
-            </div>
-        <?php else: ?>
+                <?php elseif ($pag['modo'] === 'geral'): ?>
+                    <!-- TABELA GERAL CRONOLÓGICA -->
+                    <table class="table-estoque">
+                        <thead>
+                            <tr>
+                                <?php if ($isPaisagem): ?>
+                                    <th style="width: 9%;" class="text-center">Data / Hora</th>
+                                    <th style="width: 8%;">C. Custo</th>
+                                    <th style="width: 10%;">Categoria</th>
+                                    <th style="width: 7%;">Código</th>
+                                    <th style="width: 20%;">Descrição do Produto</th>
+                                    <th style="width: 13%;">Tipo Movimentação</th>
+                                    <th style="width: 5%;" class="text-right">Entrada</th>
+                                    <th style="width: 5%;" class="text-right">Saída</th>
+                                    <th style="width: 9%;">Operador</th>
+                                    <th style="width: 14%;">Doc / Justificativa</th>
+                                <?php else: ?>
+                                    <th style="width: 11%;" class="text-center">Data / Hora</th>
+                                    <th style="width: 11%;">Categoria</th>
+                                    <th style="width: 8%;">Código</th>
+                                    <th style="width: 21%;">Descrição do Produto</th>
+                                    <th style="width: 14%;">Tipo Movimentação</th>
+                                    <th style="width: 6%;" class="text-right">Entrada</th>
+                                    <th style="width: 6%;" class="text-right">Saída</th>
+                                    <th style="width: 9%;">Operador</th>
+                                    <th style="width: 14%;">Doc / Justificativa</th>
+                                <?php endif; ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($pag['itens'] as $m): ?>
+                                <tr>
+                                    <td class="text-center font-tabular" style="font-size: 8px; line-height: 1.2;">
+                                        <?php echo $m['data_formatada']; ?><br>
+                                        <span style="color: #64748b;"><?php echo $m['hora_formatada']; ?></span>
+                                    </td>
+                                    <?php if ($isPaisagem): ?>
+                                        <td><small><?php echo htmlspecialchars($m['centro_custo'], ENT_QUOTES, 'UTF-8'); ?></small></td>
+                                    <?php endif; ?>
+                                    <td><small><?php echo htmlspecialchars($m['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
+                                    <td class="font-tabular"><?php echo htmlspecialchars($m['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><strong><?php echo htmlspecialchars($m['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
+                                        <?php echo $m['qtd_entrada'] > 0 ? ('+' . $m['qtd_entrada']) : '—'; ?>
+                                    </td>
+                                    <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
+                                        <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
+                                    </td>
+                                    <td><small><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
+                                    <td><small><?php echo htmlspecialchars($m['justificativa_completa'] ?: $m['documento_ref'], ENT_QUOTES, 'UTF-8'); ?></small></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
 
-            <?php if ($agruparGrupo): ?>
-                <!-- CENÁRIO 1: AGRUPADO POR GRUPO / CATEGORIA -->
-                <?php foreach ($gruposCategoria as $idxGrp => $grp): ?>
-                    <div class="<?php echo ($quebraPagina && $idxGrp > 0) ? 'page-break' : ''; ?>">
+                <?php elseif ($pag['modo'] === 'categoria'): ?>
+                    <!-- TABELA DE CATEGORIA ÚNICA NESTA FOLHA -->
+                    <div class="group-header">
+                        <span>CATEGORIA: <?php echo htmlspecialchars($pag['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?> <?php echo $pag['is_continua'] ? '<small style="font-weight:normal; opacity:0.85;">(Continuação)</small>' : ''; ?></span>
+                        <span class="font-tabular" style="font-size: 8.5px; font-weight: normal;">
+                            Total: <?php echo $pag['total_lancamentos']; ?> lançamento(s)
+                        </span>
+                    </div>
+
+                    <table class="table-estoque">
+                        <thead>
+                            <tr>
+                                <th style="width: 12%;" class="text-center">Data / Hora</th>
+                                <th style="width: 9%;">Código</th>
+                                <th style="width: 23%;">Descrição do Produto</th>
+                                <th style="width: 16%;">Tipo Movimentação</th>
+                                <th style="width: 7%;" class="text-right">Entrada</th>
+                                <th style="width: 7%;" class="text-right">Saída</th>
+                                <th style="width: 11%;">Operador</th>
+                                <th style="width: 15%;">Doc / Observação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($pag['itens'] as $m): ?>
+                                <tr>
+                                    <td class="text-center font-tabular" style="font-size: 8px; line-height: 1.2;">
+                                        <?php echo $m['data_formatada']; ?><br>
+                                        <span style="color: #64748b;"><?php echo $m['hora_formatada']; ?></span>
+                                    </td>
+                                    <td class="font-tabular"><?php echo htmlspecialchars($m['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><strong><?php echo htmlspecialchars($m['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
+                                        <?php echo $m['qtd_entrada'] > 0 ? ('+' . $m['qtd_entrada']) : '—'; ?>
+                                    </td>
+                                    <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
+                                        <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
+                                    </td>
+                                    <td><small><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
+                                    <td><small><?php echo htmlspecialchars($m['justificativa_completa'] ?: $m['documento_ref'], ENT_QUOTES, 'UTF-8'); ?></small></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <?php if ($pag['tem_subtotal']): ?>
+                                <tr class="group-subtotal font-tabular">
+                                    <td colspan="4" class="text-right"><strong>Subtotal da Categoria:</strong></td>
+                                    <td class="text-right qtd-entrada">+<?php echo $pag['total_entradas']; ?> un</td>
+                                    <td class="text-right qtd-saida">-<?php echo $pag['total_saidas']; ?> un</td>
+                                    <td colspan="2" class="text-right">
+                                        <strong>Balanço:</strong> 
+                                        <span class="<?php echo $pag['balanco'] >= 0 ? 'qtd-entrada' : 'qtd-saida'; ?>">
+                                            <?php echo ($pag['balanco'] >= 0 ? '+' : '') . $pag['balanco']; ?> un
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+
+                <?php elseif ($pag['modo'] === 'categoria_continuo'): ?>
+                    <!-- CATEGORIAS CONTÍNUAS -->
+                    <?php foreach ($pag['blocos'] as $bloco): ?>
                         <div class="group-header">
-                            <span>CATEGORIA: <?php echo htmlspecialchars($grp['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
-                            <span class="font-tabular" style="font-size: 9px; font-weight: normal;">
-                                Total de Lançamentos: <?php echo count($grp['itens']); ?>
+                            <span>CATEGORIA: <?php echo htmlspecialchars($bloco['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?> <?php echo $bloco['is_continua'] ? '<small style="font-weight:normal; opacity:0.85;">(Continuação)</small>' : ''; ?></span>
+                            <span class="font-tabular" style="font-size: 8.5px; font-weight: normal;">
+                                Total: <?php echo $bloco['total_lancamentos']; ?> lançamento(s)
                             </span>
                         </div>
 
                         <table class="table-estoque">
                             <thead>
                                 <tr>
-                                    <th style="width: 75px;" class="text-center">Data / Hora</th>
-                                    <th style="width: 65px;">Código</th>
-                                    <th>Descrição do Produto</th>
-                                    <th style="width: 130px;">Tipo Movimentação</th>
-                                    <th style="width: 65px;" class="text-right">Entrada</th>
-                                    <th style="width: 65px;" class="text-right">Saída</th>
-                                    <th style="width: 90px;">Operador</th>
-                                    <th style="width: 140px;">Doc / Observação</th>
+                                    <th style="width: 12%;" class="text-center">Data / Hora</th>
+                                    <th style="width: 9%;">Código</th>
+                                    <th style="width: 23%;">Descrição do Produto</th>
+                                    <th style="width: 16%;">Tipo Movimentação</th>
+                                    <th style="width: 7%;" class="text-right">Entrada</th>
+                                    <th style="width: 7%;" class="text-right">Saída</th>
+                                    <th style="width: 11%;">Operador</th>
+                                    <th style="width: 15%;">Doc / Observação</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($grp['itens'] as $m): ?>
+                                <?php foreach ($bloco['itens'] as $m): ?>
                                     <tr>
-                                        <td class="text-center font-tabular text-nowrap"><?php echo $m['data_formatada'] . ' ' . $m['hora_formatada']; ?></td>
-                                        <td class="font-tabular text-nowrap"><?php echo htmlspecialchars($m['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td class="text-center font-tabular" style="font-size: 8px; line-height: 1.2;">
+                                            <?php echo $m['data_formatada']; ?><br>
+                                            <span style="color: #64748b;"><?php echo $m['hora_formatada']; ?></span>
+                                        </td>
+                                        <td class="font-tabular"><?php echo htmlspecialchars($m['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td><strong><?php echo htmlspecialchars($m['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
                                         <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
@@ -455,52 +993,109 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                                         <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
                                             <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
                                         </td>
-                                        <td class="text-nowrap"><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td><small><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
                                         <td><small><?php echo htmlspecialchars($m['justificativa_completa'] ?: $m['documento_ref'], ENT_QUOTES, 'UTF-8'); ?></small></td>
                                     </tr>
                                 <?php endforeach; ?>
+                                <?php if ($bloco['tem_subtotal']): ?>
+                                    <tr class="group-subtotal font-tabular">
+                                        <td colspan="4" class="text-right"><strong>Subtotal da Categoria:</strong></td>
+                                        <td class="text-right qtd-entrada">+<?php echo $bloco['total_entradas']; ?> un</td>
+                                        <td class="text-right qtd-saida">-<?php echo $bloco['total_saidas']; ?> un</td>
+                                        <td colspan="2" class="text-right">
+                                            <strong>Balanço:</strong> 
+                                            <span class="<?php echo $bloco['balanco'] >= 0 ? 'qtd-entrada' : 'qtd-saida'; ?>">
+                                                <?php echo ($bloco['balanco'] >= 0 ? '+' : '') . $bloco['balanco']; ?> un
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    <?php endforeach; ?>
+
+                <?php elseif ($pag['modo'] === 'produto'): ?>
+                    <!-- TABELA DE PRODUTO ÚNICO NESTA FOLHA -->
+                    <div class="group-header">
+                        <span>[<?php echo htmlspecialchars($pag['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?>] <?php echo htmlspecialchars($pag['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?> <small style="font-weight: normal; opacity: 0.85;">(<?php echo htmlspecialchars($pag['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?>) <?php echo $pag['is_continua'] ? '(Continuação)' : ''; ?></small></span>
+                        <span class="font-tabular" style="font-size: 8.5px; font-weight: normal;">
+                            Movimentações: <?php echo $pag['total_lancamentos']; ?>
+                        </span>
+                    </div>
+
+                    <table class="table-estoque">
+                        <thead>
+                            <tr>
+                                <th style="width: 14%;" class="text-center">Data / Hora</th>
+                                <th style="width: 24%;">Tipo Movimentação</th>
+                                <th style="width: 10%;" class="text-right">Entrada</th>
+                                <th style="width: 10%;" class="text-right">Saída</th>
+                                <th style="width: 14%;">Operador</th>
+                                <th style="width: 28%;">Doc / Justificativa / NF</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($pag['itens'] as $m): ?>
+                                <tr>
+                                    <td class="text-center font-tabular" style="font-size: 8px; line-height: 1.2;">
+                                        <?php echo $m['data_formatada']; ?><br>
+                                        <span style="color: #64748b;"><?php echo $m['hora_formatada']; ?></span>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
+                                        <?php echo $m['qtd_entrada'] > 0 ? ('+' . $m['qtd_entrada']) : '—'; ?>
+                                    </td>
+                                    <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
+                                        <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
+                                    </td>
+                                    <td><small><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
+                                    <td><small><?php echo htmlspecialchars($m['justificativa_completa'] ?: $m['documento_ref'], ENT_QUOTES, 'UTF-8'); ?></small></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <?php if ($pag['tem_subtotal']): ?>
                                 <tr class="group-subtotal font-tabular">
-                                    <td colspan="4" class="text-right"><strong>Subtotal da Categoria:</strong></td>
-                                    <td class="text-right qtd-entrada">+<?php echo $grp['total_entradas']; ?> un</td>
-                                    <td class="text-right qtd-saida">-<?php echo $grp['total_saidas']; ?> un</td>
+                                    <td colspan="2" class="text-right"><strong>Total do Produto:</strong></td>
+                                    <td class="text-right qtd-entrada">+<?php echo $pag['total_entradas']; ?> un</td>
+                                    <td class="text-right qtd-saida">-<?php echo $pag['total_saidas']; ?> un</td>
                                     <td colspan="2" class="text-right">
-                                        <strong>Balanço:</strong> 
-                                        <span class="<?php echo $grp['balanco'] >= 0 ? 'qtd-entrada' : 'qtd-saida'; ?>">
-                                            <?php echo ($grp['balanco'] >= 0 ? '+' : '') . $grp['balanco']; ?> un
+                                        <strong>Variação no Período:</strong> 
+                                        <span class="<?php echo $pag['balanco'] >= 0 ? 'qtd-entrada' : 'qtd-saida'; ?>">
+                                            <?php echo ($pag['balanco'] >= 0 ? '+' : '') . $pag['balanco']; ?> un
                                         </span>
                                     </td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
 
-            <?php elseif ($agruparProduto): ?>
-                <!-- CENÁRIO 2: AGRUPADO POR PRODUTO -->
-                <?php foreach ($gruposProduto as $idxPrd => $pGrp): ?>
-                    <div class="<?php echo ($quebraPagina && $idxPrd > 0) ? 'page-break' : ''; ?>">
+                <?php elseif ($pag['modo'] === 'produto_continuo'): ?>
+                    <!-- PRODUTOS CONTÍNUOS -->
+                    <?php foreach ($pag['blocos'] as $bloco): ?>
                         <div class="group-header">
-                            <span>[<?php echo htmlspecialchars($pGrp['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?>] <?php echo htmlspecialchars($pGrp['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?> <small style="font-weight: normal; opacity: 0.85;">(<?php echo htmlspecialchars($pGrp['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?>)</small></span>
-                            <span class="font-tabular" style="font-size: 9px; font-weight: normal;">
-                                Movimentações: <?php echo count($pGrp['itens']); ?>
+                            <span>[<?php echo htmlspecialchars($bloco['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?>] <?php echo htmlspecialchars($bloco['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?> <small style="font-weight: normal; opacity: 0.85;">(<?php echo htmlspecialchars($bloco['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?>) <?php echo $bloco['is_continua'] ? '(Continuação)' : ''; ?></small></span>
+                            <span class="font-tabular" style="font-size: 8.5px; font-weight: normal;">
+                                Movimentações: <?php echo $bloco['total_lancamentos']; ?>
                             </span>
                         </div>
 
                         <table class="table-estoque">
                             <thead>
                                 <tr>
-                                    <th style="width: 80px;" class="text-center">Data / Hora</th>
-                                    <th style="width: 160px;">Tipo Movimentação</th>
-                                    <th style="width: 75px;" class="text-right">Entrada</th>
-                                    <th style="width: 75px;" class="text-right">Saída</th>
-                                    <th style="width: 100px;">Operador</th>
-                                    <th>Doc / Justificativa / NF</th>
+                                    <th style="width: 14%;" class="text-center">Data / Hora</th>
+                                    <th style="width: 24%;">Tipo Movimentação</th>
+                                    <th style="width: 10%;" class="text-right">Entrada</th>
+                                    <th style="width: 10%;" class="text-right">Saída</th>
+                                    <th style="width: 14%;">Operador</th>
+                                    <th style="width: 28%;">Doc / Justificativa / NF</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($pGrp['itens'] as $m): ?>
+                                <?php foreach ($bloco['itens'] as $m): ?>
                                     <tr>
-                                        <td class="text-center font-tabular text-nowrap"><?php echo $m['data_formatada'] . ' ' . $m['hora_formatada']; ?></td>
+                                        <td class="text-center font-tabular" style="font-size: 8px; line-height: 1.2;">
+                                            <?php echo $m['data_formatada']; ?><br>
+                                            <span style="color: #64748b;"><?php echo $m['hora_formatada']; ?></span>
+                                        </td>
                                         <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
                                             <?php echo $m['qtd_entrada'] > 0 ? ('+' . $m['qtd_entrada']) : '—'; ?>
@@ -508,103 +1103,64 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                                         <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
                                             <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
                                         </td>
-                                        <td class="text-nowrap"><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td><small><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
                                         <td><small><?php echo htmlspecialchars($m['justificativa_completa'] ?: $m['documento_ref'], ENT_QUOTES, 'UTF-8'); ?></small></td>
                                     </tr>
                                 <?php endforeach; ?>
-                                <tr class="group-subtotal font-tabular">
-                                    <td colspan="2" class="text-right"><strong>Total do Produto:</strong></td>
-                                    <td class="text-right qtd-entrada">+<?php echo $pGrp['total_entradas']; ?> un</td>
-                                    <td class="text-right qtd-saida">-<?php echo $pGrp['total_saidas']; ?> un</td>
-                                    <td colspan="2" class="text-right">
-                                        <strong>Variação no Período:</strong> 
-                                        <span class="<?php echo $pGrp['balanco'] >= 0 ? 'qtd-entrada' : 'qtd-saida'; ?>">
-                                            <?php echo ($pGrp['balanco'] >= 0 ? '+' : '') . $pGrp['balanco']; ?> un
-                                        </span>
-                                    </td>
-                                </tr>
+                                <?php if ($bloco['tem_subtotal']): ?>
+                                    <tr class="group-subtotal font-tabular">
+                                        <td colspan="2" class="text-right"><strong>Total do Produto:</strong></td>
+                                        <td class="text-right qtd-entrada">+<?php echo $bloco['total_entradas']; ?> un</td>
+                                        <td class="text-right qtd-saida">-<?php echo $bloco['total_saidas']; ?> un</td>
+                                        <td colspan="2" class="text-right">
+                                            <strong>Variação no Período:</strong> 
+                                            <span class="<?php echo $bloco['balanco'] >= 0 ? 'qtd-entrada' : 'qtd-saida'; ?>">
+                                                <?php echo ($bloco['balanco'] >= 0 ? '+' : '') . $bloco['balanco']; ?> un
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
-                    </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
 
-            <?php else: ?>
-                <!-- CENÁRIO 3: LISTAGEM GERAL CRONOLÓGICA -->
-                <table class="table-estoque">
-                    <thead>
-                        <tr>
-                            <th style="width: 75px;" class="text-center">Data / Hora</th>
-                            <?php if ($isPaisagem): ?>
-                                <th style="width: 85px;">C. Custo</th>
-                            <?php endif; ?>
-                            <th style="width: 90px;">Categoria</th>
-                            <th style="width: 65px;">Código</th>
-                            <th>Descrição do Produto</th>
-                            <th style="width: 140px;">Tipo Movimentação</th>
-                            <th style="width: 60px;" class="text-right">Entrada</th>
-                            <th style="width: 60px;" class="text-right">Saída</th>
-                            <th style="width: 90px;">Operador</th>
-                            <th style="<?php echo $isPaisagem ? 'width: 160px;' : 'width: 120px;'; ?>">Doc / Justificativa</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($movimentacoes as $m): ?>
-                            <tr>
-                                <td class="text-center font-tabular text-nowrap"><?php echo $m['data_formatada'] . ' ' . $m['hora_formatada']; ?></td>
-                                <?php if ($isPaisagem): ?>
-                                    <td class="text-nowrap"><small><?php echo htmlspecialchars($m['centro_custo'], ENT_QUOTES, 'UTF-8'); ?></small></td>
-                                <?php endif; ?>
-                                <td class="text-nowrap"><small><?php echo htmlspecialchars($m['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
-                                <td class="font-tabular text-nowrap"><?php echo htmlspecialchars($m['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                <td><strong><?php echo htmlspecialchars($m['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
-                                <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
-                                    <?php echo $m['qtd_entrada'] > 0 ? ('+' . $m['qtd_entrada']) : '—'; ?>
-                                </td>
-                                <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
-                                    <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
-                                </td>
-                                <td class="text-nowrap"><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                <td><small><?php echo htmlspecialchars($m['justificativa_completa'] ?: $m['documento_ref'], ENT_QUOTES, 'UTF-8'); ?></small></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-
-            <!-- Caixa de Consolidação Geral e Totais do Período -->
-            <div class="totais-box font-tabular">
-                <div class="totais-grid">
-                    <div class="totais-item">
-                        <span class="totais-label">Total Entradas</span>
-                        <span class="totais-val qtd-entrada">+<?php echo number_format($totais['total_entradas'], 0, ',', '.'); ?> un</span>
+                <!-- Caixa de Consolidação Geral e Totais do Período (Apenas na Última Página) -->
+                <?php if ($pag['tem_totais']): ?>
+                    <div class="totais-box font-tabular">
+                        <div class="totais-grid">
+                            <div class="totais-item">
+                                <span class="totais-label">Total Entradas</span>
+                                <span class="totais-val qtd-entrada">+<?php echo number_format($totais['total_entradas'], 0, ',', '.'); ?> un</span>
+                            </div>
+                            <div class="totais-item">
+                                <span class="totais-label">Saídas por Vendas</span>
+                                <span class="totais-val qtd-saida">-<?php echo number_format($totais['total_vendas'], 0, ',', '.'); ?> un</span>
+                            </div>
+                            <div class="totais-item">
+                                <span class="totais-label">Baixas por Perdas</span>
+                                <span class="totais-val" style="color: #92400e;">-<?php echo number_format($totais['total_perdas'], 0, ',', '.'); ?> un</span>
+                            </div>
+                            <div class="totais-item">
+                                <span class="totais-label">Balanço Líquido</span>
+                                <span class="totais-val <?php echo $totais['balanco_periodo'] >= 0 ? 'qtd-entrada' : 'qtd-saida'; ?>">
+                                    <?php echo ($totais['balanco_periodo'] >= 0 ? '+' : '') . number_format($totais['balanco_periodo'], 0, ',', '.'); ?> un
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="totais-item">
-                        <span class="totais-label">Saídas por Vendas</span>
-                        <span class="totais-val qtd-saida">-<?php echo number_format($totais['total_vendas'], 0, ',', '.'); ?> un</span>
-                    </div>
-                    <div class="totais-item">
-                        <span class="totais-label">Baixas por Perdas</span>
-                        <span class="totais-val" style="color: #92400e;">-<?php echo number_format($totais['total_perdas'], 0, ',', '.'); ?> un</span>
-                    </div>
-                    <div class="totais-item">
-                        <span class="totais-label">Balanço Líquido do Período</span>
-                        <span class="totais-val <?php echo $totais['balanco_periodo'] >= 0 ? 'qtd-entrada' : 'qtd-saida'; ?>">
-                            <?php echo ($totais['balanco_periodo'] >= 0 ? '+' : '') . number_format($totais['balanco_periodo'], 0, ',', '.'); ?> un
-                        </span>
-                    </div>
-                </div>
-            </div>
+                <?php endif; ?>
 
-        <?php endif; ?>
+            </div> <!-- /.page-body -->
 
-        <!-- Rodapé do Documento -->
-        <footer class="doc-footer">
-            <div>Colégio Monteiro Lobato • Sistema Cantina Web — Relatório Gerencial de Estoque</div>
-            <div class="font-tabular">Documento Oficial de Auditoria • <?php echo date('d/m/Y'); ?></div>
-        </footer>
+            <!-- Rodapé Oficial da Folha Física -->
+            <footer class="doc-footer">
+                <div>Colégio Monteiro Lobato • Sistema Cantina Web — Relatório Gerencial de Estoque</div>
+                <div class="font-tabular">Documento Oficial de Auditoria • <?php echo date('d/m/Y'); ?> • Página <?php echo $numPagina; ?> de <?php echo $totalPaginas; ?></div>
+            </footer>
 
-    </div>
+        </div> <!-- /.page-sheet -->
+    <?php endforeach; ?>
 
     <script>
         function fecharJanela() {

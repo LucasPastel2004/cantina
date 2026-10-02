@@ -1086,9 +1086,16 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     7. `app/views/relatorios/fechamento_caixa_pdf.php` (Espelho de Fechamento de Caixa / PDV);
     8. `app/views/relatorios/med_negativados_pdf.php` (Relatório Gerencial de Casos MED / Saldos Negativados);
   * Suporte nativo mantido para visualização direta no navegador, impressão contínua/A4 e geração de PDF via motor Chromium Gotenberg sem falhas de `border-collapse`.
+* [x] **Correção de Transbordo Lateral e Motor de Paginação A4:**
+  * Correção definitiva do transbordo lateral de tabela ("bugado para fora"): aplicação de `table-layout: fixed !important; width: 100% !important;` com larguras percentuais precisas por coluna somando estritamente 100%, quebra de palavras forçada com `word-break: break-word;` e `overflow: hidden;` no contêiner da folha;
+  * Implementação de motor de paginação em folhas físicas A4 (`.sheet-container.page-sheet`): fragmentação de grandes volumes de lançamentos (ex.: mais de 250 registros) em folhas individuais com visualização de cartões A4 reais na tela e quebras físicas automáticas (`page-break-after: always`);
+  * Cabeçalho completo na primeira folha e cabeçalho compacto com marcação `(Continuação)` nas folhas subsequentes;
+  * Contador dinâmico de páginas (`Página X de Y`) exibido nos cabeçalhos e rodapés de cada folha;
+  * Caixa consolidada de fechamento e totais posicionada estritamente na última folha do documento;
+  * Compatibilidade idêntica e homologada para visualização direta em tela (`@media screen`), impressão do navegador (`window.print()`) e exportação de PDF via Gotenberg Chromium.
 * [x] **Testes Automatizados e Auditoria de Regressão:**
-  * Suíte oficial `tests/fase23_test.php` expandida para **109 de 109 asserções aprovadas com 100% de sucesso**;
-  * Validação de compilação real de PDFs em Retrato (93 KB) e Paisagem (94 KB) via contêiner Gotenberg Chromium;
+  * Suíte oficial `tests/fase23_test.php` expandida para **124 de 124 asserções aprovadas com 100% de sucesso**;
+  * Validação de compilação real de PDFs em Retrato (110 KB) e Paisagem (112 KB) via contêiner Gotenberg Chromium;
   * Validação de integridade do arquivo CSV (BOM UTF-8, delimitador `;`, centro de custo Cantina Geral);
   * Regressão da suíte da Fase 22 (79/79) executada e 100% aprovada.
 
