@@ -2465,6 +2465,19 @@ class RelatoriosController extends Controller
             ]
         ];
     }
+
+    /**
+     * Retorna a URL base normalizada da aplicação
+     */
+    protected function getBaseUrl(): string
+    {
+        if (defined('BASE_URL')) {
+            return BASE_URL;
+        }
+        $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+        $base = str_replace('\\', '/', $scriptDir);
+        return ($base === '/' || $base === '.') ? '' : rtrim($base, '/');
+    }
 }
 
 

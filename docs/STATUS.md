@@ -1070,9 +1070,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Rótulo do campo atualizado para `Formato do layout`;
   * Card de Movimentações de Estoque no Hub atualizado para `Filtros & Layout`;
   * Compatibilidade retroativa dupla preservada no backend (`RelatoriosController.php`) e na view para os parâmetros `formato_layout` e `formato_leiaute`.
+* [x] **Correção de Falha em Emissão e Eliminação de Botões Duplicados:**
+  * Correção do erro fatal 500 (`Call to undefined method App\Controllers\RelatoriosController::getBaseUrl()`) através da implementação do método `getBaseUrl()` na classe base `App\Core\Controller` e no `RelatoriosController`;
+  * Eliminação do botão dropdown repetido "Emitir" no topo da tela, mantendo apenas a navegação para o Hub de Relatórios;
+  * Implementação clara e direta do trio oficial de saída no rodapé do formulário: `Visualizar / Imprimir (A4)` (`btnEmitirImprimir`), `Baixar em PDF (A4)` (`btnEmitirPdf`) e `Exportar Planilha (CSV)` (`btnEmitirCsv`).
 * [x] **Testes Automatizados e Auditoria de Regressão:**
-  * Suíte oficial `tests/fase23_test.php` expandida para **85 de 85 asserções aprovadas com 100% de sucesso**;
-  * Validação de compilação real de PDFs em Retrato (91 KB) e Paisagem (92 KB) via contêiner Gotenberg Chromium;
+  * Suíte oficial `tests/fase23_test.php` expandida para **99 de 99 asserções aprovadas com 100% de sucesso**;
+  * Validação de compilação real de PDFs em Retrato (92 KB) e Paisagem (92 KB) via contêiner Gotenberg Chromium;
   * Validação de integridade do arquivo CSV (BOM UTF-8, delimitador `;`, centro de custo Cantina Geral);
   * Regressão da suíte da Fase 22 (79/79) executada e 100% aprovada.
 

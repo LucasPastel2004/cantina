@@ -1333,3 +1333,18 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Ajustada a fórmula de progressão contábil para debitar o saldo progressivo apenas quando `forma_pagamento === 'Saldo'`, preservando a integridade da carteira digital compartilhada e a exatidão do total gasto no período.
   3. Criada e homologada a suíte `tests/fase22_test.php` com 80 de 80 asserções aprovadas com sucesso, cobrindo cálculo contábil, opções da aba Leiaute, espelho A4 e proteção LGPD no Portal da Família.
 - Como evitar no futuro: Sempre consultar os schemas das migrações do banco de dados antes de redigir queries analíticas e distinguir contabilmente compras debitadas de carteiras pré-pagas de compras quitadas em espécie no ato da entrega.
+
+---
+
+## 2026-10-02 - Falha de método inexistente getBaseUrl() e botões redundantes de emissão no painel de estoque
+
+- Sintoma: Ao clicar no botão de emitir o relatório de movimentações de estoque (`/relatorios/estoque-movimentacoes/imprimir`), o sistema interceptou uma falha 500 com a mensagem `Call to undefined method App\Controllers\RelatoriosController::getBaseUrl()`. Além disso, a tela apresentava botões repetidos ("Emitir" no topo como dropdown e "Emitir Relatório" no rodapé), gerando confusão de interface.
+- Causa:
+  1. Os métodos `estoqueMovimentacoes()` e `estoqueMovimentacoesPdf()` em `RelatoriosController.php` invocavam `$this->getBaseUrl()`, porém o método não estava definido nem no controller nem na classe abstrata `Controller.php`.
+  2. A view `app/views/relatorios/estoque_filtros.php` continha um menu dropdown "Emitir" no cabeçalho superior e outro botão "Emitir Relatório" no rodapé, duplicando ações de envio em posições desconexas.
+- Solução aplicada:
+  1. Implementado o método `getBaseUrl(): string` na classe base `App\Core\Controller` e em `RelatoriosController`, calculando e normalizando a URL base da aplicação de forma segura e portável.
+  2. Removido o dropdown duplicado do topo da tela em `app/views/relatorios/estoque_filtros.php`, mantendo apenas o link de navegação `Hub de Relatórios`.
+  3. No rodapé do formulário, implementado o trio oficial e explícito de ações de emissão alinhado ao Design System corporativo: `Visualizar / Imprimir (A4)` (azul), `Baixar em PDF (A4)` (vermelho) e `Exportar Planilha (CSV)` (verde).
+  4. Expandida a suíte de testes `tests/fase23_test.php` para 99 asserções cobrindo a execução direta de `estoqueMovimentacoes()`, a ausência de duplicidade e o correto funcionamento de todas as opções de saída.
+- Como evitar no futuro: Sempre que um controller renderizar views sem passar pelo método padrão `$this->render()` (que injeta variáveis automáticas), garantir que os helpers de resolução de URLs e tokens pertençam à classe base `Controller` e estejam cobertos por testes pontuais de invocação. Evitar duplicar botões de submissão no topo e rodapé de formulários de parametrização.

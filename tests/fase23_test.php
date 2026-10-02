@@ -283,6 +283,10 @@ assertTeste(str_contains($htmlFiltros, 'name="agrupar_grupo"'), "Controle de agr
 assertTeste(str_contains($htmlFiltros, 'name="agrupar_produto"'), "Controle de agrupar_produto presente");
 assertTeste(str_contains($htmlFiltros, 'name="quebra_pagina"'), "Controle de quebra_pagina presente");
 assertTeste(str_contains($htmlFiltros, 'Cantina Geral'), "Centro de Custo 'Cantina Geral' referenciado");
+assertTeste(!str_contains($htmlFiltros, 'id="dropdownEmitirEstoque"'), "Botão repetido/dropdown do topo foi devidamente removido");
+assertTeste(str_contains($htmlFiltros, 'id="btnEmitirImprimir"'), "Botão oficial de emissão 'Visualizar / Imprimir (A4)' presente");
+assertTeste(str_contains($htmlFiltros, 'id="btnEmitirPdf"'), "Botão oficial de emissão 'Baixar em PDF (A4)' presente");
+assertTeste(str_contains($htmlFiltros, 'id="btnEmitirCsv"'), "Botão oficial de emissão 'Exportar Planilha (CSV)' presente");
 
 // -------------------------------------------------------------------
 // 10. Teste de Compilação de PDF Real com Gotenberg (Chromium)

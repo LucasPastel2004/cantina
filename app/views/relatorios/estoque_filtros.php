@@ -136,49 +136,11 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
             </div>
 
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <!-- Dropdown Emitir Oficial -->
-                <div class="dropdown d-inline-block">
-                    <button class="btn btn-enterprise btn-primary btn-sm dropdown-toggle d-inline-flex align-items-center gap-1.5" type="button" id="dropdownEmitirEstoque" data-bs-toggle="dropdown" aria-expanded="false">
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                            <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-                        </svg>
-                        <span>Emitir</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border" aria-labelledby="dropdownEmitirEstoque" style="font-size: 13px;">
-                        <li>
-                            <button type="submit" formaction="<?php echo $baseUrl; ?>/relatorios/estoque-movimentacoes/imprimir" formtarget="_blank" class="dropdown-item d-flex align-items-center gap-2 py-2">
-                                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" class="text-primary"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
-                                <div>
-                                    <span class="d-block fw-semibold">Visualizar / Imprimir (A4)</span>
-                                    <small class="text-muted" style="font-size: 11px;">Tela de impressão oficial do relatório</small>
-                                </div>
-                            </button>
-                        </li>
-                        <li>
-                            <button type="submit" formaction="<?php echo $baseUrl; ?>/relatorios/estoque-movimentacoes/pdf" class="dropdown-item d-flex align-items-center gap-2 py-2">
-                                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" class="text-danger"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/><path d="M4.603 12.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.127.18-.302.476-.566.862-.774.455-.246.99-.413 1.57-.492a12.879 12.879 0 0 1 1.258-.093 18.06 18.06 0 0 1-.865-1.57c-.29-.63-.497-1.3-.59-1.954-.08-.553.003-1.04.25-1.378.18-.246.438-.37.74-.37.498 0 .844.334.975.875.112.46.04 1.05-.183 1.74a17.26 17.26 0 0 1-.77 1.83 23.97 23.97 0 0 0 2.636 1.488c.453-.274.877-.52 1.23-.74.68-.423 1.15-.71 1.43-.84.34-.15.65-.18.89-.09.28.1.44.35.44.68 0 .39-.23.77-.66 1.07-.35.25-.86.49-1.48.71a17.3 17.3 0 0 1-2.01.55c-.75.14-1.53.22-2.31.25-.56.44-1.12.86-1.67 1.25-.66.47-1.28.85-1.83 1.11-.34.16-.65.25-.92.25-.43 0-.75-.2-.87-.55z"/></svg>
-                                <div>
-                                    <span class="d-block fw-semibold">Baixar em PDF (A4)</span>
-                                    <small class="text-muted" style="font-size: 11px;">Documento timbrado para arquivamento</small>
-                                </div>
-                            </button>
-                        </li>
-                        <li><hr class="dropdown-divider my-1"></li>
-                        <li>
-                            <button type="submit" formaction="<?php echo $baseUrl; ?>/relatorios/estoque-movimentacoes/csv" class="dropdown-item d-flex align-items-center gap-2 py-2">
-                                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" class="text-success"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/><path d="M4 11.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5z"/></svg>
-                                <div>
-                                    <span class="d-block fw-semibold">Exportar Planilha (CSV)</span>
-                                    <small class="text-muted" style="font-size: 11px;">Compatível com Microsoft Excel</small>
-                                </div>
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-
                 <!-- Botão Voltar ao Hub -->
-                <a href="<?php echo $baseUrl; ?>/relatorios" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1">
+                <a href="<?php echo $baseUrl; ?>/relatorios" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                    </svg>
                     <span>Hub de Relatórios</span>
                 </a>
             </div>
@@ -416,19 +378,38 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
 
         </div>
 
-        <!-- Botões de Ação de Rodapé -->
+        <!-- Rodapé com as Ações Oficiais de Emissão -->
         <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top flex-wrap gap-2">
             <a href="<?php echo $baseUrl; ?>/relatorios" class="btn btn-enterprise btn-secondary btn-sm">
                 ← Voltar aos Relatórios
             </a>
 
-            <div class="d-flex gap-2">
-                <button type="submit" formaction="<?php echo $baseUrl; ?>/relatorios/estoque-movimentacoes/imprimir" formtarget="_blank" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <!-- Visualizar / Imprimir A4 -->
+                <button type="submit" formaction="<?php echo $baseUrl; ?>/relatorios/estoque-movimentacoes/imprimir" formtarget="_blank" class="btn btn-enterprise btn-primary btn-sm px-3 d-inline-flex align-items-center gap-1.5" id="btnEmitirImprimir">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                         <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
                     </svg>
-                    <span>Emitir Relatório</span>
+                    <span>Visualizar / Imprimir (A4)</span>
+                </button>
+
+                <!-- Baixar em PDF (A4) -->
+                <button type="submit" formaction="<?php echo $baseUrl; ?>/relatorios/estoque-movimentacoes/pdf" class="btn btn-enterprise btn-danger btn-sm px-3 d-inline-flex align-items-center gap-1.5" style="background-color: #dc2626; border-color: #b91c1c; color: #ffffff;" id="btnEmitirPdf">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                        <path d="M4.603 12.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.127.18-.302.476-.566.862-.774.455-.246.99-.413 1.57-.492a12.879 12.879 0 0 1 1.258-.093 18.06 18.06 0 0 1-.865-1.57c-.29-.63-.497-1.3-.59-1.954-.08-.553.003-1.04.25-1.378.18-.246.438-.37.74-.37.498 0 .844.334.975.875.112.46.04 1.05-.183 1.74a17.26 17.26 0 0 1-.77 1.83 23.97 23.97 0 0 0 2.636 1.488c.453-.274.877-.52 1.23-.74.68-.423 1.15-.71 1.43-.84.34-.15.65-.18.89-.09.28.1.44.35.44.68 0 .39-.23.77-.66 1.07-.35.25-.86.49-1.48.71a17.3 17.3 0 0 1-2.01.55c-.75.14-1.53.22-2.31.25-.56.44-1.12.86-1.67 1.25-.66.47-1.28.85-1.83 1.11-.34.16-.65.25-.92.25-.43 0-.75-.2-.87-.55z"/>
+                    </svg>
+                    <span>Baixar em PDF (A4)</span>
+                </button>
+
+                <!-- Exportar Planilha CSV -->
+                <button type="submit" formaction="<?php echo $baseUrl; ?>/relatorios/estoque-movimentacoes/csv" class="btn btn-enterprise btn-success btn-sm px-3 d-inline-flex align-items-center gap-1.5" style="background-color: #16a34a; border-color: #15803d; color: #ffffff;" id="btnEmitirCsv">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                        <path d="M4 11.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                    <span>Exportar Planilha (CSV)</span>
                 </button>
             </div>
         </div>
