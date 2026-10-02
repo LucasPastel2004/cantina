@@ -1077,29 +1077,17 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] **Padronização Estética de Relatórios — Grade Estilo Tabela Excel e Fundo Branco Puro:**
   * Aplicação de linhas pretas contínuas nas laterais esquerda e direita (`border-left: 1px solid #000000 !important; border-right: 1px solid #000000 !important;`), bem como divisórias pretas horizontais entre cada item das listas (`border-bottom: 1px solid #000000 !important;`), atendendo à solicitação da equipe escolar para facilitar a leitura visual direta em grade (formato Excel);
   * **Remoção de Fundos Coloridos nas Listas em Todos os PDFs:** Eliminados todos os tons de azul claro (`#eff6ff`, `.tag-online`), verde claro (`#f0fdf4`), vermelho claro (`#fee2e2`) e zebrados (`#fafafa`, `#f8fafc`) nas linhas de dados de todas as tabelas e subtotais, padronizando o fundo das linhas para branco puro (`background: #ffffff !important;`);
-  * **Garantia de Borda Lateral Direita e Prevenção de Cortes no Chromium:** Corrigida a soma percentual das colunas para totalizar rigorosamente 100% em todas as tabelas, aplicando `table-layout: fixed !important; width: 100% !important; box-sizing: border-box;` e garantindo que o Chromium/Gotenberg não corte a borda preta lateral direita nos PDFs gerados;
-  * Padronização aplicada de forma homogênea a **todas as 8 views de relatórios oficiais do sistema**:
-    1. `app/views/relatorios/extrato_aluno_pdf.php` (Extrato Analítico de Consumo do Aluno);
-    2. `app/views/relatorios/estoque_movimentacoes_pdf.php` (Movimentações de Estoque - Retrato e Paisagem);
-    3. `app/views/relatorios/vendas_alimento_pdf.php` (Vendas por Alimento e Aluno);
-    4. `app/views/relatorios/corte_pdf.php` (Lista de Separação / Corte de Cozinha);
-    5. `app/views/relatorios/desconto_folha_pdf.php` (Espelho Sintético de Desconto em Folha);
-    6. `app/views/relatorios/desconto_folha_individual_pdf.php` (Comprovante Individual de Desconto em Folha);
-    7. `app/views/relatorios/fechamento_caixa_pdf.php` (Espelho de Fechamento de Caixa / PDV);
-    8. `app/views/relatorios/med_negativados_pdf.php` (Relatório Gerencial de Casos MED / Saldos Negativados);
-  * Suporte nativo mantido para visualização direta no navegador, impressão contínua/A4 e geração de PDF via motor Chromium Gotenberg sem falhas de `border-collapse`.
-* [x] **Correção de Transbordo Lateral e Motor de Paginação A4:**
-  * Correção definitiva do transbordo lateral de tabela ("bugado para fora"): aplicação de `table-layout: fixed !important; width: 100% !important;` com larguras percentuais precisas por coluna somando estritamente 100%, quebra de palavras forçada com `word-break: break-word;` e `overflow: hidden;` no contêiner da folha;
-  * Implementação de motor de paginação em folhas físicas A4 (`.sheet-container.page-sheet`): fragmentação de grandes volumes de lançamentos (ex.: mais de 250 registros) em folhas individuais com visualização de cartões A4 reais na tela e quebras físicas automáticas (`page-break-after: always`);
-  * Cabeçalho completo na primeira folha e cabeçalho compacto com marcação `(Continuação)` nas folhas subsequentes;
-  * Contador dinâmico de páginas (`Página X de Y`) exibido nos cabeçalhos e rodapés de cada folha;
-  * Caixa consolidada de fechamento e totais posicionada estritamente na última folha do documento;
-  * Compatibilidade idêntica e homologada para visualização direta em tela (`@media screen`), impressão do navegador (`window.print()`) e exportação de PDF via Gotenberg Chromium.
-* [x] **Testes Automatizados e Auditoria de Regressão:**
-  * Suíte oficial `tests/fase23_test.php` expandida para **129 de 129 asserções aprovadas com 100% de sucesso**;
-  * Validação de compilação real de PDFs em Retrato (115 KB) e Paisagem (117 KB) via contêiner Gotenberg Chromium;
-  * Validação de integridade do arquivo CSV (BOM UTF-8, delimitador `;`, centro de custo Cantina Geral);
-  * Regressão da suíte da Fase 22 (79/79) e Fase 21 (99/99) executadas e 100% aprovadas.
+* [x] **Correção Definitiva de Borda Lateral Direita e Emulação de Impressão no Gotenberg:**
+  * **Diagnóstico da Causa Raiz:** O Chromium Headless do Gotenberg renderizava na mídia padrão `screen` por falta do parâmetro `emulatedMediaType => 'print'`, aplicando regras de `@media screen` (com larguras infladas de até 224mm) ou expandindo contêineres de 100% sobre uma viewport de 794px, o que empurrava a última coluna para `x = 668 pt`, fatiando e cortando mais de 70 pontos para fora do papel A4 físico (594.96 pt);
+  * **Correção no `PdfService.php`:** Adicionado envio explícito de `emulatedMediaType => 'print'` e suporte ao parâmetro `scale` nas requisições cURL para o endpoint `/forms/chromium/convert/html` do Gotenberg;
+  * **Padronização Universal de CSS em todos os 8 relatórios PDF A4 (`_pdf.php`):**
+    - `@page`: `margin: 10mm 0 10mm 0;` (margens verticais controladas e margens horizontais delegadas ao contêiner);
+    - `@media print`: contêiner configurado com `width: 535px !important; max-width: 535px !important; margin: 0 30px !important; padding: 0 !important; box-sizing: border-box !important;` (gerando exatamente `30 + 535 + 30 = 595 pt`, com margem física de segurança de ~10,7mm à direita e à esquerda);
+    - `@media screen`: contêiner com `width: 210mm; max-width: calc(100% - 24px); min-height: 297mm; padding: 10mm 12mm; margin: 0 auto; box-sizing: border-box;`;
+    - **Grade tipo Excel e fundo 100% branco:** Todas as células de tabelas com `border: 1px solid #000000 !important;`, divisórias pretas completas e `background-color: #ffffff !important;`, sem qualquer fundo azul claro ou zebrado;
+    - **Quebra de página e paginação:** Inclusão de `thead { display: table-header-group; }`, `tfoot { display: table-footer-group; }` e prevenção de corte de linhas `tr { page-break-inside: avoid; break-inside: avoid; }`;
+  * **Validação com `pypdf`:** Medição vetorial confirmando borda esquerda em `x = 30.5 pt`, borda direita em `x = 564.5 pt` e margem livre de 30.5 pt até a borda física da folha (595.0 pt), garantindo 100% de visibilidade de todas as bordas e colunas;
+  * Suítes oficiais `tests/fase23_test.php` (134 testes), `tests/fase22_test.php` (79 testes) e `tests/fase21_test.php` (99 testes) 100% aprovadas.
 
 ---
 

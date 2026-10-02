@@ -383,11 +383,11 @@ $totalPaginas = count($paginas);
            ========================================================================== */
         @page {
             size: <?php echo $isPaisagem ? 'A4 landscape' : 'A4 portrait'; ?>;
-            margin: 8mm 10mm;
+            margin: 10mm 0 10mm 0;
         }
 
         * {
-            box-sizing: border-box;
+            box-sizing: border-box !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
@@ -567,24 +567,31 @@ $totalPaginas = count($paginas);
         .table-estoque {
             width: 100% !important;
             table-layout: fixed !important; /* Bloqueia rigorosamente transbordos */
-            border-collapse: collapse;
+            border-collapse: collapse !important;
             margin-bottom: 10px;
             font-size: <?php echo $isPaisagem ? '9px' : '8.5px'; ?>;
-            border-left: 1px solid #000000;
-            border-right: 1px solid #000000;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border: 1px solid #000000 !important;
+            box-sizing: border-box !important;
+        }
+        .table-estoque thead {
+            display: table-header-group;
+        }
+        .table-estoque tfoot {
+            display: table-footer-group;
+        }
+        .table-estoque tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
         .table-estoque th {
-            background-color: #f1f5f9;
+            background-color: #ffffff !important;
             color: #0f172a;
             font-weight: 700;
             text-transform: uppercase;
             font-size: 8px;
             letter-spacing: 0.02em;
             padding: 4px 5px;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border: 1px solid #000000 !important;
             text-align: left;
             overflow: hidden;
             word-break: break-word;
@@ -600,7 +607,7 @@ $totalPaginas = count($paginas);
         .table-estoque td {
             background-color: #ffffff !important;
             padding: 3px 5px;
-            border-bottom: 1px solid #000000 !important; /* Linha preta entre os itens das listas */
+            border: 1px solid #000000 !important; /* Linhas pretas estilo Excel */
             vertical-align: middle;
             color: #0f172a;
             overflow: hidden;
@@ -719,15 +726,17 @@ $totalPaginas = count($paginas);
                 display: none !important;
             }
             .sheet-container.page-sheet {
-                width: 100% !important;
-                max-width: 100% !important;
+                width: <?php echo $isPaisagem ? '760px' : '535px'; ?> !important;
+                max-width: <?php echo $isPaisagem ? '760px' : '535px'; ?> !important;
                 min-height: auto !important;
                 height: auto !important;
-                margin: 0 !important;
+                margin: 0 <?php echo $isPaisagem ? '40px' : '30px'; ?> !important;
                 padding: 0 !important;
                 box-shadow: none !important;
+                border: none !important;
                 border-radius: 0 !important;
                 display: block !important;
+                box-sizing: border-box !important;
                 page-break-after: always !important;
                 break-after: page !important;
             }

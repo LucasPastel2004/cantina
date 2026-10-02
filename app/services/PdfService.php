@@ -180,6 +180,7 @@ class PdfService
             'files' => new \CURLFile($tempFile, 'text/html', 'index.html'),
             'preferCssPageSize' => $opcoes['preferCssPageSize'] ?? 'true',
             'printBackground'   => $opcoes['printBackground'] ?? 'true',
+            'emulatedMediaType' => $opcoes['emulatedMediaType'] ?? 'print',
             'marginTop'         => $opcoes['marginTop'] ?? '0',
             'marginBottom'      => $opcoes['marginBottom'] ?? '0',
             'marginLeft'        => $opcoes['marginLeft'] ?? '0',
@@ -194,6 +195,9 @@ class PdfService
         }
         if (isset($opcoes['landscape'])) {
             $postFields['landscape'] = $opcoes['landscape'] ? 'true' : 'false';
+        }
+        if (isset($opcoes['scale'])) {
+            $postFields['scale'] = (string)$opcoes['scale'];
         }
 
         $ch = curl_init();

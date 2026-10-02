@@ -67,7 +67,7 @@ if ($emitirAlim && $emitirAluno) {
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 12mm 10mm 12mm;
+            margin: 10mm 0 10mm 0;
             @bottom-right {
                 content: "1/1";
                 font-family: Arial, sans-serif;
@@ -76,17 +76,19 @@ if ($emitirAlim && $emitirAluno) {
             }
         }
         * {
-            box-sizing: border-box;
+            box-sizing: border-box !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        body {
+        html, body {
             font-family: "Segoe UI", Arial, Helvetica, sans-serif;
             color: #000000;
             margin: 0;
             padding: 0;
             font-size: 8.5pt;
             line-height: 1.35;
+            background: #ffffff;
+            width: 100%;
         }
         .font-tabular {
             font-variant-numeric: tabular-nums;
@@ -147,26 +149,29 @@ if ($emitirAlim && $emitirAluno) {
                 padding: 24px 0 40px 0;
             }
             .no-print {
-                width: 200mm;
+                width: 210mm;
                 max-width: calc(100% - 32px);
                 margin: 0 auto 16px auto;
                 box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
             }
             .container {
-                width: 200mm;
-                max-width: calc(100% - 32px);
-                min-height: 280mm;
+                width: 210mm;
+                max-width: calc(100% - 24px);
+                min-height: 297mm;
                 margin: 0 auto;
                 background: #ffffff;
-                padding: 12mm 15mm 15mm 15mm;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
+                padding: 10mm 12mm;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                box-sizing: border-box;
                 border-radius: 2px;
+                position: relative;
             }
         }
 
         /* Impressão Direta (Física / Browser Print / Gotenberg PDF) */
         @media print {
-            body {
+            html, body {
+                width: 100% !important;
                 background: #ffffff !important;
                 padding: 0 !important;
                 margin: 0 !important;
@@ -176,15 +181,24 @@ if ($emitirAlim && $emitirAluno) {
                 display: none !important;
             }
             .container {
-                width: 100% !important;
-                max-width: 100% !important;
+                width: 535px !important;
+                max-width: 535px !important;
                 min-height: auto !important;
-                margin: 0 !important;
+                margin: 0 30px !important;
                 padding: 0 !important;
                 box-shadow: none !important;
+                border: none !important;
                 border-radius: 0 !important;
+                background: #ffffff !important;
+                box-sizing: border-box !important;
             }
         }
+
+        /* Quebra de páginas adequada em tabelas longas */
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+        tr { page-break-inside: avoid; break-inside: avoid; }
+        .school-header, .resumo-alimentos-card, .footer-assinaturas-box { page-break-inside: avoid; break-inside: avoid; }
 
         /* Cabeçalho Oficial Escolar */
         .school-header {
@@ -223,24 +237,21 @@ if ($emitirAlim && $emitirAluno) {
         table.tabela-relatorio {
             width: 100% !important;
             table-layout: fixed !important;
-            box-sizing: border-box;
-            border-collapse: collapse;
+            box-sizing: border-box !important;
+            border-collapse: collapse !important;
             margin-top: 4px;
             margin-bottom: 8px;
             font-size: 8pt;
-            border-left: 1px solid #000000;
-            border-right: 1px solid #000000;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border: 1px solid #000000 !important;
         }
         table.tabela-relatorio th {
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border: 1px solid #000000 !important;
             padding: 3px 4px;
             font-weight: bold;
             text-align: left;
             color: #000000;
             font-size: 8pt;
+            background: #ffffff !important;
         }
         table.tabela-relatorio th:first-child,
         table.tabela-relatorio td:first-child {
@@ -253,9 +264,11 @@ if ($emitirAlim && $emitirAluno) {
         table.tabela-relatorio td {
             padding: 2.5px 4px;
             vertical-align: middle;
-            border-bottom: 1px solid #000000 !important; /* Linha preta entre os itens das listas */
+            border: 1px solid #000000 !important; /* Linha preta estilo Excel */
             color: #000000;
             background: #ffffff !important; /* Fundo branco puro nos itens das listas */
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
         table.tabela-relatorio tbody tr td {
             background: #ffffff !important;

@@ -76,14 +76,20 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
     <style>
         @page {
             size: A4 portrait;
-            margin: 8mm 10mm;
+            margin: 10mm 0 10mm 0;
+            @bottom-right {
+                content: "1/1";
+                font-family: Arial, sans-serif;
+                font-size: 8pt;
+                color: #64748b;
+            }
         }
         * {
-            box-sizing: border-box;
+            box-sizing: border-box !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        body {
+        html, body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 8.5pt;
             color: #000000;
@@ -91,12 +97,65 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             margin: 0;
             padding: 0;
             line-height: 1.25;
-        }
-        .container {
             width: 100%;
-            max-width: 190mm;
-            margin: 0 auto;
         }
+
+        @media screen {
+            body {
+                background-color: #cbd5e1;
+                padding: 20px 10px;
+            }
+            .container {
+                width: 210mm;
+                max-width: calc(100% - 24px);
+                min-height: 297mm;
+                margin: 0 auto;
+                background: #ffffff;
+                padding: 10mm 12mm;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                box-sizing: border-box;
+                position: relative;
+            }
+            .no-print {
+                margin-bottom: 15px;
+                background: #f8fafc;
+                padding: 8px 14px;
+                border: 1px solid #cbd5e1;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-radius: 4px;
+            }
+        }
+
+        @media print {
+            html, body {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .container {
+                width: 535px !important;
+                max-width: 535px !important;
+                margin: 0 30px !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                background: #ffffff !important;
+                box-sizing: border-box !important;
+            }
+        }
+
+        /* Quebra de páginas adequada em tabelas longas */
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+        tr { page-break-inside: avoid; break-inside: avoid; }
+        .header-top, .resumo-box, .footer-note, .table-control { page-break-inside: avoid; break-inside: avoid; }
+
         .header-top {
             display: flex;
             justify-content: space-between;
@@ -128,21 +187,18 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         table {
             width: 100% !important;
             table-layout: fixed !important;
-            box-sizing: border-box;
-            border-collapse: collapse;
+            box-sizing: border-box !important;
+            border-collapse: collapse !important;
             margin-bottom: 6px;
             font-size: 8pt;
-            border-left: 1px solid #000000;
-            border-right: 1px solid #000000;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border: 1px solid #000000 !important;
         }
         th {
             font-weight: bold;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border: 1px solid #000000 !important;
             padding: 2px 4px;
             text-align: left;
+            background: #ffffff !important;
         }
         th:first-child,
         td:first-child {
@@ -154,20 +210,21 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         }
         td {
             padding: 2px 4px;
-            border-bottom: 1px solid #000000 !important; /* Linha preta entre os itens das listas */
+            border: 1px solid #000000 !important; /* Linhas pretas estilo Excel */
             background: #ffffff !important; /* Fundo branco puro nos itens das listas */
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
         tbody tr td {
             background: #ffffff !important;
         }
         .table-control th {
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
-            background: #f8fafc;
+            border: 1px solid #000000 !important;
+            background: #ffffff !important;
             padding: 3px 4px;
         }
         .table-control td {
-            border-bottom: 1px solid #000000 !important;
+            border: 1px solid #000000 !important;
             padding: 4px;
             font-weight: normal;
             background: #ffffff !important;
@@ -181,7 +238,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         .row-subtotal td {
             font-weight: bold;
             border-top: 1px solid #000000 !important;
-            border-bottom: 1px solid #000000 !important;
+            border-bottom: 1.5px solid #000000 !important;
             background: #ffffff !important;
         }
         .tag-origem {
@@ -228,20 +285,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             justify-content: space-between;
             font-size: 7pt;
             color: #475569;
-            border-top: 1px solid #cbd5e1;
+            border-top: 1px solid #000000;
             padding-top: 4px;
-        }
-        .no-print {
-            margin-bottom: 15px;
-            background: #f8fafc;
-            padding: 8px 14px;
-            border: 1px solid #cbd5e1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        @media print {
-            .no-print { display: none !important; }
         }
     </style>
 </head>

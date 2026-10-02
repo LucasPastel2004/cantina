@@ -22,9 +22,22 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
     <meta charset="UTF-8">
     <title>Famílias Negativadas MED — Cantina Web</title>
     <style>
-        @page { size: A4 portrait; margin: 12mm 15mm; }
-        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        body {
+        @page {
+            size: A4 portrait;
+            margin: 10mm 0 10mm 0;
+            @bottom-right {
+                content: "1/1";
+                font-family: Arial, sans-serif;
+                font-size: 8pt;
+                color: #64748b;
+            }
+        }
+        * {
+            box-sizing: border-box !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        html, body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: #0f172a;
             background: #fff;
@@ -32,12 +45,69 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             padding: 0;
             font-size: 11px;
             line-height: 1.4;
+            width: 100%;
         }
-        .container { max-width: 180mm; margin: 0 auto; }
         .font-tabular {
             font-variant-numeric: tabular-nums;
             font-feature-settings: 'tnum' 1, 'zero' 1;
         }
+
+        @media screen {
+            body {
+                background-color: #cbd5e1;
+                padding: 20px 10px;
+            }
+            .container {
+                width: 210mm;
+                max-width: calc(100% - 24px);
+                min-height: 297mm;
+                margin: 0 auto;
+                background: #ffffff;
+                padding: 10mm 12mm;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                box-sizing: border-box;
+                position: relative;
+            }
+            .no-print {
+                margin-bottom: 15px;
+                background: #f8fafc;
+                padding: 8px 12px;
+                border: 1px solid #cbd5e1;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-radius: 4px;
+            }
+        }
+
+        @media print {
+            html, body {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .container {
+                width: 535px !important;
+                max-width: 535px !important;
+                margin: 0 30px !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                background: #ffffff !important;
+                box-sizing: border-box !important;
+            }
+        }
+
+        /* Quebra de páginas adequada em tabelas longas */
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+        tr { page-break-inside: avoid; break-inside: avoid; }
+        .print-header, .stat-grid { page-break-inside: avoid; break-inside: avoid; }
+
         .print-header {
             border-bottom: 2px solid #b91c1c;
             padding-bottom: 10px;
@@ -66,24 +136,20 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         table {
             width: 100% !important;
             table-layout: fixed !important;
-            box-sizing: border-box;
-            border-collapse: collapse;
+            box-sizing: border-box !important;
+            border-collapse: collapse !important;
             margin-bottom: 20px;
             font-size: 10px;
-            border-left: 1px solid #000000;
-            border-right: 1px solid #000000;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border: 1px solid #000000 !important;
         }
         th {
-            background: #f8fafc;
+            background: #ffffff !important;
             color: #0f172a;
             font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
             padding: 5px 8px;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border: 1px solid #000000 !important;
             text-align: left;
         }
         th:first-child,
@@ -96,8 +162,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         }
         td {
             padding: 5px 8px;
-            border-bottom: 1px solid #000000 !important; /* Linha preta entre os itens das listas */
+            border: 1px solid #000000 !important; /* Linhas pretas estilo Excel */
             background-color: #ffffff !important; /* Fundo branco puro nos itens das listas */
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
         tr:nth-child(even) td { background-color: #ffffff !important; }
         .text-right { text-align: right; }
@@ -105,21 +173,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         .total-row td {
             background: #ffffff !important;
             font-weight: 700;
-            border-top: 1px solid #000000 !important;
-            border-bottom: 1px solid #000000 !important;
+            border: 1.5px solid #000000 !important;
             font-size: 11px;
             color: #b91c1c;
         }
-        .no-print {
-            margin-bottom: 15px;
-            background: #f8fafc;
-            padding: 8px 12px;
-            border: 1px solid #cbd5e1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>

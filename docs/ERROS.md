@@ -1379,3 +1379,28 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - Removidos todos os fundos azul claro, verde claro, vermelho e zebrados nas linhas de itens das listas, definindo estritamente `background: #ffffff !important;` e `border-bottom: 1px solid #000000 !important;` nas células `td`, preservando o padrão de grade tipo Excel com linhas divisórias pretas e fundo branco puro.
   2. Executadas as suítes de teste `tests/fase23_test.php` (129 asserções), `tests/fase22_test.php` (79 asserções) e `tests/fase21_test.php` (99 asserções), todas aprovadas com 100% de sucesso.
 - Como evitar no futuro: Em templates destinados à conversão para PDF via Chromium, garantir matematicamente que a soma das larguras de todas as colunas de qualquer tabela seja estritamente igual a 100%, aplicar `table-layout: fixed !important; box-sizing: border-box;` e assegurar que as linhas de dados mantenham fundo neutro `#ffffff` conforme a preferência corporativa da instituição.
+
+---
+
+## 2026-10-02 - Borda direita da tabela cortada no PDF devido à ausência de emulação de mídia 'print' e descompasso de viewport no Gotenberg Chromium
+
+- Sintoma: Mesmo com a soma percentual das colunas ajustada em 100%, o arquivo PDF compilado pelo Gotenberg continuava cortando a borda vertical da extremidade direita da tabela e parte dos valores da última coluna ("Saldo"), enquanto a visualização de tela do navegador e o diálogo de impressão direta do browser saíam normais ("ainda está cortando").
+- Causa:
+  1. No arquivo `app/services/PdfService.php`, o método `htmlToPdf()` não enviava o parâmetro `emulatedMediaType` para o endpoint `/forms/chromium/convert/html` do Gotenberg. O Chromium Headless executava a conversão com a mídia padrão `screen`.
+  2. Como consequência, o Chromium avaliava as regras `@media screen { .doc-page { width: 200mm; padding: 10mm 12mm; } }` (somando 224mm de largura total contra os 210mm físicos do papel A4) ou expandia o contêiner `width: 100%` sobre uma viewport padrão de 794px. Em medição vetorial via `pypdf`, a coluna "Saldo" estava sendo renderizada em `x = 668 pt`, enquanto a folha física A4 termina em `594.96 pt`! Exatos 73 pontos (~2,6 cm) eram cortados para fora da folha física.
+  3. Faltava nos templates PDF um contêiner de impressão calibrado estritamente para a largura útil do A4 (535px) com margens laterais simétricas fixas (30px de cada lado), totalizando `30 + 535 + 30 = 595 pt`, sem depender de auto-ajustes da viewport do navegador.
+- Solução aplicada:
+  1. Em `app/services/PdfService.php`, adicionado `emulatedMediaType => $opcoes['emulatedMediaType'] ?? 'print'` e suporte ao parâmetro `scale` nas opções enviadas via cURL ao Gotenberg, forçando a compilação do Chromium a avaliar exclusivamente as regras `@media print`.
+  2. Em todos os templates de relatórios PDF A4 (`extrato_aluno_pdf.php`, `corte_pdf.php`, `desconto_folha_pdf.php`, `desconto_folha_individual_pdf.php`, `estoque_movimentacoes_pdf.php`, `fechamento_caixa_pdf.php`, `med_negativados_pdf.php` e `vendas_alimento_pdf.php`):
+     - No `@page`: configurado `margin: 10mm 0 10mm 0;` (margens verticais controladas e margens horizontais delegadas ao contêiner);
+     - No `@media print`: contêiner configurado com `width: 535px !important; max-width: 535px !important; margin: 0 30px !important; padding: 0 !important; box-sizing: border-box !important;`;
+     - No `@media screen`: contêiner configurado com `width: 210mm; max-width: calc(100% - 24px); min-height: 297mm; padding: 10mm 12mm; margin: 0 auto; box-sizing: border-box;`;
+     - Nas tabelas: `border: 1px solid #000000 !important;` com divisórias pretas completas em todas as células (estética Excel) e fundo 100% branco puro (`background-color: #ffffff !important;`), sem fundos azuis ou zebrados;
+     - Nas quebras de página: ativada repetição automática de cabeçalho `thead { display: table-header-group; }`, rodapé `tfoot { display: table-footer-group; }` e prevenção contra quebra de linhas no meio `tr { page-break-inside: avoid; break-inside: avoid; }`.
+  3. Validação matemática definitiva via script automatizado com `pypdf`:
+     - Borda esquerda da tabela: `x = 30.5 pt`;
+     - Borda direita da tabela: `x = 564.5 pt`;
+     - Margem física direita livre até a borda da folha: `595.0 - 564.5 = 30.5 pt` (~10,7 mm);
+     - 100% da borda direita preta visível, sem corte em nenhuma página.
+  4. Executados testes de compilação em lote para todos os 6 relatórios em `tests/teste_todos_pdfs.php` e suítes `tests/fase23_test.php` (134 testes), `tests/fase22_test.php` (79 testes) e `tests/fase21_test.php` (99 testes), com 100% de aprovação.
+- Como evitar no futuro: Em integrações com o Gotenberg Chromium para geração de PDFs A4, sempre enviar explicitamente `emulatedMediaType: 'print'` e definir a largura do contêiner principal como 535px com margem lateral fixa de 30px no `@media print` para casar perfeitamente com os 594.96 pontos do papel A4, evitando que a viewport padrão do Chromium de 800px infle as dimensões relativas em `%` e extrapole a folha física.

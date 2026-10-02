@@ -44,7 +44,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 12mm 10mm 12mm;
+            margin: 10mm 0 10mm 0;
             @bottom-right {
                 content: "1/1";
                 font-family: Arial, sans-serif;
@@ -53,17 +53,19 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             }
         }
         * {
-            box-sizing: border-box;
+            box-sizing: border-box !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        body {
+        html, body {
             font-family: "Segoe UI", Arial, Helvetica, sans-serif;
             color: #000000;
             margin: 0;
             padding: 0;
             font-size: 8.5pt;
             line-height: 1.35;
+            background: #ffffff;
+            width: 100%;
         }
         .font-tabular {
             font-variant-numeric: tabular-nums;
@@ -77,7 +79,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
                 padding: 20px 10px;
             }
             .top-actions-bar {
-                max-width: 200mm;
+                max-width: 210mm;
                 margin: 0 auto 14px auto;
                 background: #ffffff;
                 border: 1px solid #94a3b8;
@@ -117,27 +119,54 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
                 background: #f8fafc;
             }
             .doc-page {
-                width: 200mm;
+                width: 210mm;
                 max-width: calc(100% - 24px);
-                min-height: 285mm;
+                min-height: 297mm;
                 background: #ffffff;
                 padding: 10mm 12mm;
                 margin: 0 auto;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                box-sizing: border-box;
                 position: relative;
             }
         }
 
         @media print {
-            .top-actions-bar {
-                display: none !important;
-            }
-            .doc-page {
+            html, body {
                 width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                box-shadow: none !important;
+                background: #ffffff !important;
             }
+            .top-actions-bar, .no-print {
+                display: none !important;
+            }
+            .doc-page {
+                width: 535px !important;
+                max-width: 535px !important;
+                margin: 0 30px !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                background: #ffffff !important;
+                box-sizing: border-box !important;
+            }
+        }
+
+        /* Quebra de páginas adequada em tabelas longas */
+        thead {
+            display: table-header-group;
+        }
+        tfoot {
+            display: table-footer-group;
+        }
+        tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .report-header, .student-info-box, .resumo-saldo-card, .signature-section {
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         /* Cabeçalho Oficial do Relatório Escolar */
@@ -228,23 +257,19 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
         .table-extrato {
             width: 100% !important;
             table-layout: fixed !important;
-            border-collapse: collapse;
+            border-collapse: collapse !important;
             font-size: 8.5pt;
             margin-bottom: 14px;
-            border-left: 1px solid #000000;
-            border-right: 1px solid #000000;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
-            box-sizing: border-box;
+            border: 1px solid #000000 !important;
+            box-sizing: border-box !important;
         }
         .table-extrato thead th {
-            background-color: #ffffff;
+            background-color: #ffffff !important;
             color: #0f172a;
             font-weight: 700;
             font-size: 8pt;
             padding: 5px 6px;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border: 1px solid #000000 !important;
             text-transform: none;
             letter-spacing: normal;
         }
@@ -263,7 +288,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
         }
         .table-extrato tbody td {
             padding: 4px 6px;
-            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
+            border: 1px solid #000000 !important; /* Linha preta entre os itens e divisórias estilo Excel */
             vertical-align: middle;
             color: #0f172a;
             background-color: #ffffff !important;
@@ -284,8 +309,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             padding: 6px;
             font-weight: 800;
             font-size: 9pt;
-            border-top: 1.5px solid #000000;
-            border-bottom: 1.5px solid #000000;
+            border: 1.5px solid #000000 !important;
             background-color: #ffffff !important;
         }
 

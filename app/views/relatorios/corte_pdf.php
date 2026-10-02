@@ -25,9 +25,22 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
     <meta charset="UTF-8">
     <title>Pedido Fornecedor — <?php echo htmlspecialchars($dataFmt . ' ' . $turno); ?></title>
     <style>
-        @page { size: A4 portrait; margin: 12mm 15mm; }
-        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        body {
+        @page {
+            size: A4 portrait;
+            margin: 10mm 0 10mm 0;
+            @bottom-right {
+                content: "1/1";
+                font-family: Arial, sans-serif;
+                font-size: 8pt;
+                color: #64748b;
+            }
+        }
+        * {
+            box-sizing: border-box !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        html, body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: #0f172a;
             background: #fff;
@@ -35,8 +48,69 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             padding: 0;
             font-size: 11px;
             line-height: 1.4;
+            width: 100%;
         }
-        .container { max-width: 180mm; margin: 0 auto; }
+        .font-tabular {
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: 'tnum' 1, 'zero' 1;
+        }
+
+        @media screen {
+            body {
+                background-color: #cbd5e1;
+                padding: 20px 10px;
+            }
+            .container {
+                width: 210mm;
+                max-width: calc(100% - 24px);
+                min-height: 297mm;
+                margin: 0 auto;
+                background: #ffffff;
+                padding: 10mm 12mm;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                box-sizing: border-box;
+                position: relative;
+            }
+            .no-print {
+                margin-bottom: 15px;
+                background: #f8fafc;
+                padding: 8px 12px;
+                border: 1px solid #cbd5e1;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-radius: 4px;
+            }
+        }
+
+        @media print {
+            html, body {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .container {
+                width: 535px !important;
+                max-width: 535px !important;
+                margin: 0 30px !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                background: #ffffff !important;
+                box-sizing: border-box !important;
+            }
+        }
+
+        /* Quebra de páginas adequada em tabelas longas */
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+        tr { page-break-inside: avoid; break-inside: avoid; }
+        .print-header, .stat-grid, .sign-box { page-break-inside: avoid; break-inside: avoid; }
+
         .print-header {
             border-bottom: 2px solid #1d4ed8;
             padding-bottom: 10px;
@@ -50,10 +124,6 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         .school-title { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0; }
         .report-title { font-size: 12px; font-weight: 600; color: #1d4ed8; margin: 2px 0 0 0; }
         .report-sub { font-size: 9px; color: #64748b; margin: 1px 0 0 0; }
-        .font-tabular {
-            font-variant-numeric: tabular-nums;
-            font-feature-settings: 'tnum' 1, 'zero' 1;
-        }
         .stat-grid {
             display: flex;
             justify-content: space-between;
@@ -69,24 +139,20 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         .data-table {
             width: 100% !important;
             table-layout: fixed !important;
-            border-collapse: collapse;
+            border-collapse: collapse !important;
             margin-bottom: 20px;
             font-size: 10.5px;
-            border-left: 1px solid #000000;
-            border-right: 1px solid #000000;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
-            box-sizing: border-box;
+            border: 1px solid #000000 !important;
+            box-sizing: border-box !important;
         }
         .data-table th {
-            background: #f1f5f9;
+            background: #ffffff !important;
             color: #0f172a;
             font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
             padding: 6px 8px;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border: 1px solid #000000 !important;
             text-align: left;
         }
         .data-table th:first-child,
@@ -102,7 +168,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         }
         .data-table td {
             padding: 6px 8px;
-            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
+            border: 1px solid #000000 !important; /* Linhas pretas estilo Excel */
             font-size: 10.5px;
             background: #ffffff !important;
             overflow-wrap: break-word;
@@ -112,7 +178,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         .cell-code { font-family: monospace; font-weight: 600; color: #334155; }
         .cell-right { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
         .total-row { background: #ffffff !important; font-weight: 700; }
-        .total-row td { border-top: 1px solid #000000; border-bottom: 1px solid #000000; font-size: 12px; background: #ffffff !important; }
+        .total-row td { border: 1.5px solid #000000 !important; font-size: 12px; background: #ffffff !important; }
         .sign-box {
             display: flex;
             justify-content: space-between;
@@ -122,21 +188,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         .sign-line {
             width: 45%;
             text-align: center;
-            border-top: 1px solid #94a3b8;
+            border-top: 1px solid #000000;
             padding-top: 4px;
             font-size: 9px;
             color: #475569;
         }
-        .no-print {
-            margin-bottom: 15px;
-            background: #f8fafc;
-            padding: 8px 12px;
-            border: 1px solid #cbd5e1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>
