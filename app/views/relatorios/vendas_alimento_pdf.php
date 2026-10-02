@@ -221,7 +221,9 @@ if ($emitirAlim && $emitirAluno) {
 
         /* Tabela de Vendas Oficial (Estética Excel com Laterais e Linhas Pretas entre Itens) */
         table.tabela-relatorio {
-            width: 100%;
+            width: 100% !important;
+            table-layout: fixed !important;
+            box-sizing: border-box;
             border-collapse: collapse;
             margin-top: 4px;
             margin-bottom: 8px;
@@ -242,17 +244,21 @@ if ($emitirAlim && $emitirAluno) {
         }
         table.tabela-relatorio th:first-child,
         table.tabela-relatorio td:first-child {
-            border-left: 1px solid #000000;
+            border-left: 1px solid #000000 !important;
         }
         table.tabela-relatorio th:last-child,
         table.tabela-relatorio td:last-child {
-            border-right: 1px solid #000000;
+            border-right: 1px solid #000000 !important;
         }
         table.tabela-relatorio td {
             padding: 2.5px 4px;
             vertical-align: middle;
-            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
+            border-bottom: 1px solid #000000 !important; /* Linha preta entre os itens das listas */
             color: #000000;
+            background: #ffffff !important; /* Fundo branco puro nos itens das listas */
+        }
+        table.tabela-relatorio tbody tr td {
+            background: #ffffff !important;
         }
 
         .text-center { text-align: center; }
@@ -261,27 +267,29 @@ if ($emitirAlim && $emitirAluno) {
 
         /* Linhas de Totalização Oficial */
         .row-total-dia td {
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border-top: 1px solid #000000 !important;
+            border-bottom: 1px solid #000000 !important;
             font-weight: bold;
             padding: 3.5px 4px;
             color: #000000;
+            background: #ffffff !important;
         }
         .row-total-periodo td {
-            border-top: 1px solid #000000;
-            border-bottom: 2px solid #000000;
+            border-top: 1px solid #000000 !important;
+            border-bottom: 2px solid #000000 !important;
             font-weight: bold;
             padding: 4px 4px;
             color: #000000;
             font-size: 8.5pt;
+            background: #ffffff !important;
         }
         .row-subtotal-turma td {
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
+            border-top: 1px solid #000000 !important;
+            border-bottom: 1px solid #000000 !important;
             font-weight: bold;
             padding: 3px 4px;
             color: #000000;
-            background: #f8fafc;
+            background: #ffffff !important;
         }
 
         /* Banners de Turma e Quebras de Página */
@@ -407,25 +415,36 @@ if ($emitirAlim && $emitirAluno) {
 
         <?php if ($agruparPer): ?>
             <!-- CASO 1.1: AGRUPADO POR DIA (Conforme relatorio de vendas por período.pdf) -->
+            <?php
+            $wData = 11;
+            $wHora = $emitirHora ? 8 : 0;
+            $wTipo = $agruparTipo ? 11 : 0;
+            $wQtd  = 8;
+            $wUnit = 11;
+            $wTot  = 11;
+            $wForma = $emitirForma ? 11 : 0;
+            $wObs  = $emitirObs ? 14 : 0;
+            $wAlim = 100 - ($wData + $wHora + $wTipo + $wQtd + $wUnit + $wTot + $wForma + $wObs);
+            ?>
             <table class="tabela-relatorio">
                 <thead>
                     <tr>
-                        <th style="width: 14%;">Data</th>
+                        <th style="width: <?php echo $wData; ?>%;">Data</th>
                         <?php if ($emitirHora): ?>
-                            <th style="width: 10%;" class="text-center">Horário</th>
+                            <th style="width: <?php echo $wHora; ?>%;" class="text-center">Horário</th>
                         <?php endif; ?>
                         <?php if ($agruparTipo): ?>
-                            <th style="width: 14%;">Tipo Pessoa</th>
+                            <th style="width: <?php echo $wTipo; ?>%;">Tipo Pessoa</th>
                         <?php endif; ?>
-                        <th style="<?php echo ($emitirHora || $agruparTipo || $emitirForma || $emitirObs) ? 'width: 32%;' : 'width: 44%;'; ?>">Alimento</th>
-                        <th style="width: 12%;" class="text-right">Quantidade</th>
-                        <th style="width: 15%;" class="text-right">Valor Unitário</th>
-                        <th style="width: 15%;" class="text-right">Valor Total</th>
+                        <th style="width: <?php echo $wAlim; ?>%;">Alimento</th>
+                        <th style="width: <?php echo $wQtd; ?>%;" class="text-right">Quantidade</th>
+                        <th style="width: <?php echo $wUnit; ?>%;" class="text-right">Valor Unitário</th>
+                        <th style="width: <?php echo $wTot; ?>%;" class="text-right">Valor Total</th>
                         <?php if ($emitirForma): ?>
-                            <th style="width: 14%;">Forma Pagto</th>
+                            <th style="width: <?php echo $wForma; ?>%;">Forma Pagto</th>
                         <?php endif; ?>
                         <?php if ($emitirObs): ?>
-                            <th style="width: 16%;">Observação</th>
+                            <th style="width: <?php echo $wObs; ?>%;">Observação</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
@@ -490,12 +509,12 @@ if ($emitirAlim && $emitirAluno) {
             <table class="tabela-relatorio">
                 <thead>
                     <tr>
-                        <th style="width: 14%;">Código</th>
-                        <th style="width: 44%;">Alimento</th>
-                        <th style="width: 18%;">Categoria</th>
+                        <th style="width: 12%;">Código</th>
+                        <th style="width: 38%;">Alimento</th>
+                        <th style="width: 16%;">Categoria</th>
                         <th style="width: 10%;" class="text-right">Qtd Total</th>
-                        <th style="width: 14%;" class="text-right">Preço Médio</th>
-                        <th style="width: 14%;" class="text-right">Valor Total</th>
+                        <th style="width: 12%;" class="text-right">Preço Médio</th>
+                        <th style="width: 12%;" class="text-right">Valor Total</th>
                     </tr>
                 </thead>
                 <tbody>

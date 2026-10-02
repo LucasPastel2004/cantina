@@ -126,7 +126,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             color: #000000;
         }
         table {
-            width: 100%;
+            width: 100% !important;
+            table-layout: fixed !important;
+            box-sizing: border-box;
             border-collapse: collapse;
             margin-bottom: 6px;
             font-size: 8pt;
@@ -144,15 +146,19 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         }
         th:first-child,
         td:first-child {
-            border-left: 1px solid #000000;
+            border-left: 1px solid #000000 !important;
         }
         th:last-child,
         td:last-child {
-            border-right: 1px solid #000000;
+            border-right: 1px solid #000000 !important;
         }
         td {
             padding: 2px 4px;
-            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
+            border-bottom: 1px solid #000000 !important; /* Linha preta entre os itens das listas */
+            background: #ffffff !important; /* Fundo branco puro nos itens das listas */
+        }
+        tbody tr td {
+            background: #ffffff !important;
         }
         .table-control th {
             border-top: 1px solid #000000;
@@ -161,9 +167,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             padding: 3px 4px;
         }
         .table-control td {
-            border-bottom: 1px solid #000000;
+            border-bottom: 1px solid #000000 !important;
             padding: 4px;
             font-weight: normal;
+            background: #ffffff !important;
         }
         .font-tabular {
             font-variant-numeric: tabular-nums;
@@ -173,9 +180,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         .text-center { text-align: center; }
         .row-subtotal td {
             font-weight: bold;
-            border-top: 1px solid #000000;
-            border-bottom: 1px solid #000000;
-            background: #fafafa;
+            border-top: 1px solid #000000 !important;
+            border-bottom: 1px solid #000000 !important;
+            background: #ffffff !important;
         }
         .tag-origem {
             font-size: 7pt;
@@ -184,12 +191,14 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             text-transform: uppercase;
         }
         .tag-online {
-            background: #eff6ff;
+            background: #ffffff !important;
+            border: 1px solid #1d4ed8;
             color: #1d4ed8;
             font-weight: bold;
         }
         .tag-balcao {
-            background: #f1f5f9;
+            background: #ffffff !important;
+            border: 1px solid #64748b;
             color: #334155;
         }
         
@@ -291,10 +300,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         <thead>
             <tr>
                 <th style="width: 8%;">Duplicata</th>
-                <th style="width: 32%;">Aluno</th>
+                <th style="width: 31%;">Aluno</th>
                 <th style="width: 8%;">Referência</th>
                 <th style="width: 8%;">Finalidade</th>
-                <th style="width: 9%;">Vencto</th>
+                <th style="width: 8%;">Vencto</th>
                 <th style="width: 8%;" class="text-right">Vlr Nominal</th>
                 <th style="width: 5%;" class="text-right">Multa</th>
                 <th style="width: 5%;" class="text-right">Juros</th>
@@ -342,12 +351,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
     <table>
         <thead>
             <tr>
-                <th style="width: 36%;">Alimento</th>
-                <th style="width: 36%;">Aluno</th>
+                <th style="width: 32%;">Alimento</th>
+                <th style="width: 32%;">Aluno</th>
                 <th style="width: 10%;" class="text-right">PrcUnitário</th>
                 <th style="width: 6%;" class="text-center">Qtde</th>
-                <th style="width: 12%;" class="text-right">Vlr Pago</th>
-                <th style="width: 10%;" class="text-center">Tipo</th>
+                <th style="width: 11%;" class="text-right">Vlr Pago</th>
+                <th style="width: 9%;" class="text-center">Tipo</th>
             </tr>
         </thead>
         <tbody>
@@ -383,12 +392,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
     <table>
         <thead>
             <tr>
-                <th style="width: 36%;">Alimento</th>
-                <th style="width: 36%;">Pessoa / Cliente</th>
+                <th style="width: 32%;">Alimento</th>
+                <th style="width: 32%;">Pessoa / Cliente</th>
                 <th style="width: 10%;" class="text-right">PrcUnitário</th>
                 <th style="width: 6%;" class="text-center">Qtde</th>
-                <th style="width: 12%;" class="text-right">Vlr Pago</th>
-                <th style="width: 10%;" class="text-center">Tipo</th>
+                <th style="width: 11%;" class="text-right">Vlr Pago</th>
+                <th style="width: 9%;" class="text-center">Tipo</th>
             </tr>
         </thead>
         <tbody>

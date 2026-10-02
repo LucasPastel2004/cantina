@@ -69,7 +69,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             font-feature-settings: "tnum" 1, "zero" 1;
         }
         table {
-            width: 100%;
+            width: 100% !important;
+            table-layout: fixed !important;
+            box-sizing: border-box;
             border-collapse: collapse;
             margin-bottom: 20px;
             font-size: 10.5px;
@@ -91,25 +93,26 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         }
         th:first-child,
         td:first-child {
-            border-left: 1px solid #000000;
+            border-left: 1px solid #000000 !important;
         }
         th:last-child,
         td:last-child {
-            border-right: 1px solid #000000;
+            border-right: 1px solid #000000 !important;
         }
         td {
             padding: 6px 8px;
-            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
+            border-bottom: 1px solid #000000 !important; /* Linha preta entre os itens das listas */
+            background-color: #ffffff !important; /* Branco puro nos itens das listas */
         }
-        tr:nth-child(even) { background: #fafafa; }
+        tr:nth-child(even) td { background-color: #ffffff !important; }
         .cell-code { font-family: monospace; font-weight: 600; color: #334155; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
         .total-row td {
-            background: #eff6ff !important;
+            background: #ffffff !important;
             font-weight: 700;
-            border-top: 1px solid #1d4ed8;
-            border-bottom: 1px solid #1d4ed8;
+            border-top: 1px solid #000000 !important;
+            border-bottom: 1px solid #000000 !important;
             font-size: 11.5px;
         }
         .sign-box {

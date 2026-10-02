@@ -591,15 +591,16 @@ $totalPaginas = count($paginas);
         }
         .table-estoque th:first-child,
         .table-estoque td:first-child {
-            border-left: 1px solid #000000;
+            border-left: 1px solid #000000 !important;
         }
         .table-estoque th:last-child,
         .table-estoque td:last-child {
-            border-right: 1px solid #000000;
+            border-right: 1px solid #000000 !important;
         }
         .table-estoque td {
+            background-color: #ffffff !important;
             padding: 3px 5px;
-            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
+            border-bottom: 1px solid #000000 !important; /* Linha preta entre os itens das listas */
             vertical-align: middle;
             color: #0f172a;
             overflow: hidden;
@@ -608,8 +609,11 @@ $totalPaginas = count($paginas);
             word-wrap: break-word;
             hyphens: auto;
         }
+        .table-estoque tr td {
+            background-color: #ffffff !important;
+        }
         .table-estoque tr:hover td {
-            background-color: #f8fafc;
+            background-color: #ffffff !important;
         }
 
         .text-center { text-align: center !important; }
@@ -640,10 +644,13 @@ $totalPaginas = count($paginas);
             align-items: center;
         }
         .group-subtotal {
-            background-color: #f8fafc;
+            background-color: #ffffff !important;
             border-top: 1px solid #000000;
             border-bottom: 2px solid #000000;
             font-weight: 700;
+        }
+        .group-subtotal td {
+            background-color: #ffffff !important;
         }
 
         /* Quebras de Página Físicas e Lógicas */

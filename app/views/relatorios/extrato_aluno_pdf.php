@@ -226,7 +226,8 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
 
         /* Tabela Oficial de Movimentações (Estética Excel com Laterais e Linhas Pretas entre Itens) */
         .table-extrato {
-            width: 100%;
+            width: 100% !important;
+            table-layout: fixed !important;
             border-collapse: collapse;
             font-size: 8.5pt;
             margin-bottom: 14px;
@@ -234,9 +235,10 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             border-right: 1px solid #000000;
             border-top: 1px solid #000000;
             border-bottom: 1px solid #000000;
+            box-sizing: border-box;
         }
         .table-extrato thead th {
-            background-color: #f1f5f9;
+            background-color: #ffffff;
             color: #0f172a;
             font-weight: 700;
             font-size: 8pt;
@@ -249,28 +251,34 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
         .table-extrato thead th:first-child,
         .table-extrato tbody td:first-child,
         .table-extrato tfoot td:first-child {
-            border-left: 1px solid #000000;
+            border-left: 1px solid #000000 !important;
         }
         .table-extrato thead th:last-child,
         .table-extrato tbody td:last-child,
         .table-extrato tfoot td:last-child {
-            border-right: 1px solid #000000;
+            border-right: 1px solid #000000 !important;
+        }
+        .table-extrato tbody tr {
+            background-color: #ffffff !important;
         }
         .table-extrato tbody td {
             padding: 4px 6px;
             border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
             vertical-align: middle;
             color: #0f172a;
+            background-color: #ffffff !important;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
         .table-extrato tbody tr:nth-child(even) {
-            background-color: #fafafa;
+            background-color: #ffffff !important;
         }
         .table-extrato tbody tr.row-initial {
-            background-color: #f8fafc;
+            background-color: #ffffff !important;
             font-weight: 700;
         }
         .table-extrato tbody tr.row-recarga {
-            background-color: #f0fdf4;
+            background-color: #ffffff !important;
         }
         .table-extrato tfoot td {
             padding: 6px;
@@ -278,7 +286,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             font-size: 9pt;
             border-top: 1.5px solid #000000;
             border-bottom: 1.5px solid #000000;
-            background-color: #f8fafc;
+            background-color: #ffffff !important;
         }
 
         .cell-left { text-align: left; }
@@ -474,13 +482,13 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
         <table class="table-extrato">
             <thead>
                 <tr>
-                    <th class="cell-left" style="width: 13%;">Data</th>
-                    <th class="cell-left" style="width: 37%;">Descrição</th>
-                    <th class="cell-center" style="width: 7%;">Qtd.</th>
-                    <th class="cell-right" style="width: 13%;">V. Unitário</th>
-                    <th class="cell-right" style="width: 13%;">V. Total</th>
+                    <th class="cell-left" style="width: 12%;">Data</th>
+                    <th class="cell-left" style="width: 33%;">Descrição</th>
+                    <th class="cell-center" style="width: 6%;">Qtd.</th>
+                    <th class="cell-right" style="width: 12%;">V. Unitário</th>
+                    <th class="cell-right" style="width: 12%;">V. Total</th>
                     <th class="cell-center" style="width: 11%;">Forma Pgto.</th>
-                    <th class="cell-right" style="width: 13%;">Saldo</th>
+                    <th class="cell-right" style="width: 14%;">Saldo</th>
                 </tr>
             </thead>
             <tbody>

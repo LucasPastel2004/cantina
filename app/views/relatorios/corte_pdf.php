@@ -67,13 +67,16 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         .stat-label { font-size: 8.5px; font-weight: 600; color: #64748b; text-transform: uppercase; }
         .stat-value { font-size: 12px; font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; }
         .data-table {
-            width: 100%;
+            width: 100% !important;
+            table-layout: fixed !important;
             border-collapse: collapse;
             margin-bottom: 20px;
+            font-size: 10.5px;
             border-left: 1px solid #000000;
             border-right: 1px solid #000000;
             border-top: 1px solid #000000;
             border-bottom: 1px solid #000000;
+            box-sizing: border-box;
         }
         .data-table th {
             background: #f1f5f9;
@@ -88,22 +91,28 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         }
         .data-table th:first-child,
         .data-table td:first-child {
-            border-left: 1px solid #000000;
+            border-left: 1px solid #000000 !important;
         }
         .data-table th:last-child,
         .data-table td:last-child {
-            border-right: 1px solid #000000;
+            border-right: 1px solid #000000 !important;
+        }
+        .data-table tbody tr {
+            background: #ffffff !important;
         }
         .data-table td {
             padding: 6px 8px;
             border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
             font-size: 10.5px;
+            background: #ffffff !important;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
-        .data-table tr:nth-child(even) { background: #fafafa; }
+        .data-table tr:nth-child(even) { background: #ffffff !important; }
         .cell-code { font-family: monospace; font-weight: 600; color: #334155; }
         .cell-right { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
-        .total-row { background: #eff6ff !important; font-weight: 700; }
-        .total-row td { border-top: 1px solid #1d4ed8; border-bottom: 1px solid #1d4ed8; font-size: 12px; }
+        .total-row { background: #ffffff !important; font-weight: 700; }
+        .total-row td { border-top: 1px solid #000000; border-bottom: 1px solid #000000; font-size: 12px; background: #ffffff !important; }
         .sign-box {
             display: flex;
             justify-content: space-between;

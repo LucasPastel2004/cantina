@@ -1074,8 +1074,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Correção do erro fatal 500 (`Call to undefined method App\Controllers\RelatoriosController::getBaseUrl()`) através da implementação do método `getBaseUrl()` na classe base `App\Core\Controller` e no `RelatoriosController`;
   * Eliminação do botão dropdown repetido "Emitir" no topo da tela, mantendo apenas a navegação para o Hub de Relatórios;
   * Implementação clara e direta do trio oficial de saída no rodapé do formulário: `Visualizar / Imprimir (A4)` (`btnEmitirImprimir`), `Baixar em PDF (A4)` (`btnEmitirPdf`) e `Exportar Planilha (CSV)` (`btnEmitirCsv`).
-* [x] **Padronização Estética de Relatórios — Grade Estilo Tabela Excel:**
-  * Aplicação de linhas pretas contínuas nas laterais esquerda e direita (`border-left: 1px solid #000000; border-right: 1px solid #000000;`), bem como divisórias pretas horizontais entre cada item das listas (`border-bottom: 1px solid #000000;`), atendendo à solicitação da equipe escolar para facilitar a leitura visual direta em grade (formato Excel);
+* [x] **Padronização Estética de Relatórios — Grade Estilo Tabela Excel e Fundo Branco Puro:**
+  * Aplicação de linhas pretas contínuas nas laterais esquerda e direita (`border-left: 1px solid #000000 !important; border-right: 1px solid #000000 !important;`), bem como divisórias pretas horizontais entre cada item das listas (`border-bottom: 1px solid #000000 !important;`), atendendo à solicitação da equipe escolar para facilitar a leitura visual direta em grade (formato Excel);
+  * **Remoção de Fundos Coloridos nas Listas em Todos os PDFs:** Eliminados todos os tons de azul claro (`#eff6ff`, `.tag-online`), verde claro (`#f0fdf4`), vermelho claro (`#fee2e2`) e zebrados (`#fafafa`, `#f8fafc`) nas linhas de dados de todas as tabelas e subtotais, padronizando o fundo das linhas para branco puro (`background: #ffffff !important;`);
+  * **Garantia de Borda Lateral Direita e Prevenção de Cortes no Chromium:** Corrigida a soma percentual das colunas para totalizar rigorosamente 100% em todas as tabelas, aplicando `table-layout: fixed !important; width: 100% !important; box-sizing: border-box;` e garantindo que o Chromium/Gotenberg não corte a borda preta lateral direita nos PDFs gerados;
   * Padronização aplicada de forma homogênea a **todas as 8 views de relatórios oficiais do sistema**:
     1. `app/views/relatorios/extrato_aluno_pdf.php` (Extrato Analítico de Consumo do Aluno);
     2. `app/views/relatorios/estoque_movimentacoes_pdf.php` (Movimentações de Estoque - Retrato e Paisagem);
@@ -1094,10 +1096,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Caixa consolidada de fechamento e totais posicionada estritamente na última folha do documento;
   * Compatibilidade idêntica e homologada para visualização direta em tela (`@media screen`), impressão do navegador (`window.print()`) e exportação de PDF via Gotenberg Chromium.
 * [x] **Testes Automatizados e Auditoria de Regressão:**
-  * Suíte oficial `tests/fase23_test.php` expandida para **124 de 124 asserções aprovadas com 100% de sucesso**;
-  * Validação de compilação real de PDFs em Retrato (110 KB) e Paisagem (112 KB) via contêiner Gotenberg Chromium;
+  * Suíte oficial `tests/fase23_test.php` expandida para **129 de 129 asserções aprovadas com 100% de sucesso**;
+  * Validação de compilação real de PDFs em Retrato (115 KB) e Paisagem (117 KB) via contêiner Gotenberg Chromium;
   * Validação de integridade do arquivo CSV (BOM UTF-8, delimitador `;`, centro de custo Cantina Geral);
-  * Regressão da suíte da Fase 22 (79/79) executada e 100% aprovada.
+  * Regressão da suíte da Fase 22 (79/79) e Fase 21 (99/99) executadas e 100% aprovadas.
 
 ---
 
