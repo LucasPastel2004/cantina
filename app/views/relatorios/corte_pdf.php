@@ -70,20 +70,33 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            border-left: 1px solid #000000;
+            border-right: 1px solid #000000;
+            border-top: 1px solid #000000;
+            border-bottom: 1px solid #000000;
         }
         .data-table th {
             background: #f1f5f9;
-            color: #475569;
+            color: #0f172a;
             font-size: 9px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             padding: 6px 8px;
-            border-bottom: 1px solid #cbd5e1;
+            border-top: 1px solid #000000;
+            border-bottom: 1px solid #000000;
             text-align: left;
+        }
+        .data-table th:first-child,
+        .data-table td:first-child {
+            border-left: 1px solid #000000;
+        }
+        .data-table th:last-child,
+        .data-table td:last-child {
+            border-right: 1px solid #000000;
         }
         .data-table td {
             padding: 6px 8px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
             font-size: 10.5px;
         }
         .data-table tr:nth-child(even) { background: #fafafa; }

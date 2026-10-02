@@ -219,13 +219,17 @@ if ($emitirAlim && $emitirAluno) {
             text-transform: uppercase;
         }
 
-        /* Tabela de Vendas Oficial */
+        /* Tabela de Vendas Oficial (Estética Excel com Laterais e Linhas Pretas entre Itens) */
         table.tabela-relatorio {
             width: 100%;
             border-collapse: collapse;
             margin-top: 4px;
             margin-bottom: 8px;
             font-size: 8pt;
+            border-left: 1px solid #000000;
+            border-right: 1px solid #000000;
+            border-top: 1px solid #000000;
+            border-bottom: 1px solid #000000;
         }
         table.tabela-relatorio th {
             border-top: 1px solid #000000;
@@ -236,14 +240,19 @@ if ($emitirAlim && $emitirAluno) {
             color: #000000;
             font-size: 8pt;
         }
+        table.tabela-relatorio th:first-child,
+        table.tabela-relatorio td:first-child {
+            border-left: 1px solid #000000;
+        }
+        table.tabela-relatorio th:last-child,
+        table.tabela-relatorio td:last-child {
+            border-right: 1px solid #000000;
+        }
         table.tabela-relatorio td {
             padding: 2.5px 4px;
             vertical-align: middle;
-            border-bottom: 1px dotted #e2e8f0;
+            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
             color: #000000;
-        }
-        table.tabela-relatorio tr:last-child td {
-            border-bottom: none;
         }
 
         .text-center { text-align: center; }

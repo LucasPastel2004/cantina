@@ -199,28 +199,40 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             color: #0f172a;
         }
 
-        /* Tabelas Analíticas Oficiais */
+        /* Tabelas Analíticas Oficiais (Estética Excel com Laterais e Linhas Pretas entre Itens) */
         .table-estoque {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 14px;
             font-size: <?php echo $isPaisagem ? '9.5px' : '9px'; ?>;
+            border-left: 1px solid #000000;
+            border-right: 1px solid #000000;
+            border-top: 1px solid #000000;
+            border-bottom: 1px solid #000000;
         }
         .table-estoque th {
             background-color: #f1f5f9;
-            color: #334155;
+            color: #0f172a;
             font-weight: 700;
             text-transform: uppercase;
             font-size: 8.5px;
             letter-spacing: 0.03em;
             padding: 5px 6px;
-            border-top: 1px solid #cbd5e1;
-            border-bottom: 1px solid #94a3b8;
+            border-top: 1px solid #000000;
+            border-bottom: 1px solid #000000;
             text-align: left;
+        }
+        .table-estoque th:first-child,
+        .table-estoque td:first-child {
+            border-left: 1px solid #000000;
+        }
+        .table-estoque th:last-child,
+        .table-estoque td:last-child {
+            border-right: 1px solid #000000;
         }
         .table-estoque td {
             padding: 4px 6px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
             vertical-align: middle;
             color: #0f172a;
         }

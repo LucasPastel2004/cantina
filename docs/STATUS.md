@@ -1074,9 +1074,21 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Correção do erro fatal 500 (`Call to undefined method App\Controllers\RelatoriosController::getBaseUrl()`) através da implementação do método `getBaseUrl()` na classe base `App\Core\Controller` e no `RelatoriosController`;
   * Eliminação do botão dropdown repetido "Emitir" no topo da tela, mantendo apenas a navegação para o Hub de Relatórios;
   * Implementação clara e direta do trio oficial de saída no rodapé do formulário: `Visualizar / Imprimir (A4)` (`btnEmitirImprimir`), `Baixar em PDF (A4)` (`btnEmitirPdf`) e `Exportar Planilha (CSV)` (`btnEmitirCsv`).
+* [x] **Padronização Estética de Relatórios — Grade Estilo Tabela Excel:**
+  * Aplicação de linhas pretas contínuas nas laterais esquerda e direita (`border-left: 1px solid #000000; border-right: 1px solid #000000;`), bem como divisórias pretas horizontais entre cada item das listas (`border-bottom: 1px solid #000000;`), atendendo à solicitação da equipe escolar para facilitar a leitura visual direta em grade (formato Excel);
+  * Padronização aplicada de forma homogênea a **todas as 8 views de relatórios oficiais do sistema**:
+    1. `app/views/relatorios/extrato_aluno_pdf.php` (Extrato Analítico de Consumo do Aluno);
+    2. `app/views/relatorios/estoque_movimentacoes_pdf.php` (Movimentações de Estoque - Retrato e Paisagem);
+    3. `app/views/relatorios/vendas_alimento_pdf.php` (Vendas por Alimento e Aluno);
+    4. `app/views/relatorios/corte_pdf.php` (Lista de Separação / Corte de Cozinha);
+    5. `app/views/relatorios/desconto_folha_pdf.php` (Espelho Sintético de Desconto em Folha);
+    6. `app/views/relatorios/desconto_folha_individual_pdf.php` (Comprovante Individual de Desconto em Folha);
+    7. `app/views/relatorios/fechamento_caixa_pdf.php` (Espelho de Fechamento de Caixa / PDV);
+    8. `app/views/relatorios/med_negativados_pdf.php` (Relatório Gerencial de Casos MED / Saldos Negativados);
+  * Suporte nativo mantido para visualização direta no navegador, impressão contínua/A4 e geração de PDF via motor Chromium Gotenberg sem falhas de `border-collapse`.
 * [x] **Testes Automatizados e Auditoria de Regressão:**
-  * Suíte oficial `tests/fase23_test.php` expandida para **99 de 99 asserções aprovadas com 100% de sucesso**;
-  * Validação de compilação real de PDFs em Retrato (92 KB) e Paisagem (92 KB) via contêiner Gotenberg Chromium;
+  * Suíte oficial `tests/fase23_test.php` expandida para **109 de 109 asserções aprovadas com 100% de sucesso**;
+  * Validação de compilação real de PDFs em Retrato (93 KB) e Paisagem (94 KB) via contêiner Gotenberg Chromium;
   * Validação de integridade do arquivo CSV (BOM UTF-8, delimitador `;`, centro de custo Cantina Geral);
   * Regressão da suíte da Fase 22 (79/79) executada e 100% aprovada.
 

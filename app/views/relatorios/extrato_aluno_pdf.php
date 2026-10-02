@@ -224,12 +224,16 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             font-size: 11pt;
         }
 
-        /* Tabela Oficial de Movimentações */
+        /* Tabela Oficial de Movimentações (Estética Excel com Laterais e Linhas Pretas entre Itens) */
         .table-extrato {
             width: 100%;
             border-collapse: collapse;
             font-size: 8.5pt;
             margin-bottom: 14px;
+            border-left: 1px solid #000000;
+            border-right: 1px solid #000000;
+            border-top: 1px solid #000000;
+            border-bottom: 1px solid #000000;
         }
         .table-extrato thead th {
             background-color: #f1f5f9;
@@ -242,9 +246,19 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             text-transform: none;
             letter-spacing: normal;
         }
+        .table-extrato thead th:first-child,
+        .table-extrato tbody td:first-child,
+        .table-extrato tfoot td:first-child {
+            border-left: 1px solid #000000;
+        }
+        .table-extrato thead th:last-child,
+        .table-extrato tbody td:last-child,
+        .table-extrato tfoot td:last-child {
+            border-right: 1px solid #000000;
+        }
         .table-extrato tbody td {
             padding: 4px 6px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
             vertical-align: middle;
             color: #0f172a;
         }

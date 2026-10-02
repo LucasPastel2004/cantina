@@ -130,16 +130,29 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             border-collapse: collapse;
             margin-bottom: 6px;
             font-size: 8pt;
+            border-left: 1px solid #000000;
+            border-right: 1px solid #000000;
+            border-top: 1px solid #000000;
+            border-bottom: 1px solid #000000;
         }
         th {
             font-weight: bold;
+            border-top: 1px solid #000000;
             border-bottom: 1px solid #000000;
             padding: 2px 4px;
             text-align: left;
         }
+        th:first-child,
+        td:first-child {
+            border-left: 1px solid #000000;
+        }
+        th:last-child,
+        td:last-child {
+            border-right: 1px solid #000000;
+        }
         td {
             padding: 2px 4px;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #000000; /* Linha preta entre os itens das listas */
         }
         .table-control th {
             border-top: 1px solid #000000;
