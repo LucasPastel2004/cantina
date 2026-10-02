@@ -1404,3 +1404,28 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - 100% da borda direita preta visível, sem corte em nenhuma página.
   4. Executados testes de compilação em lote para todos os 6 relatórios em `tests/teste_todos_pdfs.php` e suítes `tests/fase23_test.php` (134 testes), `tests/fase22_test.php` (79 testes) e `tests/fase21_test.php` (99 testes), com 100% de aprovação.
 - Como evitar no futuro: Em integrações com o Gotenberg Chromium para geração de PDFs A4, sempre enviar explicitamente `emulatedMediaType: 'print'` e definir a largura do contêiner principal como 535px com margem lateral fixa de 30px no `@media print` para casar perfeitamente com os 594.96 pontos do papel A4, evitando que a viewport padrão do Chromium de 800px infle as dimensões relativas em `%` e extrapole a folha física.
+
+---
+
+## 2026-10-02 - Espaçamento gigante em branco à direita da folha A4 no PDF após limitação de largura fixa em 535px
+
+- Sintoma: Ao gerar o PDF dos relatórios (ex.: `extrato_aluno_MATMOD30901_20261002_103750.pdf`), o relatório parava antes de dois terços da largura da página, deixando uma faixa lateral direita vazia gigante de quase 30% da folha em branco ("moss, ficou gigante o espacamento agora").
+- Causa:
+  1. No commit anterior (`996410f`), para evitar que a borda direita fosse cortada, o CSS do `@media print` havia fixado a largura do contêiner em `width: 535px !important; margin: 0 30px !important;`, combinado com `@page { margin: 10mm 0 10mm 0; }` (margens laterais zero no `@page`) e `PdfService.php` enviando `marginLeft: 0, marginRight: 0` na requisição ao Gotenberg.
+  2. No Chromium, em 96 DPI, a folha A4 possui `793.7px` de largura útil quando as margens laterais da página estão em zero. Um contêiner de `535px` com margem esquerda de `30px` totalizava `565px`, restando $794 - 565 = 229\text{px}$ (~61 mm) de espaço vazio na margem direita, gerando o vazio excessivo apontado pelo usuário.
+- Solução aplicada:
+  1. Em `app/services/PdfService.php`: Removida a imposição de margens zero (`marginLeft: 0`, `marginRight: 0`) nos campos padrão multipart do Gotenberg quando `preferCssPageSize: true` estiver ativo. O Gotenberg agora delega o dimensionamento das margens da página às diretivas CSS `@page` do documento HTML.
+  2. Em todos os 8 templates de relatórios PDF A4 (`extrato_aluno_pdf.php`, `corte_pdf.php`, `desconto_folha_pdf.php`, `desconto_folha_individual_pdf.php`, `estoque_movimentacoes_pdf.php`, `fechamento_caixa_pdf.php`, `med_negativados_pdf.php` e `vendas_alimento_pdf.php`):
+     - **Definição formal de margens no `@page`:** Configurado `@page { size: A4 portrait; margin: 10mm 12mm 10mm 12mm; }` (ou `A4 landscape` quando aplicável), estabelecendo margens físicas uniformes e simétricas de 10mm no topo/rodapé e 12mm nas laterais.
+     - **Preenchimento total da área útil no `@media print`:** O contêiner foi configurado com `width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important;`.
+     - **Tabelas de ponta a ponta:** As tabelas utilizam `width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important;`, expandindo-se exatamente pelos 186mm da área útil da folha.
+  3. Validação óptica e vetorial com `pypdfium2` e `PIL`:
+     - Dimensões da folha: 1190 x 1684 px (proporção A4 física perfeita);
+     - Início dos elementos e tabelas: `x = 67 px` (exatos 11.8 mm);
+     - Término dos elementos e tabelas: `x = 1122 px` (exatos 11.8 mm da borda direita da folha);
+     - Largura ocupada pela tabela: 1055 px (100% da área útil preenchida);
+     - Borda direita preta nítida e 100% visível, com simetria milimétrica perfeita de margens laterais;
+     - Zero faixa branca residual na direita e zero corte de bordas;
+     - Preservada rigorosamente a estética de grade tipo Excel com linhas divisórias pretas e fundo 100% branco nas células.
+  4. Suíte `tests/teste_todos_pdfs.php` cobrindo todos os 8 relatórios PDF e suítes `tests/fase23_test.php` (139 testes), `tests/fase22_test.php` (79 testes) e `tests/fase21_test.php` (99 testes) 100% aprovadas.
+- Como evitar no futuro: Em documentos A4 gerados com Chromium/Gotenberg, definir sempre as margens físicas na própria regra `@page` do CSS (`margin: 10mm 12mm`), delegando ao Chromium a aplicação das margens e mantendo os contêineres e tabelas com `width: 100%` da área útil, sem tentar restringir larguras em pixels fixos que distorcem em diferentes densidades de tela e emuladores de impressão.

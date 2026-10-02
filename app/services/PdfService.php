@@ -181,11 +181,20 @@ class PdfService
             'preferCssPageSize' => $opcoes['preferCssPageSize'] ?? 'true',
             'printBackground'   => $opcoes['printBackground'] ?? 'true',
             'emulatedMediaType' => $opcoes['emulatedMediaType'] ?? 'print',
-            'marginTop'         => $opcoes['marginTop'] ?? '0',
-            'marginBottom'      => $opcoes['marginBottom'] ?? '0',
-            'marginLeft'        => $opcoes['marginLeft'] ?? '0',
-            'marginRight'       => $opcoes['marginRight'] ?? '0',
         ];
+
+        if (isset($opcoes['marginTop'])) {
+            $postFields['marginTop'] = (string)$opcoes['marginTop'];
+        }
+        if (isset($opcoes['marginBottom'])) {
+            $postFields['marginBottom'] = (string)$opcoes['marginBottom'];
+        }
+        if (isset($opcoes['marginLeft'])) {
+            $postFields['marginLeft'] = (string)$opcoes['marginLeft'];
+        }
+        if (isset($opcoes['marginRight'])) {
+            $postFields['marginRight'] = (string)$opcoes['marginRight'];
+        }
 
         if (isset($opcoes['paperWidth'])) {
             $postFields['paperWidth'] = (string)$opcoes['paperWidth'];

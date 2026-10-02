@@ -110,4 +110,28 @@ $htmlMed = \App\Services\PdfService::renderView('relatorios/med_negativados_pdf'
 $pdfMed = \App\Services\PdfService::htmlToPdf($htmlMed);
 echo "6. MED Negativados: " . ($pdfMed && str_starts_with($pdfMed, '%PDF') ? "OK (" . strlen($pdfMed) . " bytes)" : "FALHA") . "\n";
 
-echo "\nTodos os relatórios geraram PDFs binários com sucesso via Gotenberg!\n";
+// 7. Estoque Movimentações
+$htmlEstoque = \App\Services\PdfService::renderView('relatorios/estoque_movimentacoes_pdf', [
+    'movimentacoes' => [
+        ['data_movimentacao' => '2026-10-01 08:00', 'tipo' => 'entrada', 'produto_codigo' => 'SAL01', 'produto_nome' => 'Coxinha', 'categoria_nome' => 'Salgados', 'quantidade' => 50, 'saldo_anterior' => 10, 'saldo_novo' => 60, 'usuario_nome' => 'Admin']
+    ],
+    'totais' => ['total_entradas' => 50, 'total_saidas' => 0, 'total_vendas' => 0, 'total_perdas' => 0, 'balanco_periodo' => 50, 'total_movimentacoes' => 1],
+    'isPaisagem' => false,
+    'agruparGrupo' => false,
+    'quebraPagina' => false
+]);
+$pdfEstoque = \App\Services\PdfService::htmlToPdf($htmlEstoque);
+echo "7. Estoque Movimentações: " . ($pdfEstoque && str_starts_with($pdfEstoque, '%PDF') ? "OK (" . strlen($pdfEstoque) . " bytes)" : "FALHA") . "\n";
+
+// 8. Vendas Alimento
+$htmlVendas = \App\Services\PdfService::renderView('relatorios/vendas_alimento_pdf', [
+    'filtros' => ['emitir_vendas_alimento' => 'sim', 'emitir_vendas_aluno' => 'nao'],
+    'vendas' => [
+        ['produto_codigo' => 'SAL01', 'produto_nome' => 'Coxinha', 'categoria_nome' => 'Salgados', 'quantidade_total' => 20, 'preco_medio' => 7.0, 'subtotal' => 140.0]
+    ],
+    'totais' => ['quantidade_total' => 20, 'faturamento_total' => 140.0]
+]);
+$pdfVendas = \App\Services\PdfService::htmlToPdf($htmlVendas);
+echo "8. Vendas por Alimento: " . ($pdfVendas && str_starts_with($pdfVendas, '%PDF') ? "OK (" . strlen($pdfVendas) . " bytes)" : "FALHA") . "\n";
+
+echo "\nTodos os 8 relatórios geraram PDFs binários com sucesso via Gotenberg!\n";

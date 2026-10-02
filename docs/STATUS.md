@@ -1077,17 +1077,22 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] **Padronização Estética de Relatórios — Grade Estilo Tabela Excel e Fundo Branco Puro:**
   * Aplicação de linhas pretas contínuas nas laterais esquerda e direita (`border-left: 1px solid #000000 !important; border-right: 1px solid #000000 !important;`), bem como divisórias pretas horizontais entre cada item das listas (`border-bottom: 1px solid #000000 !important;`), atendendo à solicitação da equipe escolar para facilitar a leitura visual direta em grade (formato Excel);
   * **Remoção de Fundos Coloridos nas Listas em Todos os PDFs:** Eliminados todos os tons de azul claro (`#eff6ff`, `.tag-online`), verde claro (`#f0fdf4`), vermelho claro (`#fee2e2`) e zebrados (`#fafafa`, `#f8fafc`) nas linhas de dados de todas as tabelas e subtotais, padronizando o fundo das linhas para branco puro (`background: #ffffff !important;`);
-* [x] **Correção Definitiva de Borda Lateral Direita e Emulação de Impressão no Gotenberg:**
-  * **Diagnóstico da Causa Raiz:** O Chromium Headless do Gotenberg renderizava na mídia padrão `screen` por falta do parâmetro `emulatedMediaType => 'print'`, aplicando regras de `@media screen` (com larguras infladas de até 224mm) ou expandindo contêineres de 100% sobre uma viewport de 794px, o que empurrava a última coluna para `x = 668 pt`, fatiando e cortando mais de 70 pontos para fora do papel A4 físico (594.96 pt);
-  * **Correção no `PdfService.php`:** Adicionado envio explícito de `emulatedMediaType => 'print'` e suporte ao parâmetro `scale` nas requisições cURL para o endpoint `/forms/chromium/convert/html` do Gotenberg;
+* [x] **Calibração Harmônica da Área Útil e Eliminação de Vazio Lateral em Todos os 8 PDFs A4:**
+  * **Diagnóstico da Causa Raiz:** A configuração anterior de largura fixa em 535px com margens zero no `@page` deixava uma faixa em branco de quase 30% da página (~229px / 61mm) à direita na folha A4 física (794px em 96 DPI), gerando espaçamento desproporcional;
+  * **Ajuste em `app/services/PdfService.php`:** Remoção da imposição forçada de margens zero (`marginLeft: 0`, `marginRight: 0`) nos campos padrão da API Gotenberg quando `preferCssPageSize: true` é utilizado, permitindo que o Chromium interprete as diretivas CSS `@page` nativas com total precisão;
   * **Padronização Universal de CSS em todos os 8 relatórios PDF A4 (`_pdf.php`):**
-    - `@page`: `margin: 10mm 0 10mm 0;` (margens verticais controladas e margens horizontais delegadas ao contêiner);
-    - `@media print`: contêiner configurado com `width: 535px !important; max-width: 535px !important; margin: 0 30px !important; padding: 0 !important; box-sizing: border-box !important;` (gerando exatamente `30 + 535 + 30 = 595 pt`, com margem física de segurança de ~10,7mm à direita e à esquerda);
+    - `@page`: `size: A4 portrait; margin: 10mm 12mm 10mm 12mm;` (ou `A4 landscape` quando aplicável), estabelecendo margens físicas simétricas e elegantes de 10mm no topo/rodapé e 12mm nas laterais;
+    - `@media print`: contêiner configurado com `width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important;`;
     - `@media screen`: contêiner com `width: 210mm; max-width: calc(100% - 24px); min-height: 297mm; padding: 10mm 12mm; margin: 0 auto; box-sizing: border-box;`;
     - **Grade tipo Excel e fundo 100% branco:** Todas as células de tabelas com `border: 1px solid #000000 !important;`, divisórias pretas completas e `background-color: #ffffff !important;`, sem qualquer fundo azul claro ou zebrado;
     - **Quebra de página e paginação:** Inclusão de `thead { display: table-header-group; }`, `tfoot { display: table-footer-group; }` e prevenção de corte de linhas `tr { page-break-inside: avoid; break-inside: avoid; }`;
-  * **Validação com `pypdf`:** Medição vetorial confirmando borda esquerda em `x = 30.5 pt`, borda direita em `x = 564.5 pt` e margem livre de 30.5 pt até a borda física da folha (595.0 pt), garantindo 100% de visibilidade de todas as bordas e colunas;
-  * Suítes oficiais `tests/fase23_test.php` (134 testes), `tests/fase22_test.php` (79 testes) e `tests/fase21_test.php` (99 testes) 100% aprovadas.
+  * **Validação Óptica e Vetorial com `PIL` e `pypdfium2`:**
+    - Dimensões do documento: 1190 x 1684 px (proporção A4 perfeita);
+    - Linha de cabeçalho e tabela: de `x = 67 px` (11.8 mm) até `x = 1122 px` (11.8 mm da margem direita);
+    - Largura preenchida pela tabela: 1055 px (100% dos 186.4 mm da área útil);
+    - Borda lateral direita 100% íntegra, nítida e visível, com simetria milimétrica perfeita e zero corte;
+    - Eliminação completa da faixa em branco excessiva à direita;
+  * Suítes oficiais `tests/fase23_test.php` (139 testes), `tests/fase22_test.php` (79 testes), `tests/fase21_test.php` (99 testes) e `tests/teste_todos_pdfs.php` (8 relatórios) 100% aprovadas.
 
 ---
 

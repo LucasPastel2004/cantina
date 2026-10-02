@@ -44,13 +44,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 0 10mm 0;
-            @bottom-right {
-                content: "1/1";
-                font-family: Arial, sans-serif;
-                font-size: 8pt;
-                color: #64748b;
-            }
+            margin: 10mm 12mm 10mm 12mm;
         }
         * {
             box-sizing: border-box !important;
@@ -142,9 +136,9 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
                 display: none !important;
             }
             .doc-page {
-                width: 535px !important;
-                max-width: 535px !important;
-                margin: 0 30px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
                 border: none !important;

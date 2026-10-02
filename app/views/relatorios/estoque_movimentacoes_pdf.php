@@ -383,7 +383,7 @@ $totalPaginas = count($paginas);
            ========================================================================== */
         @page {
             size: <?php echo $isPaisagem ? 'A4 landscape' : 'A4 portrait'; ?>;
-            margin: 10mm 0 10mm 0;
+            margin: 10mm 12mm 10mm 12mm;
         }
 
         * {
@@ -726,11 +726,11 @@ $totalPaginas = count($paginas);
                 display: none !important;
             }
             .sheet-container.page-sheet {
-                width: <?php echo $isPaisagem ? '760px' : '535px'; ?> !important;
-                max-width: <?php echo $isPaisagem ? '760px' : '535px'; ?> !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 min-height: auto !important;
                 height: auto !important;
-                margin: 0 <?php echo $isPaisagem ? '40px' : '30px'; ?> !important;
+                margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
                 border: none !important;
