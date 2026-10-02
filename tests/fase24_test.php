@@ -271,6 +271,13 @@ class Fase24Test
 
         $calculoResLiq = $dados['lucro_bruto'] - $dados['total_despesas'];
         $this->assert(abs($dados['resultado_liquido'] - $calculoResLiq) < 0.01, "Matemática contábil exata: Resultado Líquido = Lucro Bruto - Despesas Operacionais.");
+
+        // Validação de apuração por intervalo arbitrário de datas
+        $dadosPeriodo = $dreModel->calcularPeriodo('2026-09-01', '2026-09-30');
+        $this->assert(isset($dadosPeriodo['receita_bruta']), "calcularPeriodo apura 'receita_bruta'.");
+        $this->assert(isset($dadosPeriodo['receita_liquida']), "calcularPeriodo apura 'receita_liquida'.");
+        $this->assert(isset($dadosPeriodo['cmv']), "calcularPeriodo apura 'cmv'.");
+        $this->assert(isset($dadosPeriodo['resultado_liquido']), "calcularPeriodo apura 'resultado_liquido'.");
     }
 
     private function testModelDreComparativoAnual(): void
@@ -345,25 +352,32 @@ class Fase24Test
 
         $controller = new \App\Controllers\DreController();
 
-        // 1. Index
-        $_GET['ano'] = '2026';
+        // 1. Index (Painel Visual & Gráficos Interativos sempre abertos com seletor de período)
+        $_GET['data_inicio'] = '2026-09-01';
+        $_GET['data_fim']    = '2026-09-30';
         ob_start();
         $controller->index();
         $html = ob_get_clean();
 
-        $this->assert(str_contains($html, 'Demonstração do Resultado do Exercício — Ano 2026'), "View do DRE renderizou título com o ano corrente.");
-        $this->assert(str_contains($html, 'RECEITA BRUTA DE VENDAS'), "Tabela comparativa contém (+) RECEITA BRUTA DE VENDAS.");
-        $this->assert(str_contains($html, 'RECEITA LÍQUIDA DE VENDAS'), "Tabela comparativa contém (=) RECEITA LÍQUIDA DE VENDAS.");
-        $this->assert(str_contains($html, 'CUSTO DAS MERCADORIAS VENDIDAS (CMV)'), "Tabela comparativa contém (-) CUSTO DAS MERCADORIAS VENDIDAS.");
-        $this->assert(str_contains($html, 'LUCRO BRUTO'), "Tabela comparativa contém (=) LUCRO BRUTO.");
-        $this->assert(str_contains($html, 'DESPESAS OPERACIONAIS'), "Tabela comparativa contém (-) DESPESAS OPERACIONAIS.");
-        $this->assert(str_contains($html, 'RESULTADO LÍQUIDO DO EXERCÍCIO'), "Tabela comparativa contém (=) RESULTADO LÍQUIDO DO EXERCÍCIO.");
+        $this->assert(str_contains($html, 'Painel Financeiro & DRE Gerencial'), "View do DRE renderizou título oficial.");
+        $this->assert(str_contains($html, 'data_inicio') && str_contains($html, 'data_fim'), "Filtro de período por datas presente na interface.");
+        $this->assert(str_contains($html, 'stat-strip'), "Stat-strip de métricas financeiras presente.");
+        $this->assert(str_contains($html, 'chartEvolucaoMensal'), "Painel de gráficos interativos sempre aberto na view.");
+        $this->assert(str_contains($html, 'chartCanaisVenda'), "Gráfico de canais de venda presente.");
+        $this->assert(str_contains($html, 'chartDespesasCat'), "Gráfico de despesas por categoria presente.");
+        $this->assert(str_contains($html, 'chartProdutosRentaveis'), "Gráfico de ranking de produtos rentáveis presente.");
         $this->assert(str_contains($html, 'chart.min.js'), "Inclusão da biblioteca local chart.min.js confirmada na view.");
 
-        // 2. Imprimir (A4)
+        // 2. Imprimir (A4) — Onde o DRE completo em formato contábil/planilha é exibido sob demanda
         ob_start();
         $controller->imprimir();
         $htmlPrint = ob_get_clean();
+        $this->assert(str_contains($htmlPrint, 'RECEITA BRUTA DE VENDAS'), "Espelho A4 contém (+) RECEITA BRUTA DE VENDAS.");
+        $this->assert(str_contains($htmlPrint, 'RECEITA LÍQUIDA DE VENDAS'), "Espelho A4 contém (=) RECEITA LÍQUIDA DE VENDAS.");
+        $this->assert(str_contains($htmlPrint, 'CUSTO DAS MERCADORIAS VENDIDAS (CMV)'), "Espelho A4 contém (-) CUSTO DAS MERCADORIAS VENDIDAS.");
+        $this->assert(str_contains($htmlPrint, 'LUCRO BRUTO'), "Espelho A4 contém (=) LUCRO BRUTO.");
+        $this->assert(str_contains($htmlPrint, 'DESPESAS OPERACIONAIS'), "Espelho A4 contém (-) DESPESAS OPERACIONAIS.");
+        $this->assert(str_contains($htmlPrint, 'RESULTADO LÍQUIDO DO EXERCÍCIO'), "Espelho A4 contém (=) RESULTADO LÍQUIDO DO EXERCÍCIO.");
         $this->assert(str_contains($htmlPrint, 'A4 landscape'), "Espelho A4 de impressão configurado com A4 landscape (Paisagem).");
         $this->assert(str_contains($htmlPrint, 'table-dre-doc'), "Grade tipo Excel presente no documento de impressão.");
     }

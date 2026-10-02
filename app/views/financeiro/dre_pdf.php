@@ -263,12 +263,14 @@ $isPdf = $isPdf ?? false;
 <?php if (!$isPdf): ?>
 <div class="action-bar-top no-print">
     <div>
-        <span style="font-weight: 700; font-size: 13px;">Cantina Web — Relatório Oficial DRE <?php echo $anoAtual; ?></span>
-        <span style="color: #94a3b8; font-size: 11px; margin-left: 10px;">Visualização em Formato Paisagem A4</span>
+        <span style="font-weight: 700; font-size: 13px;">Cantina Web — Relatório Oficial DRE</span>
+        <span style="color: #94a3b8; font-size: 11px; margin-left: 10px;">
+            Período: <?php echo date('d/m/Y', strtotime($dataInicio ?? date('Y-01-01'))); ?> a <?php echo date('d/m/Y', strtotime($dataFim ?? date('Y-m-d'))); ?> &bull; Formato A4 Paisagem
+        </span>
     </div>
     <div style="display: flex; gap: 8px;">
-        <a href="<?php echo $baseUrl; ?>/financeiro/dre?ano=<?php echo $anoAtual; ?>" class="btn-action-nav">
-            ← Voltar ao DRE
+        <a href="<?php echo $baseUrl; ?>/financeiro/dre?data_inicio=<?php echo $dataInicio ?? ''; ?>&data_fim=<?php echo $dataFim ?? ''; ?>" class="btn-action-nav">
+            ← Voltar ao Painel
         </a>
         <button type="button" class="btn-action-nav" onclick="window.print()">
             🖨 Imprimir Documento
@@ -288,7 +290,9 @@ $isPdf = $isPdf ?? false;
         <?php endif; ?>
         <div class="header-text">
             <h1><?php echo htmlspecialchars($razaoSocial, ENT_QUOTES, 'UTF-8'); ?></h1>
-            <p>DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE) — EXERCÍCIO FISCAL <?php echo $anoAtual; ?></p>
+            <p>
+                DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE) — PERÍODO DE <?php echo date('d/m/Y', strtotime($dataInicio ?? date('Y-01-01'))); ?> A <?php echo date('d/m/Y', strtotime($dataFim ?? date('Y-m-d'))); ?>
+            </p>
         </div>
         <div class="header-meta">
             <?php if (!empty($cnpj)): ?>
@@ -307,7 +311,7 @@ $isPdf = $isPdf ?? false;
                 <?php for ($m = 1; $m <= 12; $m++): ?>
                     <th class="col-mes font-tabular"><?php echo $mesesAbrev[$m]; ?>/<?php echo substr((string)$anoAtual, 2); ?></th>
                 <?php endfor; ?>
-                <th class="col-total font-tabular">TOTAL <?php echo $anoAtual; ?></th>
+                <th class="col-total font-tabular">TOTAL DO PERÍODO</th>
             </tr>
         </thead>
         <tbody>

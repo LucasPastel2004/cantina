@@ -204,6 +204,177 @@ class Dre extends Model
     }
 
     /**
+     * Calcula o DRE consolidado para um intervalo arbitrário de datas (data_inicio a data_fim).
+     */
+    public function calcularPeriodo(string $dataInicio, string $dataFim): array
+    {
+        $pdo = self::getConnection();
+
+        // 1. Receita Bruta de Vendas Online (Pedidos)
+        $sqlOnline = "SELECT 
+                        COALESCE(SUM(p.valor_total), 0.00) as total,
+                        COUNT(p.id) as qtd_pedidos
+                      FROM `pedidos` p
+                      WHERE p.data_consumo BETWEEN :dt_inicio AND :dt_fim
+                        AND p.status NOT IN ('cancelado', 'estornado')";
+        $stmtOnline = $pdo->prepare($sqlOnline);
+        $stmtOnline->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $resOnline = $stmtOnline->fetch(\PDO::FETCH_ASSOC);
+        $receitaOnline = (float)($resOnline['total'] ?? 0.00);
+
+        // 2. Receita Bruta de Vendas Presenciais (Balcão)
+        $sqlBalcao = "SELECT 
+                        COALESCE(SUM(vb.valor_total), 0.00) as total,
+                        COUNT(vb.id) as qtd_vendas
+                      FROM `vendas_balcao` vb
+                      WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
+                        AND (vb.status != 'estornada' OR vb.status IS NULL)
+                        AND vb.estornado_em IS NULL";
+        $stmtBalcao = $pdo->prepare($sqlBalcao);
+        $stmtBalcao->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $resBalcao = $stmtBalcao->fetch(\PDO::FETCH_ASSOC);
+        $receitaBalcao = (float)($resBalcao['total'] ?? 0.00);
+
+        $receitaBruta = $receitaOnline + $receitaBalcao;
+
+        // 3. Deduções e Abatimentos (Estornos)
+        $sqlEstornoBalcao = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
+                             FROM `vendas_balcao` vb
+                             WHERE DATE(vb.estornado_em) BETWEEN :dt_inicio AND :dt_fim
+                                OR (vb.status = 'estornada' AND DATE(vb.created_at) BETWEEN :dt_inicio2 AND :dt_fim2)";
+        $stmtEstornoB = $pdo->prepare($sqlEstornoBalcao);
+        $stmtEstornoB->execute([
+            ':dt_inicio'  => $dataInicio,
+            ':dt_fim'     => $dataFim,
+            ':dt_inicio2' => $dataInicio,
+            ':dt_fim2'    => $dataFim,
+        ]);
+        $estornosBalcao = (float)$stmtEstornoB->fetchColumn();
+
+        $sqlEstornoOnline = "SELECT COALESCE(SUM(p.valor_total), 0.00)
+                             FROM `pedidos` p
+                             WHERE p.data_consumo BETWEEN :dt_inicio AND :dt_fim
+                               AND (p.status = 'estornado' OR p.estornado_em IS NOT NULL)";
+        $stmtEstornoO = $pdo->prepare($sqlEstornoOnline);
+        $stmtEstornoO->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $estornosOnline = (float)$stmtEstornoO->fetchColumn();
+
+        $totalDeducoes = $estornosBalcao + $estornosOnline;
+        $receitaLiquida = max(0.00, $receitaBruta - $totalDeducoes);
+
+        // 4. CMV do Período
+        $cmv = $this->calcularCmvPeriodo($dataInicio, $dataFim, $receitaLiquida);
+        $lucroBruto = $receitaLiquida - $cmv;
+        $margemBrutaPercent = $receitaLiquida > 0 ? ($lucroBruto / $receitaLiquida) * 100 : 0.0;
+
+        // 5. Despesas Operacionais por Categoria no Período
+        $compIni = substr($dataInicio, 0, 7);
+        $compFim = substr($dataFim, 0, 7);
+        $sqlDespesas = "SELECT 
+                            d.categoria,
+                            COALESCE(SUM(d.valor), 0.00) as total
+                        FROM `despesas_operacionais` d
+                        WHERE (
+                            (d.competencia_mes_ano BETWEEN :comp_ini AND :comp_fim)
+                            OR (d.data_vencimento BETWEEN :dt_inicio AND :dt_fim)
+                            OR (d.data_pagamento BETWEEN :dt_inicio2 AND :dt_fim2)
+                        )
+                          AND d.status != 'cancelado'
+                          AND d.deleted_at IS NULL
+                        GROUP BY d.categoria";
+        $stmtDesp = $pdo->prepare($sqlDespesas);
+        $stmtDesp->execute([
+            ':comp_ini'   => $compIni,
+            ':comp_fim'   => $compFim,
+            ':dt_inicio'  => $dataInicio,
+            ':dt_fim'     => $dataFim,
+            ':dt_inicio2' => $dataInicio,
+            ':dt_fim2'    => $dataFim,
+        ]);
+        $despPorCat = $stmtDesp->fetchAll(\PDO::FETCH_KEY_PAIR) ?: [];
+
+        $despesasVendas      = (float)($despPorCat[DespesaOperacional::CATEGORIA_VENDAS] ?? 0.00);
+        $despesasAdmin       = (float)($despPorCat[DespesaOperacional::CATEGORIA_ADMINISTRATIVA] ?? 0.00);
+        $despesasPessoal     = (float)($despPorCat[DespesaOperacional::CATEGORIA_PESSOAL] ?? 0.00);
+        $despesasManutencao  = (float)($despPorCat[DespesaOperacional::CATEGORIA_MANUTENCAO] ?? 0.00);
+        $despesasFinanceiras = (float)($despPorCat[DespesaOperacional::CATEGORIA_FINANCEIRA] ?? 0.00);
+        $despesasOutras      = (float)($despPorCat[DespesaOperacional::CATEGORIA_OUTRAS] ?? 0.00);
+
+        $totalDespesasOperacionais = $despesasVendas + $despesasAdmin + $despesasPessoal + 
+                                     $despesasManutencao + $despesasFinanceiras + $despesasOutras;
+
+        $resultadoLiquido = $lucroBruto - $totalDespesasOperacionais;
+        $margemLiquidaPercent = $receitaLiquida > 0 ? ($resultadoLiquido / $receitaLiquida) * 100 : 0.0;
+
+        // Identifica os meses participantes do período
+        $mesesParticipantes = [];
+        $inicioDt = new \DateTime($dataInicio);
+        $fimDt    = new \DateTime($dataFim);
+        $cursorDt = new \DateTime($inicioDt->format('Y-m-01'));
+        $limiteDt = new \DateTime($fimDt->format('Y-m-01'));
+
+        while ($cursorDt <= $limiteDt) {
+            $comp = $cursorDt->format('Y-m');
+            $mesNum = (int)$cursorDt->format('n');
+            $anoNum = (int)$cursorDt->format('Y');
+            $mesesParticipantes[$comp] = [
+                'competencia' => $comp,
+                'ano'         => $anoNum,
+                'mes'         => $mesNum,
+                'mes_abrev'   => self::MESES_ABREV[$mesNum] ?? "M{$mesNum}",
+                'mes_nome'    => self::MESES_PT[$mesNum] ?? "Mês {$mesNum}",
+                'dados'       => $this->calcularCompetencia($comp),
+            ];
+            $cursorDt->modify('+1 month');
+        }
+
+        return [
+            'data_inicio'              => $dataInicio,
+            'data_fim'                 => $dataFim,
+            'data_inicio_formatada'    => date('d/m/Y', strtotime($dataInicio)),
+            'data_fim_formatada'       => date('d/m/Y', strtotime($dataFim)),
+            'meses_participantes'      => $mesesParticipantes,
+            'qtd_meses'                => count($mesesParticipantes),
+
+            // (+) RECEITA BRUTA
+            'receita_online'           => $receitaOnline,
+            'receita_balcao'           => $receitaBalcao,
+            'receita_bruta'            => $receitaBruta,
+
+            // (-) DEDUÇÕES
+            'estornos_balcao'          => $estornosBalcao,
+            'estornos_online'          => $estornosOnline,
+            'total_deducoes'           => $totalDeducoes,
+
+            // (=) RECEITA LÍQUIDA
+            'receita_liquida'          => $receitaLiquida,
+
+            // (-) CMV
+            'cmv'                      => $cmv,
+            'cmv_percent'              => $receitaLiquida > 0 ? ($cmv / $receitaLiquida) * 100 : 0.0,
+
+            // (=) LUCRO BRUTO
+            'lucro_bruto'              => $lucroBruto,
+            'margem_bruta_percent'     => $margemBrutaPercent,
+
+            // (-) DESPESAS OPERACIONAIS
+            'despesas_vendas'          => $despesasVendas,
+            'despesas_administrativas' => $despesasAdmin,
+            'despesas_pessoal'         => $despesasPessoal,
+            'despesas_manutencao'      => $despesasManutencao,
+            'despesas_financeiras'     => $despesasFinanceiras,
+            'despesas_outras'          => $despesasOutras,
+            'total_despesas'           => $totalDespesasOperacionais,
+            'despesas_percent'         => $receitaLiquida > 0 ? ($totalDespesasOperacionais / $receitaLiquida) * 100 : 0.0,
+
+            // (=) RESULTADO LÍQUIDO
+            'resultado_liquido'        => $resultadoLiquido,
+            'margem_liquida_percent'   => $margemLiquidaPercent,
+            'lucro_positivo'           => $resultadoLiquido >= 0,
+        ];
+    }
+
+    /**
      * Calcula o DRE anual comparativo mês a mês (Janeiro a Dezembro + Total Consolidado do Ano).
      */
     public function calcularAnoComparativo(int $ano): array
@@ -331,8 +502,9 @@ class Dre extends Model
 
     /**
      * Retorna os dados analíticos formatados para os gráficos interativos da tela de DRE.
+     * Suporta agregação por ano ou por período personalizado (data_inicio a data_fim).
      */
-    public function obterDadosGraficos(int $ano): array
+    public function obterDadosGraficos(int $ano, ?string $dataInicio = null, ?string $dataFim = null): array
     {
         $dreAno = $this->calcularAnoComparativo($ano);
         
@@ -352,43 +524,84 @@ class Dre extends Model
             $balcao[]   = round($d['receita_balcao'], 2);
         }
 
-        // Totais por categoria de despesas no ano
+        // Se datas foram fornecidas, apura os totais específicos do período selecionado
+        if ($dataInicio && $dataFim) {
+            $drePeriodo = $this->calcularPeriodo($dataInicio, $dataFim);
+            $totais = $drePeriodo;
+        } else {
+            $totais = $dreAno['totais'];
+        }
+
+        // Totais por categoria de despesas no período selecionado
         $totaisDespesas = [
-            'Administrativas' => $dreAno['totais']['despesas_administrativas'],
-            'Pessoal & Salários' => $dreAno['totais']['despesas_pessoal'],
-            'Vendas & Embalagens' => $dreAno['totais']['despesas_vendas'],
-            'Manutenção' => $dreAno['totais']['despesas_manutencao'],
-            'Financeiras' => $dreAno['totais']['despesas_financeiras'],
-            'Outras Despesas' => $dreAno['totais']['despesas_outras'],
+            'Administrativas' => $totais['despesas_administrativas'] ?? 0.00,
+            'Pessoal & Salários' => $totais['despesas_pessoal'] ?? 0.00,
+            'Vendas & Embalagens' => $totais['despesas_vendas'] ?? 0.00,
+            'Manutenção' => $totais['despesas_manutencao'] ?? 0.00,
+            'Financeiras' => $totais['despesas_financeiras'] ?? 0.00,
+            'Outras Despesas' => $totais['despesas_outras'] ?? 0.00,
         ];
 
-        // Ranking dos 8 produtos mais rentáveis / vendidos no ano
+        // Ranking dos 8 produtos mais rentáveis / vendidos no período
         $pdo = self::getConnection();
-        $sqlRanking = "SELECT 
-                        pr.id,
-                        pr.codigo_interno,
-                        pr.descricao,
-                        pr.preco_venda,
-                        COALESCE(pr.preco_custo, pr.preco_venda * 0.45) as preco_custo,
-                        SUM(t.qtd) as total_qtd,
-                        SUM(t.subtotal) as total_receita
-                       FROM (
-                           SELECT ip.produto_id, ip.quantidade as qtd, ip.subtotal
-                           FROM itens_pedido ip
-                           INNER JOIN pedidos p ON ip.pedido_id = p.id
-                           WHERE YEAR(p.data_consumo) = :ano AND p.status NOT IN ('cancelado', 'estornado')
-                           UNION ALL
-                           SELECT ivb.produto_id, ivb.quantidade as qtd, ivb.subtotal
-                           FROM itens_venda_balcao ivb
-                           INNER JOIN vendas_balcao vb ON ivb.venda_balcao_id = vb.id
-                           WHERE YEAR(vb.created_at) = :ano2 AND (vb.status != 'estornada' OR vb.status IS NULL)
-                       ) t
-                       INNER JOIN produtos pr ON t.produto_id = pr.id
-                       GROUP BY pr.id, pr.codigo_interno, pr.descricao, pr.preco_venda, pr.preco_custo
-                       ORDER BY total_receita DESC
-                       LIMIT 8";
-        $stmtR = $pdo->prepare($sqlRanking);
-        $stmtR->execute([':ano' => $ano, ':ano2' => $ano]);
+        if ($dataInicio && $dataFim) {
+            $sqlRanking = "SELECT 
+                            pr.id,
+                            pr.codigo_interno,
+                            pr.descricao,
+                            pr.preco_venda,
+                            COALESCE(pr.preco_custo, pr.preco_venda * 0.45) as preco_custo,
+                            SUM(t.qtd) as total_qtd,
+                            SUM(t.subtotal) as total_receita
+                           FROM (
+                               SELECT ip.produto_id, ip.quantidade as qtd, ip.subtotal
+                               FROM itens_pedido ip
+                               INNER JOIN pedidos p ON ip.pedido_id = p.id
+                               WHERE p.data_consumo BETWEEN :dt_inicio AND :dt_fim AND p.status NOT IN ('cancelado', 'estornado')
+                               UNION ALL
+                               SELECT ivb.produto_id, ivb.quantidade as qtd, ivb.subtotal
+                               FROM itens_venda_balcao ivb
+                               INNER JOIN vendas_balcao vb ON ivb.venda_balcao_id = vb.id
+                               WHERE DATE(vb.created_at) BETWEEN :dt_inicio2 AND :dt_fim2 AND (vb.status != 'estornada' OR vb.status IS NULL)
+                           ) t
+                           INNER JOIN produtos pr ON t.produto_id = pr.id
+                           GROUP BY pr.id, pr.codigo_interno, pr.descricao, pr.preco_venda, pr.preco_custo
+                           ORDER BY total_receita DESC
+                           LIMIT 8";
+            $stmtR = $pdo->prepare($sqlRanking);
+            $stmtR->execute([
+                ':dt_inicio'  => $dataInicio,
+                ':dt_fim'     => $dataFim,
+                ':dt_inicio2' => $dataInicio,
+                ':dt_fim2'    => $dataFim,
+            ]);
+        } else {
+            $sqlRanking = "SELECT 
+                            pr.id,
+                            pr.codigo_interno,
+                            pr.descricao,
+                            pr.preco_venda,
+                            COALESCE(pr.preco_custo, pr.preco_venda * 0.45) as preco_custo,
+                            SUM(t.qtd) as total_qtd,
+                            SUM(t.subtotal) as total_receita
+                           FROM (
+                               SELECT ip.produto_id, ip.quantidade as qtd, ip.subtotal
+                               FROM itens_pedido ip
+                               INNER JOIN pedidos p ON ip.pedido_id = p.id
+                               WHERE YEAR(p.data_consumo) = :ano AND p.status NOT IN ('cancelado', 'estornado')
+                               UNION ALL
+                               SELECT ivb.produto_id, ivb.quantidade as qtd, ivb.subtotal
+                               FROM itens_venda_balcao ivb
+                               INNER JOIN vendas_balcao vb ON ivb.venda_balcao_id = vb.id
+                               WHERE YEAR(vb.created_at) = :ano2 AND (vb.status != 'estornada' OR vb.status IS NULL)
+                           ) t
+                           INNER JOIN produtos pr ON t.produto_id = pr.id
+                           GROUP BY pr.id, pr.codigo_interno, pr.descricao, pr.preco_venda, pr.preco_custo
+                           ORDER BY total_receita DESC
+                           LIMIT 8";
+            $stmtR = $pdo->prepare($sqlRanking);
+            $stmtR->execute([':ano' => $ano, ':ano2' => $ano]);
+        }
         $ranking = $stmtR->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
         $rankingFormatado = [];

@@ -31,23 +31,62 @@ class DreController extends Controller
     }
 
     /**
-     * Tela principal comparativa do DRE com demonstrativo mês a mês e gráficos interativos.
+     * Resolve o intervalo de datas (data_inicio, data_fim) e o ano de referência.
+     */
+    private function resolverPeriodo(): array
+    {
+        $dataInicio = isset($_GET['data_inicio']) && is_string($_GET['data_inicio']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['data_inicio'])
+            ? $_GET['data_inicio']
+            : null;
+        $dataFim = isset($_GET['data_fim']) && is_string($_GET['data_fim']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['data_fim'])
+            ? $_GET['data_fim']
+            : null;
+
+        // Se fornecido ano explicitamente via parâmetro 'ano'
+        $anoParam = isset($_GET['ano']) ? (int)$_GET['ano'] : 0;
+        if ($anoParam >= 2020 && $anoParam <= 2050 && (!$dataInicio || !$dataFim)) {
+            $dataInicio = sprintf('%04d-01-01', $anoParam);
+            $dataFim    = sprintf('%04d-12-31', $anoParam);
+            $ano = $anoParam;
+        } elseif ($dataInicio && $dataFim) {
+            $ano = (int)date('Y', strtotime($dataInicio));
+        } else {
+            // Padrão: ano corrente de 01/01 até o final do ano (ou hoje)
+            $ano = (int)date('Y');
+            $dataInicio = sprintf('%04d-01-01', $ano);
+            $dataFim    = date('Y-m-d');
+        }
+
+        if ($dataInicio > $dataFim) {
+            $temp = $dataInicio;
+            $dataInicio = $dataFim;
+            $dataFim = $temp;
+        }
+
+        return [$dataInicio, $dataFim, $ano];
+    }
+
+    /**
+     * Tela principal: Painel Visual & Gráficos Interativos sempre abertos, com seletor de período por datas.
+     * O demonstrativo formal do DRE é gerado sob demanda via Visualizar/Imprimir ou Baixar PDF.
      */
     public function index(): void
     {
-        $ano = isset($_GET['ano']) ? (int)$_GET['ano'] : (int)date('Y');
-        if ($ano < 2020 || $ano > 2050) {
-            $ano = (int)date('Y');
-        }
+        [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
 
+        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim);
         $dreAno = $this->dreModel->calcularAnoComparativo($ano);
-        $dadosGraficos = $this->dreModel->obterDadosGraficos($ano);
+        $dadosGraficos = $this->dreModel->obterDadosGraficos($ano, $dataInicio, $dataFim);
         $config = Configuracao::obter();
 
         $this->render('financeiro/dre', [
-            'title'         => "DRE Gerencial {$ano} — Colégio Monteiro Lobato",
+            'title'         => "Painel Financeiro & DRE Gerencial — Colégio Monteiro Lobato",
             'activeMenu'    => 'dre',
             'ano'           => $ano,
+            'dataInicio'    => $dataInicio,
+            'dataFim'       => $dataFim,
+            'drePeriodo'    => $drePeriodo,
+            'totais'        => $drePeriodo, // Alimenta os stat-cards com o período filtrado
             'dre'           => $dreAno,
             'graficos'      => $dadosGraficos,
             'config'        => $config,
@@ -62,22 +101,25 @@ class DreController extends Controller
      */
     public function graficosJson(): void
     {
-        $ano = isset($_GET['ano']) ? (int)$_GET['ano'] : (int)date('Y');
-        $dados = $this->dreModel->obterDadosGraficos($ano);
+        [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
+        $dados = $this->dreModel->obterDadosGraficos($ano, $dataInicio, $dataFim);
 
         $this->json([
-            'sucesso' => true,
-            'ano'     => $ano,
-            'dados'   => $dados,
+            'sucesso'     => true,
+            'ano'         => $ano,
+            'data_inicio' => $dataInicio,
+            'data_fim'    => $dataFim,
+            'dados'       => $dados,
         ]);
     }
 
     /**
-     * Gera e despacha o espelho HTML oficial do DRE para impressão via navegador.
+     * Gera e despacha o espelho HTML oficial do DRE para impressão via navegador para o período selecionado.
      */
     public function imprimir(): void
     {
-        $ano = isset($_GET['ano']) ? (int)$_GET['ano'] : (int)date('Y');
+        [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
+        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim);
         $dreAno = $this->dreModel->calcularAnoComparativo($ano);
         $config = Configuracao::obter();
 
@@ -87,7 +129,11 @@ class DreController extends Controller
         // Renderiza a view de impressão com escopo protegido
         $this->renderViewDireto('financeiro/dre_pdf', [
             'ano'         => $ano,
+            'dataInicio'  => $dataInicio,
+            'dataFim'     => $dataFim,
+            'drePeriodo'  => $drePeriodo,
             'dre'         => $dreAno,
+            'totais'      => $drePeriodo,
             'config'      => $config,
             'logoBase64'  => $logoBase64,
             'dataEmissao' => date('d/m/Y H:i:s'),
@@ -99,18 +145,23 @@ class DreController extends Controller
     }
 
     /**
-     * Gera e efetua download direto do relatório DRE em PDF A4 timbrado via Gotenberg/Chromium.
+     * Gera e efetua download direto do relatório DRE em PDF A4 timbrado via Gotenberg/Chromium para o período selecionado.
      */
     public function pdf(): void
     {
-        $ano = isset($_GET['ano']) ? (int)$_GET['ano'] : (int)date('Y');
+        [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
+        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim);
         $dreAno = $this->dreModel->calcularAnoComparativo($ano);
         $config = Configuracao::obter();
         $logoBase64 = $this->obterLogoBase64();
 
         $viewVars = [
             'ano'         => $ano,
+            'dataInicio'  => $dataInicio,
+            'dataFim'     => $dataFim,
+            'drePeriodo'  => $drePeriodo,
             'dre'         => $dreAno,
+            'totais'      => $drePeriodo,
             'config'      => $config,
             'logoBase64'  => $logoBase64,
             'dataEmissao' => date('d/m/Y H:i:s'),
@@ -122,7 +173,7 @@ class DreController extends Controller
 
         $html = PdfService::renderView('financeiro/dre_pdf', $viewVars);
 
-        // Opções para Gotenberg: documento em modo Paisagem para comportar as 13 colunas perfeitamente
+        // Opções para Gotenberg: documento em modo Paisagem para comportar as colunas perfeitamente
         $opcoes = [
             'landscape'         => true,
             'preferCssPageSize' => true,
@@ -132,7 +183,7 @@ class DreController extends Controller
         $pdfBinario = PdfService::htmlToPdf($html, $opcoes);
 
         if ($pdfBinario !== null && strlen($pdfBinario) > 1000) {
-            $nomeArquivo = "dre_gerencial_{$ano}_" . date('Ymd_His') . ".pdf";
+            $nomeArquivo = "dre_gerencial_{$dataInicio}_a_{$dataFim}_" . date('Ymd_His') . ".pdf";
             header('Content-Type: application/pdf');
             header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
             header('Content-Length: ' . strlen($pdfBinario));
@@ -147,14 +198,15 @@ class DreController extends Controller
     }
 
     /**
-     * Exporta o DRE comparativo anual para planilha no formato CSV com BOM UTF-8 e delimitador ';'.
+     * Exporta o DRE para planilha no formato CSV com BOM UTF-8 e delimitador ';'.
      */
     public function csv(): void
     {
-        $ano = isset($_GET['ano']) ? (int)$_GET['ano'] : (int)date('Y');
+        [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
+        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim);
         $dreAno = $this->dreModel->calcularAnoComparativo($ano);
 
-        $nomeArquivo = "dre_gerencial_{$ano}_" . date('Ymd_His') . ".csv";
+        $nomeArquivo = "dre_gerencial_{$dataInicio}_a_{$dataFim}_" . date('Ymd_His') . ".csv";
 
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
@@ -167,7 +219,8 @@ class DreController extends Controller
 
         // Cabeçalho da Empresa
         fputcsv($output, ['COLÉGIO MONTEIRO LOBATO - CANTINA WEB'], ';');
-        fputcsv($output, ["DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE) - ANO {$ano}"], ';');
+        fputcsv($output, ["DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE)"], ';');
+        fputcsv($output, ["PERÍODO: " . date('d/m/Y', strtotime($dataInicio)) . " A " . date('d/m/Y', strtotime($dataFim)) . " (Exercício {$ano})"], ';');
         fputcsv($output, ['Emissão: ' . date('d/m/Y H:i:s')], ';');
         fputcsv($output, [], ';');
 
@@ -176,17 +229,17 @@ class DreController extends Controller
         for ($m = 1; $m <= 12; $m++) {
             $cabecalho[] = Dre::MESES_ABREV[$m] . '/' . substr((string)$ano, 2);
         }
-        $cabecalho[] = 'TOTAL DO ANO';
+        $cabecalho[] = 'TOTAL DO PERÍODO';
         fputcsv($output, $cabecalho, ';');
 
         // Função auxiliar para montar linha de valores
-        $escreverLinha = function(string $rotulo, string $chave, bool $formatarValor = true) use ($output, $dreAno) {
+        $escreverLinha = function(string $rotulo, string $chave, bool $formatarValor = true) use ($output, $dreAno, $drePeriodo) {
             $linha = [$rotulo];
             for ($m = 1; $m <= 12; $m++) {
                 $val = $dreAno['meses'][$m][$chave] ?? 0.00;
                 $linha[] = $formatarValor ? number_format((float)$val, 2, ',', '.') : $val;
             }
-            $totalVal = $dreAno['totais'][$chave] ?? 0.00;
+            $totalVal = $drePeriodo[$chave] ?? 0.00;
             $linha[] = $formatarValor ? number_format((float)$totalVal, 2, ',', '.') : $totalVal;
             fputcsv($output, $linha, ';');
         };
