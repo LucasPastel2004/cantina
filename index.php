@@ -552,9 +552,56 @@ $router->post('/admin/contestacoes/desbloquear', [\App\Controllers\AdminControll
 $router->get('/admin/contestacoes/sugestoes', [\App\Controllers\AdminController::class, 'contestacoesSugestoes'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
-$router->get('/admin/contestacoes/pdf', [\App\Controllers\AdminController::class, 'contestacoesPdf'], [
+// 6. Módulo Financeiro: Despesas Operacionais e DRE Gerencial Completo (Fase 24 — FSD, Diretrizes e Planilha Modelo Aethos)
+$router->get('/financeiro/despesas', [\App\Controllers\DespesasController::class, 'index'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/financeiro/despesas/salvar', [\App\Controllers\DespesasController::class, 'salvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/financeiro/despesas/{id}/json', [\App\Controllers\DespesasController::class, 'editarJson'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/financeiro/despesas/atualizar', [\App\Controllers\DespesasController::class, 'atualizar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/financeiro/despesas/pagar', [\App\Controllers\DespesasController::class, 'pagar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/financeiro/despesas/excluir', [\App\Controllers\DespesasController::class, 'excluir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
+// DRE Gerencial e Gráficos
+$router->get('/financeiro/dre', [\App\Controllers\DreController::class, 'index'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/financeiro/dre/graficos-json', [\App\Controllers\DreController::class, 'graficosJson'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/financeiro/dre/imprimir', [\App\Controllers\DreController::class, 'imprimir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/financeiro/dre/pdf', [\App\Controllers\DreController::class, 'pdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/financeiro/dre/csv', [\App\Controllers\DreController::class, 'csv'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+// Atalhos compatíveis na Central de Relatórios
+$router->get('/relatorios/dre', [\App\Controllers\DreController::class, 'index'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/dre/pdf', [\App\Controllers\DreController::class, 'pdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/dre/imprimir', [\App\Controllers\DreController::class, 'imprimir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/dre/csv', [\App\Controllers\DreController::class, 'csv'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 
 // 9. Despacha a requisição HTTP atual
 $router->dispatch();
+

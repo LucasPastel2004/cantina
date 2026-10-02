@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 23 — Relatório Gerencial de Movimentações de Estoque (Retrato e Paisagem)
-* **Status da Fase 23:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 23 de 24 Fases Concluídas
-* **Última Atualização:** 2026-10-01 10:15:00 (Conclusão e homologação da Fase 23: 1) View de filtros e opções de leiaute `app/views/relatorios/estoque_filtros.php` implementando abas 'Filtro' e 'Leiaute' com opções de orientação Retrato/Paisagem, agrupamento por grupo/produto, quebra de página e centro de custo Cantina Geral conforme `filtro movimentação estoque.pdf`; 2) View oficial de emissão A4 e PDF `app/views/relatorios/estoque_movimentacoes_pdf.php` com suporte nativo a Paisagem e Retrato, cabeçalho escolar, subtotais e consolidação; 3) Métodos `estoqueFiltros`, `estoqueMovimentacoes`, `estoqueMovimentacoesPdf`, `estoqueMovimentacoesImprimir`, `estoqueMovimentacoesCsv` e `obterDadosMovimentacoesEstoqueAvancadas` em `RelatoriosController.php`; 4) Suporte a landscape em `PdfService.php` para Gotenberg; 5) Card no Hub de Relatórios e link na Sidebar sob Estoque; 6) Suíte `tests/fase23_test.php` com 77 asserções 100% aprovadas e regressões homologadas).
+* **Fase Atual:** Fase 24 — Módulo Financeiro de Despesas, DRE Gerencial Completo e Painel de Gráficos Interativos
+* **Status da Fase 24:** Concluída [x] (100% Homologada)
+* **Status Geral do Projeto:** 24 de 24 Fases Concluídas — PROJETO 100% CONCLUÍDO!
+* **Última Atualização:** 2026-10-02 14:50:00 (Conclusão e homologação da Fase 24: 1) Migration 029 criando a tabela `despesas_operacionais` e adicionando `preco_custo` em `produtos`; 2) Modelos `DespesaOperacional.php` e `Dre.php` com apuração contábil rigorosa de Receita Bruta, Deduções, CMV, Lucro Bruto, Despesas Operacionais e Resultado Líquido do Exercício; 3) Controllers `DespesasController.php` e `DreController.php` protegidos por RBAC; 4) Views corporativas `app/views/financeiro/despesas.php`, `app/views/financeiro/dre.php` com tabela comparativa anual de 12 meses e gráficos interativos, e espelho de emissão A4 Paisagem `app/views/financeiro/dre_pdf.php` com grade tipo Excel e fundo 100% branco; 5) Inclusão local de `assets/js/chart.min.js`; 6) Rotas, sidebar e hub de relatórios atualizados; 7) Seeder `database/seed_despesas_dre.php` executado; 8) Suíte de testes `tests/fase24_test.php` com 93/93 asserções 100% aprovadas e testes de regressão de caixa e relatórios homologados com sucesso).
 
 
 
@@ -1096,24 +1096,50 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [ ] Fase 24 — Módulo Financeiro de Despesas, DRE Gerencial Completo e Painel de Gráficos Interativos
-* [ ] Migration 027 criando a tabela `despesas_operacionais`.
-* [ ] CRUD administrativo de despesas operacionais (`app/controllers/DespesasController.php`).
-* [ ] Motor de apuração contábil de DRE em `app/models/Dre.php` com apuração de Receita Bruta, Deduções, CMV automático, Lucro Bruto e Abatimento de Despesas conforme `Estrutura de uma DRE.pdf` e `Planilha_DRE_Modelo_Aethos_Sistemas.pdf`.
-* [ ] Tela comparativa mensal do DRE com exportações em PDF e CSV.
-* [ ] Painel com gráficos visuais interativos locais (`assets/js/chart.min.js` ou SVG nativo de alta densidade): evolução mensal, faturamento online vs presencial e produtos mais rentáveis.
-* [ ] Bateria de testes automatizados `tests/fase24_test.php`.
+### [x] Fase 24 — Módulo Financeiro de Despesas, DRE Gerencial Completo e Painel de Gráficos Interativos
+* [x] **Migração e Persistência de Dados:**
+  * Migration `029_create_despesas_operacionais_table.php` criada e executada com sucesso via `database/runner.php`;
+  * Tabela `despesas_operacionais` com campos para categorias contábeis padronizadas (`administrativa`, `pessoal`, `vendas`, `manutencao`, `financeira`, `outras`), subcategoria, descrição, valor monetário, competência `YYYY-MM`, vencimento, quitação/pagamento, status (`pendente`, `pago`, `cancelado`), forma de pagamento, documento de referência, observações, trilha de auditoria (`created_by`, `updated_by`) e soft delete (`deleted_at`);
+  * Adição da coluna `preco_custo` (`DECIMAL(10,2)`) na tabela `produtos` para apuração direta de CMV;
+  * Seeder `database/seed_despesas_dre.php` desenvolvido e executado, calibrando 85 despesas distribuídas pelos 12 meses de 2026 e precificação de custo para os produtos.
+* [x] **Modelos de Domínio (`DespesaOperacional.php` e `Dre.php`):**
+  * `DespesaOperacional.php`: CRUD completo, validações de negócio (descrição mínima, valor positivo, formato `YYYY-MM` de competência), quitação rápida, paginação, filtros por período/categoria/status e soft delete garantindo integridade contábil;
+  * `Dre.php`: Motor contábil analítico em conformidade com as diretrizes de `Estrutura de uma DRE.pdf` e `Planilha_DRE_Modelo_Aethos_Sistemas.pdf`:
+    1. (+) Receita Bruta de Vendas (Pedidos Online + Vendas Balcão);
+    2. (-) Deduções e Abatimentos (Estornos no Balcão + Estornos Online);
+    3. (=) Receita Líquida de Vendas;
+    4. (-) Custo das Mercadorias Vendidas (CMV apurado item a item por produto vendido, entradas ou margem de 45%);
+    5. (=) Lucro Bruto e Margem Bruta (%);
+    6. (-) Despesas Operacionais discriminadas por categoria (Administrativas, Pessoal & Salários, Vendas & Embalagens, Manutenção, Financeiras e Outras);
+    7. (=) Resultado Líquido do Exercício (Lucro Líquido Real) e Margem Líquida (%);
+  * Métodos `calcularCompetencia()`, `calcularAnoComparativo()` (12 meses de Janeiro a Dezembro + consolidado anual) e `obterDadosGraficos()` com séries temporais e ranking dos produtos mais rentáveis.
+* [x] **Controladores Administrativos (`DespesasController.php` e `DreController.php`):**
+  * Proteção mandatória por RBAC (`ROLE_ADMINISTRADOR`);
+  * `DespesasController.php`: Listagem com stat-strip financeiro, modais de novo lançamento e quitação, validações CSRF e exclusão lógica;
+  * `DreController.php`: Visão comparativa Jan-Dez, alternador de ano de exercício, endpoint API JSON `/financeiro/dre/graficos-json`, visualização/impressão A4 Paisagem, geração de PDF via Gotenberg e exportação CSV com delimitador `;` e BOM UTF-8.
+* [x] **Visualização e Design System (`app/views/financeiro/`):**
+  * `app/views/financeiro/despesas.php`: Stat-strip de 4 cartões (Total do Mês, Pago, Pendente, A Vencer), tabela de despesas com badges de status, modais corporativos;
+  * `app/views/financeiro/dre.php`: Tabela comparativa mês a mês estilo planilha Aethos, abas integradas para gráficos interativos (Evolução Anual, Rosca Receita Online vs Balcão, Barras de Despesas por Categoria, Ranking de Rentabilidade);
+  * `app/views/financeiro/dre_pdf.php`: Espelho oficial timbrado A4 Paisagem (`@page { size: A4 landscape; margin: 10mm 12mm; }`), grade estilo Excel com divisórias pretas nítidas e células com fundo 100% branco puro (`background-color: #ffffff !important;`), sem qualquer corte na borda direita;
+  * `assets/js/chart.min.js`: Biblioteca Chart.js versão 4.4.1 integrada localmente (205 KB), eliminando dependência externa ou CDN.
+* [x] **Navegação e Roteamento:**
+  * Rotas registradas no `index.php`: `/financeiro/despesas*`, `/financeiro/dre*` e `/relatorios/dre*`;
+  * Links "Despesas da Cantina" e "DRE Gerencial" integrados no menu lateral (`sidebar.php`) na seção Administração;
+  * Card "DRE Gerencial & Despesas" adicionado na Central de Relatórios (`app/views/relatorios/index.php`).
+* [x] **Homologação e Testes:**
+  * Suíte automatizada `tests/fase24_test.php` com 93/93 asserções aprovadas com 100% de sucesso (tabelas, models, controllers, view, PDF compilado com 84.813 bytes);
+  * Testes de regressão de caixa (`tests/caixa_test.php`), relatórios (`tests/fase21_test.php`, `tests/fase22_test.php`, `tests/fase23_test.php`) e todos os PDFs (`tests/teste_todos_pdfs.php`) 100% aprovados.
 
 ---
 
 ## Próximo Passo Recomendado
 
-Executar a **Fase 24 — Módulo Financeiro de Despesas, DRE Gerencial Completo e Painel de Gráficos Interativos** (Última Fase do Projeto):
-1. Criar a Migration 027 para a tabela `despesas_operacionais` (categorias, vencimento, pagamento, valor, status e soft delete);
-2. Construir o CRUD de lançamentos de despesas operacionais da cantina;
-3. Desenvolver o motor de DRE gerencial com apuração de CMV, deduções, margem de contribuição e resultado líquido do exercício conforme os modelos oficiais da escola;
-4. Implementar a tela comparativa do DRE mês a mês e exportações em PDF e CSV;
-5. Integrar biblioteca de gráficos interativos locais (`assets/js/chart.min.js` ou SVG nativo de alta densidade) e consolidar os testes automatizados da Fase 24.
+**A CODIFICAÇÃO DO PROJETO ESTÁ 100% CONCLUÍDA!**
+
+Todas as 24 fases planejadas no `docs/PLANO.md` foram construídas, testadas e homologadas com 100% de sucesso.
+Conforme as instruções do projeto:
+1. Efetuar o commit e push do repositório Git;
+2. Abrir um **novo chat** e iniciar o **Passo 5 — Validação de Segurança e Auditoria Final**, garantindo a checagem global de conformidade, blindagem de endpoints, LGPD e prontidão para implantação em produção (Hostnet).
 
 
 

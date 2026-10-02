@@ -227,5 +227,30 @@ $baseUrl = $baseUrl ?? '';
                 </div>
             </div>
         </div>
+
+        <!-- Relatório 8: DRE Gerencial Completo & Finanças (Fase 24) -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Controladoria & DRE</span>
+                        <span class="code-tag font-tabular">Planilha + Gráficos</span>
+                    </div>
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">DRE Gerencial & Despesas</h2>
+                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
+                        Demonstração do Resultado do Exercício comparativo mês a mês (Receita Bruta, Estornos, CMV, Lucro Bruto, Despesas Operacionais e Lucro Líquido Real) com gráficos e exportações.
+                    </p>
+                </div>
+                <div class="d-flex gap-2 pt-3 border-top mt-auto flex-wrap">
+                    <a href="<?php echo $baseUrl; ?>/financeiro/dre" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
+                        Ver DRE Anual
+                    </a>
+                    <a href="<?php echo $baseUrl; ?>/financeiro/despesas" class="btn btn-enterprise btn-secondary btn-sm text-center fw-medium" title="Gerenciar Despesas Operacionais">
+                        Despesas
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+

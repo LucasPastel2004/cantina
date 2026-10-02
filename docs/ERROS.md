@@ -1429,3 +1429,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - Preservada rigorosamente a estética de grade tipo Excel com linhas divisórias pretas e fundo 100% branco nas células.
   4. Suíte `tests/teste_todos_pdfs.php` cobrindo todos os 8 relatórios PDF e suítes `tests/fase23_test.php` (139 testes), `tests/fase22_test.php` (79 testes) e `tests/fase21_test.php` (99 testes) 100% aprovadas.
 - Como evitar no futuro: Em documentos A4 gerados com Chromium/Gotenberg, definir sempre as margens físicas na própria regra `@page` do CSS (`margin: 10mm 12mm`), delegando ao Chromium a aplicação das margens e mantendo os contêineres e tabelas com `width: 100%` da área útil, sem tentar restringir larguras em pixels fixos que distorcem em diferentes densidades de tela e emuladores de impressão.
+
+---
+
+## 2026-10-02 - Referência incorreta a vb.data_hora e método inexistente Configuracao::getInstancia() na Fase 24
+
+- Sintoma: Erros disparados durante a primeira execução da suíte `tests/fase24_test.php`:
+  1. `PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'vb.data_hora' in 'where clause'` no modelo `app/models/Dre.php` ao apurar a receita e custos das vendas de balcão.
+  2. `Fatal error: Uncaught Error: Call to undefined method App\Models\Configuracao::getInstancia()` em `app/controllers/DreController.php` e no teste automatizado.
+- Causa:
+  1. Na tabela `vendas_balcao` criada na Migration 020, a coluna de registro temporal é `created_at` (e `estornado_em` para cancelamentos), e não `data_hora`. Quatro consultas em `app/models/Dre.php` referenciaram `vb.data_hora`.
+  2. O modelo `app/models/Configuracao` utiliza o método estático `Configuracao::obter()` para recuperar as configurações institucionais da cantina, mas o controller e o teste invocaram o método não existente `getInstancia()`.
+- Solução aplicada:
+  1. Em `app/models/Dre.php`, substituídas todas as 4 ocorrências de `vb.data_hora` por `vb.created_at`.
+  2. Em `app/controllers/DreController.php` e `tests/fase24_test.php`, substituída a chamada por `Configuracao::obter()`.
+  3. Reexecutada a suíte `tests/fase24_test.php`, com 93 de 93 asserções aprovadas com 100% de sucesso.
+- Como evitar no futuro: Sempre inspecionar a migração de criação da tabela de dados antes de montar as queries de agregação contábil, e conferir a assinatura dos métodos dos modelos utilitários existentes (`Configuracao::obter()`).

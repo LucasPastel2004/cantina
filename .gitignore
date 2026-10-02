@@ -63,6 +63,7 @@ composer.phar
 *.temp
 *.cache
 cache/
+storage/*.pdf
 
 # ------------------------------------------------------------------------------
 # 6. Docker e Volumes de Dados Locais
