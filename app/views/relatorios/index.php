@@ -214,12 +214,12 @@ $baseUrl = $baseUrl ?? '';
                     </div>
                     <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Movimentações de Estoque</h2>
                     <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
-                        Demonstrativo analítico de entradas (fornecedor/XML), saídas (balcão/online) e perdas com opções de leiaute Paisagem/Retrato, agrupamento por grupo/produto e Centro de Custo Cantina Geral.
+                        Demonstrativo analítico de entradas (fornecedor/XML), saídas (balcão/online) e perdas com opções de layout Paisagem/Retrato, agrupamento por grupo/produto e Centro de Custo Cantina Geral.
                     </p>
                 </div>
                 <div class="d-flex gap-2 pt-3 border-top mt-auto flex-wrap">
                     <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
-                        Filtros & Leiaute
+                        Filtros & Layout
                     </a>
                     <a href="<?php echo $baseUrl; ?>/relatorios/estoque-movimentacoes/imprimir" class="btn btn-enterprise btn-secondary btn-sm text-center fw-medium" target="_blank" title="Visualizar / Imprimir Relatório Atual">
                         Visualizar A4

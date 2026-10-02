@@ -123,7 +123,7 @@ class RelatoriosController extends Controller
         $apenasSaldo = ($this->input('apenas_saldo', 'nao') === 'sim');
         $saldoApenasPeriodo = ($this->input('saldo_apenas_periodo', 'nao') === 'sim');
         $abaAtiva = trim((string)$this->input('aba', 'filtros'));
-        if (!in_array($abaAtiva, ['filtros', 'leiaute'], true)) {
+        if (!in_array($abaAtiva, ['filtros', 'leiaute', 'layout'], true)) {
             $abaAtiva = 'filtros';
         }
 
@@ -2002,7 +2002,7 @@ class RelatoriosController extends Controller
     }
 
     /**
-     * Tela de Opções de Leiaute e Filtros de Movimentações de Estoque (Fase 23)
+     * Tela de Opções de Layout e Filtros de Movimentações de Estoque (Fase 23)
      * Conforme docs/alterações sistema guideline/filtro movimentação estoque.pdf
      */
     public function estoqueFiltros(): void
@@ -2017,7 +2017,8 @@ class RelatoriosController extends Controller
         $tipoMov     = trim($_GET['tipo_movimentacao'] ?? '');
         $motivoPerda = trim($_GET['motivo_perda'] ?? '');
 
-        $formatoLeiaute    = in_array(strtolower($_GET['formato_leiaute'] ?? ''), ['paisagem', 'retrato']) ? strtolower($_GET['formato_leiaute']) : 'retrato';
+        $paramFormato      = $_GET['formato_layout'] ?? $_GET['formato_leiaute'] ?? '';
+        $formatoLayout     = in_array(strtolower($paramFormato), ['paisagem', 'retrato']) ? strtolower($paramFormato) : 'retrato';
         $agruparGrupo      = ($_GET['agrupar_grupo'] ?? 'ocultar') === 'mostrar' ? 'mostrar' : 'ocultar';
         $agruparProduto    = ($_GET['agrupar_produto'] ?? 'ocultar') === 'mostrar' ? 'mostrar' : 'ocultar';
         $quebraPagina      = ($_GET['quebra_pagina'] ?? 'ocultar') === 'mostrar' ? 'mostrar' : 'ocultar';
@@ -2034,7 +2035,8 @@ class RelatoriosController extends Controller
                 'produto_id'           => $produtoId,
                 'tipo_movimentacao'    => $tipoMov,
                 'motivo_perda'         => $motivoPerda,
-                'formato_leiaute'      => $formatoLeiaute,
+                'formato_layout'       => $formatoLayout,
+                'formato_leiaute'      => $formatoLayout, // retrocompatibilidade
                 'agrupar_centro_custo' => 'ocultar',
                 'agrupar_grupo'        => $agruparGrupo,
                 'agrupar_produto'      => $agruparProduto,
@@ -2071,7 +2073,7 @@ class RelatoriosController extends Controller
         $dados = $this->obterDadosMovimentacoesEstoqueAvancadas($_GET);
         $dados['baseUrl'] = $this->getBaseUrl();
 
-        $formato = $dados['formato_leiaute'] ?? 'retrato';
+        $formato = $dados['formato_layout'] ?? $dados['formato_leiaute'] ?? 'retrato';
         $isLandscape = ($formato === 'paisagem');
 
         $html = PdfService::renderView('relatorios/estoque_movimentacoes_pdf', $dados);
@@ -2185,7 +2187,7 @@ class RelatoriosController extends Controller
     }
 
     /**
-     * Processa e consolida as movimentações de estoque conforme filtros e leiaute
+     * Processa e consolida as movimentações de estoque conforme filtros e layout
      * 
      * @param array $filtros Parâmetros de requisição ($_GET)
      * @return array Matriz estruturada com agrupamentos, subtotais e totais
@@ -2201,7 +2203,9 @@ class RelatoriosController extends Controller
             $dataFim = $tmp;
         }
 
-        $formatoLeiaute = in_array(strtolower($filtros['formato_leiaute'] ?? ''), ['paisagem', 'retrato']) ? strtolower($filtros['formato_leiaute']) : 'retrato';
+        $paramFormato  = $filtros['formato_layout'] ?? $filtros['formato_leiaute'] ?? '';
+        $formatoLayout = in_array(strtolower($paramFormato), ['paisagem', 'retrato']) ? strtolower($paramFormato) : 'retrato';
+        $formatoLeiaute = $formatoLayout; // alias de compatibilidade
         $agruparGrupo   = ($filtros['agrupar_grupo'] ?? 'ocultar') === 'mostrar';
         $agruparProduto = ($filtros['agrupar_produto'] ?? 'ocultar') === 'mostrar';
         $quebraPagina   = ($filtros['quebra_pagina'] ?? 'ocultar') === 'mostrar';
@@ -2442,7 +2446,8 @@ class RelatoriosController extends Controller
             'categoria_filtro'         => $catNome,
             'produto_filtro'           => $prodNome,
             'centro_custo'             => 'Cantina Geral',
-            'formato_leiaute'          => $formatoLeiaute,
+            'formato_layout'           => $formatoLayout,
+            'formato_leiaute'          => $formatoLayout, // retrocompatibilidade
             'agrupar_grupo'            => $agruparGrupo,
             'agrupar_produto'          => $agruparProduto,
             'quebra_pagina'            => $quebraPagina,

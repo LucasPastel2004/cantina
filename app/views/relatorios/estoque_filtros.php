@@ -1,7 +1,7 @@
 <?php
 /**
  * Cantina Web — Colégio Monteiro Lobato
- * View: Painel de Opções de Leiaute e Filtros de Movimentações de Estoque
+ * View: Painel de Opções de Layout e Filtros de Movimentações de Estoque
  * 
  * Conforme docs/alterações sistema guideline/filtro movimentação estoque.pdf e docs/DESIGN.md
  */
@@ -20,7 +20,8 @@ $produtoId   = (int)($filtros['produto_id'] ?? 0);
 $tipoMov     = $filtros['tipo_movimentacao'] ?? '';
 $motivoPerda = $filtros['motivo_perda'] ?? '';
 
-$formatoLeiaute = $filtros['formato_leiaute'] ?? 'retrato';
+$formatoLayout  = $filtros['formato_layout'] ?? $filtros['formato_leiaute'] ?? 'retrato';
+$formatoLeiaute = $formatoLayout; // alias de compatibilidade
 $agruparGrupo   = $filtros['agrupar_grupo'] ?? 'ocultar';
 $agruparProduto = $filtros['agrupar_produto'] ?? 'ocultar';
 $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
@@ -183,7 +184,7 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
             </div>
         </div>
 
-        <!-- Abas de Navegação Estilo Escolar Manager: Filtro e Leiaute -->
+        <!-- Abas de Navegação Estilo Escolar Manager: Filtro e Layout -->
         <ul class="nav nav-tabs nav-tabs-enterprise mb-3" id="tabsEstoque" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tab-filtro-btn" data-bs-toggle="tab" data-bs-target="#tab-filtro-pane" type="button" role="tab" aria-controls="tab-filtro-pane" aria-selected="true">
@@ -194,11 +195,11 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-leiaute-btn" data-bs-toggle="tab" data-bs-target="#tab-leiaute-pane" type="button" role="tab" aria-controls="tab-leiaute-pane" aria-selected="false">
+                <button class="nav-link" id="tab-layout-btn" data-bs-toggle="tab" data-bs-target="#tab-layout-pane" type="button" role="tab" aria-controls="tab-layout-pane" aria-selected="false">
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
                     </svg>
-                    <span>Leiaute</span>
+                    <span>Layout</span>
                 </button>
             </li>
         </ul>
@@ -313,21 +314,24 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                 </div>
             </div>
 
-            <!-- ABA 2: LEIAUTE E FORMATAÇÃO (ESTILO ESCOLAR MANAGER) -->
-            <div class="tab-pane fade" id="tab-leiaute-pane" role="tabpanel" aria-labelledby="tab-leiaute-btn" tabindex="0">
+            <!-- ABA 2: LAYOUT E FORMATAÇÃO (ESTILO ESCOLAR MANAGER) -->
+            <div class="tab-pane fade" id="tab-layout-pane" role="tabpanel" aria-labelledby="tab-layout-btn" tabindex="0">
                 <div class="card-filtro-container mb-3">
                     
                     <div class="row g-4 mb-4">
                         
-                        <!-- 1. Formato do Leiaute: Paisagem / Retrato -->
+                        <!-- 1. Formato do Layout: Paisagem / Retrato -->
                         <div class="col-12 col-sm-6 col-md-3">
-                            <label class="label-campo-escolar">Formato do leiaute</label>
+                            <label class="label-campo-escolar">Formato do layout</label>
                             <div class="btn-toggle-group-escolar w-100">
-                                <input type="radio" class="btn-check" name="formato_leiaute" id="leiautePaisagem" value="paisagem" <?php echo ($formatoLeiaute === 'paisagem') ? 'checked' : ''; ?>>
-                                <label class="btn btn-escolar-segment flex-fill text-center" for="leiautePaisagem">Paisagem</label>
+                                <input type="radio" class="btn-check" name="formato_layout" id="layoutPaisagem" value="paisagem" <?php echo ($formatoLayout === 'paisagem') ? 'checked' : ''; ?> onchange="sincronizarFormatoLayout(this.value)">
+                                <label class="btn btn-escolar-segment flex-fill text-center" for="layoutPaisagem">Paisagem</label>
 
-                                <input type="radio" class="btn-check" name="formato_leiaute" id="leiauteRetrato" value="retrato" <?php echo ($formatoLeiaute === 'retrato') ? 'checked' : ''; ?>>
-                                <label class="btn btn-escolar-segment flex-fill text-center" for="leiauteRetrato">Retrato</label>
+                                <input type="radio" class="btn-check" name="formato_layout" id="layoutRetrato" value="retrato" <?php echo ($formatoLayout === 'retrato') ? 'checked' : ''; ?> onchange="sincronizarFormatoLayout(this.value)">
+                                <label class="btn btn-escolar-segment flex-fill text-center" for="layoutRetrato">Retrato</label>
+
+                                <!-- Compatibilidade com formato_leiaute -->
+                                <input type="hidden" name="formato_leiaute" id="formatoLeiauteHidden" value="<?php echo htmlspecialchars($formatoLayout, ENT_QUOTES, 'UTF-8'); ?>">
                             </div>
                             <small class="text-muted d-block mt-1" style="font-size: 11px;">
                                 Orientação da folha física A4
@@ -378,7 +382,7 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                         </div>
                     </div>
 
-                    <!-- Linha 2 de Leiaute: Quebra de Página -->
+                    <!-- Linha 2 de Layout: Quebra de Página -->
                     <div class="row g-4 pt-3 border-top">
                         <div class="col-12 col-sm-6 col-md-3">
                             <label class="label-campo-escolar">Quebra de página</label>
@@ -487,6 +491,14 @@ function filtrarProdutosPorCategoria() {
 
     if (!encontrouSelecionado) {
         selectProd.value = '0';
+    }
+}
+
+// Sincroniza o valor de formato de layout com o input de compatibilidade
+function sincronizarFormatoLayout(val) {
+    const hidden = document.getElementById('formatoLeiauteHidden');
+    if (hidden) {
+        hidden.value = val;
     }
 }
 </script>

@@ -245,7 +245,7 @@ $linhas = $dadosExtrato['linhas'] ?? ($dadosExtrato['movimentacoes'] ?? []);
                 <span class="code-tag font-tabular">Opção Ativa: Apenas Saldo</span>
             </div>
             <p class="text-secondary text-microcopy mb-4">
-                O extrato detalhado de itens individuais está oculto conforme a opção selecionada na aba <strong>Leiaute</strong>. Apenas os totais consolidados e o saldo oficial são emitidos.
+                O extrato detalhado de itens individuais está oculto conforme a opção selecionada na aba <strong>Layout</strong>. Apenas os totais consolidados e o saldo oficial são emitidos.
             </p>
             <div class="row g-3">
                 <div class="col-6 col-md-3">

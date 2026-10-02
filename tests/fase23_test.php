@@ -272,8 +272,11 @@ $htmlFiltros = ob_get_clean();
 
 assertTeste(str_contains($htmlFiltros, 'Emissão de Movimentações de Estoque'), "Título 'Emissão de Movimentações de Estoque' presente");
 assertTeste(str_contains($htmlFiltros, 'id="tab-filtro-btn"'), "Aba de 'Filtro' presente");
-assertTeste(str_contains($htmlFiltros, 'id="tab-leiaute-btn"'), "Aba de 'Leiaute' presente");
-assertTeste(str_contains($htmlFiltros, 'name="formato_leiaute"'), "Controle de seleção de formato_leiaute presente");
+assertTeste(str_contains($htmlFiltros, 'id="tab-layout-btn"'), "Aba de 'Layout' presente com ID 'tab-layout-btn'");
+assertTeste(str_contains($htmlFiltros, '<span>Layout</span>'), "Rótulo da aba grafado corretamente como 'Layout'");
+assertTeste(str_contains($htmlFiltros, 'Formato do layout'), "Campo grafado corretamente como 'Formato do layout'");
+assertTeste(str_contains($htmlFiltros, 'name="formato_layout"'), "Controle de seleção formato_layout presente");
+assertTeste(str_contains($htmlFiltros, 'name="formato_leiaute"'), "Compatibilidade com formato_leiaute preservada");
 assertTeste(str_contains($htmlFiltros, 'Paisagem'), "Opção 'Paisagem' presente nos botões segmentados");
 assertTeste(str_contains($htmlFiltros, 'Retrato'), "Opção 'Retrato' presente nos botões segmentados");
 assertTeste(str_contains($htmlFiltros, 'name="agrupar_grupo"'), "Controle de agrupar_grupo presente");

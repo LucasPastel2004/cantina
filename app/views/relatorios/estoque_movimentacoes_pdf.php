@@ -17,8 +17,9 @@ $centroCusto     = $centro_custo ?? 'Cantina Geral';
 $catFiltro       = $categoria_filtro ?? 'Todas as Categorias';
 $prodFiltro      = $produto_filtro ?? 'Todos os Produtos';
 
-$formatoLeiaute  = $formato_leiaute ?? 'retrato';
-$isPaisagem      = ($formatoLeiaute === 'paisagem');
+$formatoLayout   = $formato_layout ?? $formato_leiaute ?? 'retrato';
+$formatoLeiaute  = $formatoLayout;
+$isPaisagem      = ($formatoLayout === 'paisagem');
 
 $agruparGrupo    = !empty($agrupar_grupo);
 $agruparProduto  = !empty($agrupar_produto);

@@ -1064,11 +1064,17 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * 5 novas rotas registradas em `index.php` protegidas por RBAC (`ROLE_ADMINISTRADOR` e `ROLE_OPERADOR`): `/relatorios/estoque-filtros`, `/relatorios/estoque-movimentacoes`, `/relatorios/estoque-movimentacoes/pdf`, `/relatorios/estoque-movimentacoes/imprimir`, `/relatorios/estoque-movimentacoes/csv`;
   * Adicionado Card Oficial "Movimentações de Estoque" no Hub da Central de Relatórios (`app/views/relatorios/index.php`);
   * Adicionado link "Movimentações" na seção "Estoque" do menu lateral (`app/views/layouts/sidebar.php`).
+* [x] **Refinamento de UX & Padronização de Nomenclatura (Layout):**
+  * Substituição integral da grafia aportuguesada "Leiaute" pela grafia padrão "Layout" na aba de opções, campos, títulos, cards e descrições do sistema;
+  * Aba no painel de emissão atualizada para `Layout` com id `tab-layout-btn`;
+  * Rótulo do campo atualizado para `Formato do layout`;
+  * Card de Movimentações de Estoque no Hub atualizado para `Filtros & Layout`;
+  * Compatibilidade retroativa dupla preservada no backend (`RelatoriosController.php`) e na view para os parâmetros `formato_layout` e `formato_leiaute`.
 * [x] **Testes Automatizados e Auditoria de Regressão:**
-  * Criação da suíte oficial `tests/fase23_test.php` com **77 de 77 asserções aprovadas com 100% de sucesso**;
-  * Validação de compilação real de PDFs em Retrato (90 KB) e Paisagem (90 KB) via contêiner Gotenberg Chromium;
+  * Suíte oficial `tests/fase23_test.php` expandida para **85 de 85 asserções aprovadas com 100% de sucesso**;
+  * Validação de compilação real de PDFs em Retrato (91 KB) e Paisagem (92 KB) via contêiner Gotenberg Chromium;
   * Validação de integridade do arquivo CSV (BOM UTF-8, delimitador `;`, centro de custo Cantina Geral);
-  * Regressão das suítes das Fases 20 (71/71), 21 (99/99) e 22 (79/79) executadas e 100% aprovadas.
+  * Regressão da suíte da Fase 22 (79/79) executada e 100% aprovada.
 
 ---
 
