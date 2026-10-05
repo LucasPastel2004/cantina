@@ -370,9 +370,9 @@ $motivoFiltro = $motivoFiltro ?? '';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const baseUrl = <?php echo json_encode($baseUrl); ?>;
-    const listaAlunos = <?php echo json_encode($alunos); ?>;
-    const listaColaboradores = <?php echo json_encode($colaboradores); ?>;
+    const baseUrl = <?php echo json_encode($baseUrl, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+    const listaAlunos = <?php echo json_encode($alunos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+    const listaColaboradores = <?php echo json_encode($colaboradores, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
 
     const formFiltros = document.getElementById('formFiltrosEstorno');
     const formGravar = document.getElementById('formGravarEstorno');

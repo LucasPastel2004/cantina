@@ -183,12 +183,20 @@ class CarteiraController extends Controller
      */
     public function simularPagamento(array $params = []): void
     {
-        // Apenas em ambiente local/desenvolvimento
+        // Permitido estritamente em ambiente de desenvolvimento local COM provedor mock
         $configFile = __DIR__ . '/../../config/config.php';
         $config = file_exists($configFile) ? require $configFile : [];
-        if (($config['app']['env'] ?? 'development') !== 'development' && ($config['integracoes']['pix']['provedor'] ?? '') !== 'mock') {
-            $this->json(['sucesso' => false, 'erro' => 'Operação permitida apenas em ambiente de testes.'], 403);
+        $appEnv = $config['app']['env'] ?? 'development';
+        $provedor = $config['integracoes']['pix']['provedor'] ?? '';
+
+        if ($appEnv !== 'development' || $provedor !== 'mock') {
+            $this->json(['sucesso' => false, 'erro' => 'Operação permitida apenas em ambiente de testes e desenvolvimento local com provedor mock.'], 403);
             return;
+        }
+
+        // Validação de token CSRF
+        if (!defined('CANTINA_TEST_MODE') || !CANTINA_TEST_MODE) {
+            $this->validateCsrf();
         }
 
         $user = Auth::user();
@@ -201,6 +209,10 @@ class CarteiraController extends Controller
         }
 
         $cobranca = PixService::obterCobrancaCache($txid);
+        if ($cobranca && isset($cobranca['responsavel_id']) && (int)$cobranca['responsavel_id'] !== $responsavelId) {
+            $this->json(['sucesso' => false, 'erro' => 'Acesso negado: cobrança não pertence à sua família.'], 403);
+            return;
+        }
         if (!$cobranca) {
             // Em ambiente de desenvolvimento local, reconstitui a cobrança defensivamente
             $configFile = __DIR__ . '/../../config/config.php';

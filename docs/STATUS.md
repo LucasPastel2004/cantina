@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Fase 24 — Módulo Financeiro de Despesas, DRE Gerencial Completo e Painel de Gráficos Interativos
-* **Status da Fase 24:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 24 de 24 Fases Concluídas — PROJETO 100% CONCLUÍDO!
-* **Última Atualização:** 2026-10-02 14:50:00 (Conclusão e homologação da Fase 24: 1) Migration 029 criando a tabela `despesas_operacionais` e adicionando `preco_custo` em `produtos`; 2) Modelos `DespesaOperacional.php` e `Dre.php` com apuração contábil rigorosa de Receita Bruta, Deduções, CMV, Lucro Bruto, Despesas Operacionais e Resultado Líquido do Exercício; 3) Controllers `DespesasController.php` e `DreController.php` protegidos por RBAC; 4) Views corporativas `app/views/financeiro/despesas.php`, `app/views/financeiro/dre.php` com tabela comparativa anual de 12 meses e gráficos interativos, e espelho de emissão A4 Paisagem `app/views/financeiro/dre_pdf.php` com grade tipo Excel e fundo 100% branco; 5) Inclusão local de `assets/js/chart.min.js`; 6) Rotas, sidebar e hub de relatórios atualizados; 7) Seeder `database/seed_despesas_dre.php` executado; 8) Suíte de testes `tests/fase24_test.php` com 93/93 asserções 100% aprovadas e testes de regressão de caixa e relatórios homologados com sucesso).
+* **Fase Atual:** Revisão de Segurança Pré-Publicação (Passo 5)
+* **Status da Revisão:** Concluída [x] (100% Homologada)
+* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria e Blindagem de Segurança 100% Concluídas!
+* **Última Atualização:** 2026-10-05 08:30:00 (Conclusão da Revisão de Segurança Pré-Publicação: 1) Conformidade LGPD com remoção de arquivos com dados reais do controle de versão e adição ao `.gitignore`; 2) Blindagem de autenticação de Webhook Pix contra bypass em produção; 3) Rate limiting e cooldown de 60s em códigos de 6 dígitos via WhatsApp; 4) Proteção CSRF completa em todas as rotas POST do sistema; 5) Prevenção de Formula Injection (CSV Injection) em relatórios analíticos; 6) Proteção contra breakout XSS em scripts inline; 7) Blindagem de rotas de teste e diagnóstico na raiz `/` em produção; 8) Suítes de testes 100% aprovadas).
 
 
 
@@ -1132,14 +1132,49 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+---
+
+### [x] Revisão de Segurança Pré-Publicação (Passo 5)
+* [x] **Auditoria e Diagnóstico Global:**
+  * Leitura e análise dos arquivos vivos (`AGENTS.md`, `docs/FSD.md`, `docs/DESIGN.md`, `docs/INSUMOS.md`, `docs/PLANO.md`, `docs/STATUS.md`, `docs/ERROS.md`);
+  * Mapeamento completo de controllers, models, serviços, rotas e views da aplicação;
+  * Varredura automatizada contra injeção de SQL, falhas de autorização e controle de acesso, integridade de sessões e cookies, falhas de XSS, CSRF, validação de entradas, segurança em uploads, webhooks e integração Pix.
+* [x] **Conformidade LGPD e Dados Sensíveis:**
+  * Identificado arquivo com dados pessoais reais de 232 alunos e 195 familiares (`database/matriculas_reais.json`) e documento PDF (`docs/alterações sistema guideline/Matriculas.pdf`);
+  * Arquivos desindexados do Git (`git rm --cached`) e protegidos permanentemente no `.gitignore`, mantendo os arquivos locais no disco para integridade da cantina sem permitir novos commits;
+  * Orientações fornecidas ao usuário para limpeza definitiva de commits remotos no GitHub se desejado.
+* [x] **Blindagem do Gateway Pix e Webhooks:**
+  * Refatorado `PixService::validarWebhook()` para proibir terminantemente bypass ou secret padrão/vazio quando em ambiente de produção (`app.env === 'production'`);
+  * Corrigida checagem de ambiente e adicionada trava de titularidade da cobrança em `CarteiraController::simularPagamento()`.
+* [x] **Rate Limiting e Proteção contra Força Bruta:**
+  * Adicionado limite estrito de 5 tentativas consecutivas para códigos de 6 dígitos via WhatsApp em `AuthController::primeiroAcessoValidarCodigo()` e `AuthController::recuperarSenhaRedefinir()`;
+  * Implementado cooldown obrigatório de 60 segundos entre solicitações de novos códigos, prevenindo custos indesejados de API e spam;
+  * Registro compulsório de eventos de auditoria em `logs_seguranca` quando o limite é excedido.
+* [x] **Proteção CSRF Completa:**
+  * Adicionado `$this->validateCsrf()` em todas as ações POST faltantes: `primeiroAcessoReenviar()`, `importacaoEscolarCancelar()`, `pdv/pix/gerar` e `portal/recarga/simular/{txid}`, com suporte transparente a suites de testes CLI (`CANTINA_TEST_MODE`).
+* [x] **Prevenção contra CSV / Formula Injection:**
+  * Criados os métodos `sanitizarCsvCelula()` e `sanitizarCsvLinha()` em `RelatoriosController.php`, blindando todas as exportações CSV (`extratoAlunoCsv`, `vendasFiltrosCsv`, `descontoFolhaCsv`, `estoqueMovimentacoesCsv`) contra injeção de comandos DDE em softwares de planilha (Excel/Calc).
+* [x] **Proteção contra XSS e Breakout Inline:**
+  * Inclusão das flags de segurança `JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP` nas chamadas de `json_encode` em scripts inline (`agendamento.php`, `pedido_editar.php`, `estorno_vendas.php`, `dre.php`);
+  * Aplicação de `htmlspecialchars()` na view de agendamento do Portal da Família.
+* [x] **Proteção da Rota Raiz e Diagnóstico em Produção:**
+  * `HomeController::index()` configurado para redirecionar usuários para `/portal`, `/admin` ou `/login` em produção;
+  * Endpoints de teste e diagnóstico (`/teste-parametro`, `/teste-csrf`, `/teste-erro`, `/api/status`) blindados para retornar HTTP 404 em ambiente de produção.
+* [x] **Homologação e Testes:**
+  * Execução e aprovação com 100% de sucesso das suítes de testes automatizados (`fase24_test.php`, `fase6_test.php`, `fase9_test.php`, `fase10_test.php`, `fase13_test.php`, `fase16_test.php`, `fase21_test.php`).
+
+---
+
 ## Próximo Passo Recomendado
 
-**A CODIFICAÇÃO DO PROJETO ESTÁ 100% CONCLUÍDA!**
+**AUDITORIA E BLINDAGEM DE SEGURANÇA 100% CONCLUÍDAS!**
 
-Todas as 24 fases planejadas no `docs/PLANO.md` foram construídas, testadas e homologadas com 100% de sucesso.
-Conforme as instruções do projeto:
-1. Efetuar o commit e push do repositório Git;
-2. Abrir um **novo chat** e iniciar o **Passo 5 — Validação de Segurança e Auditoria Final**, garantindo a checagem global de conformidade, blindagem de endpoints, LGPD e prontidão para implantação em produção (Hostnet).
+O sistema Cantina Web — Colégio Monteiro Lobato foi completamente construído, testado, auditado e blindado em todas as camadas (arquitetura MVC, banco de dados MySQL, regras de negócio, interface, conformidade LGPD e segurança defensiva).
+
+Conforme as instruções operacionais:
+1. Efetuar o commit no Git das correções de segurança aplicadas;
+2. Realizar o push para o repositório remoto;
+3. Iniciar um **chat novo** com o **prompt do passo 6** para a fase seguinte de preparação do ambiente e checklist de publicação.
 
 
 

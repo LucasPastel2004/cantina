@@ -25,6 +25,36 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 class RelatoriosController extends Controller
 {
     /**
+     * Sanitiza célula de planilha para prevenir CSV / Formula Injection no Excel e Calc
+     */
+    private static function sanitizarCsvCelula(mixed $valor): mixed
+    {
+        if (!is_string($valor)) {
+            return $valor;
+        }
+        $trim = trim($valor);
+        if ($trim === '') {
+            return $valor;
+        }
+        $primeiro = $trim[0];
+        if (in_array($primeiro, ['=', '+', '-', '@', "\t", "\r"], true)) {
+            if (is_numeric($trim)) {
+                return $valor;
+            }
+            return "'" . $valor;
+        }
+        return $valor;
+    }
+
+    /**
+     * Sanitiza todas as células de uma linha de CSV
+     */
+    private static function sanitizarCsvLinha(array $linha): array
+    {
+        return array_map([self::class, 'sanitizarCsvCelula'], $linha);
+    }
+
+    /**
      * Central / Hub de Relatórios Gerenciais (FSD Tela 8.1)
      */
     public function index(): void
@@ -289,7 +319,7 @@ class RelatoriosController extends Controller
             fputcsv($out, ['', 'Saldo inicial', '', '', '', '', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')], $delimitador);
 
             foreach ($dadosExtrato['linhas'] as $l) {
-                fputcsv($out, [
+                fputcsv($out, self::sanitizarCsvLinha([
                     $l['data_formatada'] ?? '',
                     $l['descricao'] ?? '',
                     $l['quantidade'] ?? '',
@@ -297,7 +327,7 @@ class RelatoriosController extends Controller
                     is_numeric($l['valor_total']) ? number_format((float)$l['valor_total'], 2, ',', '.') : $l['valor_total'],
                     $l['forma_pagamento'] ?? '',
                     is_numeric($l['saldo']) ? number_format((float)$l['saldo'], 2, ',', '.') : ''
-                ], $delimitador);
+                ]), $delimitador);
             }
 
             fputcsv($out, ['', 'Total gasto no periodo', '', '', number_format($dadosExtrato['total_gasto'], 2, ',', '.'), '', ''], $delimitador);
@@ -507,7 +537,7 @@ class RelatoriosController extends Controller
             if ($emitirForma) $linha[] = str_replace(';', ' ', $item['forma_pagamento'] ?? '-');
             if ($emitirObs) $linha[] = str_replace([';', "\r", "\n"], ' ', $item['observacao'] ?? '-');
 
-            $csv .= implode(';', $linha) . "\r\n";
+            $csv .= implode(';', self::sanitizarCsvLinha($linha)) . "\r\n";
         }
 
         // Totais do período no CSV
@@ -634,13 +664,16 @@ class RelatoriosController extends Controller
         $csv .= "MATRICULA;NOME;CARGO;QUANTIDADE_LANCHES;VALOR_DESCONTO_RS;COMPETENCIA\r\n";
 
         foreach ($colaboradores as $c) {
-            $mat   = str_replace(';', ' ', $c['matricula_funcional'] ?? '-');
-            $nome  = str_replace(';', ' ', $c['colaborador_nome'] ?? '-');
-            $cargo = str_replace(';', ' ', $c['cargo'] ?? '-');
-            $qtd   = (int)($c['total_lanches'] ?? 0);
-            $valor = number_format((float)($c['total_desconto'] ?? 0.0), 2, ',', '');
+            $linha = self::sanitizarCsvLinha([
+                str_replace(';', ' ', $c['matricula_funcional'] ?? '-'),
+                str_replace(';', ' ', $c['colaborador_nome'] ?? '-'),
+                str_replace(';', ' ', $c['cargo'] ?? '-'),
+                (int)($c['total_lanches'] ?? 0),
+                number_format((float)($c['total_desconto'] ?? 0.0), 2, ',', ''),
+                $competencia
+            ]);
 
-            $csv .= "{$mat};{$nome};{$cargo};{$qtd};{$valor};{$competencia}\r\n";
+            $csv .= implode(';', $linha) . "\r\n";
         }
 
         $nomeArquivo = 'desconto_folha_rh_' . str_replace('-', '_', $competencia) . '.csv';
@@ -2149,7 +2182,7 @@ class RelatoriosController extends Controller
         ], ';');
 
         foreach ($dados['movimentacoes'] as $m) {
-            fputcsv($output, [
+            fputcsv($output, self::sanitizarCsvLinha([
                 $m['data_formatada'],
                 $m['hora_formatada'],
                 $m['centro_custo'],
@@ -2162,7 +2195,7 @@ class RelatoriosController extends Controller
                 $m['operador_nome'],
                 $m['documento_ref'],
                 $m['justificativa_completa']
-            ], ';');
+            ]), ';');
         }
 
         // Totais no rodapé da planilha

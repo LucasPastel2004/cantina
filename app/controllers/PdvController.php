@@ -212,6 +212,10 @@ class PdvController extends Controller
      */
     public function pixGerar(): void
     {
+        if (!defined('CANTINA_TEST_MODE') || !CANTINA_TEST_MODE) {
+            $this->validateCsrf();
+        }
+
         $valorRaw = $_POST['valor'] ?? '0';
         $valor = (float)str_replace(',', '.', preg_replace('/[^\d,.]/', '', $valorRaw));
 

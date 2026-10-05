@@ -272,7 +272,7 @@ $corte = $pedido['status_corte'];
 document.addEventListener('DOMContentLoaded', function() {
     const totalAntigo = <?php echo (float)$totalAntigo; ?>;
     const saldoDisponivel = <?php echo (float)$saldoDisponivel; ?>;
-    const nomeAluno = <?php echo json_encode($pedido['aluno_nome']); ?>;
+    const nomeAluno = <?php echo json_encode($pedido['aluno_nome'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
 
     const modalAlergiaEl = document.getElementById('modal-alergia-edicao');
     const modalAlergia = modalAlergiaEl ? new bootstrap.Modal(modalAlergiaEl) : null;

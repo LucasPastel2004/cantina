@@ -162,21 +162,21 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
                 <h3 class="mb-0" style="font-size: 15px; font-weight: 600; color: #0f172a;">
-                    Cardápio para <?php echo $diaSelecionado['dia_semana_nome']; ?>, <?php echo $diaSelecionado['data_formatada']; ?>
+                    Cardápio para <?php echo htmlspecialchars($diaSelecionado['dia_semana_nome'], ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars($diaSelecionado['data_formatada'], ENT_QUOTES, 'UTF-8'); ?>
                 </h3>
                 <span class="status-indicator" style="font-size: 12px; color: #334155;">
                     <span class="bullet" style="color: #64748b;">●</span> <?php echo htmlspecialchars($statusCorte['rotulo'], ENT_QUOTES, 'UTF-8'); ?>
                 </span>
             </div>
             <p class="text-secondary mb-0" style="font-size: 12px;">
-                <?php echo $statusCorte['mensagem']; ?> 
-                &bull; Turno do aluno: <strong><?php echo ucfirst($alunoSelecionado['turno']); ?></strong> 
-                (horário rígido de corte às <strong><?php echo $statusCorte['hora_corte']; ?></strong>).
+                <?php echo htmlspecialchars($statusCorte['mensagem'], ENT_QUOTES, 'UTF-8'); ?> 
+                &bull; Turno do aluno: <strong><?php echo htmlspecialchars(ucfirst($alunoSelecionado['turno']), ENT_QUOTES, 'UTF-8'); ?></strong> 
+                (horário rígido de corte às <strong><?php echo htmlspecialchars($statusCorte['hora_corte'], ENT_QUOTES, 'UTF-8'); ?></strong>).
             </p>
         </div>
         <div>
             <span class="font-tabular text-secondary" style="font-size: 12px;">
-                Data de Consumo: <strong><?php echo $diaSelecionado['data']; ?></strong>
+                Data de Consumo: <strong><?php echo htmlspecialchars($diaSelecionado['data'], ENT_QUOTES, 'UTF-8'); ?></strong>
             </span>
         </div>
     </div>
@@ -487,7 +487,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const saldoDisponivel = <?php echo (float)$saldoDisponivel; ?>;
-    const nomeAluno = <?php echo json_encode($alunoSelecionado['nome']); ?>;
+    const nomeAluno = <?php echo json_encode($alunoSelecionado['nome'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
 
     const modalAlergiaEl = document.getElementById('modal-alergia-advertencia');
     const modalAlergia = modalAlergiaEl ? new bootstrap.Modal(modalAlergiaEl) : null;

@@ -46,6 +46,11 @@ storage/logs/*.log
 storage/uploads/private/*
 !storage/uploads/private/.gitkeep
 
+# Arquivos de dados reais de alunos e responsáveis (Conformidade LGPD)
+database/matriculas_reais.json
+docs/alterações sistema guideline/Matriculas.pdf
+scratch/
+
 # Uploads públicos gerados dinamicamente em tempo de execução
 storage/uploads/public/*
 !storage/uploads/public/.gitkeep

@@ -191,12 +191,22 @@ class PixService
      */
     public static function validarWebhook(array $headers, string $rawBody, ?string $queryToken = null): bool
     {
+        $configFile = __DIR__ . '/../../config/config.php';
+        $fullConfig = file_exists($configFile) ? require $configFile : [];
+        $appEnv = $fullConfig['app']['env'] ?? 'development';
         $config = self::getConfig();
-        $expectedSecret = $config['webhook_secret'] ?? '';
+        $expectedSecret = (string)($config['webhook_secret'] ?? '');
 
-        // Se o segredo configurado for mock ou estiver vazio em ambiente de desenvolvimento local
-        if (empty($expectedSecret) || $expectedSecret === 'SEU_WEBHOOK_SECRET' || ($config['provedor'] ?? '') === 'mock') {
-            return true;
+        // Em ambiente de produção: PROIBIDO bypass e PROIBIDO secret vazio ou padrão de exemplo
+        if ($appEnv === 'production') {
+            if (empty($expectedSecret) || $expectedSecret === 'SEU_WEBHOOK_SECRET' || ($config['provedor'] ?? '') === 'mock') {
+                return false;
+            }
+        } else {
+            // Em ambiente de desenvolvimento local: permite testes com provedor mock ou sem secret configurado
+            if (empty($expectedSecret) || $expectedSecret === 'SEU_WEBHOOK_SECRET' || ($config['provedor'] ?? '') === 'mock') {
+                return true;
+            }
         }
 
         // 1. Checagem via Header X-Webhook-Secret ou X-Webhook-Token

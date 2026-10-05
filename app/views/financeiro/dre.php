@@ -293,7 +293,7 @@ function definirDatas(inicio, fim) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const dadosGraficos = <?php echo json_encode($graficos, JSON_UNESCAPED_UNICODE); ?>;
+    const dadosGraficos = <?php echo json_encode($graficos, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
 
     if (!window.Chart) {
         console.warn('Chart.js local não carregado.');

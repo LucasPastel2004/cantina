@@ -806,6 +806,10 @@ class AdminController extends Controller
      */
     public function importacaoEscolarCancelar(): void
     {
+        if (!defined('CANTINA_TEST_MODE') || !CANTINA_TEST_MODE) {
+            $this->validateCsrf();
+        }
+
         $tempPath = Session::get('_import_temp_file');
         if ($tempPath && file_exists($tempPath)) {
             @unlink($tempPath);

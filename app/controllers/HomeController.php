@@ -22,12 +22,25 @@ class HomeController extends Controller
     {
         $configFile = __DIR__ . '/../../config/config.php';
         $config = file_exists($configFile) ? require $configFile : [];
+        $isProduction = ($config['app']['env'] ?? 'development') === 'production';
+
+        // Se o usuário já estiver autenticado, redireciona para seu painel oficial
+        if (\App\Core\Auth::check()) {
+            $this->redirect(\App\Core\Auth::isResponsavel() ? '/portal' : '/admin');
+            return;
+        }
+
+        // Em produção, a raiz redireciona para a tela de login
+        if ($isProduction) {
+            $this->redirect('/login');
+            return;
+        }
 
         $data = [
             'appName'     => $config['app']['name'] ?? 'Cantina Web',
-            'environment' => $config['app']['env'] ?? 'production',
+            'environment' => $config['app']['env'] ?? 'development',
             'phpVersion'  => PHP_VERSION,
-            'faseAtual'   => 'Fase 14 Concluída (Gestão de Estoque, XML e Perdas)',
+            'faseAtual'   => 'Sistema Completo e Homologado (24 Fases)',
             'timestamp'   => date('d/m/Y H:i:s'),
             'sessionActive' => session_status() === PHP_SESSION_ACTIVE,
             'csrfToken'   => Session::getCsrfToken()
@@ -43,13 +56,19 @@ class HomeController extends Controller
     {
         $configFile = __DIR__ . '/../../config/config.php';
         $config = file_exists($configFile) ? require $configFile : [];
+        $isProduction = ($config['app']['env'] ?? 'development') === 'production';
+
+        if ($isProduction) {
+            $this->json(['status' => 'online', 'timestamp' => date('Y-m-d H:i:s')]);
+            return;
+        }
 
         $this->json([
             'status'      => 'online',
             'app'         => $config['app']['name'] ?? 'Cantina Web',
-            'environment' => $config['app']['env'] ?? 'production',
+            'environment' => $config['app']['env'] ?? 'development',
             'php_version' => PHP_VERSION,
-            'fase_atual'  => 'Fase 14 Concluída (Gestão de Estoque, XML e Perdas)',
+            'fase_atual'  => 'Sistema Completo e Homologado (24 Fases)',
             'mvc_core'    => [
                 'router'       => 'App\Core\Router',
                 'controller'   => 'App\Core\Controller',
@@ -66,6 +85,13 @@ class HomeController extends Controller
      */
     public function testeParametro(array $params): void
     {
+        $configFile = __DIR__ . '/../../config/config.php';
+        $config = file_exists($configFile) ? require $configFile : [];
+        if (($config['app']['env'] ?? 'development') === 'production') {
+            $this->json(['sucesso' => false, 'erro' => 'Não encontrado.'], 404);
+            return;
+        }
+
         $id = $params['id'] ?? 'indefinido';
         $this->json([
             'sucesso'   => true,
@@ -80,6 +106,13 @@ class HomeController extends Controller
      */
     public function testeCsrf(): void
     {
+        $configFile = __DIR__ . '/../../config/config.php';
+        $config = file_exists($configFile) ? require $configFile : [];
+        if (($config['app']['env'] ?? 'development') === 'production') {
+            $this->json(['sucesso' => false, 'erro' => 'Não encontrado.'], 404);
+            return;
+        }
+
         $dados = $this->all();
 
         $valido = $this->validate($dados, [
@@ -92,6 +125,7 @@ class HomeController extends Controller
                 'sucesso' => false,
                 'erros'   => $this->getValidationErrors()
             ], 422);
+            return;
         }
 
         $this->json([
@@ -108,6 +142,13 @@ class HomeController extends Controller
      */
     public function testeErro(): void
     {
+        $configFile = __DIR__ . '/../../config/config.php';
+        $config = file_exists($configFile) ? require $configFile : [];
+        if (($config['app']['env'] ?? 'development') === 'production') {
+            $this->redirect('/login');
+            return;
+        }
+
         throw new \RuntimeException("Erro de simulação intencional para validação da contingência do ErrorHandler.");
     }
 }

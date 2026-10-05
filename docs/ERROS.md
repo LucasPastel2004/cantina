@@ -1445,3 +1445,25 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Em `app/controllers/DreController.php` e `tests/fase24_test.php`, substituída a chamada por `Configuracao::obter()`.
   3. Reexecutada a suíte `tests/fase24_test.php`, com 93 de 93 asserções aprovadas com 100% de sucesso.
 - Como evitar no futuro: Sempre inspecionar a migração de criação da tabela de dados antes de montar as queries de agregação contábil, e conferir a assinatura dos métodos dos modelos utilitários existentes (`Configuracao::obter()`).
+
+---
+
+## 2026-10-05 - Correções de Segurança, Conformidade LGPD e Blindagem Pré-Publicação
+
+- Sintoma: Auditoria de segurança prévia identificou potenciais vetores de vulnerabilidade: (1) dados reais de alunos versionados no Git (`database/matriculas_reais.json`); (2) validação permissiva de Webhook Pix em produção sem secret obrigatório; (3) ausência de rate limiting nas tentativas de código de 6 dígitos via WhatsApp; (4) ausência de CSRF em reenvio de código, cancelamento de importação e simulação de pagamento Pix; (5) risco de Formula Injection (CSV Injection) nas exportações de relatórios em planilhas; (6) exposição de diagnóstico na raiz `/` em produção.
+- Causa:
+  1. Durante a migração de dados reais de alunos da escola na Fase 18, o arquivo de dados foi versionado no repositório.
+  2. A função `PixService::validarWebhook()` continha bypass genérico que permitia aceitar requisições de webhook quando o secret estivesse vazio ou configurado com o valor de exemplo.
+  3. Os controllers de autenticação não limitavam as tentativas com códigos de 6 dígitos na sessão nem impunham intervalo mínimo entre reenvios.
+  4. Rotas pontuais executadas via POST não chamavam `$this->validateCsrf()`.
+  5. As exportações analíticas geravam CSV concatenando strings sem prefixar apóstrofo em células iniciadas por caracteres de comando (`=`, `+`, `-`, `@`).
+  6. `HomeController::index()` renderizava dados de desenvolvimento para visitantes anônimos.
+- Solução aplicada:
+  1. **Conformidade LGPD:** Arquivos de dados reais escolares (`database/matriculas_reais.json`, `docs/alterações sistema guideline/Matriculas.pdf` e `scratch/`) adicionados ao `.gitignore` e desindexados do Git (`git rm --cached`).
+  2. **Blindagem do Webhook Pix:** `PixService::validarWebhook()` refatorado para proibir categoricamente bypass ou segredos vazios/padrão em ambiente de produção.
+  3. **Proteção contra Força Bruta e Spam de WhatsApp:** Adicionado rate limiting de 5 tentativas consecutivas nos códigos de Primeiro Acesso e Recuperação de Senha, com bloqueio temporário e log de auditoria, além de cooldown mínimo de 60 segundos entre solicitações.
+  4. **Proteção CSRF Completa:** Adicionado `$this->validateCsrf()` em `primeiroAcessoReenviar()`, `importacaoEscolarCancelar()`, `pdv/pix/gerar` e `portal/recarga/simular/{txid}`, com suporte transparente ao modo de testes (`CANTINA_TEST_MODE`).
+  5. **Prevenção contra CSV Formula Injection:** Criados os métodos `sanitizarCsvCelula()` e `sanitizarCsvLinha()` em `RelatoriosController.php`, prefixando `'` em células com fórmulas potencialmente maliciosas.
+  6. **Proteção contra Breakout XSS:** Adicionadas as flags `JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP` nos scripts inline das views (`agendamento.php`, `pedido_editar.php`, `estorno_vendas.php`, `dre.php`) e aplicado `htmlspecialchars()` na view de agendamento.
+  7. **Blindagem em Produção:** `HomeController` configurado para redirecionar usuários para `/portal`, `/admin` ou `/login` em produção e retornar HTTP 404 em rotas de teste/diagnóstico.
+- Como evitar no futuro: Nunca comitar dados reais de usuários no repositório de controle de versão; sempre exigir segredos criptográficos fortes em ambiente de produção; aplicar rate limiting em todos os fluxos de autenticação em duas etapas; e sanitizar rigorosamente qualquer saída em formatos interpretáveis como CSV ou JSON inline.
