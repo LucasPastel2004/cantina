@@ -966,8 +966,10 @@ class SessaoCaixa extends Model
             }
 
             $tipoStr = 'Dinheiro';
-            if ($ib['forma_pagamento'] === 'pix') {
+            if ($ib['forma_pagamento'] === 'pix' || $ib['forma_pagamento'] === 'pix_balcao') {
                 $tipoStr = 'Pix';
+            } elseif ($ib['forma_pagamento'] === 'saldo') {
+                $tipoStr = 'Saldo';
             } elseif ($ib['tipo_venda'] === 'desconto_folha' || $ib['forma_pagamento'] === 'desconto_folha') {
                 $tipoStr = 'Folha';
             } elseif ($ib['forma_pagamento'] === 'cartao_debito') {
@@ -1053,11 +1055,13 @@ class SessaoCaixa extends Model
 
         $stmtPixBalcao = $pdo->prepare("
             SELECT valor_total FROM vendas_balcao
-            WHERE sessao_caixa_id = :sessao_id AND forma_pagamento = 'pix' AND status = 'concluida'
+            WHERE sessao_caixa_id = :sessao_id AND forma_pagamento IN ('pix', 'pix_balcao') AND status = 'concluida'
         ");
         $stmtPixBalcao->execute(['sessao_id' => $sessaoId]);
+        $totalPixBalcaoSoma = 0.0;
         while ($row = $stmtPixBalcao->fetch(\PDO::FETCH_ASSOC)) {
             $val = (float)$row['valor_total'];
+            $totalPixBalcaoSoma += $val;
             $totalPixRecebimentos += $val;
             $pixRecebimentos[] = [
                 'banco'      => 'NUBANK - CANTINA',
@@ -1071,8 +1075,20 @@ class SessaoCaixa extends Model
         $fundoTroco = (float)($sessao['fundo_troco_inicial'] ?? 0.0);
         $dinheiroRecargas = (float)($sessao['total_dinheiro_recargas'] ?? 0.0);
         $dinheiroAvulso = (float)($sessao['total_dinheiro_avulso'] ?? 0.0);
+
+        // Garante que o dinheiro de vendas avulsas reflita a soma real
+        $stmtDinheiroBalcao = $pdo->prepare("
+            SELECT COALESCE(SUM(valor_total), 0.00) FROM vendas_balcao
+            WHERE sessao_caixa_id = :sessao_id AND forma_pagamento = 'dinheiro' AND status = 'concluida'
+        ");
+        $stmtDinheiroBalcao->execute(['sessao_id' => $sessaoId]);
+        $dinheiroBalcaoReal = (float)$stmtDinheiroBalcao->fetchColumn();
+        if ($dinheiroBalcaoReal > $dinheiroAvulso) {
+            $dinheiroAvulso = $dinheiroBalcaoReal;
+        }
+
         $totalDinheiroEntradas = $dinheiroRecargas + $dinheiroAvulso;
-        $totalPixEntradas = (float)($sessao['total_pix_balcao'] ?? 0.0) + $totalPixRecebimentos;
+        $totalPixEntradas = max((float)($sessao['total_pix_balcao'] ?? 0.0), $totalPixBalcaoSoma);
         
         $totalEntradas = $totalDinheiroEntradas + $totalPixEntradas;
         $saldoCaixaDinheiro = $fundoTroco + $totalDinheiroEntradas;
@@ -1118,7 +1134,8 @@ class SessaoCaixa extends Model
             'subtotal_vendas'        => $subtotalVendas,
             'pix_recebimentos'       => $pixRecebimentos,
             'total_pix_recebimentos' => $totalPixRecebimentos,
-            'resumo_caixa'           => $resumoCaixa
+            'resumo_caixa'           => $resumoCaixa,
+            'resumo'                 => $resumoCaixa
         ];
     }
 }

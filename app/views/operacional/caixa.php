@@ -51,14 +51,15 @@ $totalEntradas = 0.0;
 $totalCaixa = 0.0;
 $esperadoGaveta = 0.0;
 
-if ($dadosFechamento) {
-    $fundoCaixaValor = (float)($dadosFechamento['resumo']['fundo']['dinheiro'] ?? 0.0);
-    $entradaDinheiro = (float)($dadosFechamento['resumo']['entradas']['dinheiro'] ?? 0.0);
-    $entradaPix = (float)($dadosFechamento['resumo']['entradas']['pix'] ?? 0.0);
-    $totalSaidas = (float)($dadosFechamento['resumo']['saidas']['total'] ?? 0.0);
-    $totalEntradas = (float)($dadosFechamento['resumo']['entradas']['total'] ?? ($entradaDinheiro + $entradaPix));
-    $totalCaixa = (float)($dadosFechamento['resumo']['saldo']['total'] ?? ($fundoCaixaValor + $totalEntradas - $totalSaidas));
-    $esperadoGaveta = (float)($dadosFechamento['resumo']['saldo']['dinheiro'] ?? ($fundoCaixaValor + $entradaDinheiro));
+$resumoOficial = $dadosFechamento['resumo_caixa'] ?? $dadosFechamento['resumo'] ?? null;
+if ($resumoOficial) {
+    $fundoCaixaValor = (float)($resumoOficial['fundo']['dinheiro'] ?? ($resumoOficial['fundo_caixa'] ?? 0.0));
+    $entradaDinheiro = (float)($resumoOficial['entradas']['dinheiro'] ?? 0.0);
+    $entradaPix = (float)($resumoOficial['entradas']['pix'] ?? 0.0);
+    $totalSaidas = (float)($resumoOficial['saidas']['total'] ?? ($resumoOficial['total_saidas'] ?? 0.0));
+    $totalEntradas = (float)($resumoOficial['entradas']['total'] ?? ($resumoOficial['total_entradas'] ?? ($entradaDinheiro + $entradaPix)));
+    $totalCaixa = (float)($resumoOficial['saldo']['total'] ?? ($resumoOficial['saldo_atual'] ?? ($fundoCaixaValor + $totalEntradas - $totalSaidas)));
+    $esperadoGaveta = (float)($resumoOficial['saldo']['dinheiro'] ?? ($fundoCaixaValor + $entradaDinheiro));
     if (!empty($dadosFechamento['sessao']['aberto_em'])) {
         $dataHoraAberturaStr = date('d/m/Y, H:i', strtotime($dadosFechamento['sessao']['aberto_em']));
     }

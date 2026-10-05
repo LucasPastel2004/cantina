@@ -11,6 +11,7 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 $baseUrl = $baseUrl ?? '';
 $maskedPhone = $maskedPhone ?? '';
 $mockCode = $mockCode ?? null;
+$codigoBloqueado = $codigoBloqueado ?? false;
 ?>
 
 <div class="auth-header-block text-center mb-3">
@@ -26,36 +27,55 @@ $mockCode = $mockCode ?? null;
     </div>
 <?php endif; ?>
 
-<form action="<?php echo $baseUrl; ?>/primeiro-acesso/validar-codigo" method="POST" autocomplete="off" class="auth-form" id="form-primeiro-acesso-codigo">
-    <?php echo $csrf_field ?? ''; ?>
-
-    <div class="mb-3 text-center">
-        <label for="codigo" class="form-label-enterprise d-block">Código de 6 Dígitos</label>
-        <input type="text" 
-               class="form-control form-control-enterprise font-tabular text-center mx-auto" 
-               id="codigo" 
-               name="codigo" 
-               placeholder="000000" 
-               maxlength="6" 
-               pattern="\d{6}" 
-               style="letter-spacing: 8px; font-size: 22px; font-weight: 700; max-width: 220px;" 
-               required>
-        <div class="text-microcopy text-muted mt-2">O código expira em 15 minutos.</div>
+<?php if ($codigoBloqueado): ?>
+    <div class="alert alert-warning py-3 px-3 mb-3 text-center border">
+        <div class="font-weight-bold text-dark mb-1" style="font-size: 14px;">Código Bloqueado</div>
+        <p class="text-microcopy text-secondary mb-3">
+            O limite de 5 tentativas foi excedido. Por motivos de segurança, clique no botão abaixo para receber um novo código no seu WhatsApp.
+        </p>
+        <form action="<?php echo $baseUrl; ?>/primeiro-acesso/reenviar" method="POST">
+            <?php echo $csrf_field ?? ''; ?>
+            <button type="submit" class="btn btn-enterprise btn-primary w-100 py-2">
+                Solicitar Novo Código por WhatsApp
+            </button>
+        </form>
     </div>
-
-    <button type="submit" class="btn btn-enterprise btn-primary w-100 py-2">
-        Confirmar Código
-    </button>
-</form>
-
-<div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-    <!-- Formulário de Reenvio do Código -->
-    <form action="<?php echo $baseUrl; ?>/primeiro-acesso/reenviar" method="POST" class="d-inline">
+<?php else: ?>
+    <form action="<?php echo $baseUrl; ?>/primeiro-acesso/validar-codigo" method="POST" autocomplete="off" class="auth-form" id="form-primeiro-acesso-codigo">
         <?php echo $csrf_field ?? ''; ?>
-        <button type="submit" class="btn btn-link text-microcopy text-primary p-0 text-decoration-none border-0 bg-transparent">
-            Reenviar código
+
+        <div class="mb-3 text-center">
+            <label for="codigo" class="form-label-enterprise d-block">Código de 6 Dígitos</label>
+            <input type="text" 
+                   class="form-control form-control-enterprise font-tabular text-center mx-auto" 
+                   id="codigo" 
+                   name="codigo" 
+                   placeholder="000000" 
+                   maxlength="6" 
+                   pattern="\d{6}" 
+                   style="letter-spacing: 8px; font-size: 22px; font-weight: 700; max-width: 220px;" 
+                   required>
+            <div class="text-microcopy text-muted mt-2">O código expira em 15 minutos.</div>
+        </div>
+
+        <button type="submit" class="btn btn-enterprise btn-primary w-100 py-2">
+            Confirmar Código
         </button>
     </form>
+<?php endif; ?>
+
+<div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+    <?php if (!$codigoBloqueado): ?>
+        <!-- Formulário de Reenvio do Código -->
+        <form action="<?php echo $baseUrl; ?>/primeiro-acesso/reenviar" method="POST" class="d-inline">
+            <?php echo $csrf_field ?? ''; ?>
+            <button type="submit" class="btn btn-link text-microcopy text-primary p-0 text-decoration-none border-0 bg-transparent">
+                Reenviar código
+            </button>
+        </form>
+    <?php else: ?>
+        <span class="text-microcopy text-muted">Aguardando novo envio</span>
+    <?php endif; ?>
 
     <a href="<?php echo $baseUrl; ?>/primeiro-acesso" class="text-microcopy text-secondary text-decoration-none">
         Trocar CPF

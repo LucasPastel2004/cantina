@@ -17,14 +17,40 @@ $baseUrl = $baseUrl ?? '';
 $anoAtual = $ano ?? (int)date('Y');
 $dataInicio = $dataInicio ?? sprintf('%04d-01-01', $anoAtual);
 $dataFim    = $dataFim ?? date('Y-m-d');
+$regime     = $regime ?? 'competencia';
 $totais = $totais ?? ($drePeriodo ?? ($dre['totais'] ?? []));
 $produtosRentaveis = $graficos['produtos_rentaveis'] ?? [];
 ?>
 
 <div class="container-fluid px-2 pb-5" style="max-width: 1440px; margin: 0 auto;">
 
+    <!-- Alternador Oficial de Regime Contábil (Competência vs Caixa) -->
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-microcopy text-uppercase font-weight-bold text-secondary">Regime do DRE:</span>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Seletor de Regime Contábil">
+                <a href="<?php echo $baseUrl; ?>/financeiro/dre?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&regime=competencia" 
+                   class="btn btn-enterprise <?php echo ($regime !== 'caixa') ? 'btn-primary' : 'btn-outline-primary'; ?>"
+                   title="Reconhece a receita das vendas de lanches consumidos/entregues no período">
+                    Regime de Competência (Vendas & Consumo)
+                </a>
+                <a href="<?php echo $baseUrl; ?>/financeiro/dre?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>&regime=caixa" 
+                   class="btn btn-enterprise <?php echo ($regime === 'caixa') ? 'btn-primary' : 'btn-outline-primary'; ?>"
+                   title="Reconhece a receita das recargas de saldo dos alunos somadas às vendas avulsas de balcão">
+                    Regime de Caixa (Recargas & Arrecadação)
+                </a>
+            </div>
+        </div>
+        <div>
+            <span class="badge bg-white text-dark border font-tabular" style="font-size: 11px;">
+                ● <?php echo ($regime === 'caixa') ? 'Modo Arrecadação (Recargas de Saldo)' : 'Modo Faturamento (Consumo de Lanches)'; ?>
+            </span>
+        </div>
+    </div>
+
     <!-- Formulário Oficial de Filtro de Período e Emissão do DRE -->
     <form action="<?php echo $baseUrl; ?>/financeiro/dre" method="GET" id="formDre">
+        <input type="hidden" name="regime" value="<?php echo htmlspecialchars($regime, ENT_QUOTES, 'UTF-8'); ?>">
 
         <!-- Cabeçalho Executivo e Barra de Ações -->
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3 pb-2 border-bottom">
@@ -106,15 +132,35 @@ $produtosRentaveis = $graficos['produtos_rentaveis'] ?? [];
 
     </form>
 
+    <!-- Informativo do Regime de Caixa com Subseção de Consumo de Saldo -->
+    <?php if ($regime === 'caixa'): ?>
+        <div class="alert alert-info py-2 px-3 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2" style="font-size: 12px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 6px;">
+            <div class="d-flex align-items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
+                <span>
+                    <strong>Demonstrativo sob Regime de Caixa:</strong> Receita considera as <strong>Recargas de Saldo</strong> (Pix Online e Balcão) e as <strong>Vendas Avulsas no Balcão</strong> (Dinheiro e Pix).
+                </span>
+            </div>
+            <div class="font-tabular font-semibold">
+                Consumo real em lanches no período: <strong>R$ <?php echo number_format((float)($totais['consumo_saldo_total'] ?? 0), 2, ',', '.'); ?></strong>
+                <span class="badge bg-white text-dark border ms-1 font-tabular">Diferença Recargas - Consumo: <?php echo ($totais['diferenca_recarga_consumo'] >= 0 ? '+' : '') . 'R$ ' . number_format((float)($totais['diferenca_recarga_consumo'] ?? 0), 2, ',', '.'); ?></span>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <!-- Stat-Strip: Síntese Financeira Consolidada do Período Filtrado -->
     <div class="stat-strip mb-4">
         <div class="stat-item">
-            <span class="stat-label">Receita Bruta Total</span>
+            <span class="stat-label"><?php echo ($regime === 'caixa') ? 'Arrecadação Bruta Total' : 'Receita Bruta Total'; ?></span>
             <span class="stat-value font-tabular text-dark">
                 R$ <?php echo number_format((float)($totais['receita_bruta'] ?? 0), 2, ',', '.'); ?>
             </span>
             <span class="text-secondary text-microcopy mt-1 font-tabular">
-                Online: R$ <?php echo number_format((float)($totais['receita_online'] ?? 0), 2, ',', '.'); ?> | Balcão: R$ <?php echo number_format((float)($totais['receita_balcao'] ?? 0), 2, ',', '.'); ?>
+                <?php if ($regime === 'caixa'): ?>
+                    Recargas: R$ <?php echo number_format((float)($totais['total_recargas'] ?? 0), 2, ',', '.'); ?> | Avulso Balcão: R$ <?php echo number_format((float)(($totais['vendas_dinheiro'] ?? 0) + ($totais['vendas_pix'] ?? 0)), 2, ',', '.'); ?>
+                <?php else: ?>
+                    Online: R$ <?php echo number_format((float)($totais['receita_online'] ?? 0), 2, ',', '.'); ?> | Balcão: R$ <?php echo number_format((float)($totais['receita_balcao'] ?? 0), 2, ',', '.'); ?>
+                <?php endif; ?>
             </span>
         </div>
 

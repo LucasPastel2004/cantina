@@ -535,6 +535,20 @@ $router->get('/relatorios/estoque-movimentacoes/csv', [\App\Controllers\Relatori
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
 
+// 4.5. Relatório de Arrecadação Financeira & Fluxo de Entradas (Cash-In Real)
+$router->get('/relatorios/arrecadacao', [\App\Controllers\RelatoriosController::class, 'arrecadacao'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/relatorios/arrecadacao/pdf', [\App\Controllers\RelatoriosController::class, 'arrecadacaoPdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/relatorios/arrecadacao/imprimir', [\App\Controllers\RelatoriosController::class, 'arrecadacaoImprimir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/relatorios/arrecadacao/csv', [\App\Controllers\RelatoriosController::class, 'arrecadacaoCsv'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+
 
 // 5. Gestão de Contestações e Mecanismo Especial de Devolução - MED Pix (Fase 16 — Acesso exclusivo 'administrador')
 $router->get('/admin/contestacoes', [\App\Controllers\AdminController::class, 'contestacoes'], [

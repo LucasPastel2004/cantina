@@ -2262,6 +2262,555 @@ class RelatoriosController extends Controller
     }
 
     /**
+     * Consolida todos os dados de arrecadação financeira real (Cash-In) e conciliação de carteira no período.
+     */
+    public function obterDadosArrecadacao(string $dataInicio, string $dataFim): array
+    {
+        $pdo = \App\Core\Model::getPdo();
+
+        // 1. Recargas Pix Online (Portal da Família / Webhook Pix)
+        $sqlRecPix = "
+            SELECT 
+                COUNT(*) AS qtd,
+                COALESCE(SUM(valor), 0) AS total
+            FROM transacoes_carteira
+            WHERE tipo_transacao = 'recarga_pix'
+              AND DATE(created_at) BETWEEN :ini AND :fim
+        ";
+        $stmt = $pdo->prepare($sqlRecPix);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        $recPix = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $recargasPixTotal = (float)($recPix['total'] ?? 0);
+        $recargasPixQtd   = (int)($recPix['qtd'] ?? 0);
+
+        // 2. Recargas no Balcão em Dinheiro Físico
+        $sqlRecDin = "
+            SELECT 
+                COUNT(*) AS qtd,
+                COALESCE(SUM(valor), 0) AS total
+            FROM transacoes_carteira
+            WHERE tipo_transacao = 'recarga_dinheiro'
+              AND DATE(created_at) BETWEEN :ini AND :fim
+        ";
+        $stmt = $pdo->prepare($sqlRecDin);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        $recDin = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $recargasDinheiroTotal = (float)($recDin['total'] ?? 0);
+        $recargasDinheiroQtd   = (int)($recDin['qtd'] ?? 0);
+
+        // 3. Vendas Balcão em Dinheiro Físico
+        $sqlVbDin = "
+            SELECT 
+                COUNT(*) AS qtd,
+                COALESCE(SUM(valor_total), 0) AS total
+            FROM vendas_balcao
+            WHERE forma_pagamento = 'dinheiro'
+              AND status != 'estornada'
+              AND DATE(created_at) BETWEEN :ini AND :fim
+        ";
+        $stmt = $pdo->prepare($sqlVbDin);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        $vbDin = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $vendasDinheiroTotal = (float)($vbDin['total'] ?? 0);
+        $vendasDinheiroQtd   = (int)($vbDin['qtd'] ?? 0);
+
+        // 4. Vendas Balcão em Pix (QR Code Balcão / Maquininha)
+        $sqlVbPix = "
+            SELECT 
+                COUNT(*) AS qtd,
+                COALESCE(SUM(valor_total), 0) AS total
+            FROM vendas_balcao
+            WHERE forma_pagamento IN ('pix', 'pix_balcao')
+              AND status != 'estornada'
+              AND DATE(created_at) BETWEEN :ini AND :fim
+        ";
+        $stmt = $pdo->prepare($sqlVbPix);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        $vbPix = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $vendasPixTotal = (float)($vbPix['total'] ?? 0);
+        $vendasPixQtd   = (int)($vbPix['qtd'] ?? 0);
+
+        // 5. Estornos MED (Devolução Bancária Pix)
+        $sqlMed = "
+            SELECT 
+                COUNT(*) AS qtd,
+                COALESCE(SUM(valor), 0) AS total
+            FROM transacoes_carteira
+            WHERE tipo_transacao = 'estorno_med'
+              AND DATE(created_at) BETWEEN :ini AND :fim
+        ";
+        $stmt = $pdo->prepare($sqlMed);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        $med = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $estornosMedTotal = (float)($med['total'] ?? 0);
+        $estornosMedQtd   = (int)($med['qtd'] ?? 0);
+
+        // 6. Total Geral Arrecadado (Cash-In)
+        $totalArrecadadoBruto = $recargasPixTotal + $recargasDinheiroTotal + $vendasDinheiroTotal + $vendasPixTotal;
+        $totalArrecadadoLiquido = $totalArrecadadoBruto - $estornosMedTotal;
+        $totalTransacoesArrecadacao = $recargasPixQtd + $recargasDinheiroQtd + $vendasDinheiroQtd + $vendasPixQtd;
+
+        // 7. Consumo de Saldo no Período (Lanches Entregues por Carteira)
+        // 7a. Vendas Balcão em Saldo
+        $sqlVbSaldo = "
+            SELECT 
+                COUNT(*) AS qtd,
+                COALESCE(SUM(valor_total), 0) AS total
+            FROM vendas_balcao
+            WHERE forma_pagamento = 'saldo'
+              AND status != 'estornada'
+              AND DATE(created_at) BETWEEN :ini AND :fim
+        ";
+        $stmt = $pdo->prepare($sqlVbSaldo);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        $vbSaldo = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $vendasSaldoTotal = (float)($vbSaldo['total'] ?? 0);
+        $vendasSaldoQtd   = (int)($vbSaldo['qtd'] ?? 0);
+
+        // 7b. Pedidos Online em Saldo
+        $sqlPedSaldo = "
+            SELECT 
+                COUNT(*) AS qtd,
+                COALESCE(SUM(valor_total), 0) AS total
+            FROM pedidos
+            WHERE status IN ('agendado', 'editado', 'entregue')
+              AND data_consumo BETWEEN :ini AND :fim
+        ";
+        $stmt = $pdo->prepare($sqlPedSaldo);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        $pedSaldo = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $pedidosSaldoTotal = (float)($pedSaldo['total'] ?? 0);
+        $pedidosSaldoQtd   = (int)($pedSaldo['qtd'] ?? 0);
+
+        $totalConsumoSaldo = $vendasSaldoTotal + $pedidosSaldoTotal;
+        $totalQtdConsumoSaldo = $vendasSaldoQtd + $pedidosSaldoQtd;
+
+        // 8. Confronto da Carteira (Recargas vs Consumo)
+        $totalRecargas = $recargasPixTotal + $recargasDinheiroTotal;
+        $variacaoCarteira = $totalRecargas - $totalConsumoSaldo;
+
+        // 9. Agrupamento Diário (Linha a linha de cada dia do período)
+        $diasPeriodo = [];
+        $inicioObj = new \DateTime($dataInicio);
+        $fimObj    = new \DateTime($dataFim);
+        $fimObj->modify('+1 day');
+        $intervalo = new \DatePeriod($inicioObj, new \DateInterval('P1D'), $fimObj);
+
+        // a) Recargas Pix Diárias
+        $mapRecPix = [];
+        $sqlMapRecPix = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor), 0) as total, COUNT(*) as qtd
+            FROM transacoes_carteira
+            WHERE tipo_transacao = 'recarga_pix' AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlMapRecPix);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapRecPix[$r['dia']] = (float)$r['total'];
+        }
+
+        // b) Recargas Dinheiro Diárias
+        $mapRecDin = [];
+        $sqlMapRecDin = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor), 0) as total, COUNT(*) as qtd
+            FROM transacoes_carteira
+            WHERE tipo_transacao = 'recarga_dinheiro' AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlMapRecDin);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapRecDin[$r['dia']] = (float)$r['total'];
+        }
+
+        // c) Vendas Balcão Dinheiro Diárias
+        $mapVbDin = [];
+        $sqlMapVbDin = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor_total), 0) as total, COUNT(*) as qtd
+            FROM vendas_balcao
+            WHERE forma_pagamento = 'dinheiro' AND status != 'estornada' AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlMapVbDin);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapVbDin[$r['dia']] = (float)$r['total'];
+        }
+
+        // d) Vendas Balcão Pix Diárias
+        $mapVbPix = [];
+        $sqlMapVbPix = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor_total), 0) as total, COUNT(*) as qtd
+            FROM vendas_balcao
+            WHERE forma_pagamento IN ('pix', 'pix_balcao') AND status != 'estornada' AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlMapVbPix);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapVbPix[$r['dia']] = (float)$r['total'];
+        }
+
+        // e) Consumo de Saldo Diário (Vendas Balcão Saldo + Pedidos)
+        $mapConsumoSaldo = [];
+        $sqlMapVbSaldo = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor_total), 0) as total
+            FROM vendas_balcao
+            WHERE forma_pagamento = 'saldo' AND status != 'estornada' AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlMapVbSaldo);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapConsumoSaldo[$r['dia']] = ($mapConsumoSaldo[$r['dia']] ?? 0.0) + (float)$r['total'];
+        }
+
+        $sqlMapPed = "
+            SELECT data_consumo as dia, COALESCE(SUM(valor_total), 0) as total
+            FROM pedidos
+            WHERE status IN ('agendado', 'editado', 'entregue') AND data_consumo BETWEEN :ini AND :fim
+            GROUP BY data_consumo
+        ";
+        $stmt = $pdo->prepare($sqlMapPed);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapConsumoSaldo[$r['dia']] = ($mapConsumoSaldo[$r['dia']] ?? 0.0) + (float)$r['total'];
+        }
+
+        $diasSemanaPt = [
+            'Sunday'    => 'Domingo',
+            'Monday'    => 'Segunda',
+            'Tuesday'   => 'Terça',
+            'Wednesday' => 'Quarta',
+            'Thursday'  => 'Quinta',
+            'Friday'    => 'Sexta',
+            'Saturday'  => 'Sábado'
+        ];
+
+        foreach ($intervalo as $dt) {
+            $diaIso = $dt->format('Y-m-d');
+            $diaSemanaIngles = $dt->format('l');
+            $diaSemana = $diasSemanaPt[$diaSemanaIngles] ?? $diaSemanaIngles;
+
+            $rPix = $mapRecPix[$diaIso] ?? 0.0;
+            $rDin = $mapRecDin[$diaIso] ?? 0.0;
+            $vDin = $mapVbDin[$diaIso] ?? 0.0;
+            $vPix = $mapVbPix[$diaIso] ?? 0.0;
+            $totalDia = $rPix + $rDin + $vDin + $vPix;
+
+            $cSaldo = $mapConsumoSaldo[$diaIso] ?? 0.0;
+            $varSaldoDia = ($rPix + $rDin) - $cSaldo;
+
+            $diasPeriodo[] = [
+                'data_iso'           => $diaIso,
+                'data_formatada'     => $dt->format('d/m/Y'),
+                'dia_semana'         => $diaSemana,
+                'recargas_pix'       => $rPix,
+                'recargas_dinheiro'  => $rDin,
+                'vendas_dinheiro'    => $vDin,
+                'vendas_pix'         => $vPix,
+                'total_arrecadado'   => $totalDia,
+                'consumo_saldo'      => $cSaldo,
+                'variacao_saldo'     => $varSaldoDia,
+            ];
+        }
+
+        // Canais de arrecadação ordenados por representatividade
+        $canais = [
+            [
+                'canal'             => 'Recargas Pix Online',
+                'descricao'         => 'Portal da Família / Gateway Pix Dinâmico',
+                'tipo'              => 'Online',
+                'quantidade'        => $recargasPixQtd,
+                'total'             => $recargasPixTotal,
+                'percentual'        => $totalArrecadadoBruto > 0 ? ($recargasPixTotal / $totalArrecadadoBruto) * 100 : 0
+            ],
+            [
+                'canal'             => 'Recargas no Balcão em Dinheiro',
+                'descricao'         => 'Inserção física de créditos na carteira do aluno',
+                'tipo'              => 'Balcão',
+                'quantidade'        => $recargasDinheiroQtd,
+                'total'             => $recargasDinheiroTotal,
+                'percentual'        => $totalArrecadadoBruto > 0 ? ($recargasDinheiroTotal / $totalArrecadadoBruto) * 100 : 0
+            ],
+            [
+                'canal'             => 'Vendas no Balcão em Pix',
+                'descricao'         => 'Recebimento presencial instantâneo via Pix',
+                'tipo'              => 'Balcão',
+                'quantidade'        => $vendasPixQtd,
+                'total'             => $vendasPixTotal,
+                'percentual'        => $totalArrecadadoBruto > 0 ? ($vendasPixTotal / $totalArrecadadoBruto) * 100 : 0
+            ],
+            [
+                'canal'             => 'Vendas no Balcão em Dinheiro',
+                'descricao'         => 'Recebimento presencial em espécie / troco',
+                'tipo'              => 'Balcão',
+                'quantidade'        => $vendasDinheiroQtd,
+                'total'             => $vendasDinheiroTotal,
+                'percentual'        => $totalArrecadadoBruto > 0 ? ($vendasDinheiroTotal / $totalArrecadadoBruto) * 100 : 0
+            ]
+        ];
+
+        return [
+            'periodo_oficial'              => date('d/m/Y', strtotime($dataInicio)) . ' a ' . date('d/m/Y', strtotime($dataFim)),
+            'data_inicio'                  => $dataInicio,
+            'data_fim'                     => $dataFim,
+            'recargas_pix_total'           => $recargasPixTotal,
+            'recargas_pix_qtd'             => $recargasPixQtd,
+            'recargas_dinheiro_total'      => $recargasDinheiroTotal,
+            'recargas_dinheiro_qtd'        => $recargasDinheiroQtd,
+            'vendas_dinheiro_total'        => $vendasDinheiroTotal,
+            'vendas_dinheiro_qtd'          => $vendasDinheiroQtd,
+            'vendas_pix_total'             => $vendasPixTotal,
+            'vendas_pix_qtd'               => $vendasPixQtd,
+            'estornos_med_total'           => $estornosMedTotal,
+            'estornos_med_qtd'             => $estornosMedQtd,
+            'total_arrecadado_bruto'       => $totalArrecadadoBruto,
+            'total_arrecadado_liquido'     => $totalArrecadadoLiquido,
+            'total_transacoes_arrecadacao' => $totalTransacoesArrecadacao,
+            'vendas_saldo_total'           => $vendasSaldoTotal,
+            'vendas_saldo_qtd'             => $vendasSaldoQtd,
+            'pedidos_saldo_total'          => $pedidosSaldoTotal,
+            'pedidos_saldo_qtd'            => $pedidosSaldoQtd,
+            'total_consumo_saldo'          => $totalConsumoSaldo,
+            'total_qtd_consumo_saldo'      => $totalQtdConsumoSaldo,
+            'total_recargas'               => $totalRecargas,
+            'variacao_carteira'            => $variacaoCarteira,
+            'canais'                       => $canais,
+            'dias'                         => $diasPeriodo,
+            'data_emissao'                 => date('d/m/Y H:i:s')
+        ];
+    }
+
+    /**
+     * Tela Web: Relatório de Arrecadação Financeira & Fluxo de Entradas
+     */
+    public function arrecadacao(): void
+    {
+        $hoje = date('Y-m-d');
+        $primeiroDiaMes = date('Y-m-01');
+
+        $dataInicio = $_GET['data_inicio'] ?? $primeiroDiaMes;
+        $dataFim    = $_GET['data_fim'] ?? $hoje;
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataInicio)) {
+            $dataInicio = $primeiroDiaMes;
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataFim)) {
+            $dataFim = $hoje;
+        }
+        if ($dataInicio > $dataFim) {
+            $tmp = $dataInicio;
+            $dataInicio = $dataFim;
+            $dataFim = $tmp;
+        }
+
+        $dados = $this->obterDadosArrecadacao($dataInicio, $dataFim);
+        $dados['baseUrl'] = $this->getBaseUrl();
+
+        $this->render('relatorios/arrecadacao', [
+            'title'       => 'Arrecadação Financeira & Fluxo de Entradas — Colégio Monteiro Lobato',
+            'activeMenu'  => 'relatorios',
+            'dados'       => $dados,
+            'dataInicio'  => $dataInicio,
+            'dataFim'     => $dataFim,
+            'baseUrl'     => $this->getBaseUrl()
+        ], 'admin');
+    }
+
+    /**
+     * Download em PDF A4 do Relatório de Arrecadação via Gotenberg
+     */
+    public function arrecadacaoPdf(): void
+    {
+        $hoje = date('Y-m-d');
+        $primeiroDiaMes = date('Y-m-01');
+        $dataInicio = $_GET['data_inicio'] ?? $primeiroDiaMes;
+        $dataFim    = $_GET['data_fim'] ?? $hoje;
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataInicio)) {
+            $dataInicio = $primeiroDiaMes;
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataFim)) {
+            $dataFim = $hoje;
+        }
+        if ($dataInicio > $dataFim) {
+            $tmp = $dataInicio;
+            $dataInicio = $dataFim;
+            $dataFim = $tmp;
+        }
+
+        $dados = $this->obterDadosArrecadacao($dataInicio, $dataFim);
+        $dados['baseUrl'] = $this->getBaseUrl();
+        $dados['isPdf'] = true;
+
+        $html = PdfService::renderView('relatorios/arrecadacao_pdf', $dados);
+
+        $pdf = PdfService::htmlToPdf($html, [
+            'preferCssPageSize' => 'true',
+            'printBackground'   => 'true'
+        ]);
+
+        if ($pdf !== null && str_starts_with($pdf, '%PDF')) {
+            $filename = "arrecadacao_financeira_{$dataInicio}_{$dataFim}.pdf";
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="' . $filename . '"');
+            header('Content-Length: ' . strlen($pdf));
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+            echo $pdf;
+            if (!defined('CANTINA_TEST_MODE')) {
+                exit;
+            }
+            return;
+        }
+
+        echo $html;
+        if (!defined('CANTINA_TEST_MODE')) {
+            exit;
+        }
+    }
+
+    /**
+     * Espelho HTML Oficial para Visualização e Impressão A4
+     */
+    public function arrecadacaoImprimir(): void
+    {
+        $hoje = date('Y-m-d');
+        $primeiroDiaMes = date('Y-m-01');
+        $dataInicio = $_GET['data_inicio'] ?? $primeiroDiaMes;
+        $dataFim    = $_GET['data_fim'] ?? $hoje;
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataInicio)) {
+            $dataInicio = $primeiroDiaMes;
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataFim)) {
+            $dataFim = $hoje;
+        }
+        if ($dataInicio > $dataFim) {
+            $tmp = $dataInicio;
+            $dataInicio = $dataFim;
+            $dataFim = $tmp;
+        }
+
+        $dados = $this->obterDadosArrecadacao($dataInicio, $dataFim);
+        $dados['baseUrl'] = $this->getBaseUrl();
+        $dados['isPdf'] = false;
+
+        echo PdfService::renderView('relatorios/arrecadacao_pdf', $dados);
+        if (!defined('CANTINA_TEST_MODE')) {
+            exit;
+        }
+    }
+
+    /**
+     * Exportação analítica em CSV para Excel
+     */
+    public function arrecadacaoCsv(): void
+    {
+        $hoje = date('Y-m-d');
+        $primeiroDiaMes = date('Y-m-01');
+        $dataInicio = $_GET['data_inicio'] ?? $primeiroDiaMes;
+        $dataFim    = $_GET['data_fim'] ?? $hoje;
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataInicio)) {
+            $dataInicio = $primeiroDiaMes;
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataFim)) {
+            $dataFim = $hoje;
+        }
+        if ($dataInicio > $dataFim) {
+            $tmp = $dataInicio;
+            $dataInicio = $dataFim;
+            $dataFim = $tmp;
+        }
+
+        $dados = $this->obterDadosArrecadacao($dataInicio, $dataFim);
+
+        $filename = "arrecadacao_financeira_{$dataInicio}_{$dataFim}.csv";
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: max-age=0, no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF"); // BOM UTF-8
+
+        fputcsv($output, ['COLÉGIO MONTEIRO LOBATO — SISTEMA CANTINA WEB'], ';');
+        fputcsv($output, ['RELATÓRIO DE ARRECADAÇÃO FINANCEIRA & FLUXO DE ENTRADAS (CASH-IN)'], ';');
+        fputcsv($output, ['PERÍODO:', $dados['periodo_oficial'], 'EMISSÃO:', date('d/m/Y H:i:s')], ';');
+        fputcsv($output, [], ';');
+
+        fputcsv($output, ['RESUMO POR CANAIS DE ARRECADAÇÃO'], ';');
+        fputcsv($output, ['Canal / Meio de Pagamento', 'Descrição', 'Ambiente', 'Qtd Transações', 'Total Arrecadado (R$)', 'Participação (%)'], ';');
+        foreach ($dados['canais'] as $c) {
+            fputcsv($output, self::sanitizarCsvLinha([
+                $c['canal'],
+                $c['descricao'],
+                $c['tipo'],
+                $c['quantidade'],
+                number_format($c['total'], 2, ',', '.'),
+                number_format($c['percentual'], 1, ',', '.') . '%'
+            ]), ';');
+        }
+        fputcsv($output, [
+            'TOTAL GERAL ARRECADADO',
+            '',
+            '',
+            $dados['total_transacoes_arrecadacao'],
+            number_format($dados['total_arrecadado_bruto'], 2, ',', '.'),
+            '100.0%'
+        ], ';');
+        fputcsv($output, [], ';');
+
+        fputcsv($output, ['DETALHAMENTO DIÁRIO DE ENTRADAS E CONSUMO'], ';');
+        fputcsv($output, [
+            'Data',
+            'Dia da Semana',
+            'Recargas Pix Online (R$)',
+            'Recargas Balcão Dinheiro (R$)',
+            'Vendas Balcão Dinheiro (R$)',
+            'Vendas Balcão Pix (R$)',
+            'Total Arrecadado Dia (R$)',
+            'Consumo em Saldo (R$)',
+            'Variação Saldo (R$)'
+        ], ';');
+
+        foreach ($dados['dias'] as $d) {
+            fputcsv($output, self::sanitizarCsvLinha([
+                $d['data_formatada'],
+                $d['dia_semana'],
+                number_format($d['recargas_pix'], 2, ',', '.'),
+                number_format($d['recargas_dinheiro'], 2, ',', '.'),
+                number_format($d['vendas_dinheiro'], 2, ',', '.'),
+                number_format($d['vendas_pix'], 2, ',', '.'),
+                number_format($d['total_arrecadado'], 2, ',', '.'),
+                number_format($d['consumo_saldo'], 2, ',', '.'),
+                ($d['variacao_saldo'] >= 0 ? '+' : '') . number_format($d['variacao_saldo'], 2, ',', '.')
+            ]), ';');
+        }
+
+        fputcsv($output, [], ';');
+        fputcsv($output, [
+            'TOTAIS CONSOLIDADOS DO PERÍODO',
+            '',
+            number_format($dados['recargas_pix_total'], 2, ',', '.'),
+            number_format($dados['recargas_dinheiro_total'], 2, ',', '.'),
+            number_format($dados['vendas_dinheiro_total'], 2, ',', '.'),
+            number_format($dados['vendas_pix_total'], 2, ',', '.'),
+            number_format($dados['total_arrecadado_bruto'], 2, ',', '.'),
+            number_format($dados['total_consumo_saldo'], 2, ',', '.'),
+            ($dados['variacao_carteira'] >= 0 ? '+' : '') . number_format($dados['variacao_carteira'], 2, ',', '.')
+        ], ';');
+
+        fclose($output);
+        if (!defined('CANTINA_TEST_MODE')) {
+            exit;
+        }
+    }
+
+    /**
      * Retorna a URL base normalizada da aplicação
      */
     protected function getBaseUrl(): string

@@ -205,8 +205,13 @@ class AuthController extends Controller
         $ultimoEnvio = (int)Session::get('_pa_ultimo_envio', 0);
         if ($ultimoEnvio > 0 && (time() - $ultimoEnvio) < 60) {
             $espera = 60 - (time() - $ultimoEnvio);
-            Session::setFlash('warning', "Aguarde {$espera} segundo(s) antes de solicitar um novo código.");
-            $this->redirect('/primeiro-acesso/codigo');
+            if (Session::has('_pa_codigo')) {
+                Session::setFlash('warning', "Já enviamos um código para seu WhatsApp. Você pode digitá-lo abaixo ou aguardar {$espera} segundo(s) para solicitar outro.");
+                $this->redirect('/primeiro-acesso/codigo');
+            } else {
+                Session::setFlash('warning', "Por motivos de segurança, aguarde {$espera} segundo(s) antes de solicitar um novo código.");
+                $this->redirect('/primeiro-acesso?cpf=' . urlencode($cpf));
+            }
             return;
         }
 
@@ -240,6 +245,7 @@ class AuthController extends Controller
             return;
         }
 
+        $codigoBloqueado = (bool)Session::get('_pa_codigo_bloqueado', false);
         $whatsapp = Session::get('_pa_whatsapp', '');
         // Mascara o número do WhatsApp para privacidade (ex: (11) 9****-1234)
         $maskedPhone = self::maskPhone($whatsapp);
@@ -247,12 +253,13 @@ class AuthController extends Controller
         $configFile = __DIR__ . '/../../config/config.php';
         $config = file_exists($configFile) ? require $configFile : [];
         $isDev = ($config['app']['env'] ?? '') === 'development' || ($config['app']['debug'] ?? false);
-        $mockCode = $isDev ? (Session::get('_pa_codigo') ?: WhatsAppService::getLastCode($whatsapp)) : null;
+        $mockCode = ($isDev && !$codigoBloqueado) ? Session::get('_pa_codigo') : null;
 
         $this->render('auth/primeiro_acesso_codigo', [
-            'pageTitle'   => 'Confirmação de Código — Cantina Web',
-            'maskedPhone' => $maskedPhone,
-            'mockCode'    => $mockCode
+            'pageTitle'       => 'Confirmação de Código — Cantina Web',
+            'maskedPhone'     => $maskedPhone,
+            'mockCode'        => $mockCode,
+            'codigoBloqueado' => $codigoBloqueado
         ], 'auth');
     }
 
@@ -269,18 +276,31 @@ class AuthController extends Controller
             return;
         }
 
+        if (!Session::has('_pa_responsavel_id')) {
+            Session::setFlash('warning', 'Sessão de ativação expirada. Informe seu CPF novamente.');
+            $this->redirect('/primeiro-acesso');
+            return;
+        }
+
+        if (Session::get('_pa_codigo_bloqueado', false) || !Session::has('_pa_codigo')) {
+            Session::setFlash('danger', 'Este código foi cancelado por excesso de tentativas. Clique no botão abaixo para receber um novo código.');
+            $this->redirect('/primeiro-acesso/codigo');
+            return;
+        }
+
         // Rate limiting: máximo de 5 tentativas por código
         $tentativas = (int)Session::get('_pa_tentativas', 0);
         if ($tentativas >= 5) {
             Session::remove('_pa_codigo');
             Session::remove('_pa_expira_em');
             Session::remove('_pa_tentativas');
+            Session::set('_pa_codigo_bloqueado', true);
             Auth::logSecurityEvent('brute_force_primeiro_acesso', Session::get('_pa_cpf', 'desconhecido'), [
                 'motivo' => 'Excesso de tentativas incorretas no primeiro acesso',
                 'ip'     => Auth::getClientIp()
             ]);
-            Session::setFlash('danger', 'Limite de 5 tentativas excedido. Por motivos de segurança, solicite um novo código.');
-            $this->redirect('/primeiro-acesso');
+            Session::setFlash('danger', 'Limite de 5 tentativas excedido para este código. Por motivos de segurança, clique em "Solicitar Novo Código" abaixo.');
+            $this->redirect('/primeiro-acesso/codigo');
             return;
         }
 
@@ -288,7 +308,7 @@ class AuthController extends Controller
         $codigoEsperado = Session::get('_pa_codigo');
         $expiraEm = (int)Session::get('_pa_expira_em', 0);
 
-        if (time() > $expiraEm) {
+        if ($expiraEm <= 0 || time() > $expiraEm) {
             Session::setFlash('danger', 'O código de verificação expirou (validade: 15 minutos). Solicite um novo reenvio.');
             $this->redirect('/primeiro-acesso/codigo');
             return;
@@ -302,12 +322,13 @@ class AuthController extends Controller
                 Session::remove('_pa_codigo');
                 Session::remove('_pa_expira_em');
                 Session::remove('_pa_tentativas');
+                Session::set('_pa_codigo_bloqueado', true);
                 Auth::logSecurityEvent('brute_force_primeiro_acesso', Session::get('_pa_cpf', 'desconhecido'), [
                     'motivo' => '5 tentativas incorretas atingidas',
                     'ip'     => Auth::getClientIp()
                 ]);
-                Session::setFlash('danger', 'Limite de 5 tentativas excedido. Por segurança, solicite um novo código.');
-                $this->redirect('/primeiro-acesso');
+                Session::setFlash('danger', 'Limite de 5 tentativas excedido para este código. Por motivos de segurança, clique em "Solicitar Novo Código" abaixo.');
+                $this->redirect('/primeiro-acesso/codigo');
                 return;
             }
 
@@ -319,6 +340,7 @@ class AuthController extends Controller
 
         // Código aprovado com sucesso
         Session::remove('_pa_tentativas');
+        Session::remove('_pa_codigo_bloqueado');
         Session::set('_pa_verificado', true);
         $this->redirect('/primeiro-acesso/senha');
     }
@@ -350,6 +372,7 @@ class AuthController extends Controller
         $novoCodigo = WhatsAppService::generateCode();
         (new WhatsAppService())->sendFirstAccessCode($whatsapp, $novoCodigo, $nome);
 
+        Session::remove('_pa_codigo_bloqueado');
         Session::set('_pa_codigo', $novoCodigo);
         Session::set('_pa_expira_em', time() + 900);
         Session::set('_pa_tentativas', 0);
@@ -489,8 +512,13 @@ class AuthController extends Controller
         $ultimoEnvio = (int)Session::get('_rec_ultimo_envio', 0);
         if ($ultimoEnvio > 0 && (time() - $ultimoEnvio) < 60) {
             $espera = 60 - (time() - $ultimoEnvio);
-            Session::setFlash('warning', "Aguarde {$espera} segundo(s) antes de solicitar um novo código de recuperação.");
-            $this->redirect('/recuperar-senha/codigo');
+            if (Session::has('_rec_codigo')) {
+                Session::setFlash('warning', "Já enviamos um código para seu WhatsApp. Você pode digitá-lo abaixo ou aguardar {$espera} segundo(s) para nova solicitação.");
+                $this->redirect('/recuperar-senha/codigo');
+            } else {
+                Session::setFlash('warning', "Por motivos de segurança, aguarde {$espera} segundo(s) antes de solicitar um novo código de recuperação.");
+                $this->redirect('/recuperar-senha');
+            }
             return;
         }
 
@@ -513,7 +541,8 @@ class AuthController extends Controller
      */
     public function recuperarSenhaCodigo(): void
     {
-        if (!Session::has('_rec_responsavel_id')) {
+        if (!Session::has('_rec_responsavel_id') || !Session::has('_rec_codigo')) {
+            Session::setFlash('warning', 'Sessão de recuperação expirada ou inexistente. Solicite um novo código.');
             $this->redirect('/recuperar-senha');
             return;
         }
@@ -542,12 +571,19 @@ class AuthController extends Controller
             return;
         }
 
+        if (!Session::has('_rec_responsavel_id') || !Session::has('_rec_codigo')) {
+            Session::setFlash('warning', 'Sessão de recuperação expirada ou inválida. Solicite um novo código.');
+            $this->redirect('/recuperar-senha');
+            return;
+        }
+
         // Rate limiting: máximo de 5 tentativas
         $tentativas = (int)Session::get('_rec_tentativas', 0);
         if ($tentativas >= 5) {
             Session::remove('_rec_codigo');
             Session::remove('_rec_expira_em');
             Session::remove('_rec_tentativas');
+            Session::remove('_rec_responsavel_id');
             Auth::logSecurityEvent('brute_force_recuperar_senha', Session::get('_rec_cpf', 'desconhecido'), [
                 'motivo' => 'Excesso de tentativas incorretas na recuperação de senha',
                 'ip'     => Auth::getClientIp()
@@ -564,7 +600,7 @@ class AuthController extends Controller
         $codigoEsperado = Session::get('_rec_codigo');
         $expiraEm = (int)Session::get('_rec_expira_em', 0);
 
-        if (time() > $expiraEm) {
+        if ($expiraEm <= 0 || time() > $expiraEm) {
             Session::setFlash('danger', 'O código de segurança expirou (validade: 15 minutos). Solicite nova recuperação.');
             $this->redirect('/recuperar-senha');
             return;
@@ -578,6 +614,7 @@ class AuthController extends Controller
                 Session::remove('_rec_codigo');
                 Session::remove('_rec_expira_em');
                 Session::remove('_rec_tentativas');
+                Session::remove('_rec_responsavel_id');
                 Auth::logSecurityEvent('brute_force_recuperar_senha', Session::get('_rec_cpf', 'desconhecido'), [
                     'motivo' => '5 tentativas incorretas atingidas na recuperação de senha',
                     'ip'     => Auth::getClientIp()

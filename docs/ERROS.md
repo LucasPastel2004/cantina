@@ -1483,3 +1483,52 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - Aba Aluno: botões Dinheiro, Pix e Saldo (3 colunas com classe `.has-saldo`), exibindo o saldo da carteira no card do aluno e demonstrativo dinâmico de débito e saldo restante.
   4. Suíte automatizada `tests/pdv_formas_pagamento_test.php` criada com 25/25 testes aprovados.
 - Como evitar no futuro: Sempre isolar e desacoplar formas de pagamento nos controllers e views com regras reativas claras por perfil de cliente, garantindo que opções inoperantes ou descontinuadas sejam rejeitadas na camada de domínio e não apareçam na interface.
+
+---
+
+## 2026-10-05 - Loop de código expirado e código fantasma após estourar 5 tentativas no Primeiro Acesso
+
+- Sintoma: Ao errar 5 vezes o código de verificação no Primeiro Acesso e reinserir o CPF na tela inicial, o usuário era direcionado à tela de digitação de código com a mensagem de que o código já estava expirado ("Atenção: O código de verificação expirou (validade: 15 minutos). Solicite um novo reenvio."). Toda tentativa de digitar o código informado no box de ambiente local (`mockCode`) falhava com o mesmo erro de código expirado, até que o usuário clicasse em "Reenviar código".
+- Causa:
+  1. Ao atingir o limite de 5 erros consecutivos, `primeiroAcessoValidarCodigo()` removia o código e a validade da sessão (`Session::remove('_pa_codigo')` e `Session::remove('_pa_expira_em')`) e redirecionava para `/primeiro-acesso` (tela de inserção de CPF).
+  2. Ao reinserir o CPF em seguida, o cooldown de segurança contra spam de WhatsApp (60 segundos) entrava em ação. Porém, a cláusula do cooldown redirecionava o usuário para `/primeiro-acesso/codigo` incondicionalmente, mesmo sem um código ativo em sessão.
+  3. A view `/primeiro-acesso/codigo` não verificava a existência de `_pa_codigo` e buscava um código fantasma do cache estático do `WhatsAppService` (`getLastCode`), exibindo o código da tentativa anterior (já invalidada).
+  4. Ao tentar validar esse código fantasma, `_pa_expira_em` estava ausente (retornando `0`). Como `time() > 0` é verdadeiro, o validador disparava imediatamente a mensagem de expiração de 15 minutos e redirecionava de volta para a mesma tela, criando um loop infinito.
+- Solução aplicada:
+  1. Em vez de expulsar o usuário de volta para a tela de CPF (`/primeiro-acesso`), `primeiroAcessoValidarCodigo()` agora mantém a sessão familiar ativa, invalida o código anterior e marca `_pa_codigo_bloqueado = true`, redirecionando o usuário de volta para a própria tela de confirmação (`/primeiro-acesso/codigo`).
+  2. Na view `primeiro_acesso_codigo.php`, quando `codigoBloqueado` for verdadeiro, o formulário de digitação é ocultado e exibido um alerta explicativo com um botão direto de ação: **"Solicitar Novo Código por WhatsApp"**, permitindo gerar um novo código sem que o responsável tenha que redigitar seu CPF de 11 dígitos.
+  3. Em `primeiroAcessoReenviar()`, a flag `_pa_codigo_bloqueado` é removida, gerando um código novo legítimo com 15 minutos de validade e reabilitando o formulário para digitação imediata.
+  4. Caso o usuário queira trocar de responsável por engano de digitação, o link discreto "Trocar CPF" no rodapé permanece disponível.
+  5. Teste automatizado `tests/primeiro_acesso_limite_tentativas_test.php` atualizado e aprovado com 6/6 asserções com 100% de sucesso.
+- Como evitar no futuro: Em fluxos de autenticação em duas etapas, nunca deslogar ou chutar o usuário para o início do fluxo ao invalidar um código específico; em vez disso, manter o contexto da sessão e fornecer um botão direto para solicitar um novo código no mesmo local.
+
+---
+
+## 2026-10-05 - Resumo financeiro zerado e vendas rotuladas indevidamente como "Dinheiro" na Gestão de Caixa
+
+- Sintoma: Na tela de Gestão de Caixa (`/operacional/caixa?turno=matutino`), os indicadores de topo (Fundo de caixa, Entrada dinheiro, Entrada pix, Total saídas, Total entradas, Total caixa e Esperado na gaveta) exibiam todos `R$ 0,00` mesmo com sessão aberta contendo fundo de R$ 100,00 e dezenas de vendas realizadas. Além disso, todas as 31 vendas da listagem de "Vendas Presenciais no Balcão" apareciam com o rótulo "Dinheiro" na coluna TIPO, mesmo tendo vendas feitas em Pix Balcão e Saldo.
+- Causa:
+  1. A view `app/views/operacional/caixa.php` buscava `$dadosFechamento['resumo']['fundo']['dinheiro']`, `$dadosFechamento['resumo']['entradas']...`, mas o método `SessaoCaixa::obterDadosFechamentoOficial()` retornava os dados contábeis consolidados sob a chave `'resumo_caixa'`. Por ter `$dadosFechamento` presente (mas sem a subchave `resumo`), o fluxo caía no primeiro `if` e todas as variáveis numéricas recebiam `(float)null = 0.0`.
+  2. Em `SessaoCaixa.php` (linha ~969), o switch que definia o rótulo da coluna TIPO em `itens_balcao` verificava estritamente `$ib['forma_pagamento'] === 'pix'`. No PDV, as vendas são gravadas como `'pix_balcao'` e `'saldo'`, de modo que nenhuma condição casava e todas as vendas caíam no fallback default `$tipoStr = 'Dinheiro'`.
+  3. A query de recebimentos Pix em balcão em `SessaoCaixa.php` buscava `WHERE forma_pagamento = 'pix'`, desconsiderando a forma real `'pix_balcao'`.
+- Solução aplicada:
+  1. Na view `app/views/operacional/caixa.php`: atualizado para ler `$resumoOficial = $dadosFechamento['resumo_caixa'] ?? $dadosFechamento['resumo'] ?? null`, extraindo corretamente `fundo`, `entradas`, `saidas`, `saldo` e seus totais.
+  2. No model `app/models/SessaoCaixa.php`:
+     - Retorno de `obterDadosFechamentoOficial` agora fornece tanto `'resumo_caixa'` quanto `'resumo'` garantindo retrocompatibilidade total;
+     - Condição de mapeamento de rótulo atualizada para aceitar `'pix'` e `'pix_balcao'` como `"Pix"`, e `'saldo'` como `"Saldo"`;
+     - Query de recebimentos Pix atualizada para `WHERE forma_pagamento IN ('pix', 'pix_balcao')`;
+     - Adicionada leitura direta da soma de `vendas_balcao` com `forma_pagamento = 'dinheiro'` para garantir total fidelidade no demonstrativo de gaveta.
+- Como evitar no futuro: Padronizar contratos de chaves de array retornadas por models consolidados e sempre contemplar todas as variações de ENUM/string de formas de pagamento (`pix`, `pix_balcao`, `saldo`) nas rotinas de agregação contábil e de apresentação.
+
+---
+
+## 2026-10-05 - Invocação de método inexistente renderViewDireto() e encerramento prematuro com exit em testes CLI
+
+- Sintoma: Erro fatal `Fatal error: Uncaught Error: Call to undefined method App\Controllers\RelatoriosController::renderViewDireto()` e encerramento abrupto do processo de execução de testes ao invocar `RelatoriosController::arrecadacaoImprimir()` e `arrecadacaoCsv()`.
+- Causa: 
+  1. A classe `RelatoriosController` não implementa o método auxiliar `renderViewDireto()`, padrão utilizado no `DreController`, delegando a compilação HTML de impressão diretamente para `PdfService::renderView()`.
+  2. As actions de emissão e download (`arrecadacaoPdf`, `arrecadacaoImprimir`, `arrecadacaoCsv`) executavam `exit;` incondicionalmente, derrubando o script de testes automatizados CLI antes da finalização das asserções subsequentes.
+- Solução aplicada:
+  1. Substituída a chamada por `echo PdfService::renderView('relatorios/arrecadacao_pdf', $dados);`.
+  2. Protegidas todas as diretivas de encerramento com `if (!defined('CANTINA_TEST_MODE')) { exit; }`, permitindo que os testes automatizados capturem os buffers de saída com `ob_start() / ob_get_clean()` e continuem a execução com sucesso.
+- Como evitar no futuro: Em controllers que emitem saídas para download direto ou impressão, padronizar a invocação através do serviço unificado `PdfService::renderView()` e proteger instruções `exit` com constantes de ambiente de teste para viabilizar testes unitários e de integração contínua via CLI.

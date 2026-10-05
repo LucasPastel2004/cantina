@@ -54,8 +54,9 @@ class Dre extends Model
 
     /**
      * Calcula o DRE consolidado de uma competência mensal específica (YYYY-MM).
+     * Suporta regime de 'competencia' (vendas de lanches) ou 'caixa' (recargas de saldo + vendas avulsas).
      */
-    public function calcularCompetencia(string $competencia): array
+    public function calcularCompetencia(string $competencia, string $regime = 'competencia'): array
     {
         $pdo = self::getConnection();
 
@@ -66,7 +67,7 @@ class Dre extends Model
         $dataInicio = sprintf('%04d-%02d-01', $ano, $mes);
         $dataFim    = date('Y-m-t', strtotime($dataInicio));
 
-        // 2. Receita Bruta de Vendas Online (Pedidos)
+        // 2. Receita Bruta de Vendas Online (Pedidos) e Consumo Saldo
         $sqlOnline = "SELECT 
                         COALESCE(SUM(p.valor_total), 0.00) as total,
                         COUNT(p.id) as qtd_pedidos
@@ -91,7 +92,69 @@ class Dre extends Model
         $resBalcao = $stmtBalcao->fetch(\PDO::FETCH_ASSOC);
         $receitaBalcao = (float)($resBalcao['total'] ?? 0.00);
 
-        $receitaBruta = $receitaOnline + $receitaBalcao;
+        // Vendas Balcão em Saldo (Consumo)
+        $sqlBalcaoSaldo = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
+                           FROM `vendas_balcao` vb
+                           WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
+                             AND vb.forma_pagamento = 'saldo'
+                             AND (vb.status != 'estornada' OR vb.status IS NULL)
+                             AND vb.estornado_em IS NULL";
+        $stmtBS = $pdo->prepare($sqlBalcaoSaldo);
+        $stmtBS->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $consumoSaldoBalcao = (float)$stmtBS->fetchColumn();
+        $consumoSaldoTotal = $receitaOnline + $consumoSaldoBalcao;
+
+        // Vendas Balcão em Dinheiro e Pix
+        $sqlBalcaoDinheiro = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
+                              FROM `vendas_balcao` vb
+                              WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
+                                AND vb.forma_pagamento = 'dinheiro'
+                                AND (vb.status != 'estornada' OR vb.status IS NULL)
+                                AND vb.estornado_em IS NULL";
+        $stmtBD = $pdo->prepare($sqlBalcaoDinheiro);
+        $stmtBD->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $vendasBalcaoDinheiro = (float)$stmtBD->fetchColumn();
+
+        $sqlBalcaoPix = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
+                         FROM `vendas_balcao` vb
+                         WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
+                           AND vb.forma_pagamento IN ('pix', 'pix_balcao')
+                           AND (vb.status != 'estornada' OR vb.status IS NULL)
+                           AND vb.estornado_em IS NULL";
+        $stmtBP = $pdo->prepare($sqlBalcaoPix);
+        $stmtBP->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $vendasBalcaoPix = (float)$stmtBP->fetchColumn();
+
+        // Recargas da Carteira no Mês (Cash-In)
+        $sqlRecargasPix = "SELECT COALESCE(SUM(tc.valor), 0.00)
+                           FROM `transacoes_carteira` tc
+                           WHERE tc.tipo_transacao = 'recarga_pix'
+                             AND DATE(tc.created_at) BETWEEN :dt_inicio AND :dt_fim";
+        $stmtRP = $pdo->prepare($sqlRecargasPix);
+        $stmtRP->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $recargasPix = (float)$stmtRP->fetchColumn();
+
+        $sqlRecargasDinheiro = "SELECT COALESCE(SUM(tc.valor), 0.00)
+                                FROM `transacoes_carteira` tc
+                                WHERE tc.tipo_transacao = 'recarga_dinheiro'
+                                  AND DATE(tc.created_at) BETWEEN :dt_inicio AND :dt_fim";
+        $stmtRD = $pdo->prepare($sqlRecargasDinheiro);
+        $stmtRD->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $recargasDinheiro = (float)$stmtRD->fetchColumn();
+
+        $totalRecargas = $recargasPix + $recargasDinheiro;
+
+        if ($regime === 'caixa') {
+            // No Regime de Caixa:
+            // Receita Online = Recargas Pix (Portal da Família)
+            // Receita Balcão = Recargas Balcão Dinheiro + Vendas Balcão Dinheiro + Vendas Balcão Pix
+            $receitaOnline = $recargasPix;
+            $receitaBalcao = $recargasDinheiro + $vendasBalcaoDinheiro + $vendasBalcaoPix;
+            $receitaBruta = $receitaOnline + $receitaBalcao;
+        } else {
+            // No Regime de Competência (Padrão): Vendas totais de alimentos entregues
+            $receitaBruta = $receitaOnline + $receitaBalcao;
+        }
 
         // 4. Deduções e Abatimentos (Estornos)
         // 4.1 Estornos de Balcão
@@ -158,6 +221,7 @@ class Dre extends Model
 
         return [
             'competencia'              => $competencia,
+            'regime'                   => $regime,
             'ano'                      => $ano,
             'mes'                      => $mes,
             'mes_nome'                 => self::MESES_PT[$mes] ?? "Mês {$mes}",
@@ -169,6 +233,17 @@ class Dre extends Model
             'receita_online'           => $receitaOnline,
             'receita_balcao'           => $receitaBalcao,
             'receita_bruta'            => $receitaBruta,
+
+            // Dados Complementares de Recargas e Consumo Saldo
+            'recargas_pix'             => $recargasPix,
+            'recargas_dinheiro'        => $recargasDinheiro,
+            'total_recargas'           => $totalRecargas,
+            'vendas_dinheiro'          => $vendasBalcaoDinheiro,
+            'vendas_pix'               => $vendasBalcaoPix,
+            'consumo_saldo_online'     => (float)($resOnline['total'] ?? 0.00),
+            'consumo_saldo_balcao'     => $consumoSaldoBalcao,
+            'consumo_saldo_total'      => $consumoSaldoTotal,
+            'diferenca_recarga_consumo'=> round($totalRecargas - $consumoSaldoTotal, 2),
             
             // (-) DEDUÇÕES
             'estornos_balcao'          => $estornosBalcao,
@@ -205,12 +280,13 @@ class Dre extends Model
 
     /**
      * Calcula o DRE consolidado para um intervalo arbitrário de datas (data_inicio a data_fim).
+     * Suporta regime de 'competencia' (vendas de lanches) ou 'caixa' (recargas de saldo + vendas avulsas).
      */
-    public function calcularPeriodo(string $dataInicio, string $dataFim): array
+    public function calcularPeriodo(string $dataInicio, string $dataFim, string $regime = 'competencia'): array
     {
         $pdo = self::getConnection();
 
-        // 1. Receita Bruta de Vendas Online (Pedidos)
+        // 1. Receita Bruta de Vendas Online (Pedidos) e Consumo Saldo
         $sqlOnline = "SELECT 
                         COALESCE(SUM(p.valor_total), 0.00) as total,
                         COUNT(p.id) as qtd_pedidos
@@ -235,7 +311,69 @@ class Dre extends Model
         $resBalcao = $stmtBalcao->fetch(\PDO::FETCH_ASSOC);
         $receitaBalcao = (float)($resBalcao['total'] ?? 0.00);
 
-        $receitaBruta = $receitaOnline + $receitaBalcao;
+        // Vendas Balcão em Saldo (Consumo)
+        $sqlBalcaoSaldo = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
+                           FROM `vendas_balcao` vb
+                           WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
+                             AND vb.forma_pagamento = 'saldo'
+                             AND (vb.status != 'estornada' OR vb.status IS NULL)
+                             AND vb.estornado_em IS NULL";
+        $stmtBS = $pdo->prepare($sqlBalcaoSaldo);
+        $stmtBS->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $consumoSaldoBalcao = (float)$stmtBS->fetchColumn();
+        $consumoSaldoTotal = $receitaOnline + $consumoSaldoBalcao;
+
+        // Vendas Balcão em Dinheiro e Pix
+        $sqlBalcaoDinheiro = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
+                              FROM `vendas_balcao` vb
+                              WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
+                                AND vb.forma_pagamento = 'dinheiro'
+                                AND (vb.status != 'estornada' OR vb.status IS NULL)
+                                AND vb.estornado_em IS NULL";
+        $stmtBD = $pdo->prepare($sqlBalcaoDinheiro);
+        $stmtBD->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $vendasBalcaoDinheiro = (float)$stmtBD->fetchColumn();
+
+        $sqlBalcaoPix = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
+                         FROM `vendas_balcao` vb
+                         WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
+                           AND vb.forma_pagamento IN ('pix', 'pix_balcao')
+                           AND (vb.status != 'estornada' OR vb.status IS NULL)
+                           AND vb.estornado_em IS NULL";
+        $stmtBP = $pdo->prepare($sqlBalcaoPix);
+        $stmtBP->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $vendasBalcaoPix = (float)$stmtBP->fetchColumn();
+
+        // Recargas da Carteira no Período (Cash-In)
+        $sqlRecargasPix = "SELECT COALESCE(SUM(tc.valor), 0.00)
+                           FROM `transacoes_carteira` tc
+                           WHERE tc.tipo_transacao = 'recarga_pix'
+                             AND DATE(tc.created_at) BETWEEN :dt_inicio AND :dt_fim";
+        $stmtRP = $pdo->prepare($sqlRecargasPix);
+        $stmtRP->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $recargasPix = (float)$stmtRP->fetchColumn();
+
+        $sqlRecargasDinheiro = "SELECT COALESCE(SUM(tc.valor), 0.00)
+                                FROM `transacoes_carteira` tc
+                                WHERE tc.tipo_transacao = 'recarga_dinheiro'
+                                  AND DATE(tc.created_at) BETWEEN :dt_inicio AND :dt_fim";
+        $stmtRD = $pdo->prepare($sqlRecargasDinheiro);
+        $stmtRD->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $recargasDinheiro = (float)$stmtRD->fetchColumn();
+
+        $totalRecargas = $recargasPix + $recargasDinheiro;
+
+        if ($regime === 'caixa') {
+            // No Regime de Caixa:
+            // Receita Online = Recargas Pix (Portal da Família)
+            // Receita Balcão = Recargas Balcão Dinheiro + Vendas Balcão Dinheiro + Vendas Balcão Pix
+            $receitaOnline = $recargasPix;
+            $receitaBalcao = $recargasDinheiro + $vendasBalcaoDinheiro + $vendasBalcaoPix;
+            $receitaBruta = $receitaOnline + $receitaBalcao;
+        } else {
+            // No Regime de Competência (Padrão): Vendas totais de alimentos entregues
+            $receitaBruta = $receitaOnline + $receitaBalcao;
+        }
 
         // 3. Deduções e Abatimentos (Estornos)
         $sqlEstornoBalcao = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
@@ -323,12 +461,13 @@ class Dre extends Model
                 'mes'         => $mesNum,
                 'mes_abrev'   => self::MESES_ABREV[$mesNum] ?? "M{$mesNum}",
                 'mes_nome'    => self::MESES_PT[$mesNum] ?? "Mês {$mesNum}",
-                'dados'       => $this->calcularCompetencia($comp),
+                'dados'       => $this->calcularCompetencia($comp, $regime),
             ];
             $cursorDt->modify('+1 month');
         }
 
         return [
+            'regime'                   => $regime,
             'data_inicio'              => $dataInicio,
             'data_fim'                 => $dataFim,
             'data_inicio_formatada'    => date('d/m/Y', strtotime($dataInicio)),
@@ -340,6 +479,17 @@ class Dre extends Model
             'receita_online'           => $receitaOnline,
             'receita_balcao'           => $receitaBalcao,
             'receita_bruta'            => $receitaBruta,
+
+            // Dados Complementares de Recargas e Consumo Saldo
+            'recargas_pix'             => $recargasPix,
+            'recargas_dinheiro'        => $recargasDinheiro,
+            'total_recargas'           => $totalRecargas,
+            'vendas_dinheiro'          => $vendasBalcaoDinheiro,
+            'vendas_pix'               => $vendasBalcaoPix,
+            'consumo_saldo_online'     => (float)($resOnline['total'] ?? 0.00),
+            'consumo_saldo_balcao'     => $consumoSaldoBalcao,
+            'consumo_saldo_total'      => $consumoSaldoTotal,
+            'diferenca_recarga_consumo'=> round($totalRecargas - $consumoSaldoTotal, 2),
 
             // (-) DEDUÇÕES
             'estornos_balcao'          => $estornosBalcao,
@@ -376,14 +526,24 @@ class Dre extends Model
 
     /**
      * Calcula o DRE anual comparativo mês a mês (Janeiro a Dezembro + Total Consolidado do Ano).
+     * Suporta regime de 'competencia' ou 'caixa'.
      */
-    public function calcularAnoComparativo(int $ano): array
+    public function calcularAnoComparativo(int $ano, string $regime = 'competencia'): array
     {
         $meses = [];
         $totais = [
             'receita_online'           => 0.00,
             'receita_balcao'           => 0.00,
             'receita_bruta'            => 0.00,
+            'recargas_pix'             => 0.00,
+            'recargas_dinheiro'        => 0.00,
+            'total_recargas'           => 0.00,
+            'vendas_dinheiro'          => 0.00,
+            'vendas_pix'               => 0.00,
+            'consumo_saldo_online'     => 0.00,
+            'consumo_saldo_balcao'     => 0.00,
+            'consumo_saldo_total'      => 0.00,
+            'diferenca_recarga_consumo'=> 0.00,
             'estornos_balcao'          => 0.00,
             'estornos_online'          => 0.00,
             'total_deducoes'           => 0.00,
@@ -402,7 +562,7 @@ class Dre extends Model
 
         for ($m = 1; $m <= 12; $m++) {
             $competencia = sprintf('%04d-%02d', $ano, $m);
-            $dadosMes = $this->calcularCompetencia($competencia);
+            $dadosMes = $this->calcularCompetencia($competencia, $regime);
             $meses[$m] = $dadosMes;
 
             // Acumula totais do ano
@@ -430,6 +590,7 @@ class Dre extends Model
 
         return [
             'ano'    => $ano,
+            'regime' => $regime,
             'meses'  => $meses,
             'totais' => $totais,
         ];
@@ -502,11 +663,11 @@ class Dre extends Model
 
     /**
      * Retorna os dados analíticos formatados para os gráficos interativos da tela de DRE.
-     * Suporta agregação por ano ou por período personalizado (data_inicio a data_fim).
+     * Suporta agregação por ano ou por período personalizado (data_inicio a data_fim) e regime.
      */
-    public function obterDadosGraficos(int $ano, ?string $dataInicio = null, ?string $dataFim = null): array
+    public function obterDadosGraficos(int $ano, ?string $dataInicio = null, ?string $dataFim = null, string $regime = 'competencia'): array
     {
-        $dreAno = $this->calcularAnoComparativo($ano);
+        $dreAno = $this->calcularAnoComparativo($ano, $regime);
         
         $labels = [];
         $receitas = [];
@@ -526,7 +687,7 @@ class Dre extends Model
 
         // Se datas foram fornecidas, apura os totais específicos do período selecionado
         if ($dataInicio && $dataFim) {
-            $drePeriodo = $this->calcularPeriodo($dataInicio, $dataFim);
+            $drePeriodo = $this->calcularPeriodo($dataInicio, $dataFim, $regime);
             $totais = $drePeriodo;
         } else {
             $totais = $dreAno['totais'];

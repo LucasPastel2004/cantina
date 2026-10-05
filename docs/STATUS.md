@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Revisão de Segurança Pré-Publicação (Passo 5)
 * **Status da Revisão:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria e Blindagem de Segurança 100% Concluídas!
-* **Última Atualização:** 2026-10-05 08:30:00 (Conclusão da Revisão de Segurança Pré-Publicação: 1) Conformidade LGPD com remoção de arquivos com dados reais do controle de versão e adição ao `.gitignore`; 2) Blindagem de autenticação de Webhook Pix contra bypass em produção; 3) Rate limiting e cooldown de 60s em códigos de 6 dígitos via WhatsApp; 4) Proteção CSRF completa em todas as rotas POST do sistema; 5) Prevenção de Formula Injection (CSV Injection) em relatórios analíticos; 6) Proteção contra breakout XSS em scripts inline; 7) Blindagem de rotas de teste e diagnóstico na raiz `/` em produção; 8) Suítes de testes 100% aprovadas).
+* **Última Atualização:** 2026-10-05 15:10:00 (Melhoria de UX e fluxo no Primeiro Acesso: ao errar 5 vezes, o usuário não é mais expulso para a tela inicial de CPF; o sistema mantém a sessão ativa na tela de confirmação de código e exibe botão direto "Solicitar Novo Código por WhatsApp", eliminando atrito de redigitação de CPF e evitando loops de expiração).
 
 
 
@@ -1232,8 +1232,83 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Gestão e Fechamento de Caixa — Correção dos Indicadores Financeiros e Rótulos de Vendas Balcão
+
+* [x] **Model (`app/models/SessaoCaixa.php`):**
+  * Em `obterDadosFechamentoOficial`:
+    * Retorno retrocompatível fornecendo tanto `'resumo_caixa'` quanto `'resumo'`;
+    * Consulta de pagamentos Pix em balcão corrigida para `WHERE forma_pagamento IN ('pix', 'pix_balcao')`;
+    * Mapeamento de tipo de pagamento corrigido para identificar corretamente `pix`/`pix_balcao` como "Pix" e `saldo` como "Saldo" na listagem de itens/vendas presenciais no balcão;
+    * Totalizador de dinheiro em balcão sincronizado com a soma contábil real de `vendas_balcao`.
+* [x] **View (`app/views/operacional/caixa.php`):**
+  * Extração do resumo oficial corrigida para `$resumoOficial = $dadosFechamento['resumo_caixa'] ?? $dadosFechamento['resumo'] ?? null`;
+  * Indicadores de Fundo de Caixa, Entrada Dinheiro, Entrada Pix, Total Saídas, Total Entradas, Total Caixa e Esperado na Gaveta agora preenchidos dinamicamente e com precisão.
+* [x] **Validação:**
+  * Teste real na Sessão #212 (Turno Matutino de 05/10/2026):
+    * Fundo de Caixa: R$ 100,00
+    * Entrada Dinheiro: R$ 104,00 (13 vendas)
+    * Entrada Pix: R$ 104,00 (13 vendas)
+    * Vendas Saldo: R$ 36,00 (5 vendas)
+    * Total Entradas: R$ 208,00
+    * Esperado na Gaveta: R$ 204,00
+  * Suíte de regressão `tests/pdv_formas_pagamento_test.php` 100% aprovada (25/25);
+  * Suíte de relatórios e fechamento `tests/fase21_test.php` 100% aprovada (107/107).
+
+---
+
+### [x] DRE Gerencial nos Regimes de Competência e Caixa & Relatório Oficial de Arrecadação Financeira (Cash-In)
+
+* [x] **DRE Gerencial com Regimes Contábeis Alternáveis (`/financeiro/dre`):**
+  * **Model (`app/models/Dre.php`):**
+    * Métodos `calcularCompetencia`, `calcularPeriodo`, `calcularAnoComparativo` e `obterDadosGraficos` ampliados com o parâmetro `$regime = 'competencia'|'caixa'`;
+    * **Regime de Competência (Vendas & Consumo):** faturamento apurado pela entrega real de lanches (Pedidos Online em Saldo + Vendas Balcão em Saldo, Dinheiro e Pix);
+    * **Regime de Caixa (Recargas & Arrecadação):** receita bruta apurada estritamente pelas entradas financeiras novas (Recargas Pix Online da Carteira Familiar + Recargas no Balcão em Dinheiro + Vendas Avulsas de Balcão em Dinheiro e Pix), sem duplicar vendas por saldo;
+    * Apuração automática de subseção informativa de confronto: `total_recargas`, `consumo_saldo_total` e `diferenca_recarga_consumo` (Recargas - Consumo).
+  * **Controller (`app/controllers/DreController.php`):**
+    * Leitura dinâmica de `$_GET['regime']` com repasse transparente para views, espelho de impressão, emissão PDF e API de gráficos interativos.
+  * **View Web (`app/views/financeiro/dre.php`):**
+    * Adicionado seletor visual corporativo segmentado de Regime Contábil (`Regime de Competência` vs `Regime de Caixa`);
+    * Campo oculto `<input type="hidden" name="regime">` integrado no formulário de filtros `#formDre`;
+    * Box informativo em azul corporativo no modo Caixa apresentando o consumo real de lanches e a variação da carteira familiar;
+    * Stat-strip e gráficos reativos ao regime ativo.
+  * **Espelho A4 Timbrado e PDF Oficial (`app/views/financeiro/dre_pdf.php`):**
+    * Cabeçalho institucional identifica o regime ativo (`REGIME DE CAIXA (RECARGAS & ARRECADAÇÃO)` vs `REGIME DE COMPETÊNCIA (VENDAS & CONSUMO)`);
+    * Estrutura de linhas da tabela A4 adapta a seção de Receita Bruta discriminando Recargas Pix, Recargas Dinheiro, Vendas Dinheiro e Vendas Pix;
+    * Adicionada subseção informativa no rodapé da tabela com o controle de carteira (Recargas vs Consumo Real e Variação Líquida).
+
+* [x] **Relatório Oficial de Arrecadação Financeira & Fluxo de Entradas (`/relatorios/arrecadacao`):**
+  * **Motor de Agregação (`RelatoriosController::obterDadosArrecadacao`):**
+    * Consolidação de todas as fontes de dinheiro novo no período: Recargas Pix Online (Portal da Família / Webhook), Recargas no Balcão em Dinheiro, Vendas Balcão em Dinheiro e Vendas Balcão em Pix;
+    * Apuração do consumo real em saldo (pedidos online e balcão) e cálculo da variação líquida em custódia;
+    * Agrupamento cronológico diário dia a dia com dia da semana em português;
+    * Estruturação dos 4 canais de arrecadação com cálculo de representatividade percentual (somando 100%).
+  * **View Web (`app/views/relatorios/arrecadacao.php`):**
+    * Formulário de período com atalhos corporativos neutros ("Hoje", "Ontem", "Esta Semana", "Este Mês", "Mês Anterior");
+    * Stat-strip de 5 cartões com Total Arrecadado (Cash-In Real), Recargas Pix Online, Recargas Balcão Dinheiro, Vendas Presenciais e Consumo de Saldo;
+    * Grade analítica de duas colunas com Arrecadação por Canais e Conciliação da Carteira Digital;
+    * Tabela detalhada diária cronológica dia a dia com totais consolidados no rodapé;
+    * Botões de ação no topo para Visualizar / Imprimir A4, Baixar em PDF A4 e Exportar Planilha CSV.
+  * **Espelho A4 Timbrado e PDF (`app/views/relatorios/arrecadacao_pdf.php`):**
+    * Orientação A4 Retrato oficial com margens simétricas `@page { size: A4 portrait; margin: 10mm 12mm; }`;
+    * Cabeçalho escolar oficial com logotipo circular oficial do Colégio Monteiro Lobato em base64 Data-URI;
+    * Grade tipo Excel com linhas pretas contínuas e células 100% brancas puro;
+    * 3 seções analíticas completas (Canais, Controle de Carteira e Detalhamento Diário) com linhas para assinaturas formais.
+  * **Exportação CSV (`RelatoriosController::arrecadacaoCsv`):**
+    * Planilha com BOM UTF-8 e delimitador `;`, com sanitização preventiva contra CSV / Formula Injection.
+  * **Roteamento e Navegação:**
+    * 4 rotas registradas em `index.php`: `/relatorios/arrecadacao`, `/relatorios/arrecadacao/pdf`, `/relatorios/arrecadacao/imprimir` e `/relatorios/arrecadacao/csv`;
+    * Card oficial adicionado no Hub da Central de Relatórios (`app/views/relatorios/index.php`);
+    * Item "Arrecadação & Entradas" adicionado na seção Administração do menu lateral (`sidebar.php`).
+
+* [x] **Homologação e Testes:**
+  * Suíte automatizada `tests/arrecadacao_dre_regimes_test.php` criada com **89 de 89 asserções aprovadas com 100% de sucesso**;
+  * Compilação de PDF via Gotenberg Chromium validada (binário PDF com 102.113 bytes);
+  * Testes de regressão de caixa (`tests/caixa_test.php` - 59/59), regras do PDV (`tests/pdv_formas_pagamento_test.php` - 25/25), Fase 24 (`tests/fase24_test.php` - 103/103) e Fase 21 (`tests/fase21_test.php` - 107/107) 100% aprovados.
+
+---
+
 ## Próximo Passo Recomendado
 
-1. Acessar a Central de Relatórios em `http://localhost:8080/relatorios` para verificar os cards limpos e a métrica de vendas no balcão;
-2. Acessar o Relatório de Vendas por Alimento em `http://localhost:8080/relatorios/vendas-alimento` para validar a tabela sem a coluna e legenda de Curva ABC;
-3. Realizar o commit das alterações no repositório.
+1. Acessar a tela do **DRE Gerencial** (`http://localhost:8080/financeiro/dre`) e alternar entre **Regime de Competência** e **Regime de Caixa** para visualizar o demonstrativo e os gráficos reativos;
+2. Acessar o novo **Relatório de Arrecadação Financeira** (`http://localhost:8080/relatorios/arrecadacao`) e testar os filtros de período, atalhos rápidos, espelho de impressão A4, download de PDF e exportação para Excel (CSV);
+3. Realizar o commit das alterações no repositório Git.

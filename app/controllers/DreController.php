@@ -69,14 +69,16 @@ class DreController extends Controller
     /**
      * Tela principal: Painel Visual & Gráficos Interativos sempre abertos, com seletor de período por datas.
      * O demonstrativo formal do DRE é gerado sob demanda via Visualizar/Imprimir ou Baixar PDF.
+     * Suporta regime de 'competencia' (vendas de lanches) ou 'caixa' (recargas de saldo + vendas avulsas).
      */
     public function index(): void
     {
         [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
+        $regime = (isset($_GET['regime']) && $_GET['regime'] === 'caixa') ? 'caixa' : 'competencia';
 
-        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim);
-        $dreAno = $this->dreModel->calcularAnoComparativo($ano);
-        $dadosGraficos = $this->dreModel->obterDadosGraficos($ano, $dataInicio, $dataFim);
+        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim, $regime);
+        $dreAno = $this->dreModel->calcularAnoComparativo($ano, $regime);
+        $dadosGraficos = $this->dreModel->obterDadosGraficos($ano, $dataInicio, $dataFim, $regime);
         $config = Configuracao::obter();
 
         $this->render('financeiro/dre', [
@@ -85,6 +87,7 @@ class DreController extends Controller
             'ano'           => $ano,
             'dataInicio'    => $dataInicio,
             'dataFim'       => $dataFim,
+            'regime'        => $regime,
             'drePeriodo'    => $drePeriodo,
             'totais'        => $drePeriodo, // Alimenta os stat-cards com o período filtrado
             'dre'           => $dreAno,
@@ -102,11 +105,13 @@ class DreController extends Controller
     public function graficosJson(): void
     {
         [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
-        $dados = $this->dreModel->obterDadosGraficos($ano, $dataInicio, $dataFim);
+        $regime = (isset($_GET['regime']) && $_GET['regime'] === 'caixa') ? 'caixa' : 'competencia';
+        $dados = $this->dreModel->obterDadosGraficos($ano, $dataInicio, $dataFim, $regime);
 
         $this->json([
             'sucesso'     => true,
             'ano'         => $ano,
+            'regime'      => $regime,
             'data_inicio' => $dataInicio,
             'data_fim'    => $dataFim,
             'dados'       => $dados,
@@ -119,8 +124,9 @@ class DreController extends Controller
     public function imprimir(): void
     {
         [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
-        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim);
-        $dreAno = $this->dreModel->calcularAnoComparativo($ano);
+        $regime = (isset($_GET['regime']) && $_GET['regime'] === 'caixa') ? 'caixa' : 'competencia';
+        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim, $regime);
+        $dreAno = $this->dreModel->calcularAnoComparativo($ano, $regime);
         $config = Configuracao::obter();
 
         // Injeta logo institucional em base64 para carregamento garantido
@@ -131,6 +137,7 @@ class DreController extends Controller
             'ano'         => $ano,
             'dataInicio'  => $dataInicio,
             'dataFim'     => $dataFim,
+            'regime'      => $regime,
             'drePeriodo'  => $drePeriodo,
             'dre'         => $dreAno,
             'totais'      => $drePeriodo,
@@ -150,8 +157,9 @@ class DreController extends Controller
     public function pdf(): void
     {
         [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
-        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim);
-        $dreAno = $this->dreModel->calcularAnoComparativo($ano);
+        $regime = (isset($_GET['regime']) && $_GET['regime'] === 'caixa') ? 'caixa' : 'competencia';
+        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim, $regime);
+        $dreAno = $this->dreModel->calcularAnoComparativo($ano, $regime);
         $config = Configuracao::obter();
         $logoBase64 = $this->obterLogoBase64();
 
@@ -159,6 +167,7 @@ class DreController extends Controller
             'ano'         => $ano,
             'dataInicio'  => $dataInicio,
             'dataFim'     => $dataFim,
+            'regime'      => $regime,
             'drePeriodo'  => $drePeriodo,
             'dre'         => $dreAno,
             'totais'      => $drePeriodo,
@@ -203,10 +212,11 @@ class DreController extends Controller
     public function csv(): void
     {
         [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
-        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim);
-        $dreAno = $this->dreModel->calcularAnoComparativo($ano);
+        $regime = (isset($_GET['regime']) && $_GET['regime'] === 'caixa') ? 'caixa' : 'competencia';
+        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim, $regime);
+        $dreAno = $this->dreModel->calcularAnoComparativo($ano, $regime);
 
-        $nomeArquivo = "dre_gerencial_{$dataInicio}_a_{$dataFim}_" . date('Ymd_His') . ".csv";
+        $nomeArquivo = "dre_gerencial_{$regime}_{$dataInicio}_a_{$dataFim}_" . date('Ymd_His') . ".csv";
 
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
@@ -218,8 +228,9 @@ class DreController extends Controller
         fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
         // Cabeçalho da Empresa
+        $rotuloRegime = ($regime === 'caixa') ? 'REGIME DE CAIXA (RECARGAS & ARRECADAÇÃO)' : 'REGIME DE COMPETÊNCIA (VENDAS & CONSUMO)';
         fputcsv($output, ['COLÉGIO MONTEIRO LOBATO - CANTINA WEB'], ';');
-        fputcsv($output, ["DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE)"], ';');
+        fputcsv($output, ["DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE) - {$rotuloRegime}"], ';');
         fputcsv($output, ["PERÍODO: " . date('d/m/Y', strtotime($dataInicio)) . " A " . date('d/m/Y', strtotime($dataFim)) . " (Exercício {$ano})"], ';');
         fputcsv($output, ['Emissão: ' . date('d/m/Y H:i:s')], ';');
         fputcsv($output, [], ';');

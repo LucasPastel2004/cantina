@@ -201,6 +201,12 @@ $isAdmin = ($userRole === 'administrador');
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao" class="nav-link <?php echo ($activeMenu === 'arrecadacao') ? 'active' : ''; ?>">
+                        <span class="nav-bullet">●</span>
+                        <span class="nav-label">Arrecadação & Entradas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="<?php echo $baseUrl; ?>/admin/configuracoes" class="nav-link <?php echo ($activeMenu === 'configuracoes') ? 'active' : ''; ?>">
                         <span class="nav-bullet">●</span>
                         <span class="nav-label">Configurações Globais</span>
