@@ -386,9 +386,13 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
 .pdv-pay-methods {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
     margin-bottom: 10px;
+}
+
+.pdv-pay-methods.has-saldo {
+    grid-template-columns: repeat(3, 1fr);
 }
 
 .pdv-pay-btn {
@@ -552,9 +556,9 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             </span>
         </div>
         <div class="stat-strip-item">
-            <span class="stat-strip-label">Folha</span>
-            <span class="stat-strip-value font-tabular text-muted">
-                R$ <?php echo number_format((float)$metricas['total_folha'], 2, ',', '.'); ?>
+            <span class="stat-strip-label">Saldo</span>
+            <span class="stat-strip-value font-tabular text-info">
+                R$ <?php echo number_format((float)($metricas['total_saldo'] ?? 0), 2, ',', '.'); ?>
             </span>
         </div>
         <div class="stat-strip-item d-flex flex-row align-items-center gap-1">
@@ -725,9 +729,13 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     </div>
                     <div id="listaSugestoesAluno" class="list-group position-absolute shadow-sm d-none" style="z-index: 1050; max-width: 380px;"></div>
                     <div id="alunoSelecionadoCard" class="d-none mt-1 p-2 bg-white border rounded">
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between align-items-center">
                             <strong id="alunoSelNome" class="font-12"></strong>
                             <span id="alunoSelTurma" class="code-tag"></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top">
+                            <span class="font-11 text-secondary">Saldo em Carteira:</span>
+                            <span class="font-12 font-tabular font-bold text-success" id="alunoSelSaldo">R$ 0,00</span>
                         </div>
                         <div id="alunoSelAlergias" class="mt-1 font-11 text-danger"></div>
                     </div>
@@ -748,12 +756,6 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                                 <div id="colabSelCargo" class="font-11 text-secondary"></div>
                                 <div class="font-10 text-muted">Matrícula: <span id="colabSelMat" class="font-tabular font-semibold"></span></div>
                             </div>
-                        </div>
-                        <div class="form-check mt-2 pt-1 border-top">
-                            <input class="form-check-input" type="checkbox" id="chkConfirmaVisual" onchange="atualizarBotaoDescontoFolha()">
-                            <label class="form-check-label font-11 text-dark" for="chkConfirmaVisual">
-                                <strong>Confirmo a identidade do colaborador pela foto institucional</strong>
-                            </label>
                         </div>
                     </div>
                 </div>
@@ -781,7 +783,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 </div>
 
                 <!-- Botões de Forma de Pagamento -->
-                <div class="pdv-pay-methods">
+                <div class="pdv-pay-methods" id="pdvPayMethodsContainer">
                     <div class="pdv-pay-btn active" id="btnPayDinheiro" onclick="selecionarFormaPagamento('dinheiro')">
                         <div><strong>Dinheiro</strong></div>
                         <span class="font-10 text-muted">Troco auto</span>
@@ -790,9 +792,9 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                         <div><strong>Pix Balcão</strong></div>
                         <span class="font-10 text-muted">QR Code</span>
                     </div>
-                    <div class="pdv-pay-btn" id="btnPayFolha" onclick="selecionarFormaPagamento('desconto_folha')" style="opacity: 0.5; pointer-events: none;">
-                        <div><strong>Em Folha</strong></div>
-                        <span class="font-10 text-muted">Colaborador</span>
+                    <div class="pdv-pay-btn d-none" id="btnPaySaldo" onclick="selecionarFormaPagamento('saldo')">
+                        <div><strong>Saldo</strong></div>
+                        <span class="font-10 text-muted">Carteira Aluno</span>
                     </div>
                 </div>
 
@@ -811,6 +813,27 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     <div class="d-flex align-items-center justify-content-between p-2 rounded bg-light border">
                         <span class="font-12 font-semibold text-secondary">Troco Sugerido:</span>
                         <span class="font-14 font-tabular font-bold text-success" id="displayTroco">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <!-- Detalhes de Pagamento com Saldo da Carteira (Apenas Aba Aluno) -->
+                <div id="payDetailsSaldo" class="mb-2 d-none">
+                    <div class="p-2 rounded bg-light border">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="font-11 text-secondary">Saldo Atual do Aluno:</span>
+                            <span class="font-12 font-tabular font-bold text-dark" id="displaySaldoDisponivel">R$ 0,00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="font-11 text-secondary">Total a Debitar:</span>
+                            <span class="font-12 font-tabular font-bold text-primary" id="displaySaldoDebito">R$ 0,00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-1 border-top">
+                            <span class="font-11 font-semibold" id="lblSaldoRestante">Saldo Restante:</span>
+                            <span class="font-13 font-tabular font-bold text-success" id="displaySaldoRestante">R$ 0,00</span>
+                        </div>
+                    </div>
+                    <div id="alertaSaldoInsuficiente" class="alert alert-danger py-1 px-2 font-11 mt-1 mb-0 d-none">
+                        ⚠️ Saldo insuficiente na carteira para realizar esta compra.
                     </div>
                 </div>
 
@@ -1243,6 +1266,7 @@ function renderizarCarrinho() {
     countBadge.innerText = `${carrinho.length} item(ns)`;
     totalDisplay.innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
     calcularTroco();
+    atualizarDemonstrativoSaldo();
 }
 
 function trocarTipoCliente(tipo) {
@@ -1253,14 +1277,16 @@ function trocarTipoCliente(tipo) {
     document.getElementById('boxClienteAluno').classList.toggle('d-none', tipo !== 'aluno');
     document.getElementById('boxClienteColaborador').classList.toggle('d-none', tipo !== 'colaborador');
 
-    const btnFolha = document.getElementById('btnPayFolha');
-    if (tipo === 'colaborador') {
-        btnFolha.style.pointerEvents = 'auto';
-        btnFolha.style.opacity = '1';
+    const btnSaldo = document.getElementById('btnPaySaldo');
+    const payMethodsContainer = document.getElementById('pdvPayMethodsContainer');
+
+    if (tipo === 'aluno') {
+        if (btnSaldo) btnSaldo.classList.remove('d-none');
+        if (payMethodsContainer) payMethodsContainer.classList.add('has-saldo');
     } else {
-        btnFolha.style.pointerEvents = 'none';
-        btnFolha.style.opacity = '0.5';
-        if (formaPagamentoAtual === 'desconto_folha') {
+        if (btnSaldo) btnSaldo.classList.add('d-none');
+        if (payMethodsContainer) payMethodsContainer.classList.remove('has-saldo');
+        if (formaPagamentoAtual === 'saldo') {
             selecionarFormaPagamento('dinheiro');
         }
     }
@@ -1270,15 +1296,50 @@ function selecionarFormaPagamento(forma) {
     formaPagamentoAtual = forma;
     document.querySelectorAll('.pdv-pay-btn').forEach(b => b.classList.remove('active'));
 
+    const detailsDinheiro = document.getElementById('payDetailsDinheiro');
+    const detailsSaldo = document.getElementById('payDetailsSaldo');
+
     if (forma === 'dinheiro') {
-        document.getElementById('btnPayDinheiro').classList.add('active');
-        document.getElementById('payDetailsDinheiro').classList.remove('d-none');
+        document.getElementById('btnPayDinheiro')?.classList.add('active');
+        if (detailsDinheiro) detailsDinheiro.classList.remove('d-none');
+        if (detailsSaldo) detailsSaldo.classList.add('d-none');
     } else if (forma === 'pix_balcao') {
-        document.getElementById('btnPayPix').classList.add('active');
-        document.getElementById('payDetailsDinheiro').classList.add('d-none');
-    } else if (forma === 'desconto_folha') {
-        document.getElementById('btnPayFolha').classList.add('active');
-        document.getElementById('payDetailsDinheiro').classList.add('d-none');
+        document.getElementById('btnPayPix')?.classList.add('active');
+        if (detailsDinheiro) detailsDinheiro.classList.add('d-none');
+        if (detailsSaldo) detailsSaldo.classList.add('d-none');
+    } else if (forma === 'saldo') {
+        document.getElementById('btnPaySaldo')?.classList.add('active');
+        if (detailsDinheiro) detailsDinheiro.classList.add('d-none');
+        if (detailsSaldo) detailsSaldo.classList.remove('d-none');
+        atualizarDemonstrativoSaldo();
+    }
+}
+
+function atualizarDemonstrativoSaldo() {
+    const saldoDisponivel = alunoSelecionado ? (parseFloat(alunoSelecionado.saldo_atual) || 0) : 0;
+    const total = carrinho.reduce((acc, it) => acc + (it.quantidade * it.preco_unitario), 0);
+    const restante = saldoDisponivel - total;
+
+    const dispDisp = document.getElementById('displaySaldoDisponivel');
+    const dispDeb = document.getElementById('displaySaldoDebito');
+    const dispRest = document.getElementById('displaySaldoRestante');
+    const alertInsuf = document.getElementById('alertaSaldoInsuficiente');
+    const lblRest = document.getElementById('lblSaldoRestante');
+
+    if (dispDisp) dispDisp.innerText = `R$ ${saldoDisponivel.toFixed(2).replace('.', ',')}`;
+    if (dispDeb) dispDeb.innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+
+    if (dispRest) {
+        dispRest.innerText = `R$ ${Math.abs(restante).toFixed(2).replace('.', ',')}`;
+        if (restante < 0) {
+            dispRest.className = 'font-13 font-tabular font-bold text-danger';
+            if (lblRest) lblRest.innerText = 'Faltam:';
+            if (alertInsuf) alertInsuf.classList.remove('d-none');
+        } else {
+            dispRest.className = 'font-13 font-tabular font-bold text-success';
+            if (lblRest) lblRest.innerText = 'Saldo Restante:';
+            if (alertInsuf) alertInsuf.classList.add('d-none');
+        }
     }
 }
 
@@ -1385,11 +1446,7 @@ function selecionarColaborador(colab) {
     if (colab.foto_url) {
         document.getElementById('colabSelFoto').src = `${baseUrl}/${colab.foto_url}`;
     }
-    document.getElementById('chkConfirmaVisual').checked = false;
     document.getElementById('colabSelecionadoCard').classList.remove('d-none');
-
-    selecionarFormaPagamento('desconto_folha');
-    atualizarBotaoDescontoFolha();
 }
 
 function limparSelecaoColaborador() {
@@ -1397,15 +1454,6 @@ function limparSelecaoColaborador() {
     document.getElementById('buscaColabPdv').value = '';
     document.getElementById('colabSelecionadoCard').classList.add('d-none');
     document.getElementById('listaSugestoesColab').classList.add('d-none');
-    selecionarFormaPagamento('dinheiro');
-}
-
-function atualizarBotaoDescontoFolha() {
-    const chk = document.getElementById('chkConfirmaVisual');
-    const btnFolha = document.getElementById('btnPayFolha');
-    if (chk && chk.checked) {
-        btnFolha.classList.add('active');
-    }
 }
 
 // Busca Live de Alunos
@@ -1454,15 +1502,22 @@ function selecionarAluno(aluno) {
     document.getElementById('alunoSelNome').innerText = aluno.nome;
     document.getElementById('alunoSelTurma').innerText = aluno.nome_turma || 'Geral';
 
+    const saldoEl = document.getElementById('alunoSelSaldo');
+    if (saldoEl) {
+        saldoEl.innerText = `R$ ${(parseFloat(aluno.saldo_atual) || 0).toFixed(2).replace('.', ',')}`;
+    }
+
     const alergiasDiv = document.getElementById('alunoSelAlergias');
     if (aluno.restricoes_nomes) {
         alergiasDiv.innerText = `Alergias cadastradas: ${aluno.restricoes_nomes}`;
+        alergiasDiv.className = 'mt-1 font-11 text-danger';
     } else {
         alergiasDiv.innerText = 'Sem restrições alimentares cadastradas.';
         alergiasDiv.className = 'mt-1 font-11 text-success';
     }
 
     document.getElementById('alunoSelecionadoCard').classList.remove('d-none');
+    atualizarDemonstrativoSaldo();
     verificarAlergenosComAluno();
 }
 
@@ -1471,6 +1526,10 @@ function limparSelecaoAluno() {
     document.getElementById('buscaAlunoPdv').value = '';
     document.getElementById('alunoSelecionadoCard').classList.add('d-none');
     document.getElementById('listaSugestoesAluno').classList.add('d-none');
+    if (formaPagamentoAtual === 'saldo') {
+        selecionarFormaPagamento('dinheiro');
+    }
+    atualizarDemonstrativoSaldo();
 }
 
 function verificarAlergenosComAluno() {
@@ -1516,14 +1575,14 @@ function processarFinalizacaoVenda() {
         submeterVendaServidor(recValor);
     } else if (formaPagamentoAtual === 'pix_balcao') {
         abrirModalPixBalcao(total);
-    } else if (formaPagamentoAtual === 'desconto_folha') {
-        if (!colaboradorSelecionado) {
-            alert('Para lançar em Desconto em Folha, selecione um colaborador.');
+    } else if (formaPagamentoAtual === 'saldo') {
+        if (!alunoSelecionado) {
+            alert('Para pagar com saldo da carteira, selecione um aluno na aba Aluno.');
             return;
         }
-        const chk = document.getElementById('chkConfirmaVisual');
-        if (!chk || !chk.checked) {
-            alert('É obrigatório marcar a confirmação visual da foto do colaborador antes de lançar em folha.');
+        const saldoDisponivel = parseFloat(alunoSelecionado.saldo_atual) || 0;
+        if (saldoDisponivel < total) {
+            alert(`Saldo insuficiente na carteira (Saldo atual: R$ ${saldoDisponivel.toFixed(2).replace('.', ',')}, Total da compra: R$ ${total.toFixed(2).replace('.', ',')}).`);
             return;
         }
         submeterVendaServidor(0.0);
@@ -1539,10 +1598,14 @@ function submeterVendaServidor(valorRecebido) {
     formData.append('csrf_token', csrfToken);
     formData.append('sessao_caixa_id', sessaoCaixaId);
     formData.append('forma_pagamento', formaPagamentoAtual);
-    formData.append('tipo_venda', (formaPagamentoAtual === 'desconto_folha') ? 'desconto_folha' : 'avulso_aluno');
+
+    let tipoVenda = 'avulso_aluno';
+    if (clienteTipoAtual === 'colaborador') {
+        tipoVenda = 'avulso_colaborador';
+    }
+    formData.append('tipo_venda', tipoVenda);
     formData.append('aluno_id', alunoSelecionado ? alunoSelecionado.id : '');
     formData.append('colaborador_id', colaboradorSelecionado ? colaboradorSelecionado.id : '');
-    formData.append('confirmacao_visual', document.getElementById('chkConfirmaVisual')?.checked ? '1' : '0');
     formData.append('valor_dinheiro_recebido', valorRecebido);
     formData.append('itens', JSON.stringify(carrinho));
 

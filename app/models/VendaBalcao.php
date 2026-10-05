@@ -22,12 +22,14 @@ class VendaBalcao extends Model
     protected bool $timestamps = false; // Gerenciado por created_at
     protected bool $softDelete = false;
 
-    public const TIPO_AVULSO_ALUNO   = 'avulso_aluno';
-    public const TIPO_DESCONTO_FOLHA = 'desconto_folha';
+    public const TIPO_AVULSO_ALUNO        = 'avulso_aluno';
+    public const TIPO_AVULSO_COLABORADOR  = 'avulso_colaborador';
+    public const TIPO_DESCONTO_FOLHA      = 'desconto_folha';
 
-    public const FORMA_DINHEIRO       = 'dinheiro';
-    public const FORMA_PIX_BALCAO     = 'pix_balcao';
-    public const FORMA_DESCONTO_FOLHA = 'desconto_folha';
+    public const FORMA_DINHEIRO           = 'dinheiro';
+    public const FORMA_PIX_BALCAO         = 'pix_balcao';
+    public const FORMA_SALDO              = 'saldo';
+    public const FORMA_DESCONTO_FOLHA     = 'desconto_folha';
 
     public const STATUS_CONCLUIDA = 'concluida';
     public const STATUS_ESTORNADA = 'estornada';
@@ -63,14 +65,41 @@ class VendaBalcao extends Model
         $alunoId = !empty($dadosVenda['aluno_id']) ? (int)$dadosVenda['aluno_id'] : null;
         $colaboradorId = !empty($dadosVenda['colaborador_id']) ? (int)$dadosVenda['colaborador_id'] : null;
 
-        if ($formaPagamento === self::FORMA_DESCONTO_FOLHA) {
-            $tipoVenda = self::TIPO_DESCONTO_FOLHA;
-            if (!$colaboradorId) {
-                throw new \InvalidArgumentException('Para vendas sob Desconto em Folha, o colaborador deve ser identificado obrigatoriamente.');
-            }
+        if ($colaboradorId) {
             $colaborador = Colaborador::buscarPorId($colaboradorId);
             if (!$colaborador || (int)$colaborador['ativo'] !== 1) {
-                throw new \DomainException('Colaborador não localizado ou inativo para compras sob desconto em folha.');
+                throw new \DomainException('Colaborador não localizado ou inativo.');
+            }
+            if ($tipoVenda !== self::TIPO_DESCONTO_FOLHA) {
+                $tipoVenda = self::TIPO_AVULSO_COLABORADOR;
+            }
+        }
+
+        if ($formaPagamento === self::FORMA_DESCONTO_FOLHA) {
+            throw new \DomainException('A opção de pagamento em folha não está mais disponível no sistema.');
+        }
+
+        $responsavelId = null;
+        $aluno = null;
+        $resp = null;
+        if ($formaPagamento === self::FORMA_SALDO) {
+            if (!$alunoId) {
+                throw new \InvalidArgumentException('Para pagamentos com saldo da carteira, é obrigatório selecionar o aluno.');
+            }
+            $aluno = Aluno::buscarPorId($alunoId);
+            if (!$aluno) {
+                throw new \DomainException('Aluno não localizado.');
+            }
+            $responsavelId = (int)($aluno['responsavel_id'] ?? 0);
+            if (!$responsavelId) {
+                throw new \DomainException("O aluno '{$aluno['nome']}' não possui responsável financeiro cadastrado.");
+            }
+            $resp = Responsavel::buscarPorId($responsavelId);
+            if (!$resp) {
+                throw new \DomainException('Responsável financeiro da família não localizado.');
+            }
+            if ((int)($resp['bloqueado_med'] ?? 0) === 1) {
+                throw new \DomainException('Conta suspensa preventivamente por contestação bancária (MED). Operação bloqueada.');
             }
         }
 
@@ -117,6 +146,17 @@ class VendaBalcao extends Model
                 'preco_unitario' => $precoUnit,
                 'subtotal'       => $subtotal
             ];
+        }
+
+        if ($formaPagamento === self::FORMA_SALDO) {
+            $saldoDisponivel = (float)($resp['saldo_atual'] ?? 0.0);
+            if ($saldoDisponivel < $valorTotal) {
+                throw new \DomainException(sprintf(
+                    "Saldo insuficiente na carteira familiar. Saldo disponível: R$ %s. Total da venda: R$ %s.",
+                    number_format($saldoDisponivel, 2, ',', '.'),
+                    number_format($valorTotal, 2, ',', '.')
+                ));
+            }
         }
 
         // Tratamento financeiro de troco para dinheiro
@@ -223,13 +263,26 @@ class VendaBalcao extends Model
                 ]);
             }
 
-            // 3. Atualizar totalizadores na sessão de caixa correspondente
+            // 3. Se forma de pagamento for saldo, debita atomicamente da carteira familiar
+            if ($formaPagamento === self::FORMA_SALDO && $alunoId && $responsavelId) {
+                TransacaoCarteira::debitar(
+                    $responsavelId,
+                    $valorTotal,
+                    TransacaoCarteira::TIPO_DEBITO_BALCAO,
+                    "Compra no Balcão (PDV) #{$vendaId} - Aluno: {$aluno['nome']}",
+                    "PDV-{$vendaId}",
+                    $alunoId,
+                    $operadorId
+                );
+            }
+
+            // 4. Atualizar totalizadores na sessão de caixa correspondente
             if ($formaPagamento === self::FORMA_DINHEIRO) {
                 SessaoCaixa::incrementarTotais($sessaoCaixaId, $valorTotal, 0.0, 0.0);
             } elseif ($formaPagamento === self::FORMA_PIX_BALCAO) {
                 SessaoCaixa::incrementarTotais($sessaoCaixaId, 0.0, $valorTotal, 0.0);
             }
-            // Para 'desconto_folha', o montante não afeta a gaveta física/Pix da sessão de caixa corrente
+            // Para 'saldo' ou 'desconto_folha', o montante não afeta a gaveta física/Pix da sessão de caixa corrente
 
             if ($iniciouTransacao) {
                 $pdo->commit();
@@ -339,6 +392,7 @@ class VendaBalcao extends Model
                 COALESCE(SUM(vb.valor_total), 0.00) AS total_faturado,
                 COALESCE(SUM(CASE WHEN vb.forma_pagamento = 'dinheiro' THEN vb.valor_total ELSE 0 END), 0.00) AS total_dinheiro,
                 COALESCE(SUM(CASE WHEN vb.forma_pagamento = 'pix_balcao' THEN vb.valor_total ELSE 0 END), 0.00) AS total_pix,
+                COALESCE(SUM(CASE WHEN vb.forma_pagamento = 'saldo' THEN vb.valor_total ELSE 0 END), 0.00) AS total_saldo,
                 COALESCE(SUM(CASE WHEN vb.forma_pagamento = 'desconto_folha' THEN vb.valor_total ELSE 0 END), 0.00) AS total_folha
             FROM vendas_balcao vb
             WHERE DATE(vb.created_at) = CURDATE()
@@ -358,6 +412,7 @@ class VendaBalcao extends Model
             'total_faturado'  => (float)($row['total_faturado'] ?? 0.00),
             'total_dinheiro'  => (float)($row['total_dinheiro'] ?? 0.00),
             'total_pix'       => (float)($row['total_pix'] ?? 0.00),
+            'total_saldo'     => (float)($row['total_saldo'] ?? 0.00),
             'total_folha'     => (float)($row['total_folha'] ?? 0.00)
         ];
     }
@@ -567,7 +622,23 @@ class VendaBalcao extends Model
                 $stmtCaixa->execute(['valor' => $valorTotal, 'id' => $sessaoId]);
             }
 
-            // 5. Trilha obrigatória de auditoria (logs_auditoria)
+            // 5. Se a venda foi paga com saldo, credita de volta na carteira familiar
+            if ($venda['forma_pagamento'] === self::FORMA_SALDO && !empty($venda['aluno_id'])) {
+                $alunoEstorno = Aluno::buscarPorId((int)$venda['aluno_id']);
+                if ($alunoEstorno && !empty($alunoEstorno['responsavel_id'])) {
+                    TransacaoCarteira::creditar(
+                        (int)$alunoEstorno['responsavel_id'],
+                        $valorTotal,
+                        TransacaoCarteira::TIPO_ESTORNO_BALCAO,
+                        "Estorno da Compra no Balcão #{$vendaId} - Aluno: {$alunoEstorno['nome']}. Motivo: {$motivoLimpo}",
+                        "EST-PDV-{$vendaId}",
+                        (int)$venda['aluno_id'],
+                        $operadorId
+                    );
+                }
+            }
+
+            // 6. Trilha obrigatória de auditoria (logs_auditoria)
             $identificacaoPessoa = $venda['colaborador_nome'] 
                 ? "Colaborador: {$venda['colaborador_nome']}" 
                 : ($venda['aluno_nome'] ? "Aluno: {$venda['aluno_nome']}" : "Consumidor Avulso");

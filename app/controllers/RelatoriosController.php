@@ -111,32 +111,32 @@ class RelatoriosController extends Controller
         $lanchesRow = $stmtLanches->fetch(\PDO::FETCH_ASSOC);
         $lanchesMes = (int)($lanchesRow['lanches_total'] ?? 0);
 
-        // 3. Montante de Desconto em Folha para RH no Mês
-        $sqlFolha = "
-            SELECT COALESCE(SUM(valor_total), 0) AS total_folha
+        // 3. Montante de Vendas no Balcão PDV no Mês
+        $sqlBalcao = "
+            SELECT COALESCE(SUM(valor_total), 0) AS total_balcao
             FROM vendas_balcao
-            WHERE tipo_venda = 'desconto_folha'
-              AND MONTH(created_at) = :mes AND YEAR(created_at) = :ano
+            WHERE MONTH(created_at) = :mes AND YEAR(created_at) = :ano
+              AND (status IS NULL OR status = 'concluida')
         ";
-        $stmtFolha = $pdo->prepare($sqlFolha);
-        $stmtFolha->execute(['mes' => $mesAtual, 'ano' => $anoAtual]);
-        $folhaRow = $stmtFolha->fetch(\PDO::FETCH_ASSOC);
-        $descontoFolhaMes = (float)($folhaRow['total_folha'] ?? 0.0);
+        $stmtBalcao = $pdo->prepare($sqlBalcao);
+        $stmtBalcao->execute(['mes' => $mesAtual, 'ano' => $anoAtual]);
+        $balcaoRow = $stmtBalcao->fetch(\PDO::FETCH_ASSOC);
+        $faturamentoBalcaoMes = (float)($balcaoRow['total_balcao'] ?? 0.0);
 
         // 4. Famílias com Saldo Devedor ou Bloqueadas por MED
         $totalDevedores = Responsavel::contarNegativadosMed();
         $saldoTotalDevedor = Responsavel::somarSaldoDevedorMed();
 
         $this->render('relatorios/index', [
-            'pageTitle'         => 'Central de Relatórios Gerenciais',
-            'activeMenu'        => 'relatorios',
-            'user'              => Auth::user(),
-            'faturamentoMes'    => $faturamentoMes,
-            'lanchesMes'        => $lanchesMes,
-            'descontoFolhaMes'  => $descontoFolhaMes,
-            'totalDevedores'    => $totalDevedores,
-            'saldoTotalDevedor' => $saldoTotalDevedor,
-            'mesReferencia'     => date('m/Y')
+            'pageTitle'            => 'Central de Relatórios Gerenciais',
+            'activeMenu'           => 'relatorios',
+            'user'                 => Auth::user(),
+            'faturamentoMes'       => $faturamentoMes,
+            'lanchesMes'           => $lanchesMes,
+            'faturamentoBalcaoMes' => $faturamentoBalcaoMes,
+            'totalDevedores'       => $totalDevedores,
+            'saldoTotalDevedor'    => $saldoTotalDevedor,
+            'mesReferencia'        => date('m/Y')
         ], 'admin');
     }
 
@@ -383,7 +383,7 @@ class RelatoriosController extends Controller
         $categorias = Categoria::listarTodas(true);
 
         $this->render('relatorios/vendas_alimento', [
-            'pageTitle'      => 'Vendas por Alimento & Curva ABC',
+            'pageTitle'      => 'Vendas por Alimento',
             'activeMenu'     => 'relatorios',
             'user'           => Auth::user(),
             'dataInicio'     => $dataInicio,
@@ -599,303 +599,65 @@ class RelatoriosController extends Controller
     }
 
     /**
-     * Relatório de Desconto em Folha para RH (FSD Tela 8.3 & Seção 22.4)
+     * Relatório de Desconto em Folha para RH (Descontinuado conforme diretrizes da cantina)
      */
     public function descontoFolha(): void
     {
-        $competencia = trim((string)$this->input('competencia', date('Y-m')));
-        if (!preg_match('/^\d{4}-\d{2}$/', $competencia)) {
-            $competencia = date('Y-m');
-        }
-
-        $dadosFolha = $this->obterDadosDescontoFolha($competencia);
-
-        $this->render('relatorios/desconto_folha', [
-            'pageTitle'   => 'Desconto em Folha para Recursos Humanos',
-            'activeMenu'  => 'relatorios',
-            'user'        => Auth::user(),
-            'competencia' => $competencia,
-            'dadosFolha'  => $dadosFolha
-        ], 'admin');
+        Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
+        $this->redirect('/relatorios');
     }
 
     /**
-     * Download do PDF A4 Timbrado do Relatório de Desconto em Folha
+     * Download do PDF A4 Timbrado do Relatório de Desconto em Folha (Descontinuado)
      */
     public function descontoFolhaPdf(): void
     {
-        $competencia = trim((string)$this->input('competencia', date('Y-m')));
-        if (!preg_match('/^\d{4}-\d{2}$/', $competencia)) {
-            $competencia = date('Y-m');
-        }
-
-        $dadosFolha = $this->obterDadosDescontoFolha($competencia);
-        $usuario = Auth::user();
-        $dadosFolha['operador'] = $usuario['nome'] ?? 'Administração Geral';
-
-        $pdfBinario = PdfService::gerarRelatorioDescontoFolhaPdf($dadosFolha);
-        $nomeArquivo = 'desconto_folha_rh_' . str_replace('-', '_', $competencia) . '.pdf';
-
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-        header('Content-Length: ' . strlen($pdfBinario));
-        header('Cache-Control: private, max-age=0, must-revalidate');
-        header('Pragma: public');
-
-        echo $pdfBinario;
-        exit;
+        Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
+        $this->redirect('/relatorios');
     }
 
     /**
-     * Exportação CSV Oficial para Lançamento em Folha de Pagamento do RH
+     * Exportação CSV Oficial para Lançamento em Folha de Pagamento do RH (Descontinuado)
      */
     public function descontoFolhaCsv(): void
     {
-        $competencia = trim((string)$this->input('competencia', date('Y-m')));
-        if (!preg_match('/^\d{4}-\d{2}$/', $competencia)) {
-            $competencia = date('Y-m');
-        }
-
-        $dadosFolha = $this->obterDadosDescontoFolha($competencia);
-        $colaboradores = $dadosFolha['colaboradores'] ?? [];
-
-        // UTF-8 BOM para garantir correta acentuação e abertura automática no Excel
-        $csv = "\xEF\xBB\xBF";
-        $csv .= "MATRICULA;NOME;CARGO;QUANTIDADE_LANCHES;VALOR_DESCONTO_RS;COMPETENCIA\r\n";
-
-        foreach ($colaboradores as $c) {
-            $linha = self::sanitizarCsvLinha([
-                str_replace(';', ' ', $c['matricula_funcional'] ?? '-'),
-                str_replace(';', ' ', $c['colaborador_nome'] ?? '-'),
-                str_replace(';', ' ', $c['cargo'] ?? '-'),
-                (int)($c['total_lanches'] ?? 0),
-                number_format((float)($c['total_desconto'] ?? 0.0), 2, ',', ''),
-                $competencia
-            ]);
-
-            $csv .= implode(';', $linha) . "\r\n";
-        }
-
-        $nomeArquivo = 'desconto_folha_rh_' . str_replace('-', '_', $competencia) . '.csv';
-
-        header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-        header('Content-Length: ' . strlen($csv));
-        header('Cache-Control: private, max-age=0, must-revalidate');
-        header('Pragma: public');
-
-        echo $csv;
-        exit;
+        Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
+        $this->redirect('/relatorios');
     }
 
     /**
-     * Endpoint AJAX para detalhamento linha a linha de compras de um colaborador
+     * Endpoint AJAX para detalhamento de compras de um colaborador (Descontinuado)
      */
     public function descontoFolhaDetalhesAjax(): void
     {
-        $colaboradorId = (int)$this->input('colaborador_id', 0);
-        $competencia = trim((string)$this->input('competencia', date('Y-m')));
-
-        if ($colaboradorId <= 0) {
-            $this->json(['sucesso' => false, 'erro' => 'Colaborador inválido.']);
-            return;
-        }
-
-        [$ano, $mes] = explode('-', $competencia);
-        $ano = (int)$ano;
-        $mes = (int)$mes;
-
-        $colaborador = Colaborador::buscarPorId($colaboradorId);
-        if (!$colaborador) {
-            $this->json(['sucesso' => false, 'erro' => 'Colaborador não localizado.']);
-            return;
-        }
-
-        $pdo = \App\Core\Model::getPdo();
-        $sqlVendas = "
-            SELECT 
-                vb.id AS venda_id,
-                vb.created_at,
-                sc.turno,
-                u.nome AS operador_nome
-            FROM vendas_balcao vb
-            INNER JOIN sessoes_caixa sc ON sc.id = vb.sessao_caixa_id
-            INNER JOIN usuarios u ON u.id = vb.operador_id
-            WHERE vb.colaborador_id = :colab_id
-              AND vb.tipo_venda = 'desconto_folha'
-              AND YEAR(vb.created_at) = :ano
-              AND MONTH(vb.created_at) = :mes
-              AND EXISTS (SELECT 1 FROM itens_venda_balcao ivb WHERE ivb.venda_balcao_id = vb.id)
-            ORDER BY vb.created_at DESC
-        ";
-        $stmtVendas = $pdo->prepare($sqlVendas);
-        $stmtVendas->execute(['colab_id' => $colaboradorId, 'ano' => $ano, 'mes' => $mes]);
-        $vendas = $stmtVendas->fetchAll(\PDO::FETCH_ASSOC);
-
-        $vendasDetalhadas = [];
-        $totalGeral = 0.0;
-        $totalItens = 0;
-
-        foreach ($vendas as $v) {
-            $sqlItens = "
-                SELECT 
-                    ivb.quantidade,
-                    ivb.preco_unitario,
-                    ivb.subtotal,
-                    p.descricao AS produto_nome,
-                    p.codigo_interno AS produto_codigo
-                FROM itens_venda_balcao ivb
-                INNER JOIN produtos p ON p.id = ivb.produto_id
-                WHERE ivb.venda_balcao_id = :venda_id
-            ";
-            $stmtItens = $pdo->prepare($sqlItens);
-            $stmtItens->execute(['venda_id' => $v['venda_id']]);
-            $itens = $stmtItens->fetchAll(\PDO::FETCH_ASSOC);
-
-            $qtdVenda = array_sum(array_column($itens, 'quantidade'));
-            $subtotalVenda = array_sum(array_column($itens, 'subtotal'));
-            $totalItens += $qtdVenda;
-            $totalGeral += $subtotalVenda;
-
-            $vendasDetalhadas[] = [
-                'venda_id'        => (int)$v['venda_id'],
-                'data_fmt'        => date('d/m/Y H:i', strtotime($v['created_at'])),
-                'turno'           => ucfirst($v['turno']),
-                'operador'        => $v['operador_nome'],
-                'valor_total'     => $subtotalVenda,
-                'valor_total_fmt' => 'R$ ' . number_format($subtotalVenda, 2, ',', '.'),
-                'total_itens'     => $qtdVenda,
-                'itens'           => $itens
-            ];
-        }
-
-        $this->json([
-            'sucesso'     => true,
-            'colaborador' => [
-                'id'        => $colaborador['id'],
-                'nome'      => $colaborador['nome'],
-                'matricula' => $colaborador['matricula_funcional'],
-                'cargo'     => $colaborador['cargo']
-            ],
-            'competencia' => $competencia,
-            'total_geral' => $totalGeral,
-            'total_fmt'   => 'R$ ' . number_format($totalGeral, 2, ',', '.'),
-            'total_itens' => $totalItens,
-            'vendas'      => $vendasDetalhadas
-        ]);
+        $this->json(['sucesso' => false, 'erro' => 'Módulo de desconto em folha descontinuado.']);
     }
 
     /**
-     * Download do PDF A4 Timbrado do Demonstrativo Individual de Desconto em Folha do Colaborador
+     * Download do PDF Individual de Desconto em Folha (Descontinuado)
      */
     public function descontoFolhaIndividualPdf(): void
     {
-        $colaboradorId = (int)$this->input('colaborador_id', 0);
-        $competencia = trim((string)$this->input('competencia', date('Y-m')));
-        if (!preg_match('/^\d{4}-\d{2}$/', $competencia)) {
-            $competencia = date('Y-m');
-        }
-
-        $dados = $this->obterDadosDescontoFolhaIndividual($colaboradorId, $competencia);
-        if (!$dados) {
-            Session::setFlash('danger', 'Colaborador não localizado ou sem movimentações nesta competência.');
-            $this->redirect('/relatorios/desconto-folha?competencia=' . urlencode($competencia));
-            return;
-        }
-
-        $pdfBinario = PdfService::gerarRelatorioDescontoFolhaIndividualPdf($dados);
-        $matriculaLimpa = preg_replace('/[^a-zA-Z0-9_-]/', '', $dados['colaborador']['matricula_funcional'] ?? 'colab');
-        $nomeArquivo = 'desconto_folha_' . $matriculaLimpa . '_' . str_replace('-', '_', $competencia) . '.pdf';
-
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-        header('Content-Length: ' . strlen($pdfBinario));
-        header('Cache-Control: private, max-age=0, must-revalidate');
-        header('Pragma: public');
-
-        echo $pdfBinario;
-        exit;
+        Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
+        $this->redirect('/relatorios');
     }
 
     /**
-     * Espelho HTML limpo para visualização e impressão direta do Demonstrativo Individual
+     * Espelho HTML do Demonstrativo Individual (Descontinuado)
      */
     public function descontoFolhaIndividualImprimir(): void
     {
-        $colaboradorId = (int)$this->input('colaborador_id', 0);
-        $competencia = trim((string)$this->input('competencia', date('Y-m')));
-        if (!preg_match('/^\d{4}-\d{2}$/', $competencia)) {
-            $competencia = date('Y-m');
-        }
-
-        $dados = $this->obterDadosDescontoFolhaIndividual($colaboradorId, $competencia);
-        if (!$dados) {
-            Session::setFlash('danger', 'Colaborador não localizado ou sem movimentações nesta competência.');
-            $this->redirect('/relatorios/desconto-folha?competencia=' . urlencode($competencia));
-            return;
-        }
-
-        $html = PdfService::gerarEspelhoDescontoFolhaIndividualHtml($dados);
-
-        header('Content-Type: text/html; charset=UTF-8');
-        header('Cache-Control: private, max-age=0, must-revalidate');
-        header('Pragma: public');
-
-        echo $html;
-        exit;
+        Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
+        $this->redirect('/relatorios');
     }
 
     /**
-     * Geração em Lote de Relatórios Individuais (PDF com folhas individuais para todos os colaboradores do mês)
+     * Geração em Lote de Relatórios Individuais (Descontinuado)
      */
     public function descontoFolhaLotePdf(): void
     {
-        $competencia = trim((string)$this->input('competencia', date('Y-m')));
-        if (!preg_match('/^\d{4}-\d{2}$/', $competencia)) {
-            $competencia = date('Y-m');
-        }
-
-        $dadosFolha = $this->obterDadosDescontoFolha($competencia);
-        $colaboradores = $dadosFolha['colaboradores'] ?? [];
-
-        if (empty($colaboradores)) {
-            Session::setFlash('warning', 'Nenhum colaborador com consumo registrado nesta competência.');
-            $this->redirect('/relatorios/desconto-folha?competencia=' . urlencode($competencia));
-            return;
-        }
-
-        $listaDetalhados = [];
-        foreach ($colaboradores as $c) {
-            $colabId = (int)($c['colaborador_id'] ?? 0);
-            $dadosColab = $this->obterDadosDescontoFolhaIndividual($colabId, $competencia);
-            if ($dadosColab && !empty($dadosColab['itens'])) {
-                $listaDetalhados[] = $dadosColab;
-            }
-        }
-
-        if (empty($listaDetalhados)) {
-            Session::setFlash('warning', 'Nenhum item detalhado localizado para os colaboradores da competência.');
-            $this->redirect('/relatorios/desconto-folha?competencia=' . urlencode($competencia));
-            return;
-        }
-
-        $dadosLote = [
-            'competencia'              => $dadosFolha['competencia'],
-            'competencia_chave'        => $competencia,
-            'colaboradores_detalhados' => $listaDetalhados
-        ];
-
-        $pdfBinario = PdfService::gerarRelatorioDescontoFolhaIndividualLotePdf($dadosLote);
-        $nomeArquivo = 'desconto_folha_todos_individuais_' . str_replace('-', '_', $competencia) . '.pdf';
-
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-        header('Content-Length: ' . strlen($pdfBinario));
-        header('Cache-Control: private, max-age=0, must-revalidate');
-        header('Pragma: public');
-
-        echo $pdfBinario;
-        exit;
+        Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
+        $this->redirect('/relatorios');
     }
 
     /**

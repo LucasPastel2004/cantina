@@ -50,12 +50,12 @@ $baseUrl = $baseUrl ?? '';
         </div>
 
         <div class="stat-item">
-            <span class="stat-label">Desconto em Folha RH</span>
+            <span class="stat-label">Vendas no Balcão PDV</span>
             <span class="stat-value font-tabular text-dark">
-                R$ <?php echo number_format($descontoFolhaMes, 2, ',', '.'); ?>
+                R$ <?php echo number_format($faturamentoBalcaoMes ?? 0.0, 2, ',', '.'); ?>
             </span>
             <span class="text-secondary text-microcopy mt-1 font-tabular">
-                Consumo faturado para colaboradores
+                Faturamento presencial do mês
             </span>
         </div>
 
@@ -93,7 +93,7 @@ $baseUrl = $baseUrl ?? '';
             </div>
         </div>
 
-        <!-- Relatório 2: Vendas por Alimento e Curva ABC -->
+        <!-- Relatório 2: Vendas por Alimento -->
         <div class="col-12 col-md-6 col-lg-4">
             <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
                 <div>
@@ -101,38 +101,14 @@ $baseUrl = $baseUrl ?? '';
                         <span class="text-microcopy text-uppercase fw-semibold text-secondary">Desempenho Comercial</span>
                         <span class="code-tag font-tabular">PDF A4 Timbrado</span>
                     </div>
-                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Vendas por Alimento & Curva ABC</h2>
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Vendas por Alimento</h2>
                     <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
-                        Parametrização dinâmica com toggles (Sim/Não), agrupamento de consumo por período, ordenação por mais/menos vendidos, Curva ABC e espelho oficial A4 / CSV.
+                        Parametrização dinâmica com toggles (Sim/Não), agrupamento de consumo por período, ordenação por mais/menos vendidos e espelho oficial A4 / CSV.
                     </p>
                 </div>
                 <div class="d-flex gap-2 pt-3 border-top mt-auto flex-wrap">
                     <a href="<?php echo $baseUrl; ?>/relatorios/vendas-filtros" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
                         Filtros de Vendas
-                    </a>
-                    <a href="<?php echo $baseUrl; ?>/relatorios/vendas-alimento" class="btn btn-enterprise btn-secondary btn-sm text-center fw-medium">
-                        Curva ABC
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Relatório 3: Desconto em Folha para RH -->
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
-                <div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Recursos Humanos</span>
-                        <span class="code-tag font-tabular">CSV Folha + PDF A4</span>
-                    </div>
-                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Desconto em Folha para RH</h2>
-                    <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
-                        Consolidado mensal de compras de professores e colaboradores por matrícula, com exportação CSV para sistemas de folha e relatório PDF com campos para assinaturas.
-                    </p>
-                </div>
-                <div class="d-flex gap-2 pt-3 border-top mt-auto">
-                    <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
-                        Gerenciar Folha RH
                     </a>
                 </div>
             </div>

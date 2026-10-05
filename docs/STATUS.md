@@ -1165,21 +1165,75 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+---
+
+### [x] Atualização Operacional do PDV — Remoção de "Em Folha" e Regras por Aba de Cliente
+
+* [x] **Banco de Dados & Migração de Dados (Migration 030):**
+  * Migration `database/migrations/030_add_saldo_to_vendas_balcao.php` criada e aplicada com sucesso (`database/runner.php`);
+  * Atualização da coluna `vendas_balcao.forma_pagamento` para `ENUM('dinheiro', 'pix_balcao', 'saldo', 'desconto_folha')`;
+  * Atualização da coluna `vendas_balcao.tipo_venda` para `ENUM('avulso_aluno', 'avulso_colaborador', 'desconto_folha')`;
+  * Atualização da coluna `transacoes_carteira.tipo_transacao` para incluir `debito_balcao` e `estorno_balcao`.
+* [x] **Backend & Regras de Domínio:**
+  * `App\Models\VendaBalcao`:
+    * Rejeição mandatória da forma de pagamento `desconto_folha` com `DomainException` em novas vendas;
+    * Implementação da forma de pagamento `saldo`: validação obrigatória de `aluno_id`, verificação do bloqueio MED, conferência de saldo suficiente na carteira do responsável e débito atômico via `TransacaoCarteira::debitar(..., 'debito_balcao')`;
+    * Vendas para colaboradores gravadas como `tipo_venda = 'avulso_colaborador'`;
+    * Estorno atômico de vendas efetuadas em saldo devolve 100% do crédito para a carteira familiar via `TransacaoCarteira::creditar(..., 'estorno_balcao')`;
+    * Métrica diária da stat-strip atualizada com agregação de `total_saldo`.
+  * `App\Models\TransacaoCarteira`:
+    * Adicionada constante `TIPO_DEBITO_BALCAO = 'debito_balcao'` com rótulo "Compra no Balcão (PDV)".
+  * `App\Controllers\PdvController`:
+    * Bloqueio estrito de `desconto_folha`;
+    * Suporte e validação de `saldo` para aluno;
+    * Registro de `tipo_venda = 'avulso_colaborador'` para vendas na aba de colaborador;
+    * Inclusão de `saldo_atual` numérico e `saldo_atual_formatado` no endpoint de busca de alunos (`buscarAluno`).
+* [x] **Frontend e Interface do PDV (`app/views/operacional/pdv.php`):**
+  * **Aba Anônimo:** Formas de pagamento estritamente limitadas a **Dinheiro** e **Pix Balcão** (grid de 2 botões de 50%);
+  * **Aba Colaborador:** Formas de pagamento limitadas a **Dinheiro** e **Pix Balcão** (grid de 2 botões de 50%). Remoção do checkbox `chkConfirmaVisual` para lançamento em folha;
+  * **Aba Aluno:** Formas de pagamento com **Dinheiro**, **Pix Balcão** e **Saldo** (grid dinâmico de 3 botões com classe `.has-saldo`);
+    * Card de identificação do aluno exibe o **Saldo em Carteira** em tempo real;
+    * Seleção da forma Saldo ativa o container `#payDetailsSaldo` com demonstrativo de Saldo Atual, Total da Compra e Saldo Restante, alertando caso o saldo seja insuficiente;
+  * Stat-strip no topo do PDV atualizada: métrica "Folha" substituída pela métrica "Saldo";
+  * Cupom térmico 80mm (`app/views/tickets/cupom_pdv_80mm.php`) atualizado com rótulo "SALDO CARTEIRA" e identificação de colaborador genérica sem menção a desconto em folha.
+* [x] **Testes Automatizados:**
+  * Suíte `tests/pdv_formas_pagamento_test.php` criada com 25 asserções cobrindo rejeição de folha, vendas anônimas, colaborador, aluno com débito em saldo, saldo insuficiente e estorno em saldo, 100% aprovada (25/25);
+  * Suíte `tests/pdv_web_test.php` reexecutada com 30/30 testes aprovados;
+  * Suíte `tests/pdv_modal_test.php` reexecutada com 17/17 testes aprovados.
+
+---
+
+---
+
+### [x] Central de Relatórios & Vendas por Alimento — Remoção da Curva ABC e do Relatório de Desconto em Folha para RH
+
+* [x] **Central de Relatórios (`app/views/relatorios/index.php`):**
+  * Remoção completa do card de relatório **"Desconto em Folha para RH"** da grade corporativa;
+  * No card de **"Vendas por Alimento"**:
+    * Título renomeado de *"Vendas por Alimento & Curva ABC"* para *"Vendas por Alimento"*;
+    * Descrição textual limpa sem menção à Curva ABC;
+    * Remoção do botão de atalho *"Curva ABC"*, mantendo o botão *"Filtros de Vendas"* expandido com estilo Enterprise limpo;
+  * Na stat-strip de indicadores do topo: métrica de *"Desconto em Folha RH"* substituída pelo totalizador real de *"Vendas no Balcão PDV"* (`$faturamentoBalcaoMes`);
+  * Grade responsiva de 7 relatórios mantida em harmonia visual e funcional.
+* [x] **Relatório de Vendas por Alimento (`app/views/relatorios/vendas_alimento.php`):**
+  * Título principal e cabeçalho ajustados para *"Vendas por Alimento"*;
+  * Subtítulo limpo de referências à classificação ABC;
+  * Remoção do container com a legenda da Curva ABC (Classes A, B e C);
+  * Remoção da coluna de cabeçalho `<th>Curva ABC</th>`, ajuste de `colspan="8"` na linha de estado vazio, remoção do badge de classe ABC em `<tbody>` e alinhamento do `<tfoot>`.
+* [x] **Controlador (`app/controllers/RelatoriosController.php`):**
+  * No método `index()`: query de faturamento balcão PDV no mês (`$faturamentoBalcaoMes`) substituindo a busca de desconto em folha;
+  * No método `vendasAlimento()`: `'pageTitle'` ajustado para `'Vendas por Alimento'`;
+  * Descontinuação elegante dos métodos legados de folha (`descontoFolha`, `descontoFolhaPdf`, `descontoFolhaCsv`, `descontoFolhaDetalhesAjax`, `descontoFolhaIndividualPdf`, `descontoFolhaIndividualImprimir`, `descontoFolhaLotePdf`), redirecionando com flash message informativa para `/relatorios`.
+* [x] **Validação e Regressão:**
+  * Suíte `tests/pdv_formas_pagamento_test.php` aprovada (25/25);
+  * Suíte `tests/fase21_test.php` aprovada (103/103);
+  * Suíte `tests/teste_todos_pdfs.php` aprovada com todos os PDFs compilando com sucesso via Gotenberg;
+  * Sintaxe PHP verificada sem erros em todos os arquivos modificados.
+
+---
+
 ## Próximo Passo Recomendado
 
-**AUDITORIA E BLINDAGEM DE SEGURANÇA 100% CONCLUÍDAS!**
-
-O sistema Cantina Web — Colégio Monteiro Lobato foi completamente construído, testado, auditado e blindado em todas as camadas (arquitetura MVC, banco de dados MySQL, regras de negócio, interface, conformidade LGPD e segurança defensiva).
-
-Conforme as instruções operacionais:
-1. Efetuar o commit no Git das correções de segurança aplicadas;
-2. Realizar o push para o repositório remoto;
-3. Iniciar um **chat novo** com o **prompt do passo 6** para a fase seguinte de preparação do ambiente e checklist de publicação.
-
-
-
-
-
-
-
-
+1. Acessar a Central de Relatórios em `http://localhost:8080/relatorios` para verificar os cards limpos e a métrica de vendas no balcão;
+2. Acessar o Relatório de Vendas por Alimento em `http://localhost:8080/relatorios/vendas-alimento` para validar a tabela sem a coluna e legenda de Curva ABC;
+3. Realizar o commit das alterações no repositório.

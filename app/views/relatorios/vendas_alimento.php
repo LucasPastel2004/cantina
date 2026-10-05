@@ -1,7 +1,7 @@
 <?php
 /**
  * Cantina Web — Colégio Monteiro Lobato
- * View: Relatório de Vendas por Alimento & Curva ABC
+ * View: Relatório de Vendas por Alimento
  * 
  * Conforme docs/FSD.md (Área 6, Módulo 8, Tela 8.2 & Seção 22.2), docs/DESIGN.md e skill design-taste-frontend
  */
@@ -18,9 +18,9 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-        <h1 class="h5 font-weight-bold text-dark mb-1">Vendas por Alimento & Curva ABC</h1>
+        <h1 class="h5 font-weight-bold text-dark mb-1">Vendas por Alimento</h1>
         <p class="text-secondary text-microcopy mb-0">
-            Totalização comercial de alimentos e produtos, ticket médio ponderado e classificação analítica Curva ABC.
+            Totalização comercial de alimentos e produtos e ticket médio ponderado.
         </p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -136,21 +136,7 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
     </div>
 </div>
 
-<!-- Legenda da Curva ABC -->
-<div class="d-flex align-items-center gap-2 mb-3 p-2.5 bg-white border rounded flex-wrap">
-    <span class="text-microcopy text-uppercase font-weight-bold text-secondary me-1">Legenda Curva ABC:</span>
-    <span class="code-tag font-tabular" style="font-size: 11px;">
-        Classe A: Até 70% da Receita (Alta Rentabilidade)
-    </span>
-    <span class="code-tag font-tabular" style="font-size: 11px;">
-        Classe B: 70% a 90% da Receita (Rentabilidade Intermediária)
-    </span>
-    <span class="code-tag font-tabular" style="font-size: 11px;">
-        Classe C: 90% a 100% da Receita (Cauda Longa / Complementares)
-    </span>
-</div>
-
-<!-- Tabela Analítica de Vendas e Curva ABC -->
+<!-- Tabela Analítica de Vendas -->
 <div class="card-enterprise">
     <div class="card-enterprise-header d-flex justify-content-between align-items-center">
         <h2 class="h6 font-weight-bold text-dark mb-0">Relação Analítica de Itens Vendidos</h2>
@@ -170,13 +156,12 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
                     <th class="text-end" style="width: 120px;">Preço Médio</th>
                     <th class="text-end" style="width: 140px;">Faturamento Total</th>
                     <th class="text-end" style="width: 100px;">Part. %</th>
-                    <th class="text-center" style="width: 90px;">Curva ABC</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($itens)): ?>
                     <tr>
-                        <td colspan="9" class="text-center py-4 text-secondary text-microcopy">
+                        <td colspan="8" class="text-center py-4 text-secondary text-microcopy">
                             Nenhuma venda registrada com os filtros selecionados no período informado.
                         </td>
                     </tr>
@@ -211,9 +196,6 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
                             <td class="text-end font-tabular text-primary font-weight-bold">
                                 <?php echo number_format((float)$item['participacao_percentual'], 1, ',', '.'); ?>%
                             </td>
-                            <td class="text-center">
-                                <span class="code-tag font-tabular px-2.5 font-weight-bold"><?php echo htmlspecialchars($item['classe_abc'] ?? 'C', ENT_QUOTES, 'UTF-8'); ?></span>
-                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -234,9 +216,6 @@ $topItem = !empty($itens) ? ($itens[0]['descricao'] ?? '-') : '-';
                     </td>
                     <td class="text-end font-tabular text-dark font-weight-bold">
                         100,0%
-                    </td>
-                    <td class="text-center text-secondary text-microcopy font-tabular">
-                        100% ABC
                     </td>
                 </tr>
             </tfoot>

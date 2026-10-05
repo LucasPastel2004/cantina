@@ -140,22 +140,22 @@ class PdvController extends Controller
             return;
         }
 
-        // Validação estrita de colaborador
+        // Validação da forma de pagamento
         if ($formaPagamento === VendaBalcao::FORMA_DESCONTO_FOLHA) {
-            $tipoVenda = VendaBalcao::TIPO_DESCONTO_FOLHA;
-            if (!$colaboradorId) {
-                $msg = 'Para vendas sob Desconto em Folha, é obrigatório selecionar o colaborador.';
-                if ($isAjax) {
-                    $this->json(['sucesso' => false, 'mensagem' => $msg], 400);
-                    return;
-                }
-                Session::setFlash('danger', $msg);
-                $this->redirect('/operacional/pdv');
+            $msg = 'A opção de pagamento em folha não está mais disponível no sistema.';
+            if ($isAjax) {
+                $this->json(['sucesso' => false, 'mensagem' => $msg], 400);
                 return;
             }
+            Session::setFlash('danger', $msg);
+            $this->redirect('/operacional/pdv');
+            return;
+        }
 
-            if ($confirmacaoVisual !== 1) {
-                $msg = 'É obrigatório realizar a confirmação visual da foto do colaborador antes de lançar em folha.';
+        if ($formaPagamento === VendaBalcao::FORMA_SALDO) {
+            $tipoVenda = VendaBalcao::TIPO_AVULSO_ALUNO;
+            if (!$alunoId) {
+                $msg = 'Para pagamentos com saldo da carteira familiar, é obrigatório selecionar o aluno.';
                 if ($isAjax) {
                     $this->json(['sucesso' => false, 'mensagem' => $msg], 400);
                     return;
@@ -164,6 +164,8 @@ class PdvController extends Controller
                 $this->redirect('/operacional/pdv');
                 return;
             }
+        } elseif ($colaboradorId) {
+            $tipoVenda = VendaBalcao::TIPO_AVULSO_COLABORADOR;
         }
 
         $valorRecebido = 0.0;
@@ -288,6 +290,13 @@ class PdvController extends Controller
             'busca'  => $termo,
             'status' => 'ativo'
         ], 8);
+
+        foreach ($alunos as &$a) {
+            $saldoNum = (float)($a['saldo_atual'] ?? 0.0);
+            $a['saldo_atual'] = $saldoNum;
+            $a['saldo_atual_formatado'] = number_format($saldoNum, 2, ',', '.');
+        }
+        unset($a);
 
         $this->json([
             'sucesso' => true,

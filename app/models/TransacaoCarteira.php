@@ -27,6 +27,7 @@ class TransacaoCarteira extends Model
     public const TIPO_RECARGA_PIX           = 'recarga_pix';
     public const TIPO_RECARGA_DINHEIRO      = 'recarga_dinheiro';
     public const TIPO_DEBITO_PEDIDO         = 'debito_pedido';
+    public const TIPO_DEBITO_BALCAO         = 'debito_balcao';
     public const TIPO_ESTORNO_CANCELAMENTO  = 'estorno_cancelamento';
     public const TIPO_DEBITO_CONTESTACAO_MED= 'debito_contestacao_med';
     public const TIPO_ESTORNO_BALCAO        = 'estorno_balcao';
@@ -456,6 +457,7 @@ class TransacaoCarteira extends Model
             self::TIPO_RECARGA_PIX            => 'Recarga Pix Online',
             self::TIPO_RECARGA_DINHEIRO       => 'Recarga Balcão (Dinheiro)',
             self::TIPO_DEBITO_PEDIDO          => 'Agendamento de Lanche',
+            self::TIPO_DEBITO_BALCAO          => 'Compra no Balcão (PDV)',
             self::TIPO_ESTORNO_CANCELAMENTO   => 'Estorno de Cancelamento',
             self::TIPO_DEBITO_CONTESTACAO_MED => 'Estorno Devolução MED',
             self::TIPO_ESTORNO_BALCAO         => 'Estorno de Balcão',

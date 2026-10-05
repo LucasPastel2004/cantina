@@ -91,10 +91,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         <?php if (!empty($alunoNome)): ?>
             <div><strong>Estudante:</strong> <?php echo htmlspecialchars($alunoNome); ?><?php echo !empty($alunoTurma) ? ' (' . htmlspecialchars($alunoTurma) . ')' : ''; ?></div>
         <?php endif; ?>
-        <?php if ($tipoVenda === 'desconto_folha' && !empty($colaboradorNome)): ?>
-            <div style="margin-top: 2px; padding: 2px 4px; background: #f0f0f0; border: 1px solid #000;">
-                <strong>DESCONTO EM FOLHA (RH)</strong><br>
-                <?php echo htmlspecialchars($colaboradorNome); ?> (Matr: <?php echo htmlspecialchars($colaboradorMatricula ?? ''); ?>)
+        <?php if (!empty($colaboradorNome)): ?>
+            <div style="margin-top: 2px; padding: 2px 4px; background: #f8fafc; border: 1px solid #ccc;">
+                <strong>Colaborador:</strong> <?php echo htmlspecialchars($colaboradorNome); ?><?php echo !empty($colaboradorMatricula) ? ' (Matr: ' . htmlspecialchars($colaboradorMatricula) . ')' : ''; ?>
             </div>
         <?php endif; ?>
     </div>
@@ -127,9 +126,18 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             <span>TOTAL:</span>
             <span class="font-tabular">R$ <?php echo number_format($valorTotal, 2, ',', '.'); ?></span>
         </div>
+        <?php
+        $formaDesc = match($venda['forma_pagamento'] ?? '') {
+            'saldo' => 'SALDO CARTEIRA',
+            'pix_balcao' => 'PIX BALCÃO',
+            'dinheiro' => 'DINHEIRO',
+            'desconto_folha' => 'DESCONTO EM FOLHA',
+            default => strtoupper($venda['forma_pagamento'] ?? 'DINHEIRO')
+        };
+        ?>
         <div class="total-line" style="margin-top: 3px; font-size: 7.5pt;">
             <span>Forma Pagamento:</span>
-            <span><strong><?php echo $formaPagto; ?></strong></span>
+            <span><strong><?php echo $formaDesc; ?></strong></span>
         </div>
         <?php if ($formaPagto === 'DINHEIRO'): ?>
             <div class="total-line font-tabular" style="font-size: 7.5pt;">

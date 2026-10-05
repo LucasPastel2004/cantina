@@ -1467,3 +1467,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   6. **Proteção contra Breakout XSS:** Adicionadas as flags `JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP` nos scripts inline das views (`agendamento.php`, `pedido_editar.php`, `estorno_vendas.php`, `dre.php`) e aplicado `htmlspecialchars()` na view de agendamento.
   7. **Blindagem em Produção:** `HomeController` configurado para redirecionar usuários para `/portal`, `/admin` ou `/login` em produção e retornar HTTP 404 em rotas de teste/diagnóstico.
 - Como evitar no futuro: Nunca comitar dados reais de usuários no repositório de controle de versão; sempre exigir segredos criptográficos fortes em ambiente de produção; aplicar rate limiting em todos os fluxos de autenticação em duas etapas; e sanitizar rigorosamente qualquer saída em formatos interpretáveis como CSV ou JSON inline.
+
+---
+
+## 2026-10-05 - Refatoração do PDV: Remoção da opção "Em Folha" e segregação das formas de pagamento por aba
+
+- Sintoma: A opção "Em Folha" não era mais necessária e gerava confusão operacional no balcão; era necessário restringir as formas de pagamento disponíveis em cada aba de identificação do PDV (Anônimo: Dinheiro e Pix; Aluno: Dinheiro, Pix e Saldo; Colaborador: Dinheiro e Pix).
+- Causa: O schema inicial de `vendas_balcao` contemplava apenas `dinheiro`, `pix_balcao` e `desconto_folha`. Não havia a forma de pagamento `saldo` para compras presenciais no balcão de alunos debitando atomicamente da carteira familiar, e as views do PDV exibiam o botão "Em Folha" com confirmação fotográfica por checkbox.
+- Solução aplicada:
+  1. Criada e aplicada a Migration `030_add_saldo_to_vendas_balcao.php`, adicionando `saldo` em `vendas_balcao.forma_pagamento`, `avulso_colaborador` em `tipo_venda` e tipos `debito_balcao` e `estorno_balcao` em `transacoes_carteira`.
+  2. Atualizados os models `VendaBalcao.php` e `TransacaoCarteira.php`: novas vendas com `desconto_folha` são bloqueadas; pagamento com `saldo` valida se há aluno selecionado, valida bloqueio MED e debita a carteira familiar atomicamente com `debito_balcao`. O estorno em saldo devolve 100% dos créditos com `estorno_balcao`.
+  3. Atualizados o controller `PdvController.php` e a view `pdv.php`:
+     - Aba Anônimo: botões Dinheiro e Pix (2 colunas, 50% cada);
+     - Aba Colaborador: botões Dinheiro e Pix (2 colunas, 50% cada, removido checkbox `chkConfirmaVisual`);
+     - Aba Aluno: botões Dinheiro, Pix e Saldo (3 colunas com classe `.has-saldo`), exibindo o saldo da carteira no card do aluno e demonstrativo dinâmico de débito e saldo restante.
+  4. Suíte automatizada `tests/pdv_formas_pagamento_test.php` criada com 25/25 testes aprovados.
+- Como evitar no futuro: Sempre isolar e desacoplar formas de pagamento nos controllers e views com regras reativas claras por perfil de cliente, garantindo que opções inoperantes ou descontinuadas sejam rejeitadas na camada de domínio e não apareçam na interface.
