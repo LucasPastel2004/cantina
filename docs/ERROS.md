@@ -1592,3 +1592,45 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Implementado `PixService::consultarStatusCobranca(string $txid)` retornando o status resumido da cobrança ('pendente', 'pago', etc.).
   4. Suíte automatizada `tests/pdv_pix_balcao_test.php` criada com 17/17 asserções aprovadas com 100% de sucesso.
 - Como evitar no futuro: Em integrações com gateways de pagamento que atendem tanto recargas familiares com regras de negócio específicas (valor mínimo e titular obrigatório) quanto vendas presenciais de balcão (qualquer valor e cliente anônimo), manter métodos dedicados e testar a interoperabilidade entre os controladores de PDV e as classes de serviço.
+
+---
+
+## 2026-10-06 - Percepção de não baixa de estoque por acúmulo de produtos de teste clonados e ausência de reatividade visual no PDV
+
+- Sintoma: Ao vender itens no balcão do PDV (ex: 18 a 24 pães de queijo), o operador percebia que o estoque parecia não ter baixado ("acabei de vender tipo 24 pão de queijos e não vejo em lugar nenhum da lista um pão de queijo zerado, todos mantiveram suas unidades"), e a tela exibia múltiplos cards idênticos de "Pão de Queijo PDV", todos marcando 18 unidades.
+- Causa:
+  1. A suíte de testes legada `tests/fase13_test.php` realizava inserções de produtos sintéticos de teste (`PDV-DIN-...` com a descrição "Pão de Queijo PDV" e 18 unidades) a cada bateria de testes sem realizar limpeza (teardown) ao final, acumulando 22 produtos idênticos com o mesmo nome e 18 unidades na base de dados.
+  2. O motor de vendas `VendaBalcao::criarVenda()` realizava perfeitamente a baixa física de estoque no registro específico do banco (os produtos #428 e #659 foram a 0 unidades), mas como outros 20 clones continuavam com 18 unidades, gerava a ilusão visual de que nada havia sido debitado.
+  3. O JavaScript de `app/views/operacional/pdv.php` limpava o carrinho via AJAX após a venda sem abater as unidades diretamente nos cards do DOM, mantendo os numerais visíveis inalterados na tela até que um refresh (F5) fosse executado.
+  4. Para produtos esgotados, a view apresentava apenas a string "Esgotado" sem o numeral "0", ocultando o valor zero esperado pelo operador.
+- Solução aplicada:
+  1. Executado soft-delete de todos os 95 produtos sintéticos de teste no banco de dados (`deleted_at = NOW()`), restaurando o catálogo da cantina para os 12 produtos reais legítimos cadastrados.
+  2. Adicionado teardown compulsório em `tests/fase13_test.php` e nas novas suítes para inativar automaticamente produtos de teste e impedir que voltem a poluir o ambiente.
+  3. Atualizado o JavaScript do PDV (`pdv.php`) para iterar sobre os itens vendidos no retorno de sucesso da requisição e decrementar os atributos `data-estoque` e o texto dos cards correspondentes no DOM em tempo real. Se o estoque atingir zero, aplica imediatamente a classe `.disabled` e exibe o status de esgotado sem requerer recarregamento da página.
+  4. Ajustada a view `pdv.php` para renderizar `0 un (Esgotado)` com destaque vermelho em produtos com estoque esgotado.
+  5. Criada a suíte de testes automatizados `tests/pdv_estoque_baixa_test.php` com 11/11 asserções aprovadas com 100% de sucesso.
+- Como evitar no futuro: Toda suíte de testes automatizados que realize inserções de dados sintéticos deve possuir bloco obrigatório de teardown/limpeza no encerramento, e interfaces de ponto de venda orientadas a SPA/Fetch devem refletir mutações de saldo e inventário imediatamente no DOM do cliente.
+
+---
+
+## 2026-10-06 - Permissão indevida de conferência e confirmação de recebimento físico de fornecedor para datas retroativas/futuras
+
+- Sintoma: Na tela de **Conferência e Recebimento de Fornecedor** (`/operacional/recebimento`), ao selecionar uma data anterior pelo filtro (por exemplo, 29/09/2026 quando a data atual é 06/10/2026), o sistema exibia campos editáveis de quantidade entregue e o botão "Confirmar Recebimento e Dar Entrada", permitindo registrar entradas físicas no estoque de dias passados e distorcer a contabilidade de estoque da cantina.
+- Causa:
+  1. A action `PedidosController::recebimento()` carregava os dados da data selecionada na query string sem validar se era a data de hoje para fins de edição;
+  2. A action `PedidosController::recebimentoConfirmar()` processava o POST de qualquer data passada ou futura;
+  3. O método `Pedido::confirmarRecebimentoFornecedor()` não possuía validação temporal impedindo a entrada de mercadorias com `$dataConsumo !== date('Y-m-d')`;
+  4. A view `recebimento.php` renderizava inputs editáveis e o botão de confirmação baseando-se apenas em `$jaRecebido`, sem checar se a data aberta era a data de hoje.
+- Solução aplicada:
+  1. **Blindagem no Model (`Pedido::confirmarRecebimentoFornecedor`):** Adicionada validação estrita que lança `DomainException` caso `$dataConsumo !== date('Y-m-d')` (exceto em modo de teste automatizado `CANTINA_TEST_MODE`), impedindo qualquer mutação no estoque fora do dia da entrega;
+  2. **Blindagem no Controller (`PedidosController::recebimentoConfirmar`):** Adicionada trava rejeitando requisições POST com data diferente de hoje com flash error explicativo e redirecionamento de segurança;
+  3. **Interface Protegida e Informativa (`app/views/operacional/recebimento.php`):**
+     - Variável `$podeConferir = (!$jaRecebido && $isHoje)`;
+     - Para datas retroativas não conferidas: exibido badge neutro "Não Conferido na Data (Bloqueado)", alerta âmbar detalhando a proteção contábil do estoque e botão de atalho rápido "Ir para Recebimento de Hoje";
+     - Para datas futuras: exibido alerta azul indicando que a conferência física deve aguardar o dia da remessa, com link direcionando ao Painel de Corte;
+     - Para datas passadas já conferidas: preservada a visualização do espelho histórico para fins de auditoria (somente leitura);
+     - Campos de edição numérica e botões de submissão só são renderizados quando `$podeConferir === true`;
+     - Input de data recebeu `max="<?php echo $dataHoje; ?>"`, orientando visualmente o operador;
+     - No Painel de Corte (`/operacional/corte`), a navegação entre datas passadas e futuras permaneceu livre para consulta e auditoria.
+  4. **Testes Automatizados:** Nova suíte `tests/recebimento_bloqueio_datas_test.php` criada com 31/31 asserções aprovadas com 100% de sucesso.
+- Como evitar no futuro: Ações operacionais que causam mutações físicas irreversíveis em estoque ou caixa (como recebimento físico de mercadorias ou abertura de caixa) devem ter travas temporais rígidas em todas as camadas (Model, Controller e View), permitindo execução estritamente na data presente e mantendo datas retroativas em modo somente leitura para auditoria.

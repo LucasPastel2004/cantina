@@ -16,10 +16,15 @@ $itens = $dadosCorte['itens'] ?? [];
 $totalPecas = (int)($dadosCorte['total_pecas'] ?? 0);
 $statusRecebimento = $statusRecebimento ?? null;
 $csrf_token = $csrf_token ?? '';
+$dataHoje = $dataHoje ?? date('Y-m-d');
+$isHoje = $isHoje ?? ($dataConsumo === $dataHoje);
 
 $dataFmt = date('d/m/Y', strtotime($dataConsumo));
 $turnoNome = ($turnoConsumo === 'matutino') ? 'Matutino' : 'Vespertino';
 $jaRecebido = !empty($statusRecebimento['recebido']);
+$isDataPassada = ($dataConsumo < $dataHoje);
+$isDataFutura = ($dataConsumo > $dataHoje);
+$podeConferir = (!$jaRecebido && $isHoje);
 ?>
 
 <!-- Alertas Flash do Sistema -->
@@ -34,9 +39,17 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
                 <span class="status-indicator status-active" style="font-size: 12px;">
                     <span class="bullet">●</span> Recebimento Confirmado
                 </span>
-            <?php else: ?>
+            <?php elseif ($isHoje): ?>
                 <span class="badge bg-amber text-dark" style="background-color: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600;">
-                    Aguardando Conferência
+                    Aguardando Conferência (Hoje)
+                </span>
+            <?php elseif ($isDataPassada): ?>
+                <span class="badge bg-secondary text-dark border" style="font-size: 11px; font-weight: 600; background-color: #f1f5f9;">
+                    Não Conferido na Data (Bloqueado)
+                </span>
+            <?php else: ?>
+                <span class="badge bg-info text-dark" style="font-size: 11px; font-weight: 600; background-color: #e0f2fe; color: #0369a1;">
+                    Data Futura (Aguardando Entrega)
                 </span>
             <?php endif; ?>
         </div>
@@ -58,9 +71,17 @@ $jaRecebido = !empty($statusRecebimento['recebido']);
         <form method="GET" action="<?php echo $baseUrl; ?>/operacional/recebimento" class="row g-2 align-items-end">
             <div class="col-auto">
                 <label for="inputDataRec" class="form-label text-microcopy font-weight-bold text-secondary mb-1 d-block">DATA:</label>
-                <input type="date" id="inputDataRec" name="data" class="form-control form-control-sm font-tabular" 
-                       style="width: 155px;" value="<?php echo htmlspecialchars($dataConsumo, ENT_QUOTES, 'UTF-8'); ?>"
-                       onchange="this.form.submit()">
+                <div class="d-flex align-items-center gap-2">
+                    <input type="date" id="inputDataRec" name="data" class="form-control form-control-sm font-tabular" 
+                           style="width: 155px;" value="<?php echo htmlspecialchars($dataConsumo, ENT_QUOTES, 'UTF-8'); ?>"
+                           max="<?php echo htmlspecialchars($dataHoje, ENT_QUOTES, 'UTF-8'); ?>"
+                           onchange="this.form.submit()">
+                    <?php if (!$isHoje): ?>
+                        <a href="<?php echo $baseUrl; ?>/operacional/recebimento" class="btn btn-enterprise btn-secondary btn-sm" title="Voltar para a data de hoje">
+                            Hoje (<?php echo date('d/m/Y', strtotime($dataHoje)); ?>)
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
             <div class="col-auto">
                 <label for="selectTurnoRec" class="form-label text-microcopy font-weight-bold text-secondary mb-1 d-block">TURNO:</label>
@@ -119,6 +140,45 @@ if ($jaRecebido) {
             </div>
         </div>
     </div>
+<?php elseif (!$isHoje && $isDataPassada): ?>
+    <!-- Alerta Informativo de Bloqueio Retroativo -->
+    <div class="alert alert-warning d-flex align-items-center p-3 mb-4" style="background-color: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: 6px;">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" class="me-3 flex-shrink-0">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+        </svg>
+        <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
+            <div>
+                <div class="font-weight-bold" style="font-size: 13px;">Conferência Retroativa Bloqueada</div>
+                <div class="text-microcopy" style="color: #b45309;">
+                    A entrega física do turno <strong><?php echo $turnoNome; ?></strong> de <strong><?php echo $dataFmt; ?></strong> não foi conferida na data. 
+                    Para preservar a integridade contábil e evitar distorções no estoque atual da cantina, <strong>não é permitido dar entrada retroativa</strong>.
+                </div>
+            </div>
+            <a href="<?php echo $baseUrl; ?>/operacional/recebimento" class="btn btn-enterprise btn-primary btn-sm">
+                Ir para Recebimento de Hoje (<?php echo date('d/m/Y', strtotime($dataHoje)); ?>) &rarr;
+            </a>
+        </div>
+    </div>
+<?php elseif (!$isHoje && $isDataFutura): ?>
+    <!-- Alerta Informativo de Data Futura -->
+    <div class="alert alert-info d-flex align-items-center p-3 mb-4" style="background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 6px;">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" class="me-3 flex-shrink-0">
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+        </svg>
+        <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
+            <div>
+                <div class="font-weight-bold" style="font-size: 13px;">Entrega Futura</div>
+                <div class="text-microcopy" style="color: #1d4ed8;">
+                    A conferência física só pode ser realizada na data da entrega (<?php echo $dataFmt; ?>). 
+                    Para consultar a demanda de encomendas consolidada, acesse o Painel de Corte.
+                </div>
+            </div>
+            <a href="<?php echo $baseUrl; ?>/operacional/corte?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" class="btn btn-enterprise btn-primary btn-sm">
+                Ver no Painel de Corte &rarr;
+            </a>
+        </div>
+    </div>
 <?php endif; ?>
 
 <!-- Formulário de Conferência Física de Entrega -->
@@ -133,7 +193,7 @@ if ($jaRecebido) {
                 <span class="font-weight-bold text-dark">Conferência Quantitativa da Entrega</span>
                 <span class="text-secondary text-microcopy ms-2">(Total Esperado no Corte: <strong class="font-tabular"><?php echo $totalPecas; ?></strong> peças)</span>
             </div>
-            <?php if (!$jaRecebido && !empty($itens)): ?>
+            <?php if ($podeConferir && !empty($itens)): ?>
                 <button type="button" class="btn btn-enterprise btn-primary btn-sm" onclick="preencherTudoEsperado()">
                     Preencher com Valores Esperados
                 </button>
@@ -212,7 +272,7 @@ if ($jaRecebido) {
                                         <span class="font-tabular font-weight-bold" style="font-size: 14px; color: #166534;">
                                             <?php echo $qtdEntregueEfetiva; ?> un
                                         </span>
-                                    <?php else: ?>
+                                    <?php elseif ($podeConferir): ?>
                                         <div class="d-inline-flex align-items-center gap-1">
                                             <input type="number" 
                                                    name="itens[<?php echo $idx; ?>][qtd_entregue]" 
@@ -224,6 +284,8 @@ if ($jaRecebido) {
                                                    oninput="recalcularLinha(<?php echo $idx; ?>)">
                                             <span class="text-microcopy text-secondary">un</span>
                                         </div>
+                                    <?php else: ?>
+                                        <span class="text-muted font-tabular font-weight-bold" style="font-size: 13px;">—</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="cell-right font-tabular" id="diffCol_<?php echo $idx; ?>">
@@ -235,8 +297,10 @@ if ($jaRecebido) {
                                         <?php else: ?>
                                             <span class="font-weight-bold text-danger"><?php echo $diffEfetiva; ?> un (falta)</span>
                                         <?php endif; ?>
-                                    <?php else: ?>
+                                    <?php elseif ($podeConferir): ?>
                                         <span class="text-muted">Exato (0)</span>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -253,7 +317,7 @@ if ($jaRecebido) {
                                 <?php echo $totalPecas; ?> un
                             </td>
                             <td class="cell-center font-tabular font-weight-bold text-dark" id="totalEntregueCol" style="font-size: 15px; color: #0f172a !important;">
-                                <?php echo $jaRecebido ? $totalEntregueAcum : $totalPecas; ?> un
+                                <?php echo $jaRecebido ? ($totalEntregueAcum . ' un') : ($podeConferir ? ($totalPecas . ' un') : '—'); ?>
                             </td>
                             <td class="cell-right font-tabular font-weight-bold" id="totalExcedenteCol" style="font-size: 13px; color: <?php echo ($jaRecebido && $totalExcedenteAcum > 0) ? '#166534' : (($jaRecebido && $totalFaltaAcum > 0) ? '#b91c1c' : '#64748b'); ?>;">
                                 <?php if ($jaRecebido): ?>
@@ -264,8 +328,10 @@ if ($jaRecebido) {
                                     <?php else: ?>
                                         0 sobra
                                     <?php endif; ?>
-                                <?php else: ?>
+                                <?php elseif ($podeConferir): ?>
                                     0 sobra
+                                <?php else: ?>
+                                    —
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -274,7 +340,7 @@ if ($jaRecebido) {
             </table>
         </div>
 
-        <?php if (!$jaRecebido && !empty($itens)): ?>
+        <?php if ($podeConferir && !empty($itens)): ?>
             <div class="card-enterprise-body p-3 border-top">
                 <div class="mb-3">
                     <label for="observacaoRecebimento" class="form-label text-microcopy font-weight-bold text-secondary">
@@ -364,6 +430,8 @@ function preencherTudoEsperado() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const inputs = document.querySelectorAll('.input-entregue');
-    inputs.forEach((_, idx) => recalcularLinha(idx));
+    if (inputs.length > 0) {
+        inputs.forEach((_, idx) => recalcularLinha(idx));
+    }
 });
 </script>

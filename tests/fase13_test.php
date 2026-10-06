@@ -71,6 +71,8 @@ class Fase13Test
 
         // Encerra sessões de caixa abertas durante os testes para manter ambiente limpo
         $this->pdo->exec("UPDATE sessoes_caixa SET status = 'fechado', fechado_em = NOW(), total_informado_gaveta = (fundo_troco_inicial + total_dinheiro_avulso + total_dinheiro_recargas), diferenca_quebra_sobra = 0.00 WHERE observacoes = 'Abertura para testes' AND status = 'aberto'");
+        // Inativa produtos de teste criados durante a execução para não poluir o PDV operacional
+        $this->pdo->exec("UPDATE produtos SET deleted_at = NOW() WHERE (codigo_interno LIKE 'PDV-%' OR codigo_interno LIKE 'TEST-%') AND deleted_at IS NULL");
 
         echo "\n----------------------------------------------------------------------\n";
         echo sprintf(" RESULTADO FINAL: %d/%d asserções aprovadas (%.1f%%)\n",
@@ -320,37 +322,35 @@ class Fase13Test
         $this->pdo->exec("INSERT INTO produtos (codigo_interno, descricao, categoria_id, tipo, preco_venda, estoque_atual, estoque_minimo, status_pausa, created_at) VALUES ('{$cod}', 'Café com Torrada', {$catId}, 'industrializado_continuo', 8.50, 10, 2, 'ativo', NOW())");
         $prodId = (int)$this->pdo->lastInsertId();
 
-        // Tentativa sem colaborador informado deve falhar
-        $falhouSemColab = false;
+        // Tentativa de pagamento sob Desconto em Folha deve ser rejeitada com DomainException (Migration 030)
+        $rejeitouFolha = false;
         try {
             VendaBalcao::criarVenda([
-                'tipo_venda'      => 'desconto_folha',
-                'forma_pagamento' => 'desconto_folha'
+                'tipo_venda'      => 'avulso_colaborador',
+                'forma_pagamento' => 'desconto_folha',
+                'colaborador_id'  => $colabId
             ], [
                 ['produto_id' => $prodId, 'quantidade' => 1, 'preco_unitario' => 8.50]
             ], $operadorId, $sessaoId);
-        } catch (\InvalidArgumentException $e) {
-            $falhouSemColab = true;
+        } catch (\DomainException $e) {
+            $rejeitouFolha = true;
         }
-        $this->assert($falhouSemColab, "Venda sob Desconto em Folha sem colaborador selecionado é bloqueada");
+        $this->assert($rejeitouFolha, "Tentativa de pagamento em folha rejeitada com DomainException (descontinuado)");
 
-        // Venda com colaborador identificado
+        // Venda com colaborador identificado em dinheiro
         $venda = VendaBalcao::criarVenda([
-            'tipo_venda'      => 'desconto_folha',
-            'forma_pagamento' => 'desconto_folha',
-            'colaborador_id'  => $colabId
+            'tipo_venda'              => 'avulso_colaborador',
+            'forma_pagamento'         => 'dinheiro',
+            'valor_dinheiro_recebido' => 10.00,
+            'colaborador_id'          => $colabId
         ], [
             ['produto_id' => $prodId, 'quantidade' => 1, 'preco_unitario' => 8.50]
         ], $operadorId, $sessaoId);
 
-        $this->assert($venda['id'] > 0, "Venda em folha concluída com ID #{$venda['id']}");
+        $this->assert($venda['id'] > 0, "Venda para colaborador concluída com ID #{$venda['id']}");
         $this->assert((int)$venda['colaborador_id'] === $colabId, "Vínculo de colaborador_id gravado corretamente");
         $this->assert($venda['colaborador_nome'] === 'Prof. Carlos Eduardo', "Nome do colaborador retornado na consulta detalhada");
         $this->assert($venda['colaborador_matricula'] === $mat, "Matrícula funcional retornada");
-
-        // Métricas de vendas de hoje
-        $metricas = VendaBalcao::obterMetricasHoje($sessaoId);
-        $this->assert($metricas['total_folha'] >= 8.50, "Métrica de total em folha apurada com sucesso");
 
         // Limpeza defensiva da venda e produto de teste para não poluir a base
         $this->pdo->exec("DELETE FROM itens_venda_balcao WHERE venda_balcao_id = " . (int)$venda['id']);

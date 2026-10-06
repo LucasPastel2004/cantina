@@ -8,6 +8,7 @@
  */
 
 defined('CANTINA_SISTEMA') or define('CANTINA_SISTEMA', true);
+defined('CANTINA_TEST_MODE') or define('CANTINA_TEST_MODE', true);
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';

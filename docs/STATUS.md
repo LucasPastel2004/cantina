@@ -1382,10 +1382,76 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Baixa Física de Estoque no PDV Balcão, Limpeza de Clones de Teste e Feedback Visual em Tempo Real
+
+* [x] **Diagnóstico e Verificação da Baixa Física de Estoque:**
+  * Constatado que as vendas efetuadas no PDV Balcão (`VendaBalcao::criarVenda()`) **debitam sim com precisão atômica o estoque do produto** via `UPDATE produtos SET estoque_atual = estoque_atual - :quantidade WHERE id = :produto_id;` e registram rastreabilidade em `estoque_movimentacoes` (`tipo_movimentacao = 'saida_venda_avulsa'`);
+  * Verificado no banco que as vendas recentes de 18 unidades (Venda #254 no produto #428 e Venda #255 no produto #659) baixaram o estoque exatamente de 18 para **0 unidades** (`estoque_atual = 0`).
+
+* [x] **Causa Raiz da Percepção de Unidades Mantidas:**
+  * **95 produtos de teste acumulados:** A suíte de testes legada (`tests/fase13_test.php`) gerava 4 produtos sintéticos a cada rodada de teste (incluindo `PDV-DIN-...` com a descrição "Pão de Queijo PDV" e 18 unidades) sem efetuar limpeza ou inativação no teardown, acumulando 22 produtos idênticos chamados "Pão de Queijo PDV" no cardápio ativo;
+  * Ao realizar a venda de 18 unidades, o produto específico em que o operador clicou foi para zero, mas os outros 20 clones continuaram exibindo "18 un", gerando a ilusão visual de que as unidades não haviam baixado;
+  * **Ausência de Reatividade no Frontend:** O JavaScript do PDV limpava a cesta após o `fetch` da venda sem abater as unidades diretamente nos elementos do DOM na tela, mantendo o estoque estático até que a página fosse recarregada (F5).
+
+* [x] **Correções e Aprimoramentos Implementados:**
+  * **Limpeza e Sanitização do Banco:** Executado soft-delete (`deleted_at = NOW()`) em todos os 95 produtos sintéticos de teste (`PDV-%`, `TEST-%`), restaurando o catálogo da cantina para os 12 produtos reais legítimos cadastrados;
+  * **Atualização em Tempo Real no PDV (`app/views/operacional/pdv.php`):** O callback de sucesso da venda agora itera sobre os itens do carrinho antes da limpeza da cesta e decrementa imediatamente os atributos `data-estoque` e o texto dos cards correspondentes no DOM. Se o estoque zerar, aplica instantaneamente a classe `.disabled` e exibe o status esgotado;
+  * **Exibição Explícita de Saldo Zerado:** Produtos com estoque esgotado agora exibem explicitamente o texto `<span class="text-danger font-semibold">0 un (Esgotado)</span>` em vez de omitir o numeral, alinhado à expectativa operacional e ao Design System;
+  * **Blindagem dos Testes:** Adicionado teardown automático com inativação via soft delete em `tests/fase13_test.php` e `tests/pdv_estoque_baixa_test.php`, impedindo que futuras execuções de testes voltem a poluir o cardápio com itens sintéticos.
+
+* [x] **Homologação e Testes Automatizados:**
+  * Nova suíte `tests/pdv_estoque_baixa_test.php` criada e aprovada com **11 de 11 asserções com 100% de sucesso**;
+  * Suíte `tests/fase13_test.php` atualizada com teardown e aprovada com **51 de 51 asserções (100%)**;
+  * Suíte de formas de pagamento do PDV (`tests/pdv_formas_pagamento_test.php`) 100% aprovada (25/25);
+  * Suíte Pix Balcão (`tests/pdv_pix_balcao_test.php`) 100% aprovada (17/17);
+  * Catálogo de produtos ativo verificado com 0 produtos de teste e 100% limpo.
+
+---
+
+### [x] Bloqueio Rigoroso de Recebimento de Fornecedor em Datas Retroativas e Futuras
+
+* [x] **Diagnóstico da Necessidade:**
+  * No **Painel de Corte** (`/operacional/corte`), a navegação entre datas passadas e futuras é permitida e salutar para consulta, espelho de demandas e auditoria de dias anteriores;
+  * No entanto, na tela de **Conferência e Recebimento de Fornecedor** (`/operacional/recebimento`), permitir que o operador confira fisicamente uma remessa e dê entrada no estoque em datas retroativas (como 29/09/2026 estando em 06/10/2026) causaria distorções na contabilidade física e relatórios de perdas/sobras da cantina;
+  * Remessas passadas não conferidas na data devem ser estritamente bloqueadas para edição/entrada, e remessas futuras devem aguardar o dia da entrega física.
+
+* [x] **Blindagem no Backend (Model e Controller):**
+  * **Model (`app/models/Pedido.php`):**
+    * Adicionada trava rígida em `Pedido::confirmarRecebimentoFornecedor()` verificando `$dataConsumo === date('Y-m-d')`;
+    * Lança `DomainException` com mensagem explicativa detalhando a restrição à data de hoje para proteção do estoque contábil (mantendo compatibilidade com testes via constante `CANTINA_TEST_MODE`);
+  * **Controller (`app/controllers/PedidosController.php`):**
+    * `recebimento()`: computa e injeta variáveis `$isHoje` e `$dataHoje` para a view;
+    * `recebimentoConfirmar()`: bloqueia requisições POST para qualquer data fora de hoje com flash error explicativo e redirecionamento seguro para a página solicitada.
+
+* [x] **Interface e Experiência Operacional (View `app/views/operacional/recebimento.php`):**
+  * **Regra de Acesso:** `$podeConferir = (!$jaRecebido && $isHoje)`;
+  * **Badges Semânticos no Cabeçalho:**
+    * *Hoje:* `"Aguardando Conferência (Hoje)"` (âmbar institucional);
+    * *Passado Não Conferido:* `"Não Conferido na Data (Bloqueado)"` (badge neutro);
+    * *Passado Já Recebido:* `"Recebimento Confirmado"` (`.status-indicator` verde);
+    * *Futuro:* `"Data Futura (Aguardando Entrega)"` (azul suave).
+  * **Alertas Contextuais Corporativos:**
+    * Para datas passadas não conferidas: banner informativo âmbar com explicação contábil e botão de atalho rápido `"Ir para Recebimento de Hoje (DD/MM/AAAA) →"`;
+    * Para datas futuras: banner azul informativo com botão `"Ver no Painel de Corte →"`;
+    * Para datas já conferidas: card de sucesso com nome do operador que conferiu e data/hora.
+  * **Tabela e Formulário:**
+    * Inputs numéricos `.input-entregue` e botões de ação ("Preencher com Valores Esperados" e "Confirmar Recebimento e Dar Entrada") são renderizados **estritamente quando `$podeConferir === true`**;
+    * Para datas passadas bloqueadas, a tabela opera em modo somente leitura com travessão (`—`) indicando campo inativo;
+    * Barra de filtros: input date recebeu limite `max="<?php echo $dataHoje; ?>"`, e botão de atalho para voltar a "Hoje" quando navegando fora da data atual.
+
+* [x] **Homologação e Testes Automatizados:**
+  * Nova suíte `tests/recebimento_bloqueio_datas_test.php` criada com **31 de 31 asserções aprovadas com 100% de sucesso**;
+  * Suíte de encomendas e gestão de fornecedores da Fase 11 (`tests/fase11_test.php`) 100% aprovada (70/70);
+  * Suíte de salgados fracionados (`tests/salgados_fracionados_test.php`) 100% aprovada (36/36);
+  * Suítes de caixa e PDV (`tests/caixa_test.php`, `tests/caixas_simultaneos_test.php`, `tests/pdv_estoque_baixa_test.php`, `tests/pdv_formas_pagamento_test.php`) 100% mantidas e aprovadas.
+
+---
+
 ## Próximo Passo Recomendado
 
-1. No PDV Balcão (`http://localhost:8080/operacional/pdv`), adicionar itens ao carrinho (ex: Água Mineral sem Gás de R$ 3,50);
-2. Selecionar o cliente como "Anônimo", escolher a forma de pagamento **"Pix Balcão (QR Code)"** e clicar em **"Concluir Venda (F4)"**;
-3. Verificar que o modal do Pix Balcão abre perfeitamente exibindo o QR Code gerado, o valor formatado ("R$ 3,50") e o código Copia e Cola;
-4. Clicar em "Confirmar e Finalizar Venda" e verificar a geração da venda, emissão de comprovante e incremento contábil de `total_pix_balcao` na sessão de caixa;
-5. Realizar o commit das alterações no Git.
+1. Acessar a tela de Recebimento de Fornecedor (`http://localhost:8080/operacional/recebimento?data=2026-09-29&turno=matutino`);
+2. Confirmar que a tela exibe o alerta âmbar *"Conferência Retroativa Bloqueada"*, com a tabela em modo somente leitura (sem caixas de digitação nem botão de confirmar);
+3. Clicar no botão *"Ir para Recebimento de Hoje"* ou acessar a data atual (`06/10/2026`) e verificar que os campos de digitação e o botão de confirmação funcionam normalmente;
+4. No Painel de Corte (`http://localhost:8080/operacional/corte?data=2026-09-29`), conferir que a navegação de consulta por qualquer data permanece livre.
+
+

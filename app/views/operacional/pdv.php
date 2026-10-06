@@ -688,7 +688,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                             <span class="pdv-prod-price font-tabular">R$ <?php echo $precoFormatado; ?></span>
                             <span class="pdv-prod-stock font-tabular">
                                 <?php if ($esgotado): ?>
-                                    <span class="text-danger font-semibold">Esgotado</span>
+                                    <span class="text-danger font-semibold">0 un (Esgotado)</span>
                                 <?php else: ?>
                                     <?php echo $estoque; ?> un
                                 <?php endif; ?>
@@ -1713,6 +1713,26 @@ function submeterVendaServidor(valorRecebido) {
             elBtnPdf.href = `${baseUrl}/operacional/pdv/comprovante/${data.venda_id}/pdf`;
         }
         
+        // Atualiza o estoque em tempo real nos cards do catálogo sem necessidade de F5
+        carrinho.forEach(it => {
+            const card = document.querySelector(`.pdv-prod-card[data-id="${it.produto_id}"]`);
+            if (card) {
+                const estoqueAtual = parseInt(card.getAttribute('data-estoque'), 10) || 0;
+                const novoEstoque = Math.max(0, estoqueAtual - it.quantidade);
+                card.setAttribute('data-estoque', novoEstoque);
+
+                const stockSpan = card.querySelector('.pdv-prod-stock');
+                if (stockSpan) {
+                    if (novoEstoque <= 0) {
+                        card.classList.add('disabled');
+                        stockSpan.innerHTML = '<span class="text-danger font-semibold">0 un (Esgotado)</span>';
+                    } else {
+                        stockSpan.innerText = `${novoEstoque} un`;
+                    }
+                }
+            }
+        });
+
         limparCarrinho();
         limparSelecaoColaborador();
         limparSelecaoAluno();

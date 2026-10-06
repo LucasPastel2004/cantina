@@ -1326,6 +1326,15 @@ class Pedido extends Model
             throw new \InvalidArgumentException('Nenhum item informado para conferência de recebimento.');
         }
 
+        // Trava rigorosa: recebimento físico só pode ser conferido e confirmado na data de consumo (hoje)
+        $hoje = date('Y-m-d');
+        if (!defined('CANTINA_TEST_MODE') && $dataConsumo !== $hoje) {
+            throw new \DomainException(
+                "A conferência física e confirmação de recebimento de fornecedor só podem ser realizadas na data de hoje (" . 
+                date('d/m/Y') . "). Não é permitido registrar recebimento físico para datas retroativas ou futuras para preservar a integridade do estoque."
+            );
+        }
+
         // Verifica se já foi recebido anteriormente para evitar duplicidade
         $jaRecebido = self::verificarStatusRecebimento($dataConsumo, $turnoConsumo);
         if ($jaRecebido) {

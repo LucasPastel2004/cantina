@@ -160,6 +160,7 @@ class PedidosController extends Controller
         $statusRecebimento = Pedido::verificarStatusRecebimento($dataConsumo, $turnoConsumo);
 
         $user = Auth::user();
+        $isHoje = ($dataConsumo === $hoje);
 
         $this->render('operacional/recebimento', [
             'title'             => 'Conferência e Recebimento de Fornecedor',
@@ -169,6 +170,8 @@ class PedidosController extends Controller
             'turnoConsumo'      => $turnoConsumo,
             'dadosCorte'        => $dadosCorte,
             'statusRecebimento' => $statusRecebimento,
+            'isHoje'            => $isHoje,
+            'dataHoje'          => $hoje,
             'csrf_token'        => Session::generateCsrfToken(),
             'flashSuccess'      => Session::getFlash('success'),
             'flashError'        => Session::getFlash('error') ?: Session::getFlash('danger'),
@@ -192,10 +195,18 @@ class PedidosController extends Controller
         $dataConsumo = $this->normalizarDataConsumo($_POST['data_consumo'] ?? null, '');
         $turnoConsumo = trim($_POST['turno_consumo'] ?? '');
         $observacao = trim($_POST['observacao'] ?? '');
+        $hoje = date('Y-m-d');
 
         if (empty($dataConsumo) || !in_array($turnoConsumo, ['matutino', 'vespertino'], true)) {
             Session::setFlash('error', 'Data ou turno inválidos informados para o recebimento.');
             $this->redirect('/operacional/recebimento');
+            return;
+        }
+
+        // Trava rigorosa: recebimento físico só pode ser confirmado na data de hoje
+        if (!defined('CANTINA_TEST_MODE') && $dataConsumo !== $hoje) {
+            Session::setFlash('error', 'A conferência física de recebimento é permitida estritamente na data de hoje (' . date('d/m/Y') . '). Recebimentos retroativos foram bloqueados.');
+            $this->redirect("/operacional/recebimento?data={$dataConsumo}&turno={$turnoConsumo}");
             return;
         }
 
