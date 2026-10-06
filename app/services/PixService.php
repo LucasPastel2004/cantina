@@ -133,6 +133,103 @@ class PixService
     }
 
     /**
+     * Gera uma cobrança Pix dinâmica para pagamentos gerais (ex: Balcão PDV)
+     * Não restringe pelo valor mínimo de recarga familiar
+     * 
+     * @param float $valor Valor da cobrança em reais (> 0)
+     * @param string|null $txid Identificador da transação (opcional)
+     * @param string $descricao Descrição da operação
+     * @param int $expiraEmSegundos Tempo de expiração em segundos (padrão 900 = 15min)
+     * @return array Dados estruturados da cobrança gerada
+     */
+    public static function gerarCobranca(
+        float $valor,
+        ?string $txid = null,
+        string $descricao = 'Cantina Monteiro Lobato - Venda Balcão PDV',
+        int $expiraEmSegundos = 900
+    ): array {
+        if ($valor <= 0) {
+            throw new \InvalidArgumentException('O valor da cobrança Pix deve ser maior que zero.');
+        }
+
+        if (empty($txid)) {
+            $txid = 'PDV' . date('YmdHis') . strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
+        }
+
+        // Obtém chave Pix institucional e dados do recebedor
+        $configPix = self::getConfig();
+        $chavePix = !empty($configPix['chave_pix']) ? $configPix['chave_pix'] : 'financeiro@colegiomonteirolobato.com.br';
+        $nomeRecebedor = 'COLEGIO MONTEIRO LOBATO';
+        $cidadeRecebedor = 'SAO PAULO';
+
+        // Monta o payload no padrão BR Code / EMVCo
+        $payloadBrCode = self::montarPayloadBrCode($chavePix, $nomeRecebedor, $cidadeRecebedor, $valor, $txid, $descricao);
+
+        // Gera o QR Code vetorial SVG e Data URI
+        $qrCodeSvg = QrCodeService::svg($payloadBrCode, 260);
+        $qrCodeDataUri = QrCodeService::dataUri($payloadBrCode, 260);
+
+        $agora = time();
+        $expiraTimestamp = $agora + $expiraEmSegundos;
+
+        $cobrancaData = [
+            'txid'               => $txid,
+            'responsavel_id'     => 0,
+            'valor'              => round($valor, 2),
+            'descricao'          => $descricao,
+            'chave_pix'          => $chavePix,
+            'status'             => 'pendente',
+            'created_at'         => $agora,
+            'created_at_fmt'     => date('Y-m-d H:i:s', $agora),
+            'expira_em'          => $expiraTimestamp,
+            'expira_em_fmt'      => date('Y-m-d H:i:s', $expiraTimestamp),
+            'expira_em_segundos' => $expiraEmSegundos,
+        ];
+
+        // Persiste a cobrança em arquivo seguro no storage
+        self::salvarCobrancaCache($txid, $cobrancaData);
+
+        return [
+            'sucesso'            => true,
+            'txid'               => $txid,
+            'valor'              => round($valor, 2),
+            'valor_formatado'    => 'R$ ' . number_format($valor, 2, ',', '.'),
+            'payload_brcode'     => $payloadBrCode,
+            'copia_e_cola'       => $payloadBrCode,
+            'brcode'             => $payloadBrCode,
+            'qr_code_svg'        => $qrCodeSvg,
+            'qr_code_data_uri'   => $qrCodeDataUri,
+            'qr_code_uri'        => $qrCodeDataUri,
+            'expira_em_segundos' => $expiraEmSegundos,
+            'expira_em'          => date('Y-m-d H:i:s', $expiraTimestamp),
+        ];
+    }
+
+    /**
+     * Gera a representação Data URI em base64 do QR Code para um payload Pix
+     * 
+     * @param string $payload Código Pix Copia e Cola / BR Code
+     * @param int $size Tamanho da imagem
+     * @return string Data URI com o SVG
+     */
+    public static function gerarQrCodeDataUri(string $payload, int $size = 260): string
+    {
+        return QrCodeService::dataUri($payload, $size);
+    }
+
+    /**
+     * Consulta o status resumido de uma cobrança Pix (ex: 'pendente', 'pago', 'expirado')
+     * 
+     * @param string $txid Identificador da cobrança
+     * @return string Status da cobrança
+     */
+    public static function consultarStatusCobranca(string $txid): string
+    {
+        $info = self::consultarStatus($txid);
+        return $info['status'] ?? 'pendente';
+    }
+
+    /**
      * Consulta o status em tempo real de uma cobrança Pix
      * 
      * @param string $txid Identificador da cobrança

@@ -1572,3 +1572,23 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. Ajustado o rótulo do link secundário no modal para `"↗ Visualizar comprovante em tela cheia"` para evitar confusão de propósito.
   6. Criada a suíte de testes `tests/comprovantes_termicos_view_test.php` com 21/21 asserções aprovadas.
 - Como evitar no futuro: Sempre declarar constantes globais de URL (`baseUrl`) no topo dos scripts de view e garantir que documentos destinados à impressão térmica de 80mm possuam estilização de visualizador centralizado na tela (`@media screen` vs `@media print`).
+
+---
+
+## 2026-10-06 - Erro fatal ao gerar Pix balcão no PDV por ausência de método PixService::gerarCobranca()
+
+- Sintoma: Ao tentar realizar uma venda no balcão PDV (`/operacional/pdv`) com a forma de pagamento "Pix Balcão (QR Code)", o sistema exibia um pop-up de erro com a mensagem: `Erro ao gerar Pix balcão: Erro ao gerar cobrança Pix: Call to undefined method App\Services\PixService::gerarCobranca()`.
+- Causa:
+  1. A action `PdvController::pixGerar()` invocava os métodos estáticos `PixService::gerarCobranca($valor, $txid, $descricao, 900)` e `PixService::gerarQrCodeDataUri($payload)`, mas a classe `PixService` possuía apenas o método `gerarCobrancaPix()`, desenhado especificamente para recargas da carteira familiar (que exige `$responsavelId` e valor mínimo de R$ 10,00).
+  2. Como o método `gerarCobranca()` não existia em `PixService`, uma exceção `Error: Call to undefined method` era disparada, capturada no bloco `try/catch` do controller e devolvida ao frontend em JSON com status 500.
+- Solução aplicada:
+  1. Implementado o método estático `PixService::gerarCobranca(float $valor, ?string $txid, string $descricao, int $expiraEmSegundos = 900)`:
+     - Aceita qualquer valor monetário válido maior que zero (permitindo vendas avulsas de baixo valor no balcão, como água de R$ 3,50 ou salgados);
+     - Gera identificador `txid` único no padrão PDV caso não fornecido;
+     - Gera o payload oficial BR Code / EMVCo compatível com o Banco Central e o QR Code vetorial e Data URI em base64 via `QrCodeService`;
+     - Persiste a cobrança em cache temporário no storage;
+     - Retorna array completo com todas as chaves esperadas pelo controller e frontend (`txid`, `brcode`, `payload_brcode`, `copia_e_cola`, `qr_code_uri`, `qr_code_data_uri` e `valor_formatado`).
+  2. Implementado `PixService::gerarQrCodeDataUri(string $payload, int $size = 260)` encapsulando `QrCodeService::dataUri()`.
+  3. Implementado `PixService::consultarStatusCobranca(string $txid)` retornando o status resumido da cobrança ('pendente', 'pago', etc.).
+  4. Suíte automatizada `tests/pdv_pix_balcao_test.php` criada com 17/17 asserções aprovadas com 100% de sucesso.
+- Como evitar no futuro: Em integrações com gateways de pagamento que atendem tanto recargas familiares com regras de negócio específicas (valor mínimo e titular obrigatório) quanto vendas presenciais de balcão (qualquer valor e cliente anônimo), manter métodos dedicados e testar a interoperabilidade entre os controladores de PDV e as classes de serviço.

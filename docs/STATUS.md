@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Revisão de Segurança Pré-Publicação (Passo 5)
 * **Status da Revisão:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria e Blindagem de Segurança 100% Concluídas!
-* **Última Atualização:** 2026-10-06 09:10:00 (Correção do fluxo de impressão assíncrona de comprovantes térmicos e modernização do visualizador de bobina de 80mm centralizado na tela).
+* **Última Atualização:** 2026-10-06 09:35:00 (Implementação de cobrança Pix dinâmica para o PDV balcão com suporte a vendas avulsas sem valor mínimo pré-pago).
 
 
 
@@ -1356,15 +1356,36 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * **Autoprint:** Suporte nativo ao parâmetro `?autoprint=1` disparando a caixa de impressão automaticamente ao carregar;
   * **Atalhos:** Suporte a `Ctrl+P` (imprimir) e `Esc` (fechar).
 
+---
+
+### [x] Geração de Cobrança Pix Dinâmica para o Balcão PDV (Vendas Avulsas)
+
+* [x] **Diagnóstico da Causa Raiz:**
+  * O controller `PdvController::pixGerar()` invocava `PixService::gerarCobranca($valor, $txid, $descricao, 900)` e `PixService::gerarQrCodeDataUri($payload)`, mas a classe `PixService` possuía apenas o método `gerarCobrancaPix()` (desenhado para recarga familiar com titular obrigatório e valor mínimo de R$ 10,00);
+  * A ausência do método disparava exceção fatal `Call to undefined method App\Services\PixService::gerarCobranca()` ao tentar gerar o QR Code no balcão para vendas avulsas de qualquer valor (como R$ 3,50).
+
+* [x] **Implementação na Camada de Serviço (`app/services/PixService.php`):**
+  * `PixService::gerarCobranca(float $valor, ?string $txid, string $descricao, int $expiraEmSegundos = 900)`:
+    * Aceita qualquer valor monetário válido > 0 (viabilizando lanches e bebidas avulsas de pequeno valor);
+    * Gera `txid` no padrão PDV caso omitido;
+    * Monta o payload EMVCo / BR Code oficial e gera imagem SVG e Data URI via `QrCodeService`;
+    * Salva a cobrança em cache temporário no storage;
+    * Retorna todas as chaves esperadas (`txid`, `brcode`, `payload_brcode`, `copia_e_cola`, `qr_code_uri`, `qr_code_data_uri` e `valor_formatado`);
+  * `PixService::gerarQrCodeDataUri(string $payload, int $size = 260)`: encapsula `QrCodeService::dataUri()`;
+  * `PixService::consultarStatusCobranca(string $txid)`: consulta e retorna o status resumido da cobrança.
+
 * [x] **Testes Automatizados:**
-  * Nova suíte `tests/comprovantes_termicos_view_test.php` criada com **21 de 21 asserções aprovadas com 100% de sucesso**;
-  * Suítes existentes mantidas com 100% de aprovação (`tests/caixa_test.php` - 62/62, `tests/fase15_test.php` - 68/68, `tests/caixas_simultaneos_test.php` - 18/18).
+  * Nova suíte `tests/pdv_pix_balcao_test.php` criada com **17 de 17 asserções aprovadas com 100% de sucesso**;
+  * Testes de carteira e Pix da Fase 9 (`tests/fase9_test.php`) 100% mantidos (69/69);
+  * Testes de impressão e visualizadores (`tests/comprovantes_termicos_view_test.php`) 100% mantidos (21/21);
+  * Testes de gestão de caixa (`tests/caixa_test.php` - 62/62) e caixas simultâneos (`tests/caixas_simultaneos_test.php` - 18/18) 100% aprovados.
 
 ---
 
 ## Próximo Passo Recomendado
 
-1. Na interface do Caixa (`http://localhost:8080/operacional/caixa?turno=matutino`), abrir o modal de recarga presencial (`+ Recarga`), confirmar uma recarga e testar:
-   - Clicar no botão azul **"Imprimir Comprovante Térmico (80mm)"**: verificar que a caixa nativa de impressão do navegador abre diretamente sobre a tela com feedback visual;
-   - Clicar no link **"↗ Visualizar comprovante em tela cheia"**: verificar a nova tela profissional com barra superior de ferramentas de 100%, botões "Imprimir", "Baixar PDF" e o cupom de 80mm centralizado com fundo cinza;
-2. Realizar o commit das alterações no Git.
+1. No PDV Balcão (`http://localhost:8080/operacional/pdv`), adicionar itens ao carrinho (ex: Água Mineral sem Gás de R$ 3,50);
+2. Selecionar o cliente como "Anônimo", escolher a forma de pagamento **"Pix Balcão (QR Code)"** e clicar em **"Concluir Venda (F4)"**;
+3. Verificar que o modal do Pix Balcão abre perfeitamente exibindo o QR Code gerado, o valor formatado ("R$ 3,50") e o código Copia e Cola;
+4. Clicar em "Confirmar e Finalizar Venda" e verificar a geração da venda, emissão de comprovante e incremento contábil de `total_pix_balcao` na sessão de caixa;
+5. Realizar o commit das alterações no Git.
