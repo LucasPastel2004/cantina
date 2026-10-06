@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Revisão de Segurança Pré-Publicação (Passo 5)
 * **Status da Revisão:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria e Blindagem de Segurança 100% Concluídas!
-* **Última Atualização:** 2026-10-06 08:15:00 (Correção crítica de regra de negócio: bloqueio absoluto e blindagem multicamadas contra abertura simultânea de caixas matutino e vespertino para garantir integridade da gaveta e terminal físicos únicos).
+* **Última Atualização:** 2026-10-06 09:10:00 (Correção do fluxo de impressão assíncrona de comprovantes térmicos e modernização do visualizador de bobina de 80mm centralizado na tela).
 
 
 
@@ -1337,10 +1337,34 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Correção do Fluxo de Impressão Térmica Direta e Visualizador de Bobina de 80mm
+
+* [x] **Diagnóstico da Causa Raiz:**
+  * No script de `caixa.php`, a função de impressão do iframe tentava interpolar `${baseUrl}`, mas a variável `baseUrl` não estava declarada no JavaScript, disparando `ReferenceError: baseUrl is not defined` silenciosamente no console do navegador e impedindo o acionamento do botão azul "Imprimir Comprovante Térmico (80mm)";
+  * A função não tratava `iframe.onload` e a página de destino não escutava `?autoprint=1`;
+  * As views de bobina térmica (`recarga_dinheiro_pdf.php` e `cupom_pdv_80mm.php`) continham `body { width: 80mm; background: #fff; }` global sem tratamento para exibição em tela, gerando uma visualização espremida no canto superior esquerdo em telas normais de computador.
+
+* [x] **Correções nos Scripts de Impressão (`caixa.php` e `pdv.php`):**
+  * Declarada `const baseUrl = "<?php echo $baseUrl; ?>";` no início do script de `caixa.php`;
+  * `imprimirComprovanteRecargaIframe` e `imprimirComprovanteIframe` atualizados com listener `iframe.onload`, foco automático no `contentWindow` e disparo de `print()`;
+  * Adicionado feedback visual no botão com spinner e tratamento de fallback para `window.open`;
+  * Rótulo do link secundário ajustado para `"↗ Visualizar comprovante em tela cheia"` para diferenciar claramente da impressão direta.
+
+* [x] **Modernização das Views de Comprovante Térmico (`recarga_dinheiro_pdf.php` e `cupom_pdv_80mm.php`):**
+  * **Visualizador em Tela (`@media screen`):** Barra superior fixa de 100% de largura (`.top-toolbar`) com botões profissionais ("Imprimir Comprovante (Ctrl+P)", "Baixar PDF" e "Fechar Janela"); fundo cinza corporativo `#f1f5f9` e container `.receipt-screen-wrapper` centralizando o cupom de 80mm com fundo branco e sombra suave como um documento físico real;
+  * **Impressão Física (`@media print`):** Barra oculta, margens zero e largura exata de 80mm preservadas para saída perfeita em impressoras de bobina térmica;
+  * **Autoprint:** Suporte nativo ao parâmetro `?autoprint=1` disparando a caixa de impressão automaticamente ao carregar;
+  * **Atalhos:** Suporte a `Ctrl+P` (imprimir) e `Esc` (fechar).
+
+* [x] **Testes Automatizados:**
+  * Nova suíte `tests/comprovantes_termicos_view_test.php` criada com **21 de 21 asserções aprovadas com 100% de sucesso**;
+  * Suítes existentes mantidas com 100% de aprovação (`tests/caixa_test.php` - 62/62, `tests/fase15_test.php` - 68/68, `tests/caixas_simultaneos_test.php` - 18/18).
+
+---
+
 ## Próximo Passo Recomendado
 
-1. Acessar a interface operacional de Caixa (`http://localhost:8080/operacional/caixa?turno=matutino`) e abrir o caixa matutino;
-2. Alternar para a aba **Vespertino**: constatar que o botão de abertura está bloqueado, o alerta âmbar é exibido e o modal oferece o atalho direto para fechar o caixa matutino;
-3. Tentar abrir o caixa vespertino no PDV (`http://localhost:8080/operacional/pdv`): constatar o bloqueio e atalho direto;
-4. Fechar o caixa matutino prestando contas e verificar que o caixa vespertino é liberado imediatamente;
-5. Realizar o commit das alterações no Git.
+1. Na interface do Caixa (`http://localhost:8080/operacional/caixa?turno=matutino`), abrir o modal de recarga presencial (`+ Recarga`), confirmar uma recarga e testar:
+   - Clicar no botão azul **"Imprimir Comprovante Térmico (80mm)"**: verificar que a caixa nativa de impressão do navegador abre diretamente sobre a tela com feedback visual;
+   - Clicar no link **"↗ Visualizar comprovante em tela cheia"**: verificar a nova tela profissional com barra superior de ferramentas de 100%, botões "Imprimir", "Baixar PDF" e o cupom de 80mm centralizado com fundo cinza;
+2. Realizar o commit das alterações no Git.

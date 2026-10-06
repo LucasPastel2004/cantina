@@ -1034,8 +1034,8 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     Imprimir Comprovante Térmico (80mm)
                 </button>
                 <div class="d-flex justify-content-center gap-3 font-11 mt-1">
-                    <a id="btnComprovanteAba" href="#" target="_blank" class="text-secondary text-decoration-none" title="Abrir em aba separada">
-                        ↗ Abrir em nova aba
+                    <a id="btnComprovanteAba" href="#" target="_blank" class="text-secondary text-decoration-none" title="Visualizar comprovante em tela cheia">
+                        ↗ Visualizar comprovante em tela cheia
                     </a>
                     <span class="text-muted">|</span>
                     <a id="btnComprovantePdf" href="#" target="_blank" class="text-secondary text-decoration-none" title="Baixar arquivo PDF">
@@ -1072,6 +1072,22 @@ function imprimirComprovanteIframe(vendaId = null) {
     const id = vendaId || ultimaVendaIdConcluida;
     if (!id) return;
 
+    const url = `${baseUrl}/operacional/pdv/comprovante/${id}?autoprint=1`;
+
+    const btnPrint = document.getElementById('btnImprimirComprovante');
+    const originalHtml = btnPrint ? btnPrint.innerHTML : '';
+    if (btnPrint) {
+        btnPrint.disabled = true;
+        btnPrint.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Abrindo Impressão...';
+    }
+
+    const restaurarBotao = () => {
+        if (btnPrint) {
+            btnPrint.disabled = false;
+            btnPrint.innerHTML = originalHtml;
+        }
+    };
+
     let iframe = document.getElementById('iframeImpressaoPdv');
     if (!iframe) {
         iframe = document.createElement('iframe');
@@ -1086,7 +1102,26 @@ function imprimirComprovanteIframe(vendaId = null) {
         document.body.appendChild(iframe);
     }
 
-    iframe.src = `${baseUrl}/operacional/pdv/comprovante/${id}?autoprint=1`;
+    iframe.onload = function() {
+        setTimeout(function() {
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch (err) {
+                console.warn('Impressão direta via iframe não permitida pelo navegador, abrindo janela:', err);
+                window.open(url, '_blank');
+            } finally {
+                restaurarBotao();
+            }
+        }, 300);
+    };
+
+    iframe.onerror = function() {
+        restaurarBotao();
+        window.open(url, '_blank');
+    };
+
+    iframe.src = url;
 }
 
 // Inicia escutas de atalhos de teclado (F2, F3, F4, F8, F9, F10, Esc)

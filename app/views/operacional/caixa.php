@@ -818,8 +818,8 @@ if ($resumoOficial) {
                         </button>
                     </div>
                     <div class="d-flex justify-content-center gap-3 font-11 mt-2">
-                        <a id="recargaBtnAba" href="#" target="_blank" class="text-secondary text-decoration-none" title="Abrir comprovante em nova aba">
-                            ↗ Abrir em nova aba
+                        <a id="recargaBtnAba" href="#" target="_blank" class="text-secondary text-decoration-none" title="Visualizar comprovante em tela cheia">
+                            ↗ Visualizar comprovante em tela cheia
                         </a>
                     </div>
                 </div>
@@ -838,6 +838,8 @@ if ($resumoOficial) {
 </div>
 
 <script>
+const baseUrl = "<?php echo $baseUrl; ?>";
+
 // ============================================================================
 // CONFERÊNCIA FÍSICA E QUEBRA/SOBRA DE CAIXA
 // ============================================================================
@@ -1172,6 +1174,22 @@ function confirmarFechamento() {
         const id = transacaoId || transacaoConcluidaId;
         if (!id) return;
 
+        const url = `${baseUrl}/operacional/caixa/comprovante-recarga/${id}?autoprint=1`;
+
+        const btnPrint = document.getElementById('recargaBtnImprimirHtml');
+        const originalHtml = btnPrint ? btnPrint.innerHTML : '';
+        if (btnPrint) {
+            btnPrint.disabled = true;
+            btnPrint.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Abrindo Impressão...';
+        }
+
+        const restaurarBotao = () => {
+            if (btnPrint) {
+                btnPrint.disabled = false;
+                btnPrint.innerHTML = originalHtml;
+            }
+        };
+
         let iframe = document.getElementById('iframeImpressaoRecarga');
         if (!iframe) {
             iframe = document.createElement('iframe');
@@ -1186,7 +1204,26 @@ function confirmarFechamento() {
             document.body.appendChild(iframe);
         }
 
-        iframe.src = `${baseUrl}/operacional/caixa/comprovante-recarga/${id}?autoprint=1`;
+        iframe.onload = function() {
+            setTimeout(function() {
+                try {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                } catch (err) {
+                    console.warn('Impressão direta via iframe não permitida pelo navegador, abrindo janela:', err);
+                    window.open(url, '_blank');
+                } finally {
+                    restaurarBotao();
+                }
+            }, 300);
+        };
+
+        iframe.onerror = function() {
+            restaurarBotao();
+            window.open(url, '_blank');
+        };
+
+        iframe.src = url;
     }
 
     function mostrarErro(msg) {

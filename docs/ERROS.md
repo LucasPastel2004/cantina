@@ -1551,3 +1551,24 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. Nas views `caixa.php`, `pdv.php` e `abertura_caixa.php`: alertas transformados em avisos âmbar (`alert-warning`), botão primário desabilitado para `"Abrir caixa (Bloqueado)"` e modais blindados com botão de atalho direto para fechar o turno pendente.
   6. Suíte de integração `tests/caixas_simultaneos_test.php` criada e aprovada (18/18 asserções), além de `tests/caixa_test.php` (62/62) e `tests/fase15_test.php` (68/68).
 - Como evitar no futuro: Em operações de PDV que utilizam gaveta física única e terminal compartilhado, a trava de unicidade deve ser de âmbito global no nível do terminal físico (`obterQualquerSessaoAberta`), blindando todas as camadas (Model, Controllers e Views) contra concorrência de turnos.
+
+---
+
+## 2026-10-06 - Botão de impressão térmica inoperante por variável inexistente e comprovante de 80mm desalinhado em tela cheia
+
+- Sintoma: No modal de confirmação de recarga presencial (`/operacional/caixa`), ao clicar no botão azul "Imprimir Comprovante Térmico (80mm)", nenhuma ação ocorria e o diálogo nativo de impressão não abria. Ao clicar no link de abertura em nova janela, o comprovante era exibido grudado no canto esquerdo superior como uma tirinha estreita de 80mm, com o restante da tela em branco vazio e uma barra de botões minúscula ("toda mal formatada e bugada").
+- Causa:
+  1. No script de `app/views/operacional/caixa.php`, a função `imprimirComprovanteRecargaIframe` interpolava `${baseUrl}` em template literal JS, mas `baseUrl` nunca havia sido declarada como constante/variável JavaScript no template, disparando `Uncaught ReferenceError: baseUrl is not defined` no console do navegador e abortando a rotina.
+  2. A função apenas atribuía a URL ao `iframe.src` sem tratar o evento `iframe.onload` para acionar `iframe.contentWindow.print()`.
+  3. A view `recarga_dinheiro_pdf.php` não possuía script escutando a query string `?autoprint=1`.
+  4. O CSS das views de bobina térmica (`recarga_dinheiro_pdf.php` e `cupom_pdv_80mm.php`) continha `body { width: 80mm; background: #fff; }` global sem separação por `@media`, fazendo com que telas de alta resolução (1080p) exibissem a página comprimida no canto esquerdo, com barra `.no-print` de apenas 80mm e sem enquadramento de pré-visualização.
+- Solução aplicada:
+  1. Declarada a constante JavaScript `const baseUrl = "<?php echo $baseUrl; ?>";` no início do `<script>` em `app/views/operacional/caixa.php`.
+  2. Aprimorada a função de impressão do iframe em `caixa.php` e `pdv.php`: adicionado listener `iframe.onload` com foco e disparo de `print()`, tratamento de exceção com fallback automático para `window.open`, e feedback visual com spinner no botão enquanto o diálogo do sistema é preparado.
+  3. Adicionado listener nativo em `recarga_dinheiro_pdf.php` e `cupom_pdv_80mm.php` para disparar `window.print()` automaticamente se `?autoprint=1` estiver na URL, além de suporte a atalhos de teclado (Ctrl+P e Esc).
+  4. Redesenhado o layout das views de bobina térmica com segregação responsiva:
+     - `@media screen`: barra superior corporativa fixa de 100% de largura (`.top-toolbar`) com botões "Imprimir Comprovante (Ctrl+P)", "Baixar PDF" e "Fechar Janela"; fundo cinza neutro `#f1f5f9` e container `.receipt-screen-wrapper` centralizando o cupom de 80mm com fundo branco e sombra suave como uma folha real em visualizador de documentos;
+     - `@media print`: barra oculta (`display: none !important`), margens zero e largura exata de 80mm para impressão contínua em bobina física.
+  5. Ajustado o rótulo do link secundário no modal para `"↗ Visualizar comprovante em tela cheia"` para evitar confusão de propósito.
+  6. Criada a suíte de testes `tests/comprovantes_termicos_view_test.php` com 21/21 asserções aprovadas.
+- Como evitar no futuro: Sempre declarar constantes globais de URL (`baseUrl`) no topo dos scripts de view e garantir que documentos destinados à impressão térmica de 80mm possuam estilização de visualizador centralizado na tela (`@media screen` vs `@media print`).
