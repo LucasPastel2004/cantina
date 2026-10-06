@@ -140,17 +140,17 @@ if ($resumoOficial) {
 
 <!-- Alerta de Caixa Ativo no Outro Turno -->
 <?php if ($sessaoOutroTurno): ?>
-    <div class="alert alert-info d-flex justify-content-between align-items-center mb-3 py-2 px-3" style="font-size: 12px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 6px;">
+    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3 py-2 px-3" style="font-size: 12px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: 6px;">
         <div class="d-flex align-items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
-                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
             </svg>
             <span>
-                Existe uma sessão aberta no turno <strong><?php echo $outroTurnoNome; ?> (Sessão #<?php echo $sessaoOutroTurno['id']; ?>)</strong>.
+                <strong>Atenção:</strong> A sessão de caixa do turno <strong><?php echo $outroTurnoNome; ?> (Sessão #<?php echo $sessaoOutroTurno['id']; ?>)</strong> ainda está aberta. O sistema não permite dois caixas abertos simultaneamente.
             </span>
         </div>
-        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-secondary btn-sm" style="font-size: 11px;">
-            Ver Turno <?php echo $outroTurnoNome; ?> →
+        <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-warning btn-sm font-semibold" style="font-size: 11px;">
+            Ir para Fechamento do Turno <?php echo $outroTurnoNome; ?> →
         </a>
     </div>
 <?php endif; ?>
@@ -215,6 +215,14 @@ if ($resumoOficial) {
                         <path d="M5 8a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 8z"/>
                     </svg>
                     Fechar caixa
+                </button>
+            <?php elseif ($sessaoOutroTurno): ?>
+                <button type="button" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1 font-semibold opacity-75" disabled title="Não é permitido abrir este caixa enquanto o turno <?php echo $outroTurnoNome; ?> estiver aberto.">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M5 8a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 8z"/>
+                    </svg>
+                    Abrir caixa (Bloqueado)
                 </button>
             <?php else: ?>
                 <button type="button" class="btn btn-enterprise btn-success btn-sm d-inline-flex align-items-center gap-1 font-semibold" data-bs-toggle="modal" data-bs-target="#modalAbrirCaixa">
@@ -469,45 +477,66 @@ if ($resumoOficial) {
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <form action="<?php echo $baseUrl; ?>/operacional/caixa/abrir" method="POST">
+            <?php if ($sessaoOutroTurno): ?>
                 <div class="modal-body p-4">
-                    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
-                    <input type="hidden" name="turno" value="<?php echo htmlspecialchars($turnoAtual, ENT_QUOTES, 'UTF-8'); ?>">
-
-                    <p class="font-12 text-secondary mb-3">
-                        Inicie o expediente da cantina. Caso haja cédulas ou moedas de troco físico na gaveta, declare o valor abaixo.
-                    </p>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-12 col-md-6">
-                            <label class="form-label font-11 font-semibold text-secondary">Turno de Operação</label>
-                            <input type="text" class="form-control form-control-sm font-semibold bg-light" 
-                                   value="<?php echo ($turnoAtual === 'matutino') ? 'Matutino (Manhã)' : 'Vespertino (Tarde)'; ?>" readonly>
+                    <div class="alert alert-warning mb-0" style="font-size: 12.5px; line-height: 1.5;">
+                        <div class="d-flex align-items-center gap-2 mb-2 font-semibold text-dark">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                            Abertura Bloqueada
                         </div>
-                        <div class="col-12 col-md-6">
-                            <label class="form-label font-11 font-semibold text-secondary">Fundo de Troco Inicial (Gaveta)</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text">R$</span>
-                                <input type="text" name="fundo_troco_inicial" class="form-control font-tabular input-money font-semibold" value="0,00" required autofocus>
-                            </div>
-                            <div class="form-text font-11 text-muted">Padrão R$ 0,00 (caso não utilize troco físico).</div>
-                        </div>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label font-11 font-semibold text-secondary">Observações de Abertura (Opcional)</label>
-                        <input type="text" name="observacoes" class="form-control form-control-sm font-12" placeholder="Ex: Abertura do turno matutino sem troco inicial...">
+                        O caixa do turno <strong><?php echo $outroTurnoNome; ?> (Sessão #<?php echo $sessaoOutroTurno['id']; ?>)</strong> ainda está aberto. O sistema não permite abrir dois caixas simultaneamente.<br><br>
+                        Para abrir o caixa do turno <strong><?php echo ucfirst($turnoAtual); ?></strong>, é obrigatório realizar a contagem física e o fechamento do turno anterior.
                     </div>
                 </div>
                 <div class="modal-footer card-enterprise-footer py-2 px-4 d-flex justify-content-between">
                     <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">
                         Cancelar
                     </button>
-                    <button type="submit" class="btn btn-enterprise btn-success btn-sm px-3">
-                        Confirmar Abertura de Caixa
-                    </button>
+                    <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-warning btn-sm font-semibold">
+                        Ir para Fechamento do Turno <?php echo $outroTurnoNome; ?> →
+                    </a>
                 </div>
-            </form>
+            <?php else: ?>
+                <form action="<?php echo $baseUrl; ?>/operacional/caixa/abrir" method="POST">
+                    <div class="modal-body p-4">
+                        <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+                        <input type="hidden" name="turno" value="<?php echo htmlspecialchars($turnoAtual, ENT_QUOTES, 'UTF-8'); ?>">
+
+                        <p class="font-12 text-secondary mb-3">
+                            Inicie o expediente da cantina. Caso haja cédulas ou moedas de troco físico na gaveta, declare o valor abaixo.
+                        </p>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label font-11 font-semibold text-secondary">Turno de Operação</label>
+                                <input type="text" class="form-control form-control-sm font-semibold bg-light" 
+                                       value="<?php echo ($turnoAtual === 'matutino') ? 'Matutino (Manhã)' : 'Vespertino (Tarde)'; ?>" readonly>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label font-11 font-semibold text-secondary">Fundo de Troco Inicial (Gaveta)</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" name="fundo_troco_inicial" class="form-control font-tabular input-money font-semibold" value="0,00" required autofocus>
+                                </div>
+                                <div class="form-text font-11 text-muted">Padrão R$ 0,00 (caso não utilize troco físico).</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label font-11 font-semibold text-secondary">Observações de Abertura (Opcional)</label>
+                            <input type="text" name="observacoes" class="form-control form-control-sm font-12" placeholder="Ex: Abertura do turno matutino sem troco inicial...">
+                        </div>
+                    </div>
+                    <div class="modal-footer card-enterprise-footer py-2 px-4 d-flex justify-content-between">
+                        <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-enterprise btn-success btn-sm px-3">
+                            Confirmar Abertura de Caixa
+                        </button>
+                    </div>
+                </form>
+            <?php endif; ?>
         </div>
     </div>
 </div>

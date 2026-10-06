@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Revisão de Segurança Pré-Publicação (Passo 5)
 * **Status da Revisão:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria e Blindagem de Segurança 100% Concluídas!
-* **Última Atualização:** 2026-10-05 15:10:00 (Melhoria de UX e fluxo no Primeiro Acesso: ao errar 5 vezes, o usuário não é mais expulso para a tela inicial de CPF; o sistema mantém a sessão ativa na tela de confirmação de código e exibe botão direto "Solicitar Novo Código por WhatsApp", eliminando atrito de redigitação de CPF e evitando loops de expiração).
+* **Última Atualização:** 2026-10-06 08:15:00 (Correção crítica de regra de negócio: bloqueio absoluto e blindagem multicamadas contra abertura simultânea de caixas matutino e vespertino para garantir integridade da gaveta e terminal físicos únicos).
 
 
 
@@ -1307,8 +1307,40 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Bloqueio Rigoroso de Abertura Simultânea de Caixas Matutino e Vespertino (Terminal Único)
+
+* [x] **Diagnóstico da Causa Raiz:**
+  * No model `SessaoCaixa::abrir()`, a verificação de sessão aberta era restrita ao turno requisitado (`$sessaoExistente = self::obterSessaoAberta($turno)`). Ao alternar para o turno oposto na interface, `$sessaoExistente` vinha nulo e um segundo registro aberto era gerado.
+  * O método `SessaoCaixa::obterSessaoAberta()` continha filtro estrito `DATE(sc.aberto_em) = :hoje`, fazendo com que caixas esquecidos abertos no dia anterior ficassem invisíveis no dia seguinte.
+  * As telas `operacional/caixa.php` e `operacional/pdv.php` apenas exibiam avisos neutros azuis, mantendo os botões de abertura verdes e formulários ativos.
+
+* [x] **Blindagem no Model (`app/models/SessaoCaixa.php`):**
+  * Implementado `obterQualquerSessaoAberta(): ?array` para varrer o banco à procura de qualquer registro com `status = 'aberto'`;
+  * Ajustado `obterSessaoAberta(?string $turno = null)` para delegar a busca geral quando `$turno` for nulo e remover o filtro estrito de data, impedindo sessões fantasmas;
+  * `SessaoCaixa::abrir()` agora bloqueia expressamente com `DomainException` se qualquer sessão já estiver aberta (no mesmo turno ou turno oposto), informando o ID e o turno ativo.
+
+* [x] **Blindagem nos Controllers:**
+  * `CaixaController::abrirTela()`: redireciona com flash `warning` e mensagem explicativa impedindo a abertura da tela de formulário quando houver turno concorrente aberto;
+  * `CaixaController::abrir()`: validação preventiva no POST bloqueando a ação antes da camada de persistência com flash `danger`;
+  * `PdvController::abrirCaixaRapido()`: validação idêntica bloqueando a abertura rápida no terminal PDV.
+
+* [x] **Blindagem nas Interfaces Web:**
+  * `app/views/operacional/caixa.php`: alerta destacado em amarelo âmbar (`alert-warning`), botão principal desabilitado como `"Abrir caixa (Bloqueado)"` e modal `#modalAbrirCaixa` substituído por aviso e botão de atalho direto para fechar a sessão concorrente;
+  * `app/views/operacional/pdv.php`: aviso institucional em amarelo âmbar, botões de abertura rápida bloqueados com link `"Fechar Caixa {Turno} →"`, e modal de abertura rápida bloqueado;
+  * `app/views/operacional/abertura_caixa.php`: diretriz reforçada explicitando a regra física de terminal e gaveta únicos.
+
+* [x] **Homologação e Testes Automatizados:**
+  * Nova suíte dedicada `tests/caixas_simultaneos_test.php` criada com **18 de 18 asserções aprovadas com 100% de sucesso**;
+  * Suíte operacional `tests/caixa_test.php` com **62 de 62 asserções aprovadas**;
+  * Suíte da Fase 15 (`tests/fase15_test.php`) com **68 de 68 asserções aprovadas**;
+  * Simulação web `tests/web_simulation_test.php` com **5 de 5 testes aprovados**.
+
+---
+
 ## Próximo Passo Recomendado
 
-1. Acessar a tela do **DRE Gerencial** (`http://localhost:8080/financeiro/dre`) e alternar entre **Regime de Competência** e **Regime de Caixa** para visualizar o demonstrativo e os gráficos reativos;
-2. Acessar o novo **Relatório de Arrecadação Financeira** (`http://localhost:8080/relatorios/arrecadacao`) e testar os filtros de período, atalhos rápidos, espelho de impressão A4, download de PDF e exportação para Excel (CSV);
-3. Realizar o commit das alterações no repositório Git.
+1. Acessar a interface operacional de Caixa (`http://localhost:8080/operacional/caixa?turno=matutino`) e abrir o caixa matutino;
+2. Alternar para a aba **Vespertino**: constatar que o botão de abertura está bloqueado, o alerta âmbar é exibido e o modal oferece o atalho direto para fechar o caixa matutino;
+3. Tentar abrir o caixa vespertino no PDV (`http://localhost:8080/operacional/pdv`): constatar o bloqueio e atalho direto;
+4. Fechar o caixa matutino prestando contas e verificar que o caixa vespertino é liberado imediatamente;
+5. Realizar o commit das alterações no Git.

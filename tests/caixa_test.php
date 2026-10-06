@@ -138,16 +138,35 @@ class CaixaTest
         $operadorId = $this->obterOperadorId();
         $hoje = date('Y-m-d');
 
-        // Garante que não haja sessão aberta no turno vespertino para testar
-        $this->pdo->exec("UPDATE sessoes_caixa SET status = 'fechado', fechado_em = NOW() WHERE turno = 'vespertino' AND status = 'aberto'");
+        // Garante que não haja nenhuma sessão aberta antes do teste
+        $this->pdo->exec("UPDATE sessoes_caixa SET status = 'fechado', fechado_em = NOW() WHERE status = 'aberto'");
 
-        // Abertura de sessão
+        // Abertura de sessão vespertina
         $sessaoId = SessaoCaixa::abrir($operadorId, 'vespertino', 60.00, 'Abertura para teste de fechamento');
         $this->assert($sessaoId > 0, "Sessão de caixa aberta com ID #{$sessaoId}");
 
         $sessao = SessaoCaixa::buscarPorId($sessaoId);
         $this->assert($sessao['status'] === 'aberto', "Status da sessão é 'aberto'");
         $this->assert((float)$sessao['fundo_troco_inicial'] === 60.00, "Fundo de troco inicial gravado como R$ 60,00");
+
+        // Bloqueio de turno concorrente: tentar abrir matutino enquanto vespertino está aberto
+        $bloqueioTurnoOposto = false;
+        try {
+            SessaoCaixa::abrir($operadorId, 'matutino', 50.00, 'Tentativa matutino com vespertino aberto');
+        } catch (\DomainException $e) {
+            $bloqueioTurnoOposto = true;
+            $this->assert(str_contains($e->getMessage(), 'Não é permitido abrir o caixa do turno Matutino'), "Mensagem explicativa de bloqueio de turno concorrente disparada");
+        }
+        $this->assert($bloqueioTurnoOposto, "Sistema bloqueia categoricamente abertura simultânea de caixas em turnos opostos (matutino e vespertino ao mesmo tempo)");
+
+        // Bloqueio de sessão duplicada no mesmo turno
+        $bloqueioMesmoTurno = false;
+        try {
+            SessaoCaixa::abrir($operadorId, 'vespertino', 30.00, 'Tentativa vespertino duplicado');
+        } catch (\DomainException $e) {
+            $bloqueioMesmoTurno = true;
+        }
+        $this->assert($bloqueioMesmoTurno, "Sistema bloqueia tentativa de abrir caixa duplicado no mesmo turno");
 
         // Simula vendas: R$ 40 em dinheiro avulso e R$ 25 em Pix
         SessaoCaixa::incrementarTotais($sessaoId, 40.00, 25.00, 0.00);

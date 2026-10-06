@@ -101,9 +101,13 @@ class CaixaController extends Controller
             $turno = SessaoCaixa::TURNO_MATUTINO;
         }
 
-        $sessaoAberta = SessaoCaixa::obterSessaoAberta($turno);
-        if ($sessaoAberta) {
-            Session::setFlash('info', "O caixa do turno " . ucfirst($turno) . " já está aberto (Sessão #{$sessaoAberta['id']}).");
+        $sessaoAbertaAtual = SessaoCaixa::obterQualquerSessaoAberta();
+        if ($sessaoAbertaAtual) {
+            if ($sessaoAbertaAtual['turno'] === $turno) {
+                Session::setFlash('info', "O caixa do turno " . ucfirst($turno) . " já está aberto (Sessão #{$sessaoAbertaAtual['id']}).");
+            } else {
+                Session::setFlash('warning', "Não é permitido abrir o caixa do turno " . ucfirst($turno) . " pois o caixa do turno " . ucfirst($sessaoAbertaAtual['turno']) . " (Sessão #{$sessaoAbertaAtual['id']}) ainda está aberto. O sistema não permite abrir dois caixas simultaneamente. Realize o fechamento do turno anterior primeiro.");
+            }
             $this->redirect('/operacional/caixa?turno=' . urlencode($turno));
             return;
         }
@@ -142,6 +146,18 @@ class CaixaController extends Controller
         }
         $fundoTroco = (float)$fundoLimpo;
         $observacoes = trim($_POST['observacoes'] ?? '');
+
+        // Validação preventiva no Controller: verificar se há qualquer sessão de caixa aberta
+        $sessaoAbertaAtual = SessaoCaixa::obterQualquerSessaoAberta();
+        if ($sessaoAbertaAtual) {
+            if ($sessaoAbertaAtual['turno'] === $turno) {
+                Session::setFlash('warning', "O caixa do turno " . ucfirst($turno) . " já está aberto (Sessão #{$sessaoAbertaAtual['id']}).");
+            } else {
+                Session::setFlash('danger', "Operação bloqueada: Não é permitido abrir o caixa do turno " . ucfirst($turno) . " enquanto o caixa do turno " . ucfirst($sessaoAbertaAtual['turno']) . " (Sessão #{$sessaoAbertaAtual['id']}) ainda estiver aberto. O sistema não permite abrir dois caixas simultaneamente. Realize o fechamento do turno anterior antes de iniciar o novo turno.");
+            }
+            $this->redirect('/operacional/caixa?turno=' . urlencode($turno));
+            return;
+        }
 
         try {
             $operadorId = Auth::id() ?? 1;

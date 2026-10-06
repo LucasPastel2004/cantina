@@ -29,18 +29,38 @@ class SessaoCaixa extends Model
     public const TURNO_VESPERTINO = 'vespertino';
 
     /**
+     * Obtém qualquer sessão de caixa que esteja com status 'aberto' no sistema
+     * (independente de turno)
+     * 
+     * @return array|null Dados da sessão aberta ou null se nenhuma estiver aberta
+     */
+    public static function obterQualquerSessaoAberta(): ?array
+    {
+        return self::fetchOne("
+            SELECT sc.*, u.nome AS operador_nome, u.usuario AS operador_login
+            FROM sessoes_caixa sc
+            INNER JOIN usuarios u ON u.id = sc.operador_id
+            WHERE sc.status = 'aberto'
+            ORDER BY sc.id DESC
+            LIMIT 1
+        ");
+    }
+
+    /**
      * Obtém a sessão de caixa atualmente aberta para o turno ou para o momento atual
      * 
-     * @param string|null $turno 'matutino', 'vespertino' ou null para inferir pelo horário atual
+     * @param string|null $turno 'matutino', 'vespertino' ou null para inferir pelo horário atual ou sessão aberta
      * @return array|null Dados da sessão aberta ou null se fechada
      */
     public static function obterSessaoAberta(?string $turno = null): ?array
     {
         if ($turno === null) {
+            $sessaoQualquer = self::obterQualquerSessaoAberta();
+            if ($sessaoQualquer) {
+                return $sessaoQualquer;
+            }
             $turno = self::inferirTurnoAtual();
         }
-
-        $hoje = date('Y-m-d');
 
         return self::fetchOne("
             SELECT sc.*, u.nome AS operador_nome, u.usuario AS operador_login
@@ -48,12 +68,10 @@ class SessaoCaixa extends Model
             INNER JOIN usuarios u ON u.id = sc.operador_id
             WHERE sc.status = 'aberto'
               AND sc.turno = :turno
-              AND DATE(sc.aberto_em) = :hoje
             ORDER BY sc.id DESC
             LIMIT 1
         ", [
-            'turno' => $turno,
-            'hoje'  => $hoje
+            'turno' => $turno
         ]);
     }
 
@@ -92,14 +110,27 @@ class SessaoCaixa extends Model
             throw new \InvalidArgumentException('O fundo de troco inicial não pode ser negativo.');
         }
 
-        $sessaoExistente = self::obterSessaoAberta($turno);
-        if ($sessaoExistente) {
-            throw new \DomainException(sprintf(
-                'Já existe uma sessão de caixa aberta para o turno %s (Sessão #%d aberta por %s).',
-                ucfirst($turno),
-                $sessaoExistente['id'],
-                $sessaoExistente['operador_nome']
-            ));
+        // Verifica se há QUALQUER sessão de caixa aberta no momento (mesmo turno ou turno oposto)
+        $sessaoAbertaAtual = self::obterQualquerSessaoAberta();
+        if ($sessaoAbertaAtual) {
+            if ($sessaoAbertaAtual['turno'] === $turno) {
+                throw new \DomainException(sprintf(
+                    'Já existe uma sessão de caixa aberta para o turno %s (Sessão #%d aberta em %s por %s).',
+                    ucfirst($turno),
+                    $sessaoAbertaAtual['id'],
+                    date('d/m/Y H:i', strtotime($sessaoAbertaAtual['aberto_em'])),
+                    $sessaoAbertaAtual['operador_nome']
+                ));
+            } else {
+                throw new \DomainException(sprintf(
+                    'Não é permitido abrir o caixa do turno %s enquanto o caixa do turno %s (Sessão #%d, aberto em %s por %s) ainda estiver aberto. É obrigatório realizar o fechamento e a prestação de contas do turno anterior antes de iniciar um novo turno.',
+                    ucfirst($turno),
+                    ucfirst($sessaoAbertaAtual['turno']),
+                    $sessaoAbertaAtual['id'],
+                    date('d/m/Y H:i', strtotime($sessaoAbertaAtual['aberto_em'])),
+                    $sessaoAbertaAtual['operador_nome']
+                ));
+            }
         }
 
         $pdo = self::getPdo();

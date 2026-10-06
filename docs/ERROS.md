@@ -1532,3 +1532,22 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   1. Substituída a chamada por `echo PdfService::renderView('relatorios/arrecadacao_pdf', $dados);`.
   2. Protegidas todas as diretivas de encerramento com `if (!defined('CANTINA_TEST_MODE')) { exit; }`, permitindo que os testes automatizados capturem os buffers de saída com `ob_start() / ob_get_clean()` e continuem a execução com sucesso.
 - Como evitar no futuro: Em controllers que emitem saídas para download direto ou impressão, padronizar a invocação através do serviço unificado `PdfService::renderView()` e proteger instruções `exit` com constantes de ambiente de teste para viabilizar testes unitários e de integração contínua via CLI.
+
+---
+
+## 2026-10-06 - Abertura simultânea indevida de caixas em turnos concorrentes (matutino e vespertino ao mesmo tempo)
+
+- Sintoma: O sistema permitia abrir o caixa do turno matutino e do turno vespertino concomitantemente no mesmo dia e terminal. Ao alternar a aba de turno na gestão de caixa ou no PDV, o botão de abertura permanecia ativo e o backend efetuava o INSERT de uma segunda sessão aberta, violando a regra de gaveta física e terminal únicos da cantina.
+- Causa:
+  1. No model `SessaoCaixa::abrir($turno, ...)`, a validação de sessão ativa filtrava estritamente por `$sessaoExistente = self::obterSessaoAberta($turno)`. Ao requisitar o turno oposto, `$sessaoExistente` retornava `null` e uma nova sessão com status `'aberto'` era inserida.
+  2. No método `SessaoCaixa::obterSessaoAberta($turno)`, a consulta continha a restrição `DATE(sc.aberto_em) = :hoje`. Sessões esquecidas abertas de dias anteriores ficavam invisíveis no dia seguinte, permitindo novas aberturas e gerando inconsistências contábeis.
+  3. Nos controllers `CaixaController` (`abrirTela` e `abrir`) e `PdvController::abrirCaixaRapido`, não existiam travas preventivas contra abertura com turno concorrente pendente.
+  4. Nas views `caixa.php` e `pdv.php`, o alerta de outro turno aberto era puramente informativo (`alert-info`), mantendo botões de ação e modais de abertura ativos e funcionais.
+- Solução aplicada:
+  1. Criado o método central `SessaoCaixa::obterQualquerSessaoAberta(): ?array` para detectar qualquer sessão em aberto independentemente de data ou turno.
+  2. Atualizado `SessaoCaixa::obterSessaoAberta(?string $turno = null)` para delegar a busca geral e remover a restrição por data `DATE(sc.aberto_em) = :hoje`.
+  3. No model `SessaoCaixa::abrir()`: implementada checagem impeditiva com lançamento de `DomainException` caso haja qualquer sessão em aberto (mesmo turno ou oposto), detalhando ID e turno em aberto.
+  4. Nos controllers `CaixaController` e `PdvController`: adicionadas travas em `abrirTela()`, `abrir()` e `abrirCaixaRapido()`, gerando flashes explicativos e redirecionando para a gestão do turno ativo.
+  5. Nas views `caixa.php`, `pdv.php` e `abertura_caixa.php`: alertas transformados em avisos âmbar (`alert-warning`), botão primário desabilitado para `"Abrir caixa (Bloqueado)"` e modais blindados com botão de atalho direto para fechar o turno pendente.
+  6. Suíte de integração `tests/caixas_simultaneos_test.php` criada e aprovada (18/18 asserções), além de `tests/caixa_test.php` (62/62) e `tests/fase15_test.php` (68/68).
+- Como evitar no futuro: Em operações de PDV que utilizam gaveta física única e terminal compartilhado, a trava de unicidade deve ser de âmbito global no nível do terminal físico (`obterQualquerSessaoAberta`), blindando todas as camadas (Model, Controllers e Views) contra concorrência de turnos.

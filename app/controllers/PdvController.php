@@ -83,6 +83,18 @@ class PdvController extends Controller
         $fundoTroco = (float)str_replace(',', '.', preg_replace('/[^\d,.]/', '', $_POST['fundo_troco_inicial'] ?? '0'));
         $operadorId = (int)Auth::id();
 
+        // Validação preventiva no Controller: verificar se há qualquer sessão de caixa aberta
+        $sessaoAbertaAtual = SessaoCaixa::obterQualquerSessaoAberta();
+        if ($sessaoAbertaAtual) {
+            if ($sessaoAbertaAtual['turno'] === $turno) {
+                Session::setFlash('info', "O caixa do turno " . ucfirst($turno) . " já está aberto.");
+            } else {
+                Session::setFlash('danger', "Operação bloqueada: Não é permitido abrir o caixa do turno " . ucfirst($turno) . " enquanto o caixa do turno " . ucfirst($sessaoAbertaAtual['turno']) . " (Sessão #{$sessaoAbertaAtual['id']}) ainda estiver aberto. É obrigatório fechar o turno anterior primeiro.");
+            }
+            $this->redirect('/operacional/pdv?turno=' . urlencode($turno));
+            return;
+        }
+
         try {
             $sessaoId = SessaoCaixa::abrir($operadorId, $turno, $fundoTroco, 'Abertura rápida no terminal de PDV');
             Session::setFlash('success', "Caixa do turno " . ucfirst($turno) . " aberto com sucesso! Fundo de troco: R$ " . number_format($fundoTroco, 2, ',', '.'));

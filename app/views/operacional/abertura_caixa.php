@@ -122,7 +122,8 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 <div class="d-flex align-items-start gap-2">
                     <span class="badge bg-light border text-dark">Unicidade</span>
                     <div>
-                        Não é permitida mais de uma sessão aberta simultaneamente no mesmo turno.
+                        <strong>Terminal e Gaveta Únicos:</strong>
+                        Não é permitida mais de uma sessão de caixa aberta simultaneamente na cantina. É obrigatório fechar o turno anterior antes de iniciar um novo turno.
                     </div>
                 </div>
             </div>

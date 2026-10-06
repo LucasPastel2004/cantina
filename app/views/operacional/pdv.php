@@ -567,7 +567,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=matutino" class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-outline-primary'; ?>" style="font-size: 10.5px; padding: 3px 6px;">Manhã</a>
                 <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=vespertino" class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-outline-primary'; ?>" style="font-size: 10.5px; padding: 3px 6px;">Tarde</a>
             </div>
-            <?php if (!$caixaAberto): ?>
+            <?php if (!$caixaAberto && !$sessaoOutroTurno): ?>
                 <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModal('modalAbrirCaixa')">
                     Abrir Caixa
                 </button>
@@ -586,13 +586,13 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
     <!-- Alerta Operacional: Sessão do Outro Turno ainda Aberta -->
     <?php if ($sessaoOutroTurno): ?>
-        <div class="alert alert-info d-flex align-items-center justify-content-between mb-3 py-2 px-3" style="font-size: 12px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 6px;">
+        <div class="alert alert-warning d-flex align-items-center justify-content-between mb-3 py-2 px-3" style="font-size: 12px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: 6px;">
             <div class="d-flex align-items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
-                <span><strong>Alerta Operacional:</strong> A sessão de caixa do turno <strong><?php echo $outroTurnoNome; ?> (Sessão #<?php echo (int)$sessaoOutroTurno['id']; ?>)</strong> ainda está aberta. Recomendamos realizar a prestação de contas na tela de Caixa.</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                <span><strong>Atenção:</strong> A sessão de caixa do turno <strong><?php echo $outroTurnoNome; ?> (Sessão #<?php echo (int)$sessaoOutroTurno['id']; ?>)</strong> ainda está aberta. O sistema não permite abrir dois caixas simultaneamente. É obrigatório fechar a sessão do turno anterior antes de iniciar o novo turno.</span>
             </div>
-            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-primary btn-sm" style="font-size: 11px;">
-                Conferir Caixa <?php echo $outroTurnoNome; ?> →
+            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-warning btn-sm font-semibold" style="font-size: 11px;">
+                Fechar Caixa <?php echo $outroTurnoNome; ?> →
             </a>
         </div>
     <?php endif; ?>
@@ -604,9 +604,15 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.17.17 0 0 1-.066.017H1.146a.17.17 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
                 <span><strong>Atenção:</strong> A sessão de caixa do turno <strong><?php echo ucfirst($turnoAtual); ?></strong> está fechada. Vendas em dinheiro físico exigem a abertura prévia da sessão de caixa.</span>
             </div>
-            <button type="button" class="btn btn-enterprise btn-primary btn-sm" onclick="abrirModal('modalAbrirCaixa')">
-                Abrir Caixa do Turno <?php echo ucfirst($turnoAtual); ?>
-            </button>
+            <?php if ($sessaoOutroTurno): ?>
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-warning btn-sm font-semibold">
+                    Fechar Caixa <?php echo $outroTurnoNome; ?> Primeiro
+                </a>
+            <?php else: ?>
+                <button type="button" class="btn btn-enterprise btn-primary btn-sm" onclick="abrirModal('modalAbrirCaixa')">
+                    Abrir Caixa do Turno <?php echo ucfirst($turnoAtual); ?>
+                </button>
+            <?php endif; ?>
         </div>
     <?php endif; ?>
 
@@ -857,30 +863,49 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             <h2 class="modal-title-custom">Abertura de Caixa do Turno</h2>
             <button type="button" class="modal-close-custom" onclick="fecharModal('modalAbrirCaixa')">✕</button>
         </div>
-        <form action="<?php echo $baseUrl; ?>/operacional/pdv/caixa/abrir" method="POST">
-            <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+        <?php if ($sessaoOutroTurno): ?>
             <div class="modal-body-custom">
-                <div class="mb-3">
-                    <label class="form-label font-12 font-semibold">Turno de Operação</label>
-                    <select name="turno" class="form-select form-select-sm">
-                        <option value="matutino" <?php echo ($turnoAtual === 'matutino') ? 'selected' : ''; ?>>Matutino (Manhã)</option>
-                        <option value="vespertino" <?php echo ($turnoAtual === 'vespertino') ? 'selected' : ''; ?>>Vespertino (Tarde)</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label font-12 font-semibold">Fundo de Troco Inicial (Gaveta)</label>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text">R$</span>
-                        <input type="text" name="fundo_troco_inicial" class="form-control font-tabular input-money" value="50,00" required>
+                <div class="alert alert-warning mb-0" style="font-size: 12px; line-height: 1.5;">
+                    <div class="d-flex align-items-center gap-2 mb-2 font-semibold text-dark">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                        Abertura Bloqueada
                     </div>
-                    <div class="form-text font-11 text-muted">Informe o valor físico em dinheiro alocado na gaveta no início do turno.</div>
+                    O caixa do turno <strong><?php echo $outroTurnoNome; ?> (Sessão #<?php echo (int)$sessaoOutroTurno['id']; ?>)</strong> ainda está aberto. O sistema não permite abrir dois caixas simultaneamente.<br><br>
+                    Para abrir o turno <?php echo ucfirst($turnoAtual); ?>, é obrigatório realizar o fechamento do caixa do turno anterior na tela de Caixa.
                 </div>
             </div>
             <div class="modal-footer-custom">
                 <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="fecharModal('modalAbrirCaixa')">Cancelar</button>
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm">Confirmar Abertura</button>
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo strtolower($outroTurnoNome); ?>" class="btn btn-enterprise btn-warning btn-sm font-semibold">
+                    Ir para Fechamento do Caixa <?php echo $outroTurnoNome; ?> →
+                </a>
             </div>
-        </form>
+        <?php else: ?>
+            <form action="<?php echo $baseUrl; ?>/operacional/pdv/caixa/abrir" method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+                <div class="modal-body-custom">
+                    <div class="mb-3">
+                        <label class="form-label font-12 font-semibold">Turno de Operação</label>
+                        <select name="turno" class="form-select form-select-sm">
+                            <option value="matutino" <?php echo ($turnoAtual === 'matutino') ? 'selected' : ''; ?>>Matutino (Manhã)</option>
+                            <option value="vespertino" <?php echo ($turnoAtual === 'vespertino') ? 'selected' : ''; ?>>Vespertino (Tarde)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-12 font-semibold">Fundo de Troco Inicial (Gaveta)</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" name="fundo_troco_inicial" class="form-control font-tabular input-money" value="50,00" required>
+                        </div>
+                        <div class="form-text font-11 text-muted">Informe o valor físico em dinheiro alocado na gaveta no início do turno.</div>
+                    </div>
+                </div>
+                <div class="modal-footer-custom">
+                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="fecharModal('modalAbrirCaixa')">Cancelar</button>
+                    <button type="submit" class="btn btn-enterprise btn-primary btn-sm">Confirmar Abertura</button>
+                </div>
+            </form>
+        <?php endif; ?>
     </div>
 </div>
 
