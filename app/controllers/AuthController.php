@@ -498,6 +498,12 @@ class AuthController extends Controller
         $cpf = $dados['cpf'] ?? '';
         $cleanCpf = Responsavel::cleanCpf($cpf);
 
+        if (strlen($cleanCpf) !== 11) {
+            Session::setFlash('warning', 'Por favor, informe um CPF válido com 11 dígitos.');
+            $this->redirect('/recuperar-senha');
+            return;
+        }
+
         $respModel = new Responsavel();
         $resp = $respModel->findByCpf($cleanCpf);
 
@@ -505,6 +511,17 @@ class AuthController extends Controller
         if (!$resp) {
             Session::setFlash('info', 'Se o CPF estiver cadastrado, um código de verificação será enviado para o WhatsApp associado.');
             $this->redirect('/login?tab=familia');
+            return;
+        }
+
+        // Se o responsável ainda não realizou o primeiro acesso (sem senha definida ou sem termos aceitos)
+        if (Responsavel::isPendentePrimeiroAcesso($resp)) {
+            Auth::logSecurityEvent('recuperar_senha_conta_pendente', $cleanCpf, [
+                'motivo' => 'Tentativa de recuperação de senha para conta pendente de primeiro acesso',
+                'ip'     => Auth::getClientIp()
+            ]);
+            Session::setFlash('warning', 'Identificamos que você ainda não realizou o primeiro acesso e não possui senha cadastrada. Por favor, ative sua conta pelo Primeiro Acesso.');
+            $this->redirect('/primeiro-acesso?cpf=' . urlencode($cleanCpf));
             return;
         }
 
@@ -547,6 +564,21 @@ class AuthController extends Controller
             return;
         }
 
+        $respId = (int)Session::get('_rec_responsavel_id');
+        $resp = (new Responsavel())->find($respId);
+        if (!$resp || Responsavel::isPendentePrimeiroAcesso($resp)) {
+            $cleanCpf = Session::get('_rec_cpf', '');
+            Session::remove('_rec_responsavel_id');
+            Session::remove('_rec_cpf');
+            Session::remove('_rec_codigo');
+            Session::remove('_rec_expira_em');
+            Session::remove('_rec_tentativas');
+            Session::remove('_rec_ultimo_envio');
+            Session::setFlash('warning', 'Identificamos que você ainda não realizou o primeiro acesso e não possui senha cadastrada. Por favor, ative sua conta pelo Primeiro Acesso.');
+            $this->redirect('/primeiro-acesso' . ($cleanCpf ? '?cpf=' . urlencode($cleanCpf) : ''));
+            return;
+        }
+
         $configFile = __DIR__ . '/../../config/config.php';
         $config = file_exists($configFile) ? require $configFile : [];
         $isDev = ($config['app']['env'] ?? '') === 'development' || ($config['app']['debug'] ?? false);
@@ -577,6 +609,23 @@ class AuthController extends Controller
             return;
         }
 
+        $respId = (int)Session::get('_rec_responsavel_id');
+        $respModel = new Responsavel();
+        $resp = $respModel->find($respId);
+
+        if (!$resp || Responsavel::isPendentePrimeiroAcesso($resp)) {
+            $cleanCpf = Session::get('_rec_cpf', '');
+            Session::remove('_rec_codigo');
+            Session::remove('_rec_expira_em');
+            Session::remove('_rec_tentativas');
+            Session::remove('_rec_responsavel_id');
+            Session::remove('_rec_cpf');
+            Session::remove('_rec_ultimo_envio');
+            Session::setFlash('warning', 'Identificamos que você ainda não realizou o primeiro acesso e não possui senha cadastrada. Por favor, ative sua conta pelo Primeiro Acesso.');
+            $this->redirect('/primeiro-acesso' . ($cleanCpf ? '?cpf=' . urlencode($cleanCpf) : ''));
+            return;
+        }
+
         // Rate limiting: máximo de 5 tentativas
         $tentativas = (int)Session::get('_rec_tentativas', 0);
         if ($tentativas >= 5) {
@@ -584,6 +633,8 @@ class AuthController extends Controller
             Session::remove('_rec_expira_em');
             Session::remove('_rec_tentativas');
             Session::remove('_rec_responsavel_id');
+            Session::remove('_rec_cpf');
+            Session::remove('_rec_ultimo_envio');
             Auth::logSecurityEvent('brute_force_recuperar_senha', Session::get('_rec_cpf', 'desconhecido'), [
                 'motivo' => 'Excesso de tentativas incorretas na recuperação de senha',
                 'ip'     => Auth::getClientIp()
@@ -615,6 +666,8 @@ class AuthController extends Controller
                 Session::remove('_rec_expira_em');
                 Session::remove('_rec_tentativas');
                 Session::remove('_rec_responsavel_id');
+                Session::remove('_rec_cpf');
+                Session::remove('_rec_ultimo_envio');
                 Auth::logSecurityEvent('brute_force_recuperar_senha', Session::get('_rec_cpf', 'desconhecido'), [
                     'motivo' => '5 tentativas incorretas atingidas na recuperação de senha',
                     'ip'     => Auth::getClientIp()
@@ -642,8 +695,7 @@ class AuthController extends Controller
             return;
         }
 
-        $respId = (int)Session::get('_rec_responsavel_id');
-        (new Responsavel())->updatePassword($respId, $senha);
+        $respModel->updatePassword($respId, $senha);
 
         Auth::logSecurityEvent('senha_redefinida', Session::get('_rec_cpf'), [
             'responsavel_id' => $respId,
@@ -655,6 +707,7 @@ class AuthController extends Controller
         Session::remove('_rec_codigo');
         Session::remove('_rec_expira_em');
         Session::remove('_rec_tentativas');
+        Session::remove('_rec_ultimo_envio');
 
         Session::setFlash('success', 'Senha redefinida com sucesso! Você já pode entrar com a nova senha.');
         $this->redirect('/login?tab=familia');

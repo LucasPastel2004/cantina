@@ -36,9 +36,12 @@ $baseUrl = $baseUrl ?? '';
         Enviar Código de Recuperação
     </button>
 
-    <div class="text-center mt-3">
+    <div class="d-flex justify-content-between align-items-center mt-3">
         <a href="<?php echo $baseUrl; ?>/login?tab=familia" class="text-microcopy text-secondary text-decoration-none">
             &larr; Voltar para o Login
+        </a>
+        <a href="<?php echo $baseUrl; ?>/primeiro-acesso" class="text-microcopy text-secondary text-decoration-none">
+            Primeiro Acesso &rarr;
         </a>
     </div>
 </form>

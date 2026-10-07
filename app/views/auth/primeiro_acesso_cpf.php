@@ -50,8 +50,8 @@ $cpfPreenchido = $cpfPreenchido ?? '';
 document.addEventListener('DOMContentLoaded', function() {
     const cpfInput = document.getElementById('cpf');
     if (cpfInput) {
-        cpfInput.addEventListener('input', function(e) {
-            let v = e.target.value.replace(/\D/g, '');
+        function formatarCpf(val) {
+            let v = val.replace(/\D/g, '');
             if (v.length > 11) v = v.slice(0, 11);
             if (v.length > 9) {
                 v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
@@ -60,8 +60,16 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (v.length > 3) {
                 v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
             }
-            e.target.value = v;
+            return v;
+        }
+
+        cpfInput.addEventListener('input', function(e) {
+            e.target.value = formatarCpf(e.target.value);
         });
+
+        if (cpfInput.value) {
+            cpfInput.value = formatarCpf(cpfInput.value);
+        }
     }
 });
 </script>

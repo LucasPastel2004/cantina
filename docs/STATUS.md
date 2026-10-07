@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Revisão de Segurança Pré-Publicação (Passo 5)
 * **Status da Revisão:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria e Blindagem de Segurança 100% Concluídas!
-* **Última Atualização:** 2026-10-06 09:35:00 (Implementação de cobrança Pix dinâmica para o PDV balcão com suporte a vendas avulsas sem valor mínimo pré-pago).
+* **Última Atualização:** 2026-10-07 08:15:00 (Bloqueio estrito de recuperação de senha para responsáveis que ainda não realizaram o Primeiro Acesso).
 
 
 
@@ -1447,11 +1447,34 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Bloqueio Estrito de Recuperação de Senha para Contas Pendentes de Primeiro Acesso
+
+* [x] **Diagnóstico da Vulnerabilidade Operacional:**
+  * No fluxo de **Recuperação de Senha** (`/recuperar-senha`), o sistema permitia que um CPF cadastrado na instituição que ainda estivesse com status pendente de Primeiro Acesso (sem senha definida e sem formalização do aceite dos Termos de Uso) solicitasse código e redefinisse uma nova senha;
+  * Isso permitia contornar o Primeiro Acesso obrigatório e o aceite legal dos Termos e Políticas da Cantina, além de permitir redefinir uma credencial que sequer existia ainda.
+
+* [x] **Blindagem no Backend (`app/controllers/AuthController.php`):**
+  * `recuperarSenhaSolicitar()`: adicionada validação de 11 dígitos no CPF e checagem via `Responsavel::isPendentePrimeiroAcesso($resp)`. Se pendente, grava log de segurança (`recuperar_senha_conta_pendente`), emite aviso flash em amarelo/warning orientando o Primeiro Acesso e redireciona imediatamente para `/primeiro-acesso?cpf=<cpf_higienizado>`;
+  * `recuperarSenhaCodigo()` e `recuperarSenhaRedefinir()`: defesa em profundidade que consulta o registro no banco a partir da sessão (`_rec_responsavel_id`); caso a conta esteja pendente de primeiro acesso, a sessão é limpa de imediato (`Session::remove('_rec_*')`), a mutação é barrada e o usuário é redirecionado ao Primeiro Acesso sem alteração de dados.
+
+* [x] **Melhorias de Interface e Usabilidade:**
+  * `app/views/auth/primeiro_acesso_cpf.php`: adicionada formatação visual automática do CPF no evento `DOMContentLoaded` quando o campo é pré-preenchido via query string (`?cpf=...`);
+  * `app/views/auth/recuperar_senha.php`: adicionado link corporativo sutil direcionando para o "Primeiro Acesso &rarr;" ao lado do link "Voltar para o Login", guiando novos titulares.
+
+* [x] **Homologação e Testes Automatizados:**
+  * Nova suíte `tests/recuperar_senha_bloqueio_pendente_test.php` criada com **17 de 17 asserções aprovadas com 100% de sucesso**;
+  * Suíte de autenticação da Fase 6 (`tests/fase6_test.php`) aprovada com **87 de 87 asserções (100%)**;
+  * Suíte de limites e rate limiting de Primeiro Acesso (`tests/primeiro_acesso_limite_tentativas_test.php`) 100% aprovada;
+  * Suíte de ciclo e alertas (`tests/auth_flow_test.php`) 100% aprovada.
+
+---
+
 ## Próximo Passo Recomendado
 
-1. Acessar a tela de Recebimento de Fornecedor (`http://localhost:8080/operacional/recebimento?data=2026-09-29&turno=matutino`);
-2. Confirmar que a tela exibe o alerta âmbar *"Conferência Retroativa Bloqueada"*, com a tabela em modo somente leitura (sem caixas de digitação nem botão de confirmar);
-3. Clicar no botão *"Ir para Recebimento de Hoje"* ou acessar a data atual (`06/10/2026`) e verificar que os campos de digitação e o botão de confirmação funcionam normalmente;
-4. No Painel de Corte (`http://localhost:8080/operacional/corte?data=2026-09-29`), conferir que a navegação de consulta por qualquer data permanece livre.
+1. Acessar a tela de Recuperação de Senha (`http://localhost:8080/recuperar-senha`);
+2. Digitar o CPF de um titular que ainda não realizou o primeiro acesso (ex: `457.366.341-04`);
+3. Clicar em "Enviar Código de Recuperação";
+4. Confirmar que o sistema não envia código de recuperação e redireciona imediatamente para `http://localhost:8080/primeiro-acesso?cpf=45736634104`, exibindo o alerta: *"Identificamos que você ainda não realizou o primeiro acesso e não possui senha cadastrada. Por favor, ative sua conta pelo Primeiro Acesso."*, com o campo de CPF preenchido e formatado;
+5. Testar o fluxo de Primeiro Acesso recebendo o código oficial para ativação e aceite formal dos termos.
 
 

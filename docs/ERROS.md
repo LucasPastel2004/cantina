@@ -1634,3 +1634,22 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - No Painel de Corte (`/operacional/corte`), a navegação entre datas passadas e futuras permaneceu livre para consulta e auditoria.
   4. **Testes Automatizados:** Nova suíte `tests/recebimento_bloqueio_datas_test.php` criada com 31/31 asserções aprovadas com 100% de sucesso.
 - Como evitar no futuro: Ações operacionais que causam mutações físicas irreversíveis em estoque ou caixa (como recebimento físico de mercadorias ou abertura de caixa) devem ter travas temporais rígidas em todas as camadas (Model, Controller e View), permitindo execução estritamente na data presente e mantendo datas retroativas em modo somente leitura para auditoria.
+
+---
+
+## 2026-10-07 - Permissão indevida de redefinição de senha para CPF sem verificação ou primeiro acesso
+
+- Sintoma: Ao acessar a tela de **Recuperação de Senha** (`/recuperar-senha`) e digitar o CPF de um responsável cadastrado na base escolar que ainda não havia realizado o primeiro acesso (sem senha definida e sem termos aceitos), o sistema despachava código de recuperação por WhatsApp e conduzia o usuário à tela de redefinição de senha (`/recuperar-senha/codigo`), permitindo definir uma nova senha sem ter passado pela ativação, validação formal e aceite obrigatório dos Termos e Políticas da Cantina.
+- Causa:
+  1. No método `AuthController::recuperarSenhaSolicitar()`, após localizar o registro do responsável pelo CPF via `$respModel->findByCpf($cleanCpf)`, o sistema verificava apenas se o registro existia, sem checar `Responsavel::isPendentePrimeiroAcesso($resp)`;
+  2. Caso o usuário estivesse na tela `/recuperar-senha/codigo` ou submetesse um POST para `/recuperar-senha/redefinir`, não havia validação defensiva verificando se o ID em sessão (`_rec_responsavel_id`) pertencia a uma conta já ativada;
+  3. Isso permitia burlar a etapa de Primeiro Acesso e o aceite dos Termos de Uso escolares, além de criar inconsistência técnica ao gravar uma senha sem timestamp de termos aceitos.
+- Solução aplicada:
+  1. **Interceptação no Controller (`AuthController::recuperarSenhaSolicitar`):** Adicionada validação de 11 dígitos no CPF e checagem estrita de `Responsavel::isPendentePrimeiroAcesso($resp)`. Se a conta estiver pendente (sem senha ou sem aceite de termos), dispara evento de auditoria técnica (`recuperar_senha_conta_pendente`), emite aviso flash em amarelo/warning (*"Identificamos que você ainda não realizou o primeiro acesso e não possui senha cadastrada. Por favor, ative sua conta pelo Primeiro Acesso."*) e redireciona imediatamente para `/primeiro-acesso?cpf=<cpf_limpo>`;
+  2. **Defesa em Profundidade (`recuperarSenhaCodigo` e `recuperarSenhaRedefinir`):** Caso uma requisição alcance essas etapas com um ID de responsável pendente, a sessão é higienizada imediatamente (removendo `_rec_*`), a tentativa é barrada e o usuário é redirecionado ao Primeiro Acesso sem alterar qualquer senha no banco;
+  3. **Melhoria de UX nas Telas de Autenticação:**
+     - Em `app/views/auth/primeiro_acesso_cpf.php`: adicionada formatação automática do campo CPF no carregamento da tela (`DOMContentLoaded`) caso o valor venha pré-preenchido via parâmetro GET (`?cpf=...`);
+     - Em `app/views/auth/recuperar_senha.php`: adicionado link corporativo e sutil para o "Primeiro Acesso &rarr;" ao lado do link "Voltar para o Login", guiando imediatamente os responsáveis novatos;
+  4. **Testes Automatizados:**
+     - Criada a suíte `tests/recuperar_senha_bloqueio_pendente_test.php` com 17/17 asserções aprovadas com 100% de sucesso cobrindo bloqueio de solicitação, defesas em profundidade em código e redefinição, logs de segurança, validação de CPF e integridade do fluxo de contas já ativas.
+- Como evitar no futuro: Em fluxos de recuperação de credenciais de qualquer tipo de conta (responsáveis ou colaboradores), sempre verificar previamente se a conta alvo já passou pelo ciclo de vida inicial de ativação e verificação antes de autorizar a redefinição de senhas.
