@@ -57,6 +57,14 @@ class CarteiraController extends Controller
 
         $extrato = TransacaoCarteira::obterExtrato($responsavelId, $filtros, $pagina, $porPagina);
 
+        // Cobrança Pix ativa pendente (restaura no F5 se ainda válida)
+        $pixAtivo = PixService::obterCobrancaPendenteResponsavel($responsavelId);
+        if ($pixAtivo) {
+            $configFile = __DIR__ . '/../../config/config.php';
+            $config = file_exists($configFile) ? require $configFile : [];
+            $pixAtivo['is_dev'] = ($config['app']['env'] ?? 'development') === 'development';
+        }
+
         $this->render('portal/carteira', [
             'title'           => 'Carteira Familiar & Extrato — Cantina Web',
             'activeMenu'      => 'carteira',
@@ -68,6 +76,7 @@ class CarteiraController extends Controller
             'extrato'         => $extrato,
             'filtros'         => $filtros,
             'pagina'          => $pagina,
+            'pixAtivo'        => $pixAtivo,
         ], 'portal');
     }
 
@@ -122,6 +131,9 @@ class CarteiraController extends Controller
                 ]
             );
 
+            // Vincula o txid ativo à sessão do responsável para recuperação em F5
+            Session::set('_pix_ativo_txid_' . $responsavelId, $cobranca['txid']);
+
             // Verifica se o ambiente está em modo de desenvolvimento local para habilitar atalho de simulação
             $configFile = __DIR__ . '/../../config/config.php';
             $config = file_exists($configFile) ? require $configFile : [];
@@ -166,15 +178,41 @@ class CarteiraController extends Controller
 
         $status = PixService::consultarStatus($txid);
 
-        // Se o status for 'pago', atualiza o saldo na sessão imediatamente
+        // Se o status for 'pago', atualiza o saldo na sessão imediatamente e limpa pendência
         if ($status['status'] === 'pago') {
             $novoSaldo = Responsavel::consultarSaldo($responsavelId);
             Session::set('_auth_saldo', $novoSaldo);
+            Session::remove('_pix_ativo_txid_' . $responsavelId);
             $status['novo_saldo'] = $novoSaldo;
             $status['novo_saldo_fmt'] = 'R$ ' . number_format($novoSaldo, 2, ',', '.');
+        } elseif ($status['status'] === 'expirado' || $status['status'] === 'cancelado') {
+            Session::remove('_pix_ativo_txid_' . $responsavelId);
         }
 
         $this->json($status, 200);
+    }
+
+    /**
+     * Cancela a cobrança Pix pendente do responsável
+     * Rota: POST /portal/recarga/cancelar
+     */
+    public function cancelarPix(array $params = []): void
+    {
+        $user = Auth::user();
+        $responsavelId = (int)$user['id'];
+        $txid = $params['txid'] ?? $_POST['txid'] ?? '';
+
+        if (!empty($txid)) {
+            PixService::cancelarCobranca($txid, $responsavelId);
+        } else {
+            $pendente = PixService::obterCobrancaPendenteResponsavel($responsavelId);
+            if ($pendente && !empty($pendente['txid'])) {
+                PixService::cancelarCobranca($pendente['txid'], $responsavelId);
+            }
+        }
+        Session::remove('_pix_ativo_txid_' . $responsavelId);
+
+        $this->json(['sucesso' => true, 'mensagem' => 'Cobrança cancelada com sucesso.'], 200);
     }
 
     /**
@@ -253,8 +291,9 @@ class CarteiraController extends Controller
             $cobranca['transacao_id'] = $transacao['id'];
             PixService::salvarCobrancaCache($txid, $cobranca);
 
-            // Sincroniza sessão
+            // Sincroniza sessão e limpa pendência ativa
             Session::set('_auth_saldo', (float)$transacao['saldo_resultante']);
+            Session::remove('_pix_ativo_txid_' . $responsavelId);
 
             // Notifica mock WhatsApp
             $resp = Responsavel::fetchOne("SELECT nome, whatsapp FROM responsaveis WHERE id = :id LIMIT 1", ['id' => $responsavelId]);

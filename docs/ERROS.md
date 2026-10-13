@@ -1653,3 +1653,62 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. **Testes Automatizados:**
      - Criada a suíte `tests/recuperar_senha_bloqueio_pendente_test.php` com 17/17 asserções aprovadas com 100% de sucesso cobrindo bloqueio de solicitação, defesas em profundidade em código e redefinição, logs de segurança, validação de CPF e integridade do fluxo de contas já ativas.
 - Como evitar no futuro: Em fluxos de recuperação de credenciais de qualquer tipo de conta (responsáveis ou colaboradores), sempre verificar previamente se a conta alvo já passou pelo ciclo de vida inicial de ativação e verificação antes de autorizar a redefinição de senhas.
+
+---
+
+## 2026-10-13 - Sobrecarga de I/O e travamento por varredura de arquivos (glob) em volume de cache Pix
+
+- Sintoma: Lentidão extrema e alto consumo de memória/processamento no host ao tentar recuperar cobranças pendentes na pasta `storage/cache/pix/`.
+- Causa:
+  1. O método `PixService::obterCobrancaPendenteResponsavel()` continha um fallback que executava `glob('storage/cache/pix/pix_*.json')` seguido de `usort()` por `filemtime()` e leitura sequencial de todos os arquivos JSON em disco;
+  2. Como havia mais de 300 arquivos de teste acumulados no diretório compartilhado via sistema de arquivos do contêiner Docker/WSL2, a varredura gerou contenção pesada de I/O e esgotamento de recursos.
+- Solução aplicada:
+  1. **Remoção Absoluta de Varreduras:** Eliminado o uso de `glob()` e `usort()` em `PixService`;
+  2. **Arquitetura O(1) com Ponteiro Direto:** A localização de cobranças ativas foi refatorada para ser estritamente O(1), utilizando a chave de sessão do usuário (`_pix_ativo_txid_{responsavel_id}`) complementada por um arquivo de ponteiro direto em disco `storage/cache/pix/responsavel_{responsavel_id}.json` (que armazena apenas o `txid` e `expira_em`);
+  3. **Higienização Atômica:** Quando a cobrança é liquidada, cancelada ou expira os 15 minutos, o ponteiro e a sessão são removidos imediatamente via `unlink()` pontual;
+  4. **Limpeza do Cache:** Removidos arquivos legados órfãos do diretório de cache;
+  5. **Homologação:** Criada a suíte `tests/pix_f5_resilience_test.php` com 17/17 asserções aprovadas com tempo de execução inferior a 1 segundo.
+- Como evitar no futuro: Nunca utilizar varredura em diretórios de cache (`glob`, `scandir`) durante o ciclo de requisição web HTTP em produção ou desenvolvimento; indexar e buscar recursos sempre por chave direta O(1) através de sessões, IDs ou ponteiros diretos com nomenclatura previsível.
+
+---
+
+## 2026-10-13 - Ausência de feedback de erro e log de auditoria em tentativas de quebra de titularidade (IDOR) no Portal da Família
+
+- Sintoma: Ao navegar em rotas de dependentes do Portal da Família como `GET /portal/alergias?aluno=<id>` com o ID de um aluno pertencente a outra família, ou ao tentar alterar o campo oculto `aluno_id` no formulário de restrições alimentares, o sistema preservava a confidencialidade não exibindo os dados do outro aluno, porém caía em fallback silencioso para o primeiro dependente legítimo sem exibir nenhum alerta de permissão negada na tela e sem registrar a tentativa de violação na tabela `logs_seguranca`.
+- Causa:
+  1. No método `PortalController::alergias()`, quando `$alunoIdSolicitado > 0` não pertencia à lista de dependentes da família autenticada, o laço de busca terminava com `$alunoSelecionado = null` e executava `if (!$alunoSelecionado) { $alunoSelecionado = $dependentes[0]; }` de forma silenciosa, sem validar `!$this->alunoPertence($respId, $alunoIdSolicitado)`;
+  2. No método `PortalController::alergiasSalvar()`, a validação de titularidade bloqueava a mutação, mas não registrava o evento em `logs_seguranca` e a mensagem de erro era genérica;
+  3. Comportamento idêntico ocorria nos métodos `agendamento()`, `agendamentoSalvar()` e `pedidos()`, permitindo requisições arbitrárias sem feedback ostensivo de bloqueio de segurança.
+- Solução aplicada:
+  1. **Validação Estrita de Titularidade com Rejeição Ativa (`alergias`, `agendamento`, `pedidos`):** Invocação de `$this->alunoPertence($respId, $alunoIdSolicitado)`. Se for falso, despacha imediatamente evento de auditoria `acesso_negado_idor` para a tabela `logs_seguranca`, define mensagem flash corporativa em vermelho/danger (*"Você não tem permissão para visualizar ou gerenciar as restrições alimentares deste aluno."*) e redireciona limpando o parâmetro não autorizado da URL;
+  2. **Bloqueio de Mutação Maliciosa (`alergiasSalvar` e `agendamentoSalvar`):** Se houver adulteração do campo `aluno_id` no payload POST, registra o evento `tentativa_idor_mutacao` em `logs_seguranca`, define flash danger (*"Você não tem permissão para alterar as restrições alimentares deste aluno."*) e interrompe o processamento antes de qualquer gravação no banco;
+  3. **Ajuste em `Auth::logSecurityEvent`:** Adicionada a flag `JSON_UNESCAPED_SLASHES` na serialização de `detalhes_json`, facilitando consultas SQL analíticas sobre rotas;
+  4. **Homologação:** Criada a suíte de testes `tests/portal_idor_security_test.php` com 20 de 20 asserções aprovadas com 100% de sucesso.
+- Como evitar no futuro: Em qualquer endpoint que receba IDs via GET ou POST no contexto do cliente (responsável ou colaborador), sempre validar expressamente a titularidade do recurso contra o usuário autenticado antes de qualquer renderização ou mutação, e emitir alerta explícito de permissão negada somado ao registro em `logs_seguranca`.
+
+---
+
+## 2026-10-13 - Ausência de verificação e limite de estoque na edição de pedidos permitindo quantitativos ilimitados
+
+- Sintoma: Na tela de edição de pedido agendado (`/portal/pedidos/editar/{id}`), o usuário conseguia clicar no botão `+` indefinidamente (ex.: até 146 unidades ou mais) mesmo quando o produto possuía apenas 2 unidades físicas em estoque. Além disso, itens com estoque zerado não eram exibidos como esgotados e permitiam ser adicionados ao pedido.
+- Causa:
+  1. Em `app/views/portal/pedido_editar.php`, a variável `$esgotado` não era utilizada para desabilitar o card de produto ou exibir o badge "Esgotado", renderizando os botões de incremento e decremento incondicionalmente;
+  2. O atributo `max` do `<input type="text" class="input-qtd">` estava fixado com o valor estático `max="20"` hardcoded, desconsiderando o estoque físico real disponível;
+  3. No script JavaScript da view de edição, o listener do botão `btn-qtd-aumentar` não lia o atributo `max` e incrementava a quantidade diretamente (`input.value = current + 1;`), permitindo qualquer número ilimitado de cliques;
+  4. No método `PortalController::pedidoEditar()`, o cálculo de estoque disponível era obtido globalmente via `Produto::listarParaCardapio()`, que considera reservas já ativas do sistema, sem somar de volta para este pedido específico as unidades que ele próprio já havia reservado;
+  5. No backend (`Pedido::editarPedido` e `Pedido::criarPedido`), faltava a validação explícita de produto esgotado (`disponivel <= 0`) e de limite máximo de 10 unidades por pedido para salgados diários.
+- Solução aplicada:
+  1. **Cálculo de Estoque na Edição (`PortalController::pedidoEditar`):** Mapeado o array `$itensAtuais` antes do catálogo de produtos e calculada a quantidade máxima permitida para este pedido específico (`$estoqueMaxEdicao = max(0, $estoqueLivre) + $qtdAtualNoPedido`). Itens com total permitido `<= 0` são marcados como `$prod['esgotado'] = true`;
+  2. **Tratamento Visual e Badges na View (`pedido_editar.php`):**
+     - Itens com estoque zerado e não presentes no pedido são renderizados com estilo de esgotado (`opacity: 0.55; cursor: not-allowed; bg-light border-subtle`) e com a tag `<code class="code-tag font-tabular">Esgotado</code>` em vez dos botões de quantidade;
+     - Itens disponíveis exibem na descrição o quantitativo disponível (`Disp: X un`);
+     - O atributo `max` do input recebe exatamente o limite calculado para o item;
+  3. **Trava Interativa no JavaScript (`pedido_editar.php`):**
+     - O botão de aumentar (`+`) verifica se `current >= max`. Se atingido, bloqueia o incremento e emite alerta amigável de limite atingido;
+     - Implementada a função `atualizarEstadoBotoes(id)`, que desabilita visualmente o botão `+` (`disabled`) ao atingir o limite e o botão `-` ao chegar em 0;
+     - A função é executada no carregamento inicial da página para todos os itens;
+  4. **Blindagem no Backend (`Pedido::editarPedido` e `Pedido::criarPedido`):**
+     - Adicionada verificação impedindo adicionar produtos esgotados (`disponivel <= 0`);
+     - Adicionada regra limitando salgados diários a no máximo 10 unidades por pedido;
+  5. **Homologação:** Criada a suíte `tests/edicao_pedido_estoque_test.php` aprovada com 100% de sucesso cobrindo renderização HTML, atributos `max`, botões desabilitados, badge de esgotado e recusa do backend para pedidos excessivos.
+- Como evitar no futuro: Em qualquer interface de edição que envolva inventário ou reservas prévias, sempre calcular o limite máximo relativo àquele pedido (`estoque_livre + quantidade_ja_reservada_pelo_pedido`), refletir o atributo `max` no HTML e assegurar que o JavaScript e o backend validem rigorosamente os limites físicos do estoque.

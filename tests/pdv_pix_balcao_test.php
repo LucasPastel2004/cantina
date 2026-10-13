@@ -35,6 +35,7 @@ use App\Services\PixService;
 use App\Models\SessaoCaixa;
 use App\Models\VendaBalcao;
 use App\Models\Usuario;
+use App\Models\Produto;
 use App\Core\Auth;
 use App\Controllers\PdvController;
 
@@ -101,21 +102,36 @@ $sessao = SessaoCaixa::obterQualquerSessaoAberta();
 $sessaoId = $sessao ? (int)$sessao['id'] : 0;
 $criouSessao = false;
 if ($sessaoId === 0) {
-    $sessaoId = SessaoCaixa::abrir('matutino', 50.00, (int)$operador['id'], 'Teste Pix Balcão');
+    $sessaoId = SessaoCaixa::abrir((int)$operador['id'], 'matutino', 50.00, 'Teste Pix Balcão');
     $criouSessao = true;
 }
 
 $sessaoAntes = SessaoCaixa::buscarPorId($sessaoId);
 $totalPixAntes = (float)($sessaoAntes['total_pix_balcao'] ?? 0.0);
 
+// Cadastra um produto temporário para o teste com estoque garantido
+$pdo = \Database::getInstance();
+$catStmt = $pdo->query("SELECT id FROM categorias WHERE ativo = 1 AND deleted_at IS NULL LIMIT 1");
+$catId = (int)$catStmt->fetchColumn();
+$codTeste = 'TEST-PIX-' . bin2hex(random_bytes(4));
+$prodTesteId = Produto::criar([
+    'categoria_id' => $catId,
+    'codigo_barras' => $codTeste,
+    'nome' => 'Água Mineral Teste Pix',
+    'preco_venda' => 3.50,
+    'tipo_produto' => 'industrializado',
+    'estoque_atual' => 10,
+    'ativo' => 1
+]);
+
 // Venda avulsa anônima de 1 água mineral
 $itensVenda = [
     [
-        'produto_id' => 1,
+        'produto_id' => $prodTesteId,
         'quantidade' => 1,
         'preco_unitario' => 3.50,
         'subtotal' => 3.50,
-        'descricao' => 'Água Mineral sem Gás 500ml'
+        'descricao' => 'Água Mineral Teste Pix'
     ]
 ];
 
@@ -136,7 +152,10 @@ $sessaoDepois = SessaoCaixa::buscarPorId($sessaoId);
 $totalPixDepois = (float)($sessaoDepois['total_pix_balcao'] ?? 0.0);
 assercao(abs(($totalPixDepois - $totalPixAntes) - 3.50) < 0.001, "total_pix_balcao na sessão de caixa incrementado exatamente em R$ 3,50");
 
-// Limpeza se criamos sessão de teste
+// Limpeza e Teardown
+$delStmt = $pdo->prepare("UPDATE produtos SET deleted_at = NOW() WHERE id = ?");
+$delStmt->execute([$prodTesteId]);
+
 if ($criouSessao) {
     SessaoCaixa::fechar($sessaoId, 50.00, (int)$operador['id'], 'Fechamento teste Pix');
 }

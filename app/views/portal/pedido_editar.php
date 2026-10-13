@@ -97,14 +97,25 @@ $corte = $pedido['status_corte'];
                         <div class="row g-3">
                             <?php foreach ($produtosCat as $prod): ?>
                                 <?php 
-                                $esgotado = (bool)$prod['esgotado']; 
+                                $qtdAtual = (int)($itensAtuais[(int)$prod['id']] ?? 0);
+                                $esgotado = (bool)($prod['esgotado'] ?? false);
                                 $temConflito = (bool)$prod['tem_conflito_alergia'];
                                 $conflitosStr = implode(', ', $prod['conflitos_nomes']);
-                                $qtdAtual = (int)($itensAtuais[(int)$prod['id']] ?? 0);
+                                $maxPermitido = (int)($prod['estoque_max_edicao'] ?? ($prod['tipo'] === 'industrializado_continuo' ? ($prod['estoque_disponivel'] ?? 0) : 10));
+                                $isItemEsgotado = ($esgotado && $qtdAtual === 0);
                                 ?>
                                 <div class="col-12 col-md-6">
-                                    <div class="p-3 border rounded-3 h-100 d-flex flex-column justify-content-between transition-all product-card <?php echo $qtdAtual > 0 ? 'border-secondary bg-light' : 'bg-white'; ?>"
-                                         id="product-box-<?php echo $prod['id']; ?>">
+                                    <div class="p-3 border rounded-3 h-100 d-flex flex-column justify-content-between transition-all product-card <?php 
+                                        if ($isItemEsgotado) {
+                                            echo 'bg-light border-subtle';
+                                        } elseif ($qtdAtual > 0) {
+                                            echo 'border-secondary bg-light';
+                                        } else {
+                                            echo 'bg-white';
+                                        }
+                                    ?>"
+                                         id="product-box-<?php echo $prod['id']; ?>"
+                                         style="<?php echo $isItemEsgotado ? 'opacity: 0.55; cursor: not-allowed;' : ''; ?>">
                                         
                                         <div>
                                             <div class="d-flex align-items-start gap-2 mb-2">
@@ -123,6 +134,10 @@ $corte = $pedido['status_corte'];
                                                     </h4>
                                                     <div class="text-secondary mt-1" style="font-size: 11px;">
                                                         Código: <code class="code-tag font-tabular" style="font-size: 10px;"><?php echo htmlspecialchars($prod['codigo_interno'], ENT_QUOTES, 'UTF-8'); ?></code>
+                                                        &bull; <?php echo ($prod['tipo'] === 'salgado_diario') ? 'Salgado Diário' : 'Industrializado'; ?>
+                                                        <?php if ($prod['tipo'] === 'industrializado_continuo'): ?>
+                                                            &bull; <span class="font-tabular text-muted">Disp: <?php echo $maxPermitido; ?> un</span>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                             </div>
@@ -139,34 +154,41 @@ $corte = $pedido['status_corte'];
                                                 R$ <?php echo number_format($prod['preco_venda'], 2, ',', '.'); ?>
                                             </div>
 
-                                            <div class="d-flex align-items-center gap-1">
-                                                <button type="button" 
-                                                        class="btn btn-enterprise btn-secondary btn-sm btn-qtd-diminuir" 
-                                                        data-id="<?php echo $prod['id']; ?>"
-                                                        style="width: 28px; height: 28px; padding: 0;">-</button>
-                                                
-                                                <input type="text" 
-                                                       inputmode="numeric" 
-                                                       pattern="[0-9]*" 
-                                                       name="itens[<?php echo $prod['id']; ?>]" 
-                                                       id="qtd-<?php echo $prod['id']; ?>" 
-                                                       value="<?php echo $qtdAtual; ?>" 
-                                                       min="0" 
-                                                       max="20" 
-                                                       class="form-control form-control-sm text-center font-tabular input-qtd" 
-                                                       style="width: 44px; height: 28px; font-weight: 600; padding: 0 4px; text-align: center; -moz-appearance: textfield; appearance: textfield;"
-                                                       data-id="<?php echo $prod['id']; ?>"
-                                                       data-nome="<?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>"
-                                                       data-preco="<?php echo $prod['preco_venda']; ?>"
-                                                       data-conflito="<?php echo $temConflito ? '1' : '0'; ?>"
-                                                       data-conflitos-msg="<?php echo htmlspecialchars($conflitosStr, ENT_QUOTES, 'UTF-8'); ?>"
-                                                       readonly>
+                                            <?php if ($isItemEsgotado): ?>
+                                                <code class="code-tag text-uppercase font-tabular" style="font-size: 10px; color: #64748b;">Esgotado</code>
+                                            <?php else: ?>
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <button type="button" 
+                                                            class="btn btn-enterprise btn-secondary btn-sm btn-qtd-diminuir" 
+                                                            data-id="<?php echo $prod['id']; ?>"
+                                                            style="width: 28px; height: 28px; padding: 0;"
+                                                            <?php echo ($qtdAtual <= 0) ? 'disabled' : ''; ?>>-</button>
+                                                    
+                                                    <input type="text" 
+                                                           inputmode="numeric" 
+                                                           pattern="[0-9]*" 
+                                                           name="itens[<?php echo $prod['id']; ?>]" 
+                                                           id="qtd-<?php echo $prod['id']; ?>" 
+                                                           value="<?php echo $qtdAtual; ?>" 
+                                                           min="0" 
+                                                           max="<?php echo $maxPermitido; ?>" 
+                                                           class="form-control form-control-sm text-center font-tabular input-qtd" 
+                                                           style="width: 44px; height: 28px; font-weight: 600; padding: 0 4px; text-align: center; -moz-appearance: textfield; appearance: textfield;"
+                                                           data-id="<?php echo $prod['id']; ?>"
+                                                           data-nome="<?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                           data-preco="<?php echo $prod['preco_venda']; ?>"
+                                                           data-conflito="<?php echo $temConflito ? '1' : '0'; ?>"
+                                                           data-conflitos-msg="<?php echo htmlspecialchars($conflitosStr, ENT_QUOTES, 'UTF-8'); ?>"
+                                                           data-max="<?php echo $maxPermitido; ?>"
+                                                           readonly>
 
-                                                <button type="button" 
-                                                        class="btn btn-enterprise btn-secondary btn-sm btn-qtd-aumentar" 
-                                                        data-id="<?php echo $prod['id']; ?>"
-                                                        style="width: 28px; height: 28px; padding: 0;">+</button>
-                                            </div>
+                                                    <button type="button" 
+                                                            class="btn btn-enterprise btn-secondary btn-sm btn-qtd-aumentar" 
+                                                            data-id="<?php echo $prod['id']; ?>"
+                                                            style="width: 28px; height: 28px; padding: 0;"
+                                                            <?php echo ($qtdAtual >= $maxPermitido) ? 'disabled' : ''; ?>>+</button>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -373,13 +395,46 @@ document.addEventListener('DOMContentLoaded', function() {
         comandaLista.innerHTML = html;
     }
 
+    function atualizarEstadoBotoes(id) {
+        const input = document.getElementById('qtd-' + id);
+        if (!input) return;
+
+        const val = parseInt(input.value) || 0;
+        const max = parseInt(input.getAttribute('max')) || 0;
+        const btnDim = document.querySelector(`.btn-qtd-diminuir[data-id="${id}"]`);
+        const btnAum = document.querySelector(`.btn-qtd-aumentar[data-id="${id}"]`);
+        const box = document.getElementById('product-box-' + id);
+
+        if (btnDim) {
+            btnDim.disabled = (val <= 0);
+        }
+        if (btnAum) {
+            btnAum.disabled = (val >= max);
+        }
+        if (box) {
+            if (val > 0) {
+                box.classList.add('border-secondary', 'bg-light');
+                box.classList.remove('bg-white');
+            } else {
+                box.classList.remove('border-secondary', 'bg-light');
+                box.classList.add('bg-white');
+            }
+        }
+    }
+
     document.querySelectorAll('.btn-qtd-aumentar').forEach(btn => {
         btn.addEventListener('click', function() {
             const id = this.dataset.id;
             const input = document.getElementById('qtd-' + id);
             if (!input) return;
 
+            const max = parseInt(input.getAttribute('max')) || 0;
             let current = parseInt(input.value) || 0;
+
+            if (current >= max) {
+                alert('Limite máximo disponível em estoque atingido para este item (' + max + ' un).');
+                return;
+            }
 
             if (current === 0 && input.dataset.conflito === '1') {
                 produtoPendente = input;
@@ -390,6 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             input.value = current + 1;
+            atualizarEstadoBotoes(id);
             recalcularEdicao();
         });
     });
@@ -403,6 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let current = parseInt(input.value) || 0;
             if (current > 0) {
                 input.value = current - 1;
+                atualizarEstadoBotoes(id);
                 recalcularEdicao();
             }
         });
@@ -411,13 +468,24 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnAlergiaConfirmar) {
         btnAlergiaConfirmar.addEventListener('click', function() {
             if (produtoPendente) {
-                produtoPendente.value = 1;
+                const max = parseInt(produtoPendente.getAttribute('max')) || 0;
+                if (max >= 1) {
+                    produtoPendente.value = 1;
+                    atualizarEstadoBotoes(produtoPendente.dataset.id);
+                    recalcularEdicao();
+                } else {
+                    alert('Item esgotado no estoque.');
+                }
                 produtoPendente = null;
-                recalcularEdicao();
             }
             modalAlergia.hide();
         });
     }
+
+    // Inicializa o estado dos botões conforme as quantidades e limites atuais
+    document.querySelectorAll('.input-qtd').forEach(input => {
+        atualizarEstadoBotoes(input.dataset.id);
+    });
 
     recalcularEdicao();
 });

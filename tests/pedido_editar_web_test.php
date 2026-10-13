@@ -33,6 +33,7 @@ use App\Models\Turma;
 use App\Models\Categoria;
 use App\Models\Produto;
 use App\Models\TransacaoCarteira;
+use App\Models\CalendarioEscolar;
 use App\Models\Pedido;
 
 // Inicializa sessão
@@ -74,12 +75,17 @@ $prodId = Produto::criar([
     'status_pausa' => 'ativo'
 ]);
 
-// Cria pedido para a próxima terça-feira (garante data futura aberta)
-$dtFutura = (new \DateTimeImmutable())->modify('+2 days');
-if ((int)$dtFutura->format('N') >= 6) {
-    $dtFutura = $dtFutura->modify('+4 days');
+// Localiza próxima data letiva válida (garante dia útil não feriado)
+$dataConsumo = null;
+for ($i = 1; $i <= 30; $i++) {
+    $cand = (new \DateTimeImmutable())->modify("+{$i} days");
+    $candStr = $cand->format('Y-m-d');
+    $diaSemana = (int)$cand->format('N');
+    if ($diaSemana <= 5 && CalendarioEscolar::isDiaLetivo($candStr)) {
+        $dataConsumo = $candStr;
+        break;
+    }
 }
-$dataConsumo = $dtFutura->format('Y-m-d');
 $momentoAberto = (new \DateTimeImmutable($dataConsumo))->modify('monday this week 07:30:00');
 
 $pedido = Pedido::criarPedido($resp['id'], $alunoId, $dataConsumo, [

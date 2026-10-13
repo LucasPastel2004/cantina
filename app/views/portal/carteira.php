@@ -10,6 +10,8 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
 $csrfToken = \App\Core\Session::generateCsrfToken();
+$pixAtivo = $pixAtivo ?? null;
+$temPixAtivo = !empty($pixAtivo) && ($pixAtivo['segundos_restantes'] ?? 0) > 0;
 ?>
 
 <div class="carteira-container">
@@ -180,7 +182,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                                    name="valor" 
                                    class="form-control font-tabular input-money" 
                                    placeholder="0,00" 
-                                   value="50,00" 
+                                   value="<?php echo htmlspecialchars($temPixAtivo ? number_format((float)$pixAtivo['valor'], 2, ',', '.') : '50,00', ENT_QUOTES); ?>" 
                                    required 
                                    style="font-size: 15px; font-weight: 600;">
                         </div>
@@ -203,7 +205,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
             <!-- Painel de Exibição do QR Code e Copia e Cola -->
             <div class="col-12 col-lg-6">
-                <div id="pix-resultado-vazio" class="p-4 text-center border border-dashed rounded bg-light">
+                <div id="pix-resultado-vazio" class="p-4 text-center border border-dashed rounded bg-light <?php echo $temPixAtivo ? 'd-none' : ''; ?>">
                     <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-qr-code text-muted mb-2" viewBox="0 0 16 16">
                         <path d="M2 2h2v2H2zM6 2h2v2H6zM10 2h2v2h-2zM2 6h2v2H2zM10 6h2v2h-2zM2 10h2v2H2zM6 10h2v2H6zM10 10h2v2h-2z"/>
                         <path d="M0 0v6h6V0zm5 5H1V1h4zm3-5v6h6V0zm5 5H9V1h4zM0 8v6h6V8zm5 5H1V9h4zm3-5v6h6V8zm5 5H9V9h4z"/>
@@ -214,22 +216,22 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     </p>
                 </div>
 
-                <!-- Painel Ativo do Pix (inicia oculto) -->
-                <div id="pix-resultado-ativo" class="d-none border rounded p-3 bg-white shadow-sm">
+                <!-- Painel Ativo do Pix (inicia oculto se não houver cobrança pendente) -->
+                <div id="pix-resultado-ativo" class="<?php echo $temPixAtivo ? '' : 'd-none'; ?> border rounded p-3 bg-white shadow-sm">
                     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                         <div>
                             <span class="badge bg-success-subtle text-success border border-success-subtle font-tabular" style="font-size: 11px;">
                                 ● Pix Aguardando Pagamento
                             </span>
                             <div class="font-tabular fw-bold mt-1" id="pix-valor-display" style="font-size: 17px; color: var(--text-primary, #0f172a);">
-                                R$ 0,00
+                                <?php echo htmlspecialchars($temPixAtivo ? $pixAtivo['valor_formatado'] : 'R$ 0,00', ENT_QUOTES); ?>
                             </div>
                         </div>
                         <!-- Cronômetro Digital de Validade -->
                         <div class="text-end">
                             <span class="text-muted" style="font-size: 10px; text-transform: uppercase;">Expira em:</span>
                             <div class="font-tabular fw-bold text-danger" id="pix-timer-display" style="font-size: 15px;">
-                                15:00
+                                <?php echo $temPixAtivo ? sprintf('%02d:%02d', floor($pixAtivo['segundos_restantes'] / 60), $pixAtivo['segundos_restantes'] % 60) : '15:00'; ?>
                             </div>
                         </div>
                     </div>
@@ -237,7 +239,9 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     <!-- QR Code Centralizado -->
                     <div class="text-center my-3">
                         <div id="pix-qrcode-container" class="border rounded bg-white shadow-sm" style="width: 210px; height: 210px; padding: 10px; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto; box-sizing: border-box;">
-                            <!-- SVG do QR Code injetado via JS -->
+                            <?php if ($temPixAtivo): ?>
+                                <?php echo $pixAtivo['qr_code_svg']; ?>
+                            <?php endif; ?>
                         </div>
                         <div class="text-muted mt-2" style="font-size: 11px;">
                             Aponte a câmera do aplicativo do seu banco para o QR Code acima
@@ -251,7 +255,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                             <span class="text-success fw-normal d-none" id="label-copiado" style="font-size: 11px;">✓ Copiado com sucesso!</span>
                         </label>
                         <div class="input-group">
-                            <input type="text" id="pix-copia-cola-input" class="form-control font-monospace" style="font-size: 11px; background-color: #f8fafc;" readonly>
+                            <input type="text" id="pix-copia-cola-input" class="form-control font-monospace" style="font-size: 11px; background-color: #f8fafc;" value="<?php echo htmlspecialchars($temPixAtivo ? $pixAtivo['copia_e_cola'] : '', ENT_QUOTES); ?>" readonly>
                             <button type="button" class="btn btn-enterprise btn-primary" onclick="copiarPixCodigo()" title="Copiar código Pix">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="bi bi-clipboard me-1" viewBox="0 0 16 16">
                                     <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
@@ -262,17 +266,23 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                         </div>
                     </div>
 
-                    <!-- Status de Polling em Tempo Real -->
+                    <!-- Status de Polling em Tempo Real e Ações -->
                     <div class="d-flex align-items-center justify-content-between p-2 rounded bg-light" style="font-size: 11px;">
                         <div class="d-flex align-items-center gap-2 text-muted">
                             <span class="spinner-grow spinner-grow-sm text-primary" role="status" aria-hidden="true" style="width: 10px; height: 10px;"></span>
                             <span id="pix-status-texto">Aguardando confirmação bancária...</span>
                         </div>
-                        <!-- Botão de Simulação em Ambiente Local Dev -->
-                        <div id="bloco-simular-dev" class="d-none">
-                            <button type="button" class="btn btn-sm btn-outline-success py-0 px-2" style="font-size: 10px;" onclick="simularPagamentoDev()">
-                                ⚡ Simular Pagamento
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Botão de Cancelar Recarga Pendente -->
+                            <button type="button" class="btn btn-sm btn-link text-secondary text-decoration-none p-0" onclick="cancelarPixAtual()" style="font-size: 11px;" title="Cancelar esta cobrança Pix e escolher outro valor">
+                                Cancelar cobrança
                             </button>
+                            <!-- Botão de Simulação em Ambiente Local Dev -->
+                            <div id="bloco-simular-dev" class="<?php echo ($temPixAtivo && !empty($pixAtivo['is_dev'])) ? '' : 'd-none'; ?>">
+                                <button type="button" class="btn btn-sm btn-outline-success py-0 px-2" style="font-size: 10px;" onclick="simularPagamentoDev()">
+                                    ⚡ Simular Pagamento
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -474,6 +484,15 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     let pixTimerInterval = null;
     let pixTempoRestante = 900; // 15 minutos
 
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php if ($temPixAtivo): ?>
+            pixTxidAtual = <?php echo json_encode($pixAtivo['txid']); ?>;
+            pixTempoRestante = <?php echo (int)$pixAtivo['segundos_restantes']; ?>;
+            iniciarTimerPix();
+            iniciarPollingPix(pixTxidAtual);
+        <?php endif; ?>
+    });
+
     function selecionarValor(valor) {
         const input = document.getElementById('input-valor-pix');
         if (input) {
@@ -529,6 +548,9 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             document.getElementById('pix-resultado-vazio').classList.add('d-none');
             document.getElementById('pix-resultado-sucesso').classList.add('d-none');
             document.getElementById('pix-resultado-ativo').classList.remove('d-none');
+            document.getElementById('pix-status-texto').textContent = 'Aguardando confirmação bancária...';
+            const labelCopiado = document.getElementById('label-copiado');
+            if (labelCopiado) labelCopiado.classList.add('d-none');
 
             // Habilita atalho dev se estiver em modo desenvolvimento
             const blocoDev = document.getElementById('bloco-simular-dev');
@@ -706,5 +728,32 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
         document.getElementById('pix-resultado-sucesso').classList.add('d-none');
         document.getElementById('pix-resultado-ativo').classList.add('d-none');
         document.getElementById('pix-resultado-vazio').classList.remove('d-none');
+    }
+
+    async function cancelarPixAtual() {
+        if (!pixTxidAtual) return;
+        const txidParaCancelar = pixTxidAtual;
+
+        reiniciarPainelPix();
+
+        try {
+            const formData = new FormData();
+            formData.append('txid', txidParaCancelar);
+            const csrfToken = document.getElementById('pix-csrf-token')?.value || '';
+            if (csrfToken) {
+                formData.append('csrf_token', csrfToken);
+            }
+
+            await fetch('<?php echo $baseUrl; ?>/portal/recarga/cancelar', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+        } catch (e) {
+            // Cancelamento concluído no cliente
+        }
     }
 </script>

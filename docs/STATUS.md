@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Revisão de Segurança Pré-Publicação (Passo 5)
 * **Status da Revisão:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria e Blindagem de Segurança 100% Concluídas!
-* **Última Atualização:** 2026-10-07 08:15:00 (Bloqueio estrito de recuperação de senha para responsáveis que ainda não realizaram o Primeiro Acesso).
+* **Última Atualização:** 2026-10-13 09:25:00 (Correção e blindagem de estoque e limites na edição de pedidos do Portal da Família).
 
 
 
@@ -381,6 +381,12 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * `GET /portal/pedidos/{id}/editar`
   * `POST /portal/pedidos/{id}/editar`
 * [x] Criação da suíte automatizada `tests/fase10_test.php` com 71 asserções cobrindo todos os fluxos e regras da Fase 10 (100% de sucesso).
+* [x] **Blindagem de Estoque e Limites na Edição de Pedidos (`/portal/pedidos/{id}/editar`):**
+  * Correção da falha que permitia selecionar quantidades infinitas no frontend ao clicar no botão `+` (removido `max="20"` estático e introduzida trava dinâmica baseada no estoque real disponível);
+  * Enriquecimento do catálogo de produtos no `PortalController::pedidoEditar` calculando o estoque máximo para a edição considerando as unidades que já pertenciam ao pedido (`max(0, estoque_atual - estoque_reservado) + qtd_atual_no_pedido`);
+  * Exibição visual de produtos esgotados (cards atenuados com opacidade 0.5, badge "Esgotado", remoção de controles de quantidade e desabilitação automática do botão `+` ao atingir o limite físico);
+  * Validação atômica e rígida no backend em `Pedido::editarPedido()` e `Pedido::criarPedido()` rejeitando produtos esgotados ou quantidades superiores ao estoque real disponível com `DomainException`;
+  * Suítes de testes `tests/edicao_pedido_estoque_test.php` e `tests/fase10_test.php` executadas e 100% aprovadas.
 * [x] Execução e homologação de 100% dos testes de regressão das fases anteriores (Fases 7, 8 e 9).
 
 ---
@@ -1469,12 +1475,59 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Resiliência e Persistência de Cobrança Pix no Recarregamento da Página (F5)
+
+* [x] **Diagnóstico da Necessidade:**
+  * No **Portal da Família** (`/portal/carteira`), ao gerar uma cobrança Pix dinâmica para recarga e pressionar **F5** (ou atualizar a tela no navegador), o QR Code e o cronômetro regressivo de 15 minutos desapareciam, voltando ao estado inicial vazio *"Nenhuma cobrança ativa no momento"*;
+  * Como a cobrança ainda possuía validade bancária ativa (15 minutos), o responsável ficava sem acesso ao código "Copia e Cola" e ao QR Code vetorial, sendo forçado a gerar um novo Pix ou perder o acompanhamento do pagamento em andamento.
+
+* [x] **Arquitetura de Persistência e Otimização O(1) de Alta Performance:**
+  * **Ponteiro Direto O(1) e Sessão (`app/services/PixService.php`):**
+    * Ao gerar a cobrança via `PixService::gerarCobrancaPix()`, a aplicação persiste o payload completo, SVG vetorial e formatações no cache por `txid`, vincula o identificador à sessão do titular (`_pix_ativo_txid_{responsavel_id}`) e grava um ponteiro direto ultraleve `storage/cache/pix/responsavel_{responsavel_id}.json`;
+    * Implementado `PixService::obterCobrancaPendenteResponsavel($responsavelId)` com busca estritamente **O(1)** (zero varredura de diretórios `glob()`, zero ordenação `usort()`), consultando imediatamente a sessão e o ponteiro direto em disco;
+    * Validação estrita de status: se a cobrança foi paga, cancelada ou expirada (tempo atual > `expira_em`), o ponteiro e a sessão são limpos de forma atômica e o método retorna `null`;
+    * Em `PixService::consultarStatus()`, adicionado reconhecimento de status `'pago'` no cache (simulação, mock ou webhook), efetuando a remoção do ponteiro ativo e a higienização da sessão;
+    * Em `PixService::cancelarCobranca()`, o status é gravado como `'cancelado'` e os ponteiros são desalocados.
+
+* [x] **Controlador e Rotas (`app/controllers/CarteiraController.php` e `index.php`):**
+  * `CarteiraController::index()`: busca cobrança ativa pendente via `PixService::obterCobrancaPendenteResponsavel($responsavelId)` e injeta `'pixAtivo'` no template;
+  * `CarteiraController::statusPix()` e `simularPagamento()`: ao liquidar o Pix, limpam a pendência ativa e retornam o novo saldo unificado;
+  * `CarteiraController::cancelarPix()`: nova action registrada com rota `POST /portal/recarga/cancelar` sob permissão estrita `ROLE_RESPONSAVEL`.
+
+* [x] **Interface e Experiência do Usuário (`app/views/portal/carteira.php`):**
+  * **Renderização SSR Instantânea no F5:** Se houver cobrança pendente dentro da validade, a view renderiza o container `#pix-resultado-ativo` diretamente no HTML inicial, com o valor exato, QR Code SVG, código Copia e Cola e o tempo restante real recalculado com base no timestamp de expiração (sem reiniciar para 15:00);
+  * **Retomada Automática via JavaScript:** No evento `DOMContentLoaded`, o frontend detecta a cobrança ativa, inicializa `pixTxidAtual`, dispara o cronômetro regressivo com os segundos restantes reais e retoma o polling assíncrono em segundo plano;
+  * **Ação Voluntária de Cancelamento:** Adicionado botão sutil corporativo `"Cancelar cobrança"` que cancela a pendência no servidor e restaura o painel para o estado limpo de nova recarga.
+
+* [x] **Homologação e Testes Automatizados:**
+  * Nova suíte `tests/pix_f5_resilience_test.php` criada com **17 de 17 asserções aprovadas com 100% de sucesso** (cobrindo geração, restauração no F5, substituição por nova cobrança, cancelamento voluntário, não recuperação após pagamento e expiração por tempo);
+  * Suíte da Carteira Familiar da Fase 9 (`tests/fase9_test.php`) 100% aprovada (**69 de 69 asserções**);
+  * Suíte Pix Balcão PDV (`tests/pdv_pix_balcao_test.php`) 100% aprovada (**17 de 17 asserções**);
+  * Suíte de baixa física de estoque PDV (`tests/pdv_estoque_baixa_test.php`) 100% aprovada (**11 de 11 asserções**).
+
+---
+
+### [x] Blindagem contra Quebra de Titularidade (IDOR) no Portal da Família (2026-10-13)
+* [x] **Diagnóstico da Forçagem de Erro:**
+  * Identificado que requisições com IDs arbitrários em `GET /portal/alergias?aluno=<id>` preservavam o sigilo de dados (não vazavam informações de outras famílias), mas realizavam um fallback silencioso para o primeiro dependente da conta sem disparar mensagem de erro ou registro de segurança;
+* [x] **Blindagem e Rejeição Ativa nos Controladores (`app/controllers/PortalController.php`):**
+  * `alergias()`: Validação estrita de titularidade via `alunoPertence()`. Caso o ID pertença a outra família ou não exista, gera registro imediato em `logs_seguranca` (`acesso_negado_idor`), emite alerta flash corporativo (`alert-enterprise-danger`: *"Você não tem permissão para visualizar ou gerenciar as restrições alimentares deste aluno."*) e redireciona limpando a query string;
+  * `alergiasSalvar()`: Validação mandatória no payload POST; se o campo oculto `aluno_id` for adulterado no HTML, despacha evento `tentativa_idor_mutacao` para `logs_seguranca`, define alerta flash e bloqueia categoricamente a gravação;
+  * `agendamento()`, `agendamentoSalvar()` e `pedidos()`: Extensão da mesma blindagem estrita para todas as rotas familiares dependentes de `aluno_id`;
+* [x] **Ajuste no Core de Segurança (`app/core/Auth.php`):**
+  * `Auth::logSecurityEvent()` atualizado com `JSON_UNESCAPED_SLASHES` para evitar escapes desnecessários de rotas em `detalhes_json`;
+* [x] **Homologação e Testes Automatizados:**
+  * Criada a suíte `tests/portal_idor_security_test.php` com **20 de 20 asserções aprovadas com 100% de sucesso**.
+
+---
+
 ## Próximo Passo Recomendado
 
-1. Acessar a tela de Recuperação de Senha (`http://localhost:8080/recuperar-senha`);
-2. Digitar o CPF de um titular que ainda não realizou o primeiro acesso (ex: `457.366.341-04`);
-3. Clicar em "Enviar Código de Recuperação";
-4. Confirmar que o sistema não envia código de recuperação e redireciona imediatamente para `http://localhost:8080/primeiro-acesso?cpf=45736634104`, exibindo o alerta: *"Identificamos que você ainda não realizou o primeiro acesso e não possui senha cadastrada. Por favor, ative sua conta pelo Primeiro Acesso."*, com o campo de CPF preenchido e formatado;
-5. Testar o fluxo de Primeiro Acesso recebendo o código oficial para ativação e aceite formal dos termos.
+1. Acessar o Portal da Família na tela de Gestão de Restrições Alimentares (`http://localhost:8080/portal/alergias`);
+2. Testar o cenário forçando IDOR na URL informando o ID de outro aluno (ex: `?aluno=84` se pertencer a outro responsável);
+3. Confirmar que a tela recarrega imediatamente com o alerta vermelho de segurança: *"Você não tem permissão para visualizar ou gerenciar as restrições alimentares deste aluno."*, mantendo apenas os dados do dependente legítimo;
+4. Inspecionar o código HTML, alterar o `<input type="hidden" name="aluno_id" value="...">` e clicar em *"Salvar Restrições Alimentares"*;
+5. Confirmar que a alteração é bloqueada, a mensagem *"Você não tem permissão para alterar as restrições alimentares deste aluno."* é exibida e o evento é registrado na tabela `logs_seguranca`.
+
 
 

@@ -314,11 +314,24 @@ class Pedido extends Model
                     );
                 }
 
+                // Valida limite de quantidade para salgados diários
+                if ($prod['tipo'] === 'salgado_diario' && $qtd > 10) {
+                    throw new \DomainException(
+                        "Quantidade máxima permitida para o produto [{$prod['descricao']}] é de 10 unidades por pedido."
+                    );
+                }
+
                 // Valida estoque para industrializados (RN-12 e RN-13)
                 if ($prod['tipo'] === 'industrializado_continuo') {
                     $estoqueAtual = (int)$prod['estoque_atual'];
                     $estoqueReservado = (int)$prod['estoque_reservado'];
                     $estoqueDisponivel = $estoqueAtual - $estoqueReservado;
+
+                    if ($estoqueDisponivel <= 0) {
+                        throw new \DomainException(
+                            "O produto [{$prod['descricao']}] encontra-se esgotado no estoque."
+                        );
+                    }
 
                     if ($estoqueDisponivel < $qtd) {
                         throw new \DomainException(
@@ -760,8 +773,15 @@ class Pedido extends Model
                     throw new \DomainException("O produto [{$prod['descricao']}] não está disponível para o turno {$turnoConsumo}.");
                 }
 
+                if ($prod['tipo'] === 'salgado_diario' && $qtd > 10) {
+                    throw new \DomainException("Quantidade máxima permitida para o produto [{$prod['descricao']}] é de 10 unidades por pedido.");
+                }
+
                 if ($prod['tipo'] === 'industrializado_continuo') {
                     $disponivel = (int)$prod['estoque_atual'] - (int)$prod['estoque_reservado'];
+                    if ($disponivel <= 0) {
+                        throw new \DomainException("O produto [{$prod['descricao']}] encontra-se esgotado no estoque.");
+                    }
                     if ($disponivel < $qtd) {
                         throw new \DomainException("Estoque insuficiente para [{$prod['descricao']}]. Disponível: {$disponivel} un.");
                     }

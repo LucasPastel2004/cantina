@@ -71,10 +71,23 @@ class PortalController extends Controller
         }
 
         // Seleciona o aluno informado na URL ou o primeiro dependente
-        $alunoIdSolicitado = (int)$this->input('aluno', 0);
+        $alunoIdSolicitado = (int)$this->input('aluno', (int)$this->input('aluno_id', 0));
         $alunoSelecionado  = null;
 
         if ($alunoIdSolicitado > 0) {
+            if (!$this->alunoPertence($respId, $alunoIdSolicitado)) {
+                Auth::logSecurityEvent('acesso_negado_idor', $usuario['username'] ?? $usuario['cpf'] ?? null, [
+                    'motivo'         => 'Tentativa de visualização de restrições de dependente de outra família (IDOR)',
+                    'responsavel_id' => $respId,
+                    'aluno_id_alvo'  => $alunoIdSolicitado,
+                    'rota'           => '/portal/alergias',
+                    'ip'             => Auth::getClientIp()
+                ]);
+                Session::setFlash('danger', 'Você não tem permissão para visualizar ou gerenciar as restrições alimentares deste aluno.');
+                $this->redirect('/portal/alergias');
+                return;
+            }
+
             foreach ($dependentes as $dep) {
                 if ((int)$dep['id'] === $alunoIdSolicitado) {
                     $alunoSelecionado = $dep;
@@ -123,7 +136,14 @@ class PortalController extends Controller
         // Validação estrita de titularidade do dependente (LGPD escolar)
         $aluno = Aluno::buscarPorId($alunoId);
         if (!$aluno || (int)$aluno['responsavel_id'] !== $respId) {
-            Session::setFlash('danger', 'Aluno não localizado ou não pertence à sua conta familiar.');
+            Auth::logSecurityEvent('tentativa_idor_mutacao', $usuario['username'] ?? $usuario['cpf'] ?? null, [
+                'motivo'         => 'Tentativa de alteração de restrições alimentares de dependente de outra família (IDOR)',
+                'responsavel_id' => $respId,
+                'aluno_id_alvo'  => $alunoId,
+                'rota'           => '/portal/alergias/salvar',
+                'ip'             => Auth::getClientIp()
+            ]);
+            Session::setFlash('danger', 'Você não tem permissão para alterar as restrições alimentares deste aluno.');
             $this->redirect('/portal/alergias');
             return;
         }
@@ -163,9 +183,22 @@ class PortalController extends Controller
         }
 
         // 1. Aluno selecionado
-        $alunoIdSolicitado = (int)$this->input('aluno', 0);
+        $alunoIdSolicitado = (int)$this->input('aluno', (int)$this->input('aluno_id', 0));
         $alunoSelecionado = null;
         if ($alunoIdSolicitado > 0) {
+            if (!$this->alunoPertence($respId, $alunoIdSolicitado)) {
+                Auth::logSecurityEvent('acesso_negado_idor', $usuario['username'] ?? $usuario['cpf'] ?? null, [
+                    'motivo'         => 'Tentativa de agendamento de lanche para dependente de outra família (IDOR)',
+                    'responsavel_id' => $respId,
+                    'aluno_id_alvo'  => $alunoIdSolicitado,
+                    'rota'           => '/portal/agendamento',
+                    'ip'             => Auth::getClientIp()
+                ]);
+                Session::setFlash('danger', 'Você não tem permissão para agendar lanches para este aluno.');
+                $this->redirect('/portal/agendamento');
+                return;
+            }
+
             foreach ($dependentes as $dep) {
                 if ((int)$dep['id'] === $alunoIdSolicitado) {
                     $alunoSelecionado = $dep;
@@ -308,6 +341,19 @@ class PortalController extends Controller
         $dataConsumo = trim((string)$this->input('data_consumo', ''));
         $itensPost   = (array)($this->input('itens', []) ?: []);
 
+        if ($alunoId <= 0 || !$this->alunoPertence($respId, $alunoId)) {
+            Auth::logSecurityEvent('tentativa_idor_mutacao', $usuario['username'] ?? $usuario['cpf'] ?? null, [
+                'motivo'         => 'Tentativa de agendamento de lanche para aluno de outra família (IDOR)',
+                'responsavel_id' => $respId,
+                'aluno_id_alvo'  => $alunoId,
+                'rota'           => '/portal/agendamento/salvar',
+                'ip'             => Auth::getClientIp()
+            ]);
+            Session::setFlash('danger', 'Você não tem permissão para agendar lanches para este aluno.');
+            $this->redirect('/portal/agendamento');
+            return;
+        }
+
         // Formata itens [produto_id => quantidade] para [['produto_id' => ..., 'quantidade' => ...]]
         $itensFormatados = [];
         foreach ($itensPost as $prodId => $qtd) {
@@ -360,6 +406,19 @@ class PortalController extends Controller
 
         // Filtros
         $alunoFiltro = (int)$this->input('aluno', 0);
+        if ($alunoFiltro > 0 && !$this->alunoPertence($respId, $alunoFiltro)) {
+            Auth::logSecurityEvent('acesso_negado_idor', $usuario['username'] ?? $usuario['cpf'] ?? null, [
+                'motivo'         => 'Tentativa de visualização de pedidos de dependente de outra família (IDOR)',
+                'responsavel_id' => $respId,
+                'aluno_id_alvo'  => $alunoFiltro,
+                'rota'           => '/portal/pedidos',
+                'ip'             => Auth::getClientIp()
+            ]);
+            Session::setFlash('danger', 'Você não tem permissão para visualizar pedidos deste aluno.');
+            $this->redirect('/portal/pedidos');
+            return;
+        }
+
         $dataInicio  = $this->input('data_inicio', '');
         $dataFim     = $this->input('data_fim', '');
 
@@ -453,8 +512,17 @@ class PortalController extends Controller
         $alunoId    = (int)$pedido['aluno_id'];
         $alergenosAlunoIds = Aluno::obterIdsAlergenos($alunoId);
 
+        // Mapeia quantidades atuais do pedido
+        $itensAtuais = [];
+        foreach ($pedido['itens'] as $it) {
+            $itensAtuais[(int)$it['produto_id']] = (int)$it['quantidade'];
+        }
+
         $produtos = Produto::listarParaCardapio($turnoAluno);
         foreach ($produtos as &$prod) {
+            $prodId = (int)$prod['id'];
+            $qtdAtualNoPedido = (int)($itensAtuais[$prodId] ?? 0);
+
             $conflitos = [];
             foreach ($prod['alergenos'] as $alerg) {
                 if (in_array((int)$alerg['id'], $alergenosAlunoIds, true)) {
@@ -463,6 +531,21 @@ class PortalController extends Controller
             }
             $prod['tem_conflito_alergia'] = !empty($conflitos);
             $prod['conflitos_nomes'] = $conflitos;
+
+            // Cálculo preciso de estoque disponível e limite máximo para este pedido na edição
+            if ($prod['tipo'] === 'industrializado_continuo') {
+                $estoqueLivre = (int)$prod['estoque_atual'] - (int)$prod['estoque_reservado'];
+                // Para este pedido, as unidades que ele já reservou somam-se ao estoque livre disponível para ele
+                $estoqueMaxEdicao = max(0, $estoqueLivre) + $qtdAtualNoPedido;
+
+                $prod['estoque_max_edicao'] = $estoqueMaxEdicao;
+                $prod['estoque_disponivel_edicao'] = $estoqueMaxEdicao;
+                $prod['esgotado'] = ($estoqueMaxEdicao <= 0);
+            } else {
+                $prod['estoque_max_edicao'] = 10;
+                $prod['estoque_disponivel_edicao'] = 10;
+                $prod['esgotado'] = false;
+            }
         }
         unset($prod);
 
@@ -471,12 +554,6 @@ class PortalController extends Controller
         foreach ($produtos as $prod) {
             $cat = $prod['categoria_nome'] ?? 'Outros';
             $produtosPorCategoria[$cat][] = $prod;
-        }
-
-        // Mapeia quantidades atuais do pedido
-        $itensAtuais = [];
-        foreach ($pedido['itens'] as $it) {
-            $itensAtuais[(int)$it['produto_id']] = (int)$it['quantidade'];
         }
 
         $this->render('portal/pedido_editar', [

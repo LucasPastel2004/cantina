@@ -215,6 +215,19 @@ class Fase10Test
         return $dt->modify("-{$diasVoltar} days 07:30:00");
     }
 
+    private function obterDataLetivaFutura(): string
+    {
+        for ($i = 1; $i <= 30; $i++) {
+            $cand = (new \DateTimeImmutable())->modify("+{$i} days");
+            $candStr = $cand->format('Y-m-d');
+            $diaSemana = (int)$cand->format('N');
+            if ($diaSemana <= 5 && CalendarioEscolar::isDiaLetivo($candStr)) {
+                return $candStr;
+            }
+        }
+        return date('Y-m-d', strtotime('+7 days'));
+    }
+
     /**
      * 3. Testando Criação Atômica de Pedido com Débito e Reserva de Estoque
      */
@@ -227,12 +240,7 @@ class Fase10Test
         $prodSalgado = $this->criarProdutoTeste('salgado_diario', 7.50, 0, 'matutino');
         $prodInd = $this->criarProdutoTeste('industrializado_continuo', 4.50, 20, 'matutino');
 
-        $dataConsumo = date('Y-m-d', strtotime('+2 days'));
-        // Garante que é dia letivo
-        if (date('N', strtotime($dataConsumo)) >= 6) {
-            $dataConsumo = date('Y-m-d', strtotime('+4 days'));
-        }
-
+        $dataConsumo = $this->obterDataLetivaFutura();
         $momento = $this->obterMomentoAberto($dataConsumo);
 
         $itens = [
@@ -323,11 +331,7 @@ class Fase10Test
         // Produto com apenas 2 unidades físicas disponíveis
         $prodLimitado = $this->criarProdutoTeste('industrializado_continuo', 5.00, 2, 'matutino');
 
-        $dataConsumo = date('Y-m-d', strtotime('+2 days'));
-        if (date('N', strtotime($dataConsumo)) >= 6) {
-            $dataConsumo = date('Y-m-d', strtotime('+4 days'));
-        }
-
+        $dataConsumo = $this->obterDataLetivaFutura();
         $momento = $this->obterMomentoAberto($dataConsumo);
 
         // Tenta comprar 3 unidades (disponível: 2) -> deve falhar
@@ -376,11 +380,7 @@ class Fase10Test
         $aluno = $this->criarAlunoTeste($resp['id'], 'matutino');
         $prodInd = $this->criarProdutoTeste('industrializado_continuo', 10.00, 10, 'matutino');
 
-        $dataConsumo = date('Y-m-d', strtotime('+3 days'));
-        if (date('N', strtotime($dataConsumo)) >= 6) {
-            $dataConsumo = date('Y-m-d', strtotime('+5 days'));
-        }
-
+        $dataConsumo = $this->obterDataLetivaFutura();
         $momento = $this->obterMomentoAberto($dataConsumo);
 
         // Agenda pedido de R$ 20,00 (saldo vai para R$ 30,00, reserva vai para 2)
@@ -487,11 +487,7 @@ class Fase10Test
         $prodA = $this->criarProdutoTeste('salgado_diario', 10.00, 0, 'matutino');
         $prodB = $this->criarProdutoTeste('industrializado_continuo', 5.00, 10, 'matutino');
 
-        $dataConsumo = date('Y-m-d', strtotime('+2 days'));
-        if (date('N', strtotime($dataConsumo)) >= 6) {
-            $dataConsumo = date('Y-m-d', strtotime('+4 days'));
-        }
-
+        $dataConsumo = $this->obterDataLetivaFutura();
         $momento = $this->obterMomentoAberto($dataConsumo);
 
         // 1. Pedido original: 1x ProdA (R$ 10,00). Saldo vai de 60 para 50.
@@ -544,11 +540,7 @@ class Fase10Test
         $prodMisto = $this->criarProdutoTeste('salgado_diario', 8.50, 0, 'vespertino');
         Produto::sincronizarAlergenos($prodMisto['id'], [$lactoseId, $glutenId]);
 
-        $dataConsumo = date('Y-m-d', strtotime('+3 days'));
-        if (date('N', strtotime($dataConsumo)) >= 6) {
-            $dataConsumo = date('Y-m-d', strtotime('+5 days'));
-        }
-
+        $dataConsumo = $this->obterDataLetivaFutura();
         $momento = $this->obterMomentoAberto($dataConsumo);
 
         // Agenda o lanche conflitante
@@ -582,11 +574,7 @@ class Fase10Test
 
         $prod = $this->criarProdutoTeste('salgado_diario', 6.00, 0, 'matutino');
 
-        $dataConsumo = date('Y-m-d', strtotime('+2 days'));
-        if (date('N', strtotime($dataConsumo)) >= 6) {
-            $dataConsumo = date('Y-m-d', strtotime('+4 days'));
-        }
-
+        $dataConsumo = $this->obterDataLetivaFutura();
         $momento = $this->obterMomentoAberto($dataConsumo);
 
         // Família Alfa cria pedido

@@ -348,7 +348,7 @@ class Auth
     public static function logSecurityEvent(string $evento, ?string $identificador = null, array $detalhes = []): void
     {
         $ip = self::getClientIp();
-        $json = json_encode($detalhes, JSON_UNESCAPED_UNICODE);
+        $json = json_encode($detalhes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         try {
             $pdo = Model::getConnection();

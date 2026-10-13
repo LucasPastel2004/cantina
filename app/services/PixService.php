@@ -105,8 +105,12 @@ class PixService
             'txid'               => $txid,
             'responsavel_id'     => $responsavelId,
             'valor'              => round($valor, 2),
+            'valor_formatado'    => 'R$ ' . number_format($valor, 2, ',', '.'),
             'descricao'          => $descricao,
             'chave_pix'          => $chavePix,
+            'copia_e_cola'       => $payloadBrCode,
+            'qr_code_svg'        => $qrCodeSvg,
+            'qr_code_data_uri'   => $qrCodeDataUri,
             'dados_responsavel'  => $dadosResponsavel,
             'status'             => 'pendente',
             'created_at'         => $agora,
@@ -116,8 +120,23 @@ class PixService
             'expira_em_segundos' => $expiraEmSegundos,
         ];
 
+        // Cancela qualquer cobrança pendente anterior do mesmo responsável
+        $cobrancaAnterior = self::obterCobrancaPendenteResponsavel($responsavelId);
+        if ($cobrancaAnterior && !empty($cobrancaAnterior['txid']) && $cobrancaAnterior['txid'] !== $txid) {
+            self::cancelarCobranca($cobrancaAnterior['txid'], $responsavelId);
+        }
+
         // Persiste a cobrança em arquivo seguro no storage
         self::salvarCobrancaCache($txid, $cobrancaData);
+
+        // Grava ponteiro direto O(1) para o responsável (evita varredura de diretório)
+        $pointerFile = self::getCacheDir() . '/responsavel_' . (int)$responsavelId . '.json';
+        @file_put_contents($pointerFile, json_encode(['txid' => $txid, 'expira_em' => $expiraTimestamp]));
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION['_pix_ativo_txid_' . $responsavelId] = $txid;
+            $_SESSION['_pix_ativo_txid'] = $txid;
+        }
 
         return [
             'sucesso'            => true,
@@ -240,6 +259,21 @@ class PixService
         // 1. Verifica se já foi liquidada e registrada na tabela oficial transacoes_carteira
         $transacao = TransacaoCarteira::buscarPorReferencia($txid);
         if ($transacao) {
+            // Remove txid ativo da sessão e limpa ponteiro direto se liquidado
+            $cobrancaCache = self::obterCobrancaCache($txid);
+            if ($cobrancaCache && !empty($cobrancaCache['responsavel_id'])) {
+                $ptrFile = self::getCacheDir() . '/responsavel_' . (int)$cobrancaCache['responsavel_id'] . '.json';
+                if (file_exists($ptrFile)) {
+                    @unlink($ptrFile);
+                }
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    unset($_SESSION['_pix_ativo_txid_' . (int)$cobrancaCache['responsavel_id']]);
+                }
+            }
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                unset($_SESSION['_pix_ativo_txid']);
+            }
+
             return [
                 'status'         => 'pago',
                 'mensagem'       => 'Pagamento confirmado e creditado na carteira familiar!',
@@ -258,10 +292,56 @@ class PixService
             ];
         }
 
-        // 3. Verifica expiração (15 minutos)
+        // 3. Verifica se foi cancelada manualmente
+        if (($cobranca['status'] ?? '') === 'cancelado') {
+            return [
+                'status'   => 'cancelado',
+                'mensagem' => 'Cobrança cancelada pelo usuário.'
+            ];
+        }
+
+        // 3.1. Verifica se foi marcada como paga no cache (simulação, mock ou webhook)
+        if (($cobranca['status'] ?? '') === 'pago') {
+            if (!empty($cobranca['responsavel_id'])) {
+                $ptrFile = self::getCacheDir() . '/responsavel_' . (int)$cobranca['responsavel_id'] . '.json';
+                if (file_exists($ptrFile)) {
+                    @unlink($ptrFile);
+                }
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    unset($_SESSION['_pix_ativo_txid_' . (int)$cobranca['responsavel_id']]);
+                }
+            }
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                unset($_SESSION['_pix_ativo_txid']);
+            }
+
+            return [
+                'status'         => 'pago',
+                'mensagem'       => 'Pagamento confirmado e creditado na carteira familiar!',
+                'valor'          => (float)$cobranca['valor'],
+                'liquidado_em'   => $cobranca['pago_em'] ?? date('Y-m-d H:i:s'),
+                'transacao_id'   => (int)($cobranca['transacao_id'] ?? 0)
+            ];
+        }
+
+        // 4. Verifica expiração (15 minutos)
         if (time() > $cobranca['expira_em']) {
             $cobranca['status'] = 'expirado';
             self::salvarCobrancaCache($txid, $cobranca);
+
+            if (!empty($cobranca['responsavel_id'])) {
+                $ptrFile = self::getCacheDir() . '/responsavel_' . (int)$cobranca['responsavel_id'] . '.json';
+                if (file_exists($ptrFile)) {
+                    @unlink($ptrFile);
+                }
+            }
+
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                unset($_SESSION['_pix_ativo_txid']);
+                if (!empty($cobranca['responsavel_id'])) {
+                    unset($_SESSION['_pix_ativo_txid_' . (int)$cobranca['responsavel_id']]);
+                }
+            }
 
             return [
                 'status'   => 'expirado',
@@ -269,13 +349,161 @@ class PixService
             ];
         }
 
-        // 4. Cobrança continua pendente
+        // 5. Cobrança continua pendente
         return [
             'status'             => 'pendente',
             'mensagem'           => 'Aguardando confirmação de pagamento...',
             'valor'              => (float)$cobranca['valor'],
             'restante_segundos'  => max(0, $cobranca['expira_em'] - time())
         ];
+    }
+
+    /**
+     * Localiza uma cobrança Pix ativa e pendente para o responsável informado.
+     * Permite que ao recarregar a página (F5) o QR Code e o cronômetro sejam restaurados.
+     * Operação estritamente O(1) via sessão ou ponteiro direto responsavel_{id}.json.
+     * 
+     * @param int $responsavelId ID do titular da carteira
+     * @return array|null Dados estruturados da cobrança ativa ou null
+     */
+    public static function obterCobrancaPendenteResponsavel(int $responsavelId): ?array
+    {
+        $txidAtivo = null;
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $txidAtivo = $_SESSION['_pix_ativo_txid_' . $responsavelId] ?? $_SESSION['_pix_ativo_txid'] ?? null;
+        }
+
+        $cobranca = null;
+        if (!empty($txidAtivo)) {
+            $cobranca = self::obterCobrancaCache($txidAtivo);
+        }
+
+        $pointerFile = self::getCacheDir() . '/responsavel_' . (int)$responsavelId . '.json';
+
+        // Ponteiro direto O(1) gravado em disco (caso a sessão tenha sido reiniciada ou limpa)
+        if (!$cobranca && file_exists($pointerFile)) {
+            $ptrJson = @file_get_contents($pointerFile);
+            if ($ptrJson) {
+                $ptr = json_decode($ptrJson, true);
+                if (is_array($ptr) && !empty($ptr['txid']) && ($ptr['expira_em'] ?? 0) > time()) {
+                    $cobranca = self::obterCobrancaCache($ptr['txid']);
+                }
+            }
+        }
+
+        if (!$cobranca) {
+            if (file_exists($pointerFile)) {
+                @unlink($pointerFile);
+            }
+            return null;
+        }
+
+        // Validação estrita de titularidade
+        if ((int)($cobranca['responsavel_id'] ?? 0) !== $responsavelId) {
+            return null;
+        }
+
+        $txid = $cobranca['txid'] ?? '';
+        if (empty($txid)) {
+            return null;
+        }
+
+        // Consulta status em tempo real (verifica se já foi pago, cancelado ou expirado)
+        $statusInfo = self::consultarStatus($txid);
+        if ($statusInfo['status'] !== 'pendente') {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                unset($_SESSION['_pix_ativo_txid_' . $responsavelId], $_SESSION['_pix_ativo_txid']);
+            }
+            if (file_exists($pointerFile)) {
+                @unlink($pointerFile);
+            }
+            return null;
+        }
+
+        $agora = time();
+        if ($agora >= ($cobranca['expira_em'] ?? 0)) {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                unset($_SESSION['_pix_ativo_txid_' . $responsavelId], $_SESSION['_pix_ativo_txid']);
+            }
+            if (file_exists($pointerFile)) {
+                @unlink($pointerFile);
+            }
+            return null;
+        }
+
+        // Reconstrói copia_e_cola e qr_code_svg defensivamente caso ausentes em cache legado
+        if (empty($cobranca['copia_e_cola']) || empty($cobranca['qr_code_svg'])) {
+            $configPix = self::getConfig();
+            $chavePix = !empty($configPix['chave_pix']) ? $configPix['chave_pix'] : 'financeiro@colegiomonteirolobato.com.br';
+            $payload = self::montarPayloadBrCode($chavePix, 'COLEGIO MONTEIRO LOBATO', 'SAO PAULO', (float)$cobranca['valor'], $txid, $cobranca['descricao'] ?? '');
+            $cobranca['copia_e_cola'] = $payload;
+            $cobranca['qr_code_svg'] = QrCodeService::svg($payload, 260);
+            $cobranca['qr_code_data_uri'] = QrCodeService::dataUri($payload, 260);
+        }
+
+        if (empty($cobranca['valor_formatado'])) {
+            $cobranca['valor_formatado'] = 'R$ ' . number_format((float)$cobranca['valor'], 2, ',', '.');
+        }
+
+        $cobranca['segundos_restantes'] = max(0, ($cobranca['expira_em'] ?? $agora) - $agora);
+
+        // Memoriza na sessão para consultas subsequentes imediatas
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION['_pix_ativo_txid_' . $responsavelId] = $txid;
+        }
+
+        return $cobranca;
+    }
+
+    /**
+     * Cancela uma cobrança Pix pendente
+     * 
+     * @param string $txid Identificador da cobrança
+     * @param int|null $responsavelId ID do responsável para conferência opcional
+     * @return bool True se cancelado com sucesso
+     */
+    public static function cancelarCobranca(string $txid, ?int $responsavelId = null): bool
+    {
+        $cobranca = self::obterCobrancaCache($txid);
+        if (!$cobranca) {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                if ($responsavelId !== null) {
+                    unset($_SESSION['_pix_ativo_txid_' . $responsavelId]);
+                }
+                unset($_SESSION['_pix_ativo_txid']);
+            }
+            if ($responsavelId !== null) {
+                $ptrFile = self::getCacheDir() . '/responsavel_' . (int)$responsavelId . '.json';
+                if (file_exists($ptrFile)) {
+                    @unlink($ptrFile);
+                }
+            }
+            return false;
+        }
+
+        if ($responsavelId !== null && (int)($cobranca['responsavel_id'] ?? 0) !== $responsavelId) {
+            return false;
+        }
+
+        $cobranca['status'] = 'cancelado';
+        self::salvarCobrancaCache($txid, $cobranca);
+
+        $respId = $responsavelId ?? ($cobranca['responsavel_id'] ?? 0);
+        if ($respId > 0) {
+            $ptrFile = self::getCacheDir() . '/responsavel_' . (int)$respId . '.json';
+            if (file_exists($ptrFile)) {
+                @unlink($ptrFile);
+            }
+        }
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            if ($responsavelId !== null) {
+                unset($_SESSION['_pix_ativo_txid_' . $responsavelId]);
+            }
+            unset($_SESSION['_pix_ativo_txid']);
+        }
+
+        return true;
     }
 
     /**

@@ -133,6 +133,12 @@ $router->get('/portal/recarga/status/{txid}', [\App\Controllers\CarteiraControll
 $router->post('/portal/recarga/simular/{txid}', [\App\Controllers\CarteiraController::class, 'simularPagamento'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
 ]);
+$router->post('/portal/recarga/cancelar', [\App\Controllers\CarteiraController::class, 'cancelarPix'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
+$router->post('/portal/recarga/cancelar/{txid}', [\App\Controllers\CarteiraController::class, 'cancelarPix'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
+]);
 $router->get('/portal/extrato', [\App\Controllers\PortalController::class, 'extrato'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_RESPONSAVEL)
 ]);
