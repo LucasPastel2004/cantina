@@ -39,24 +39,33 @@ $dias = $dados['dias'] ?? [];
             </p>
         </div>
 
-        <!-- Ações de Exportação e Emissão -->
+        <!-- Ações de Exportação e Emissão (Integradas ao Formulário de Filtro) -->
         <div class="d-flex flex-wrap gap-2">
-            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/imprimir?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
-               target="_blank" 
-               class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2">
+            <button type="submit" 
+                    form="formFiltroArrecadacao" 
+                    formaction="<?php echo $baseUrl; ?>/relatorios/arrecadacao/imprimir" 
+                    formtarget="_blank" 
+                    class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
+                    title="Visualizar espelho oficial A4 para conferência e impressão">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
-                Visualizar / Imprimir (A4)
-            </a>
-            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/pdf?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
-               class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2">
+                <span>Visualizar / Imprimir (A4)</span>
+            </button>
+            <button type="submit" 
+                    form="formFiltroArrecadacao" 
+                    formaction="<?php echo $baseUrl; ?>/relatorios/arrecadacao/pdf" 
+                    class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
+                    title="Baixar demonstrativo timbrado em PDF de alta qualidade">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
-                Baixar em PDF (A4)
-            </a>
-            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/csv?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
-               class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2">
+                <span>Baixar em PDF (A4)</span>
+            </button>
+            <button type="submit" 
+                    form="formFiltroArrecadacao" 
+                    formaction="<?php echo $baseUrl; ?>/relatorios/arrecadacao/csv" 
+                    class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
+                    title="Exportar dados completos para planilha Microsoft Excel">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/><path d="M4.5 12.5A.5.5 0 0 1 5 12h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 10h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 8h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5z"/></svg>
-                Exportar Planilha (CSV)
-            </a>
+                <span>Exportar Planilha (CSV)</span>
+            </button>
         </div>
     </div>
 
@@ -87,11 +96,11 @@ $dias = $dados['dias'] ?? [];
                     <div>
                         <span class="text-microcopy text-secondary text-uppercase fw-semibold d-block mb-1">Atalhos de Período</span>
                         <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-enterprise btn-secondary" onclick="definirDatas('<?php echo $hoje; ?>', '<?php echo $hoje; ?>')">Hoje</button>
-                            <button type="button" class="btn btn-enterprise btn-secondary" onclick="definirDatas('<?php echo $ontem; ?>', '<?php echo $ontem; ?>')">Ontem</button>
-                            <button type="button" class="btn btn-enterprise btn-secondary" onclick="definirDatas('<?php echo $inicioSemana; ?>', '<?php echo $fimSemana; ?>')">Esta Semana</button>
-                            <button type="button" class="btn btn-enterprise btn-secondary" onclick="definirDatas('<?php echo $inicioMes; ?>', '<?php echo $fimMes; ?>')">Este Mês</button>
-                            <button type="button" class="btn btn-enterprise btn-secondary" onclick="definirDatas('<?php echo $inicioMesAnterior; ?>', '<?php echo $fimMesAnterior; ?>')">Mês Anterior</button>
+                            <button type="button" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $hoje; ?>" data-fim="<?php echo $hoje; ?>" onclick="definirDatas('<?php echo $hoje; ?>', '<?php echo $hoje; ?>')">Hoje</button>
+                            <button type="button" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $ontem; ?>" data-fim="<?php echo $ontem; ?>" onclick="definirDatas('<?php echo $ontem; ?>', '<?php echo $ontem; ?>')">Ontem</button>
+                            <button type="button" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $inicioSemana; ?>" data-fim="<?php echo $fimSemana; ?>" onclick="definirDatas('<?php echo $inicioSemana; ?>', '<?php echo $fimSemana; ?>')">Esta Semana</button>
+                            <button type="button" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $inicioMes; ?>" data-fim="<?php echo $fimMes; ?>" onclick="definirDatas('<?php echo $inicioMes; ?>', '<?php echo $fimMes; ?>')">Este Mês</button>
+                            <button type="button" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $inicioMesAnterior; ?>" data-fim="<?php echo $fimMesAnterior; ?>" onclick="definirDatas('<?php echo $inicioMesAnterior; ?>', '<?php echo $fimMesAnterior; ?>')">Mês Anterior</button>
                         </div>
                     </div>
 
@@ -101,59 +110,59 @@ $dias = $dados['dias'] ?? [];
     </div>
 
     <!-- Stat-Strip de Indicadores Financeiros de Cash-In -->
-    <div class="stat-strip-enterprise mb-4">
+    <div class="stat-strip mb-4">
         
         <!-- Cartão 1: Total Real Arrecadado (Cash-In) -->
-        <div class="stat-item" style="border-left: 3px solid #16a34a;">
-            <span class="stat-label">Total Arrecadado (Cash-In Real)</span>
-            <span class="stat-value font-tabular" style="color: #15803d !important; font-size: 20px;">
+        <div class="stat-strip-item" style="border-left: 3px solid #16a34a;">
+            <span class="stat-strip-label">Total Arrecadado (Cash-In Real)</span>
+            <span class="stat-strip-value font-tabular" style="color: #15803d !important; font-size: 20px;">
                 R$ <?php echo number_format((float)($dados['total_arrecadado_bruto'] ?? 0), 2, ',', '.'); ?>
             </span>
-            <span class="text-secondary text-microcopy mt-1 font-tabular">
+            <span class="stat-subtext font-tabular">
                 <?php echo number_format((int)($dados['total_transacoes_arrecadacao'] ?? 0), 0, ',', '.'); ?> entradas financeiras reais
             </span>
         </div>
 
         <!-- Cartão 2: Recargas Pix Online (Portal da Família) -->
-        <div class="stat-item">
-            <span class="stat-label">Recargas Pix Online (Portal)</span>
-            <span class="stat-value font-tabular text-dark">
+        <div class="stat-strip-item">
+            <span class="stat-strip-label">Recargas Pix Online (Portal)</span>
+            <span class="stat-strip-value font-tabular text-dark">
                 R$ <?php echo number_format((float)($dados['recargas_pix_total'] ?? 0), 2, ',', '.'); ?>
             </span>
-            <span class="text-secondary text-microcopy mt-1 font-tabular">
+            <span class="stat-subtext font-tabular">
                 <?php echo number_format((int)($dados['recargas_pix_qtd'] ?? 0), 0, ',', '.'); ?> recargas pagas via QR Code
             </span>
         </div>
 
         <!-- Cartão 3: Recargas Balcão (Dinheiro Físico) -->
-        <div class="stat-item">
-            <span class="stat-label">Recargas Balcão (Dinheiro)</span>
-            <span class="stat-value font-tabular text-dark">
+        <div class="stat-strip-item">
+            <span class="stat-strip-label">Recargas Balcão (Dinheiro)</span>
+            <span class="stat-strip-value font-tabular text-dark">
                 R$ <?php echo number_format((float)($dados['recargas_dinheiro_total'] ?? 0), 2, ',', '.'); ?>
             </span>
-            <span class="text-secondary text-microcopy mt-1 font-tabular">
+            <span class="stat-subtext font-tabular">
                 <?php echo number_format((int)($dados['recargas_dinheiro_qtd'] ?? 0), 0, ',', '.'); ?> inserções presenciais
             </span>
         </div>
 
         <!-- Cartão 4: Vendas Presenciais Balcão (Dinheiro + Pix) -->
-        <div class="stat-item">
-            <span class="stat-label">Vendas Presenciais Balcão</span>
-            <span class="stat-value font-tabular text-dark">
+        <div class="stat-strip-item">
+            <span class="stat-strip-label">Vendas Presenciais Balcão</span>
+            <span class="stat-strip-value font-tabular text-dark">
                 R$ <?php echo number_format((float)($dados['vendas_dinheiro_total'] + $dados['vendas_pix_total']), 2, ',', '.'); ?>
             </span>
-            <span class="text-secondary text-microcopy mt-1 font-tabular">
+            <span class="stat-subtext font-tabular">
                 Dinheiro: R$ <?php echo number_format((float)$dados['vendas_dinheiro_total'], 2, ',', '.'); ?> | Pix: R$ <?php echo number_format((float)$dados['vendas_pix_total'], 2, ',', '.'); ?>
             </span>
         </div>
 
         <!-- Cartão 5: Consumo de Saldo no Período (Informativo de Lanches) -->
-        <div class="stat-item">
-            <span class="stat-label">Consumo de Saldo (Lanches)</span>
-            <span class="stat-value font-tabular text-secondary" style="font-size: 18px;">
+        <div class="stat-strip-item">
+            <span class="stat-strip-label">Consumo de Saldo (Lanches)</span>
+            <span class="stat-strip-value font-tabular text-secondary" style="font-size: 18px;">
                 R$ <?php echo number_format((float)($dados['total_consumo_saldo'] ?? 0), 2, ',', '.'); ?>
             </span>
-            <span class="text-secondary text-microcopy mt-1 font-tabular">
+            <span class="stat-subtext font-tabular">
                 Variação: <strong><?php echo ($dados['variacao_carteira'] >= 0 ? '+' : '') . 'R$ ' . number_format((float)$dados['variacao_carteira'], 2, ',', '.'); ?></strong>
             </span>
         </div>
@@ -390,8 +399,39 @@ $dias = $dados['dias'] ?? [];
 
 <script>
 function definirDatas(inicio, fim) {
-    document.getElementById('dataInicio').value = inicio;
-    document.getElementById('dataFim').value = fim;
-    document.getElementById('formFiltroArrecadacao').submit();
+    var inputInicio = document.getElementById('dataInicio');
+    var inputFim = document.getElementById('dataFim');
+    var form = document.getElementById('formFiltroArrecadacao');
+    
+    if (inputInicio) {
+        inputInicio.value = inicio;
+    }
+    if (inputFim) {
+        inputFim.value = fim;
+    }
+    
+    if (form) {
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.submit();
+        }
+    }
 }
+window.definirDatas = definirDatas;
+
+document.addEventListener('DOMContentLoaded', function() {
+    var botoesAtalho = document.querySelectorAll('.btn-atalho-data');
+    botoesAtalho.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var inicio = this.getAttribute('data-inicio');
+            var fim = this.getAttribute('data-fim');
+            if (inicio && fim) {
+                definirDatas(inicio, fim);
+            }
+        });
+    });
+});
 </script>
+

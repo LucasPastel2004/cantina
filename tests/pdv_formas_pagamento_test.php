@@ -342,7 +342,7 @@ class PdvFormasPagamentoTest
 
     private function obterOuCriarSessaoCaixa(): int
     {
-        $sessaoAberta = SessaoCaixa::obterSessaoAberta('matutino');
+        $sessaoAberta = SessaoCaixa::obterSessaoAberta('matutino') ?? SessaoCaixa::obterSessaoAberta('vespertino');
         if ($sessaoAberta) {
             return (int)$sessaoAberta['id'];
         }

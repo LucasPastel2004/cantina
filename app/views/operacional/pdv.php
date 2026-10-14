@@ -36,6 +36,8 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     display: flex;
     flex-direction: column;
     width: 100%;
+    height: 100%;
+    min-height: 0;
 }
 
 .pdv-wrapper .stat-strip {
@@ -45,15 +47,17 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 6px 12px;
-    gap: 8px 12px;
+    padding: 4px 10px;
+    gap: 4px 10px;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    flex-shrink: 0;
+    margin-bottom: 6px;
 }
 
 .pdv-wrapper .stat-strip-item {
     display: flex;
     flex-direction: column;
-    padding-right: 12px;
+    padding-right: 10px;
     border-right: 1px solid #f1f5f9;
 }
 
@@ -64,39 +68,44 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 }
 
 .pdv-wrapper .stat-strip-label {
-    font-size: 10.5px;
+    font-size: 9.5px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: #64748b;
-    margin-bottom: 1px;
+    margin-bottom: 0;
 }
 
 .pdv-wrapper .stat-strip-value {
-    font-size: 12.5px;
+    font-size: 11.5px;
     font-weight: 700;
     color: #0f172a;
+    line-height: 1.2;
 }
 
 /* Grid de 2 Colunas (Terminal POS) */
 .pdv-grid {
     display: grid;
-    grid-template-columns: 1fr minmax(330px, 360px);
-    gap: 12px;
-    align-items: start;
+    grid-template-columns: 1fr minmax(340px, 380px);
+    gap: 10px;
+    align-items: stretch;
     width: 100%;
+    flex: 1;
+    min-height: 0;
+    height: calc(100% - 42px);
 }
 
 @media (min-width: 1440px) {
     .pdv-grid {
-        grid-template-columns: 1fr 400px;
-        gap: 16px;
+        grid-template-columns: 1fr 410px;
+        gap: 12px;
     }
 }
 
 @media (max-width: 960px) {
     .pdv-grid {
         grid-template-columns: 1fr;
+        height: auto;
     }
 }
 
@@ -105,8 +114,13 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 14px;
+    padding: 10px 12px;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .pdv-catalog-header {
@@ -114,18 +128,19 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-    padding-bottom: 12px;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
     border-bottom: 1px solid #f1f5f9;
+    flex-shrink: 0;
 }
 
 .pdv-category-nav {
     display: flex;
     flex-wrap: nowrap;
-    gap: 6px;
+    gap: 4px;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding-bottom: 2px;
     scrollbar-width: thin;
 }
 
@@ -135,8 +150,8 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 14px;
-    font-size: 12px;
+    padding: 4px 10px;
+    font-size: 11.5px;
     font-weight: 600;
     border-radius: 6px;
     border: 1px solid #cbd5e1;
@@ -164,23 +179,28 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
 .pdv-products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-    gap: 12px;
-    max-height: calc(100vh - 230px);
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding-right: 4px;
+    scrollbar-width: thin;
 }
 
 .pdv-prod-card {
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 10px;
+    padding: 8px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 165px;
+    min-height: 145px;
     position: relative;
     transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
@@ -205,14 +225,14 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
 .pdv-prod-card .prod-thumb-box {
     width: 100%;
-    height: 75px;
+    height: 65px;
     border-radius: 6px;
     background-color: #f8fafc;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     border: 1px solid #f1f5f9;
 }
 
@@ -223,28 +243,28 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 }
 
 .pdv-prod-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #0f172a;
-    line-height: 1.3;
-    margin-bottom: 4px;
+    line-height: 1.25;
+    margin-bottom: 2px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    height: 34px;
+    height: 30px;
 }
 
 .tag-alergeno {
     display: inline-block;
-    padding: 1px 5px;
-    font-size: 10px;
+    padding: 1px 4px;
+    font-size: 9.5px;
     font-weight: 600;
     background-color: #fffbeb;
     border: 1px solid #fde68a;
     color: #92400e;
     border-radius: 4px;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     max-width: 100%;
     white-space: nowrap;
     overflow: hidden;
@@ -255,19 +275,19 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 6px;
-    padding-top: 6px;
+    margin-top: 4px;
+    padding-top: 4px;
     border-top: 1px solid #f8fafc;
 }
 
 .pdv-prod-price {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #1d4ed8;
 }
 
 .pdv-prod-stock {
-    font-size: 11px;
+    font-size: 10.5px;
     color: #64748b;
     font-weight: 500;
 }
@@ -279,64 +299,83 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 145px);
-    min-height: 580px;
-    position: sticky;
-    top: 70px;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    position: static;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+
+@media (max-width: 960px) {
+    .pdv-cart-panel {
+        height: auto;
+        min-height: 520px;
+    }
 }
 
 .pdv-cart-header {
-    padding: 12px 16px;
+    padding: 8px 12px;
     border-bottom: 1px solid #e2e8f0;
     background-color: #f8fafc;
     border-radius: 8px 8px 0 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-shrink: 0;
 }
 
 .pdv-cart-body {
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 130px;
     overflow-y: auto;
-    padding: 10px 14px;
+    overscroll-behavior: contain;
+    padding: 6px 12px;
+    scrollbar-width: thin;
 }
 
 .pdv-cart-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 0;
+    padding: 5px 0;
     border-bottom: 1px solid #f1f5f9;
-    gap: 8px;
+    gap: 6px;
+    min-height: 40px;
+}
+
+.pdv-cart-item:last-child {
+    border-bottom: none;
 }
 
 .pdv-cart-item-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #0f172a;
     line-height: 1.25;
+    word-break: break-word;
 }
 
 .pdv-cart-item-desc {
-    font-size: 11px;
+    font-size: 10.5px;
     color: #64748b;
+    margin-top: 1px;
 }
 
 .pdv-cart-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
 .pdv-qty-btn {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     border: 1px solid #cbd5e1;
     background-color: #ffffff;
     border-radius: 4px;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 13px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -344,6 +383,8 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     color: #1e293b;
     user-select: none;
     transition: all 0.1s ease;
+    padding: 0;
+    line-height: 1;
 }
 
 .pdv-qty-btn:hover {
@@ -357,20 +398,21 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
 .pdv-cart-footer {
     border-top: 1px solid #e2e8f0;
-    padding: 12px 14px;
+    padding: 8px 12px;
     background-color: #ffffff;
     border-radius: 0 0 8px 8px;
+    flex-shrink: 0;
 }
 
 .pdv-total-row {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 
 .pdv-total-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: #475569;
     text-transform: uppercase;
@@ -378,7 +420,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 }
 
 .pdv-total-val {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 800;
     color: #0f172a;
     letter-spacing: -0.02em;
@@ -387,8 +429,8 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 .pdv-pay-methods {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-    margin-bottom: 10px;
+    gap: 4px;
+    margin-bottom: 6px;
 }
 
 .pdv-pay-methods.has-saldo {
@@ -398,14 +440,15 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 .pdv-pay-btn {
     border: 1px solid #cbd5e1;
     background-color: #ffffff;
-    padding: 8px 4px;
+    padding: 5px 3px;
     border-radius: 6px;
     text-align: center;
     cursor: pointer;
     transition: all 0.15s ease;
     user-select: none;
-    font-size: 12px;
+    font-size: 11px;
     color: #1e293b;
+    line-height: 1.15;
 }
 
 .pdv-pay-btn:hover {
@@ -428,12 +471,12 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     background-color: #f1f5f9;
     border: 1px solid #cbd5e1;
     border-radius: 4px;
-    padding: 1px 5px;
-    font-size: 10px;
+    padding: 1px 4px;
+    font-size: 9.5px;
     font-weight: 700;
     color: #475569;
     font-family: monospace;
-    margin-left: 4px;
+    margin-left: 3px;
     line-height: 1.2;
 }
 
@@ -712,9 +755,9 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             </div>
 
             <!-- Identificação do Cliente (Anônimo / Aluno / Colaborador) -->
-            <div class="px-3 pt-2 pb-2 bg-light border-bottom">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <span class="font-11 text-uppercase text-secondary font-semibold">Identificação do Cliente</span>
+            <div class="px-2 py-1 bg-light border-bottom" style="flex-shrink: 0;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="font-10 text-uppercase text-secondary font-semibold">Cliente</span>
                     <div class="btn-group btn-group-sm" role="group">
                         <input type="radio" class="btn-check" name="clienteTipo" id="tipoAnonimo" value="anonimo" checked onchange="trocarTipoCliente('anonimo')">
                         <label class="btn btn-outline-primary py-0 px-2 font-11" for="tipoAnonimo">Anônimo</label>
@@ -728,40 +771,48 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 </div>
 
                 <!-- Painel Aluno -->
-                <div id="boxClienteAluno" class="d-none mt-2">
-                    <div class="input-group input-group-sm">
-                        <input type="text" id="buscaAlunoPdv" class="form-control" placeholder="Digite nome ou matrícula do aluno..." oninput="buscarAlunosLive(this.value)">
-                        <button type="button" class="btn btn-outline-secondary" onclick="limparSelecaoAluno()">✕</button>
+                <div id="boxClienteAluno" class="d-none mt-1">
+                    <div class="input-group input-group-sm" id="wrapBuscaAluno">
+                        <input type="text" id="buscaAlunoPdv" class="form-control py-1 font-12" placeholder="Buscar aluno por nome ou matrícula..." oninput="buscarAlunosLive(this.value)">
+                        <button type="button" class="btn btn-outline-secondary py-1" onclick="limparSelecaoAluno()">✕</button>
                     </div>
                     <div id="listaSugestoesAluno" class="list-group position-absolute shadow-sm d-none" style="z-index: 1050; max-width: 380px;"></div>
-                    <div id="alunoSelecionadoCard" class="d-none mt-1 p-2 bg-white border rounded">
+                    
+                    <!-- Card Compacto do Aluno Selecionado -->
+                    <div id="alunoSelecionadoCard" class="d-none mt-1 px-2 py-1 bg-white border rounded">
                         <div class="d-flex justify-content-between align-items-center">
-                            <strong id="alunoSelNome" class="font-12"></strong>
-                            <span id="alunoSelTurma" class="code-tag"></span>
+                            <div class="d-flex align-items-center gap-1 text-truncate" style="max-width: 82%;">
+                                <strong id="alunoSelNome" class="font-12 text-truncate"></strong>
+                                <span id="alunoSelTurma" class="code-tag font-10" style="padding: 1px 4px;"></span>
+                            </div>
+                            <button type="button" class="btn btn-link text-danger p-0 font-12" onclick="limparSelecaoAluno()" title="Trocar Aluno">✕</button>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top">
-                            <span class="font-11 text-secondary">Saldo em Carteira:</span>
-                            <span class="font-12 font-tabular font-bold text-success" id="alunoSelSaldo">R$ 0,00</span>
+                        <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top font-11">
+                            <span>Saldo: <strong class="font-tabular font-bold text-success" id="alunoSelSaldo">R$ 0,00</strong></span>
+                            <span id="alunoSelAlergias" class="font-10 text-truncate" style="max-width: 55%;"></span>
                         </div>
-                        <div id="alunoSelAlergias" class="mt-1 font-11 text-danger"></div>
                     </div>
                 </div>
 
                 <!-- Painel Colaborador -->
-                <div id="boxClienteColaborador" class="d-none mt-2">
-                    <div class="input-group input-group-sm">
-                        <input type="text" id="buscaColabPdv" class="form-control" placeholder="Buscar professor ou funcionário..." oninput="buscarColaboradoresLive(this.value)">
-                        <button type="button" class="btn btn-outline-secondary" onclick="limparSelecaoColaborador()">✕</button>
+                <div id="boxClienteColaborador" class="d-none mt-1">
+                    <div class="input-group input-group-sm" id="wrapBuscaColab">
+                        <input type="text" id="buscaColabPdv" class="form-control py-1 font-12" placeholder="Buscar professor ou funcionário..." oninput="buscarColaboradoresLive(this.value)">
+                        <button type="button" class="btn btn-outline-secondary py-1" onclick="limparSelecaoColaborador()">✕</button>
                     </div>
                     <div id="listaSugestoesColab" class="list-group position-absolute shadow-sm d-none" style="z-index: 1050; max-width: 380px;"></div>
-                    <div id="colabSelecionadoCard" class="d-none mt-2 p-2 bg-white border rounded">
-                        <div class="d-flex align-items-center gap-2">
-                            <img id="colabSelFoto" src="<?php echo $baseUrl; ?>/assets/img/avatar-placeholder.png" width="44" height="44" class="rounded border" style="object-fit: cover;">
-                            <div class="flex-grow-1">
-                                <div id="colabSelNome" class="font-12 font-semibold"></div>
-                                <div id="colabSelCargo" class="font-11 text-secondary"></div>
-                                <div class="font-10 text-muted">Matrícula: <span id="colabSelMat" class="font-tabular font-semibold"></span></div>
+                    
+                    <!-- Card Compacto do Colaborador Selecionado -->
+                    <div id="colabSelecionadoCard" class="d-none mt-1 px-2 py-1 bg-white border rounded">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2 text-truncate" style="max-width: 85%;">
+                                <img id="colabSelFoto" src="<?php echo $baseUrl; ?>/assets/img/avatar-placeholder.png" width="28" height="28" class="rounded border" style="object-fit: cover; flex-shrink: 0;">
+                                <div class="text-truncate">
+                                    <div id="colabSelNome" class="font-12 font-semibold text-truncate"></div>
+                                    <div class="font-10 text-secondary text-truncate"><span id="colabSelCargo"></span> • Mat: <span id="colabSelMat" class="font-tabular"></span></div>
+                                </div>
                             </div>
+                            <button type="button" class="btn btn-link text-danger p-0 font-12" onclick="limparSelecaoColaborador()" title="Trocar Colaborador">✕</button>
                         </div>
                     </div>
                 </div>
@@ -770,13 +821,13 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             <!-- Lista de Itens do Carrinho -->
             <div class="pdv-cart-body" id="pdvCartBody">
                 <div id="cartEmptyState" class="text-center py-4 text-muted">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" class="mb-2">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" class="mb-1">
                         <circle cx="9" cy="21" r="1"></circle>
                         <circle cx="20" cy="21" r="1"></circle>
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                     </svg>
-                    <div class="font-12">Cesta de compras vazia.</div>
-                    <div class="font-11 text-secondary">Selecione os produtos ao lado para iniciar.</div>
+                    <div class="font-12 font-semibold text-secondary">Cesta de compras vazia</div>
+                    <div class="font-11 text-muted">Selecione os produtos ao lado para iniciar.</div>
                 </div>
                 <div id="cartItemsList"></div>
             </div>
@@ -806,45 +857,39 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
                 <!-- Detalhes de Pagamento em Dinheiro -->
                 <div id="payDetailsDinheiro" class="mb-2">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <label class="font-11 text-secondary text-uppercase font-semibold mb-0" style="min-width: 95px;">Valor Recebido:</label>
-                        <input type="text" id="inputValorRecebido" class="form-control form-control-sm font-tabular text-end input-money" placeholder="R$ 0,00" oninput="calcularTroco()">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <label class="font-11 text-secondary text-uppercase font-semibold mb-0" style="min-width: 65px; flex-shrink: 0;">Recebido:</label>
+                        <input type="text" id="inputValorRecebido" class="form-control form-control-sm font-tabular text-end input-money py-1 font-12" placeholder="R$ 0,00" oninput="calcularTroco()" style="max-width: 105px;">
+                        <div class="btn-group btn-group-sm flex-grow-1" role="group">
+                            <button type="button" class="btn btn-outline-secondary py-1 px-1 font-11" onclick="definirRecebidoExato()" title="Valor Exato">Exato</button>
+                            <button type="button" class="btn btn-outline-secondary py-1 px-1 font-11 font-tabular" onclick="somarRecebido(10)">+10</button>
+                            <button type="button" class="btn btn-outline-secondary py-1 px-1 font-11 font-tabular" onclick="somarRecebido(20)">+20</button>
+                            <button type="button" class="btn btn-outline-secondary py-1 px-1 font-11 font-tabular" onclick="somarRecebido(50)">+50</button>
+                        </div>
                     </div>
-                    <div class="d-flex gap-1 mb-2">
-                        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill font-11 py-1" onclick="definirRecebidoExato()">Exato</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill font-11 py-1 font-tabular" onclick="somarRecebido(10)">+10</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill font-11 py-1 font-tabular" onclick="somarRecebido(20)">+20</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill font-11 py-1 font-tabular" onclick="somarRecebido(50)">+50</button>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between p-2 rounded bg-light border">
-                        <span class="font-12 font-semibold text-secondary">Troco Sugerido:</span>
-                        <span class="font-14 font-tabular font-bold text-success" id="displayTroco">R$ 0,00</span>
+                    <div class="d-flex align-items-center justify-content-between px-2 py-1 rounded bg-light border">
+                        <span class="font-11 font-semibold text-secondary">Troco Sugerido:</span>
+                        <span class="font-13 font-tabular font-bold text-success" id="displayTroco">R$ 0,00</span>
                     </div>
                 </div>
 
                 <!-- Detalhes de Pagamento com Saldo da Carteira (Apenas Aba Aluno) -->
                 <div id="payDetailsSaldo" class="mb-2 d-none">
-                    <div class="p-2 rounded bg-light border">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="font-11 text-secondary">Saldo Atual do Aluno:</span>
-                            <span class="font-12 font-tabular font-bold text-dark" id="displaySaldoDisponivel">R$ 0,00</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="font-11 text-secondary">Total a Debitar:</span>
-                            <span class="font-12 font-tabular font-bold text-primary" id="displaySaldoDebito">R$ 0,00</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center pt-1 border-top">
-                            <span class="font-11 font-semibold" id="lblSaldoRestante">Saldo Restante:</span>
-                            <span class="font-13 font-tabular font-bold text-success" id="displaySaldoRestante">R$ 0,00</span>
+                    <div class="px-2 py-1 rounded bg-light border">
+                        <div class="d-flex justify-content-between align-items-center font-11">
+                            <span class="text-secondary">Debitar: <strong class="font-tabular font-bold text-primary" id="displaySaldoDebito">R$ 0,00</strong></span>
+                            <span><span id="lblSaldoRestante">Restante:</span> <strong class="font-tabular font-bold text-success" id="displaySaldoRestante">R$ 0,00</strong></span>
                         </div>
                     </div>
+                    <!-- Manter elemento de saldo disponível para compatibilidade com JS -->
+                    <span id="displaySaldoDisponivel" class="d-none"></span>
                     <div id="alertaSaldoInsuficiente" class="alert alert-danger py-1 px-2 font-11 mt-1 mb-0 d-none">
                         ⚠️ Saldo insuficiente na carteira para realizar esta compra.
                     </div>
                 </div>
 
                 <!-- Botão Principal de Conclusão -->
-                <button type="button" id="btnFinalizarVenda" class="btn btn-enterprise btn-primary w-100 py-2 font-14 font-semibold" onclick="processarFinalizacaoVenda()" <?php echo !$caixaAberto ? 'disabled' : ''; ?>>
+                <button type="button" id="btnFinalizarVenda" class="btn btn-enterprise btn-primary w-100 py-2 font-13 font-semibold mt-1" onclick="processarFinalizacaoVenda()" <?php echo !$caixaAberto ? 'disabled' : ''; ?>>
                     Concluir Venda <span class="pdv-shortcut-tag">F4</span>
                 </button>
             </div>
@@ -1305,15 +1350,15 @@ function renderizarCarrinho() {
 
         html += `
             <div class="pdv-cart-item">
-                <div style="flex: 1; padding-right: 8px;">
-                    <div class="pdv-cart-item-title">${it.descricao}</div>
+                <div style="flex: 1; padding-right: 6px; min-width: 0;">
+                    <div class="pdv-cart-item-title" title="${it.descricao}">${it.descricao}</div>
                     <div class="pdv-cart-item-desc font-tabular">R$ ${it.preco_unitario.toFixed(2).replace('.', ',')} un</div>
                 </div>
                 <div class="pdv-cart-controls">
                     <button type="button" class="pdv-qty-btn" onclick="alterarQuantidadeItem(${it.produto_id}, -1)">-</button>
                     <span class="font-tabular font-semibold px-1 font-12">${it.quantidade}</span>
                     <button type="button" class="pdv-qty-btn" onclick="alterarQuantidadeItem(${it.produto_id}, 1)">+</button>
-                    <span class="font-tabular font-semibold font-13 text-primary ms-2" style="min-width: 65px; text-align: right;">
+                    <span class="font-tabular font-semibold font-13 text-primary ms-2" style="min-width: 60px; text-align: right;">
                         R$ ${subtotal.toFixed(2).replace('.', ',')}
                     </span>
                     <button type="button" class="btn btn-link text-danger p-0 ms-1" onclick="removerItemCarrinho(${it.produto_id})" title="Remover">✕</button>
@@ -1497,23 +1542,32 @@ function buscarColaboradoresLive(termo) {
 
 function selecionarColaborador(colab) {
     colaboradorSelecionado = colab;
-    document.getElementById('listaSugestoesColab').classList.add('d-none');
-    document.getElementById('buscaColabPdv').value = colab.nome;
+    document.getElementById('listaSugestoesColab')?.classList.add('d-none');
+    const buscaInp = document.getElementById('buscaColabPdv');
+    if (buscaInp) buscaInp.value = colab.nome;
 
-    document.getElementById('colabSelNome').innerText = colab.nome;
-    document.getElementById('colabSelCargo').innerText = colab.cargo || 'Funcionário';
-    document.getElementById('colabSelMat').innerText = colab.matricula_funcional;
+    const elNome = document.getElementById('colabSelNome');
+    if (elNome) elNome.innerText = colab.nome;
+    const elCargo = document.getElementById('colabSelCargo');
+    if (elCargo) elCargo.innerText = colab.cargo || 'Funcionário';
+    const elMat = document.getElementById('colabSelMat');
+    if (elMat) elMat.innerText = colab.matricula_funcional;
     if (colab.foto_url) {
-        document.getElementById('colabSelFoto').src = `${baseUrl}/${colab.foto_url}`;
+        const elFoto = document.getElementById('colabSelFoto');
+        if (elFoto) elFoto.src = `${baseUrl}/${colab.foto_url}`;
     }
-    document.getElementById('colabSelecionadoCard').classList.remove('d-none');
+    document.getElementById('wrapBuscaColab')?.classList.add('d-none');
+    document.getElementById('colabSelecionadoCard')?.classList.remove('d-none');
 }
 
 function limparSelecaoColaborador() {
     colaboradorSelecionado = null;
-    document.getElementById('buscaColabPdv').value = '';
-    document.getElementById('colabSelecionadoCard').classList.add('d-none');
-    document.getElementById('listaSugestoesColab').classList.add('d-none');
+    const buscaInp = document.getElementById('buscaColabPdv');
+    if (buscaInp) buscaInp.value = '';
+    document.getElementById('wrapBuscaColab')?.classList.remove('d-none');
+    document.getElementById('colabSelecionadoCard')?.classList.add('d-none');
+    document.getElementById('listaSugestoesColab')?.classList.add('d-none');
+    if (buscaInp) buscaInp.focus();
 }
 
 // Busca Live de Alunos
@@ -1556,11 +1610,14 @@ function buscarAlunosLive(termo) {
 
 function selecionarAluno(aluno) {
     alunoSelecionado = aluno;
-    document.getElementById('listaSugestoesAluno').classList.add('d-none');
-    document.getElementById('buscaAlunoPdv').value = aluno.nome;
+    document.getElementById('listaSugestoesAluno')?.classList.add('d-none');
+    const buscaInp = document.getElementById('buscaAlunoPdv');
+    if (buscaInp) buscaInp.value = aluno.nome;
 
-    document.getElementById('alunoSelNome').innerText = aluno.nome;
-    document.getElementById('alunoSelTurma').innerText = aluno.nome_turma || 'Geral';
+    const elNome = document.getElementById('alunoSelNome');
+    if (elNome) elNome.innerText = aluno.nome;
+    const elTurma = document.getElementById('alunoSelTurma');
+    if (elTurma) elTurma.innerText = aluno.nome_turma || 'Geral';
 
     const saldoEl = document.getElementById('alunoSelSaldo');
     if (saldoEl) {
@@ -1568,28 +1625,36 @@ function selecionarAluno(aluno) {
     }
 
     const alergiasDiv = document.getElementById('alunoSelAlergias');
-    if (aluno.restricoes_nomes) {
-        alergiasDiv.innerText = `Alergias cadastradas: ${aluno.restricoes_nomes}`;
-        alergiasDiv.className = 'mt-1 font-11 text-danger';
-    } else {
-        alergiasDiv.innerText = 'Sem restrições alimentares cadastradas.';
-        alergiasDiv.className = 'mt-1 font-11 text-success';
+    if (alergiasDiv) {
+        if (aluno.restricoes_nomes) {
+            alergiasDiv.innerText = `⚠️ ${aluno.restricoes_nomes}`;
+            alergiasDiv.className = 'font-10 text-danger font-semibold text-truncate';
+            alergiasDiv.title = `Alergias: ${aluno.restricoes_nomes}`;
+        } else {
+            alergiasDiv.innerText = '✓ Sem restrições';
+            alergiasDiv.className = 'font-10 text-success text-truncate';
+            alergiasDiv.title = 'Sem restrições alimentares';
+        }
     }
 
-    document.getElementById('alunoSelecionadoCard').classList.remove('d-none');
+    document.getElementById('wrapBuscaAluno')?.classList.add('d-none');
+    document.getElementById('alunoSelecionadoCard')?.classList.remove('d-none');
     atualizarDemonstrativoSaldo();
     verificarAlergenosComAluno();
 }
 
 function limparSelecaoAluno() {
     alunoSelecionado = null;
-    document.getElementById('buscaAlunoPdv').value = '';
-    document.getElementById('alunoSelecionadoCard').classList.add('d-none');
-    document.getElementById('listaSugestoesAluno').classList.add('d-none');
+    const buscaInp = document.getElementById('buscaAlunoPdv');
+    if (buscaInp) buscaInp.value = '';
+    document.getElementById('wrapBuscaAluno')?.classList.remove('d-none');
+    document.getElementById('alunoSelecionadoCard')?.classList.add('d-none');
+    document.getElementById('listaSugestoesAluno')?.classList.add('d-none');
     if (formaPagamentoAtual === 'saldo') {
         selecionarFormaPagamento('dinheiro');
     }
     atualizarDemonstrativoSaldo();
+    if (buscaInp) buscaInp.focus();
 }
 
 function verificarAlergenosComAluno() {

@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Revisão de Segurança Pré-Publicação (Passo 5)
 * **Status da Revisão:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria e Blindagem de Segurança 100% Concluídas!
-* **Última Atualização:** 2026-10-13 09:25:00 (Correção e blindagem de estoque e limites na edição de pedidos do Portal da Família).
+* **Última Atualização:** 2026-10-14 16:50:00 (Otimização do terminal de caixa PDV: eliminação da rolagem de janela via .pdv-layout-locked e redesenho de alta densidade vertical da cesta e checkout, impedindo corte no nome dos produtos).
 
 
 
@@ -418,10 +418,13 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [x] Fase 12 — Impressão e Gestão de Tickets Térmicos (Bobina 80mm)
+### [x] Fase 12 — Impressão e Gestão de Tickets Térmicos (Bobina 80mm) & Folha A4
 * [x] Implementação do modelo `app/models/Ticket.php` para consultas detalhadas, busca rápida por matrícula/aluno/código, agrupamento de turmas e marcação de impressão.
 * [x] Implementação do modelo oficial `app/models/Auditoria.php` para persistência compulsória de eventos operacionais e reemissões na tabela `logs_auditoria`.
 * [x] Suporte técnico de impressão térmica contínua de 80mm (226.77 pt) implementado em `app/services/PdfService.php` (`gerarTicketsLotePdf`, `gerarTicketIndividualPdf`, `gerarEspelhoTicketsLoteHtml`, `gerarEspelhoTicketIndividualHtml`).
+* [x] **Otimização Contínua da Bobina 80mm:** Substituição da quebra de página incondicional por `page-break-inside: avoid; break-inside: avoid;`, eliminando o desperdício de espaço em branco e agrupando os tickets sequencialmente de forma compacta (redução de 14 para 4 páginas no lote).
+* [x] **Novo Formato Folha A4 em Grade de Fichas (`ticket_a4.php`):** Grade balanceada de 8 tickets por folha A4 (2 colunas x 4 linhas, ~94mm x 66mm) com linhas pontilhadas de recorte (`✂`), reduzindo 14 tickets a apenas 2 folhas A4, ideal para impressoras convencionais de escritório.
+* [x] Métodos `gerarEspelhoTicketsLoteA4Html` e `gerarTicketsLoteA4Pdf` em `PdfService.php` e suporte universal ao parâmetro `?formato=a4` e `?formato=80mm` nos endpoints `/operacional/tickets/lote`, `/lote/pdf`, `/turma/{id}` e `/turma/{id}/pdf`.
 * [x] Ordenação sequencial estrita por `Turno > turmas.ordem_impressao ASC > turmas.nome_turma ASC > alunos.nome ASC > tickets.id ASC` para entrega organizada aos professores antes do recreio.
 * [x] Destaque visual indelével e moldura obrigatória de alérgenos (`[ATENÇÃO: CONTÉM ...]`) nos tickets com restrições alimentares conflitantes (RN-16 e RN-17).
 * [x] Emissão de 2ª via com trava de justificativa obrigatória (mínimo 5 caracteres), incremento do `numero_via`, marcação indelével `[2ª VIA]` e registro compulsório em `logs_auditoria`.
@@ -1521,13 +1524,54 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Verificação e Homologação da Trava Rígida de Corte no Portal da Família (2026-10-13)
+* [x] **Auditoria da Regra de Negócio RN-02:**
+  * Trava de encerramento pontual às 08:00 para o turno matutino e às 13:30 para o turno vespertino validada tanto na camada de visualização (`app/views/portal/agendamento.php`) quanto na camada transacional de domínio (`app/models/Pedido.php` e `app/controllers/PortalController.php`);
+* [x] **Comportamento Visual e Transacional:**
+  * Para o turno matutino em data com corte encerrado (como o próprio dia letivo após as 08:00), o sistema impede a abertura do formulário de comanda de compras, apresentando o card de aviso: *"Corte Operacional Encerrado — O horário limite de compras para o turno matutino (08:00) foi atingido. Novos agendamentos para esta data foram finalizados."*;
+  * Tentativas forçadas via POST rejeitam imediatamente a operação com `DomainException`: *"Agendamento bloqueado: Horário de corte atingido para o turno matutino (08:00)."*;
+* [x] **Credenciais de Teste Homologadas:**
+  * Responsável: **Juliana Lima Santos**
+  * CPF: `111.222.333-44`
+  * Senha: `Familia@123`
+  * Dependente Vinculado: **Lucas Santos** (Matrícula / ID 255, Turma: Maternal A, Turno: **matutino**);
+  * Saldo Disponível: R$ 100,00.
+
+---
+
+### [x] Seeder Oficial de Pedidos e Compras da Semana Atual com Matrículas Reais (2026-10-14)
+* [x] **Criação do Seeder Dedicado `database/seed_pedidos_semana_atual.php`:**
+  * Desenvolvido para suprir a demanda operacional sem rodar testes automatizados com dados fictícios ("Fake", "Teste", "Ausente");
+  * Higienização profunda prévia: eliminação de mais de 128 produtos fakes gerados por suítes de teste antigas (`TEST-%`, `PDV-BLOQ-%`, `PRD-ED-%`), remoção de alunos/responsáveis temporários e restauração estrita da base oficial da escola;
+  * Base 100% oficial e auditada: **19 turmas oficiais**, **195 responsáveis familiares**, **232 alunos reais** e **12 produtos oficiais**;
+  * Semeadura de 50 pedidos reais e 100 tickets térmicos na semana letiva atual (12 a 16 de Outubro de 2026):
+    * Terça-feira (13/10): 12 pedidos com status `entregue` e tickets impressos (matutino e vespertino);
+    * Quarta-feira (14/10 - Hoje): 14 pedidos (matutino `entregue` com tickets impressos; vespertino `agendado` com tickets ativos);
+    * Quinta-feira (15/10): 12 pedidos com status `agendado` e tickets ativos;
+    * Sexta-feira (16/10): 12 pedidos com status `agendado` e tickets ativos;
+  * Lanches diversificados e saudáveis com respeito a restrições alimentares de cada aluno;
+  * Injeção de R$ 1.840,00 em recargas Pix e débitos correspondentes em `transacoes_carteira`, com conciliação matemática dos saldos;
+  * Vendas de balcão reais no PDV registradas para colaboradores reais (desconto em folha) e alunos avulsos.
+
+---
+
+### [x] Correção de Formatação de Indicadores e Botões na Tela de Arrecadação Financeira (2026-10-14)
+* [x] **Diagnóstico e Resolução do Layout de Indicadores:**
+  * Identificada que a classe `.stat-strip-enterprise` não possuía estilização em `assets/css/custom.css`, quebrando o display dos indicadores financeiros e exibindo-os como texto plano empilhado;
+  * Padronizada a view `app/views/relatorios/arrecadacao.php` com o componente oficial `.stat-strip` e `.stat-strip-item`, `.stat-strip-label`, `.stat-strip-value` e `.stat-subtext`;
+  * Adicionado suporte no `assets/css/custom.css` com layout flex responsivo (`flex-wrap: wrap`, cards individuais brancos com bordas sutis `#e2e8f0` e destaque verde no Total Arrecadado);
+* [x] **Integração e Funcionamento dos Botões de Ação e Filtro:**
+  * Transformados os links isolados do topo (`Visualizar / Imprimir A4`, `Baixar em PDF A4`, `Exportar CSV`) em botões `<button type="submit" form="formFiltroArrecadacao" formaction="..." formtarget="...">`, garantindo que qualquer data digitada ou alterada em tela seja sempre enviada para o relatório correspondente;
+  * Alterado o cabeçalho de resposta do PDF em `RelatoriosController::arrecadacaoPdf` para `Content-Disposition: attachment; filename="..."`, assegurando o download imediato do arquivo;
+  * Atualizada a função JavaScript `definirDatas()` com `form.requestSubmit()` nativo HTML5 e suporte a eventos `click` via classe `.btn-atalho-data`, tornando os botões de atalho ("Hoje", "Ontem", "Esta Semana", "Este Mês", "Mês Anterior") 100% funcionais e reativos;
+  * Atualizada a query de cache de assets no layout `admin.php` para `?v=6.0.1`;
+* [x] **Homologação:**
+  * Suíte automatizada `tests/arrecadacao_dre_regimes_test.php` reexecutada e **100% aprovada (89/89 asserções)**.
+
+---
+
 ## Próximo Passo Recomendado
 
-1. Acessar o Portal da Família na tela de Gestão de Restrições Alimentares (`http://localhost:8080/portal/alergias`);
-2. Testar o cenário forçando IDOR na URL informando o ID de outro aluno (ex: `?aluno=84` se pertencer a outro responsável);
-3. Confirmar que a tela recarrega imediatamente com o alerta vermelho de segurança: *"Você não tem permissão para visualizar ou gerenciar as restrições alimentares deste aluno."*, mantendo apenas os dados do dependente legítimo;
-4. Inspecionar o código HTML, alterar o `<input type="hidden" name="aluno_id" value="...">` e clicar em *"Salvar Restrições Alimentares"*;
-5. Confirmar que a alteração é bloqueada, a mensagem *"Você não tem permissão para alterar as restrições alimentares deste aluno."* é exibida e o evento é registrado na tabela `logs_seguranca`.
-
-
-
+1. Recarregar a página no navegador (`Ctrl + F5` ou `F5`) em `http://localhost:8080/relatorios/arrecadacao?data_inicio=2026-09-01&data_fim=2026-10-14`;
+2. Validar que os 5 indicadores financeiros de cash-in estão perfeitamente encaixados em cards executivos limpos e alinhados;
+3. Clicar nos botões de atalho ("Hoje", "Ontem", "Esta Semana", "Este Mês", "Mês Anterior") e nos botões de ação ("Visualizar / Imprimir (A4)", "Baixar em PDF (A4)" e "Exportar Planilha (CSV)") para conferir a atualização e emissão com as datas ativas.

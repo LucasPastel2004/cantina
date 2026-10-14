@@ -2655,7 +2655,7 @@ class RelatoriosController extends Controller
         if ($pdf !== null && str_starts_with($pdf, '%PDF')) {
             $filename = "arrecadacao_financeira_{$dataInicio}_{$dataFim}.pdf";
             header('Content-Type: application/pdf');
-            header('Content-Disposition: inline; filename="' . $filename . '"');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
             header('Content-Length: ' . strlen($pdf));
             header('Cache-Control: private, max-age=0, must-revalidate');
             header('Pragma: public');

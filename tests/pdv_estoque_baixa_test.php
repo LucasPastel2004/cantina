@@ -40,7 +40,7 @@ class PdvEstoqueBaixaTest
         echo "======================================================================\n\n";
 
         // Garante sessão de caixa aberta para os testes
-        $sessao = SessaoCaixa::obterSessaoAberta('matutino');
+        $sessao = SessaoCaixa::obterSessaoAberta('matutino') ?? SessaoCaixa::obterSessaoAberta('vespertino');
         if (!$sessao) {
             $operadorStmt = $this->pdo->query("SELECT id FROM usuarios WHERE perfil IN ('operador', 'administrador') AND deleted_at IS NULL LIMIT 1");
             $opId = (int)$operadorStmt->fetchColumn();

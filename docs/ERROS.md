@@ -1712,3 +1712,78 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - Adicionada regra limitando salgados diários a no máximo 10 unidades por pedido;
   5. **Homologação:** Criada a suíte `tests/edicao_pedido_estoque_test.php` aprovada com 100% de sucesso cobrindo renderização HTML, atributos `max`, botões desabilitados, badge de esgotado e recusa do backend para pedidos excessivos.
 - Como evitar no futuro: Em qualquer interface de edição que envolva inventário ou reservas prévias, sempre calcular o limite máximo relativo àquele pedido (`estoque_livre + quantidade_ja_reservada_pelo_pedido`), refletir o atributo `max` no HTML e assegurar que o JavaScript e o backend validem rigorosamente os limites físicos do estoque.
+
+---
+
+## 2026-10-14 - Poluição do banco de dados por dados fakes de testes automatizados e erro de coluna deleted_at em responsaveis
+
+- Sintoma: (1) O banco de dados continha mais de 128 produtos temporários (`TEST-%`, `PDV-BLOQ-%`, `PRD-ED-%`), além de turmas duplicadas e alunos fictícios com prefixos `MAT-TEST%`, poluindo a visualização da cantina; (2) Erro `Fatal error: Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'deleted_at' in 'where clause'` ao consultar a tabela `responsaveis`.
+- Causa:
+  1. Testes automatizados anteriores executados sem teardown completo inseriram fixtures com nomes e códigos artificiais no banco de produção/desenvolvimento compartilhado;
+  2. A tabela `responsaveis` (conforme especificado na migração `004_create_responsaveis_table.php`) foi desenhada sem a coluna `deleted_at`, possuindo exclusão física ou controle via `bloqueado_med` e constraints com `RESTRICT`. Consultas que supunham a presença de `deleted_at` geravam erro de PDO.
+- Solução aplicada:
+  1. Criação do seeder oficial `database/seed_pedidos_semana_atual.php` com etapa preliminar de purga cirúrgica que elimina todos os produtos com ID > 12, turmas não-oficiais (mantendo exatamente as 19 turmas oficiais), alunos de teste e responsáveis sem dependentes reais vinculados;
+  2. Correção das consultas na tabela `responsaveis`, removendo qualquer referência a `deleted_at` e mantendo a checagem em `alunos` e `turmas`;
+  3. Abastecimento da semana atual (12 a 16 de Outubro de 2026) exclusivamente com compras e pedidos de pais e alunos reais do Colégio Monteiro Lobato.
+- Como evitar no futuro: Não rodar testes automatizados que realizem mutações com dados sintéticos no banco de dados ativo. Para demonstrações e testes operacionais, utilizar estritamente o seeder oficial `database/seed_pedidos_semana_atual.php` baseado nas matrículas reais da instituição.
+
+---
+
+## 2026-10-14 - Quebra de página compulsória por ticket térmico e ausência de formato A4 para impressoras convencionais
+
+- Sintoma: Na visualização e download de tickets em lote (`/operacional/tickets/lote/pdf`), cada ticket era exibido isoladamente em uma página vertical inteira (14 páginas para 14 tickets), com mais de 65% de espaço em branco sob cada cupom. Em impressoras comuns (A4), cada ficha era impressa em uma folha inteira separada, e em bobinas térmicas de 80mm havia avanço excessivo de papel.
+- Causa:
+  1. O arquivo `app/views/tickets/ticket_80mm.php` continha a propriedade CSS `page-break-after: always;` na classe `.ticket-wrapper`, forçando a quebra de página incondicional após cada ticket;
+  2. No motor Chromium (Gotenberg), a ausência de especificação de `paperHeight` combinada com o `page-break-after` gerava páginas com altura padrão de 11 polegadas (279,4 mm) por cupom;
+  3. Não existia uma opção dedicada para impressão em folha de papel A4 em grade para instituições ou cantinas que operam com impressoras convencionais (jato de tinta ou laser) e realizam o corte das fichas na tesoura ou guilhotina.
+- Solução aplicada:
+  1. **Refatoração da Bobina Térmica 80mm (`ticket_80mm.php`):** Substituição de `page-break-after: always;` por `page-break-inside: avoid; break-inside: avoid;`, permitindo que os tickets fluam continuamente na bobina térmica separados pela linha pontilhada de corte (`✂ - - - -`), reduzindo o consumo de papel e agrupando 4 a 5 tickets por página no PDF;
+  2. **Criação do Modelo Folha A4 em Grade (`ticket_a4.php`):** Desenvolvimento de view especializada em folha A4 com grade balanceada de 8 tickets por folha (2 colunas x 4 linhas, ~94mm x 66mm), com bordas tracejadas para recorte, logotipo oficial, dados do aluno, produto, alérgenos e instrução de descarte, reduzindo 14 tickets a apenas 2 folhas A4;
+  3. **Suporte no `PdfService` e `TicketsController`:** Métodos `gerarEspelhoTicketsLoteA4Html` e `gerarTicketsLoteA4Pdf`, com suporte ao parâmetro `?formato=a4` e `?formato=80mm` nos endpoints `/lote`, `/lote/pdf`, `/turma/{id}` e `/turma/{id}/pdf`;
+  4. **Interface do Operador (`app/views/operacional/tickets.php`):** Botões duplos de destaque para "Imprimir Folha A4 (Grade)", "PDF A4", "Bobina Térmica (80mm)" e "PDF 80mm", além de botões claros de escolha por turma;
+  5. **Alternador Rápido no Espelho de Impressão:** Links de alternância com 1 clique ("Alternar para Folha A4" / "Alternar para Bobina 80mm") na barra superior das telas de impressão.
+- Como evitar no futuro: Em impressões contínuas de bobina térmica, nunca utilizar `page-break-after: always;` entre itens do mesmo lote, preferindo `page-break-inside: avoid;` para fluxo contínuo. Sempre disponibilizar a alternativa em Folha A4 para relatórios e cupons que possam ser impressos em equipamentos convencionais de escritório.
+
+---
+
+## 2026-10-14 - Quebra de layout de indicadores de cash-in e botões desintegrados na tela de Arrecadação Financeira
+
+- Sintoma: Na tela de Arrecadação Financeira (`/relatorios/arrecadacao`), os indicadores de resumo financeiro (Total Arrecadado Cash-In Real, Recargas Pix, Recargas Dinheiro, Vendas Balcão e Consumo de Saldo) eram renderizados como texto puro corrido e empilhado no canto superior esquerdo sem bordas, fundo ou estilo de cards. Além disso, os botões de ação e exportação (Visualizar/Imprimir A4, Baixar em PDF A4, Exportar CSV) eram links `<a>` isolados fora do formulário com datas estáticas que ignoravam qualquer alteração de período feita pelo usuário, e o botão "Baixar em PDF" enviava cabeçalho `inline` em vez de `attachment` sem download efetivo.
+- Causa:
+  1. O contêiner de indicadores em `app/views/relatorios/arrecadacao.php` utilizava a classe `.stat-strip-enterprise`, que não possuía regras correspondentes em `assets/css/custom.css` (onde a classe canônica homologada era `.stat-strip`), fazendo com que o navegador não aplicasse `display: flex`, dimensões, bordas, background branco ou espaçamentos nos elementos filhos `.stat-item`;
+  2. Os botões de exportação e emissão no topo da tela eram links `<a>` com datas fixadas via query string pelo PHP inicial, em vez de botões integrados ao formulário com `form="formFiltroArrecadacao"` e `formaction="..."`;
+  3. No controlador `RelatoriosController::arrecadacaoPdf`, o cabeçalho HTTP de resposta utilizava `Content-Disposition: inline`, fazendo o navegador tentar renderizar o PDF na mesma janela em vez de forçar o download para a máquina do usuário (`attachment`);
+  4. A função JavaScript `definirDatas()` dependia unicamente de `form.submit()`, que em navegadores baseados em Gecko (Firefox) podia falhar na submissão dinâmica sem validação completa do HTML5.
+- Solução aplicada:
+  1. **Padronização do Stat-Strip (`app/views/relatorios/arrecadacao.php` e `assets/css/custom.css`):** Substituída a classe para `.stat-strip` com filhos `.stat-strip-item`, `.stat-strip-label`, `.stat-strip-value` e `.stat-subtext`. No CSS corporativo, adicionado suporte com `display: flex; flex-wrap: wrap; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;`, garantindo caixas executivas elegantes e responsivas;
+  2. **Integração dos Botões de Ação ao Formulário:** Transformados os links de emissão em botões `<button type="submit" form="formFiltroArrecadacao" formaction="..." formtarget="...">`, assegurando que qualquer data selecionada ou alterada pelo usuário seja sempre enviada para o espelho A4, download do PDF e exportação CSV;
+  3. **Download Direto do PDF (`RelatoriosController::arrecadacaoPdf`):** Ajustado o cabeçalho para `Content-Disposition: attachment; filename="..."`, garantindo o download do arquivo PDF;
+  4. **Robustez nos Atalhos de Período:** Atualizada a função `definirDatas()` para utilizar `form.requestSubmit()` com fallback para `form.submit()`, adicionados atributos `data-inicio` e `data-fim` nos botões e anexados listeners diretos no `DOMContentLoaded`;
+  5. **Cache Busting nos Layouts:** Atualizada a versão dos assets no layout `admin.php` para `?v=6.0.1` forçando a renovação de cache em todos os clientes.
+- Como evitar no futuro: Sempre utilizar a classe `.stat-strip` e `.stat-strip-item` do Design System para faixas de indicadores corporativos. Para botões de exportação e impressão de relatórios que dependam de filtros de formulário, preferir `<button type="submit" form="..." formaction="...">` para garantir sincronia com os campos de data em tela.
+
+
+---
+
+## 2026-10-14 - Rolagem excessiva de janela e compressão vertical da cesta de compras no PDV frente de caixa
+
+- Sintoma: No terminal de caixa (`/operacional/pdv`), em telas de computadores portáteis e monitores com resolução típica (1366x768 ou 1920x1080 com escala), a expansão dos detalhes de pagamento (especialmente em Dinheiro com campo de valor recebido, atalhos +10/+20/+50 e troco sugerido) ou da identificação do cliente comprimia a lista de itens da cesta (`.pdv-cart-body`) a uma faixa vertical de apenas 30 a 40px, cortando os nomes dos produtos ao meio. Além disso, a altura combinada dos componentes excedia a altura da janela, gerando barra de rolagem na janela inteira (`window`), fazendo o cabeçalho e estatísticas rolarem para fora da tela e exigindo que o operador rolasse o mouse constantemente para voltar a ver o topo da tela.
+- Causa:
+  1. A página do PDV utilizava o layout mestre padrão administrativo com preenchimento interno amplo (`padding: 24px 32px;`) e rodapé operacional visível (`.app-admin-footer`, 40px), roubando quase 90px de altura útil da tela;
+  2. O painel da cesta de compras (`.pdv-cart-panel`) possuía altura calculada com `calc(100vh - 145px)` e `min-height: 580px; position: sticky; top: 70px;`, que, ao somar-se à barra superior e às estatísticas, forçava a janela inteira a criar uma barra de rolagem vertical externa;
+  3. A área da cesta de compras (`.pdv-cart-body`) utilizava `flex: 1` sem `min-height` protetiva. Quando os blocos inferiores de pagamento expandiam (mais de 130px de formulário), o flexbox espremia a cesta até que apenas uma linha de texto coubesse, cortando a descrição dos produtos;
+  4. Na identificação de Aluno e Colaborador, o campo de busca com o nome selecionado permanecia visível ao lado do card de dados do cliente, consumindo espaço vertical duplicado;
+  5. Ausência de `overscroll-behavior: contain;` nos contêineres de rolagem interna, fazendo com que a rolagem da roda do mouse dentro da cesta ou do catálogo encadeasse a rolagem da página externa inteira.
+- Solução aplicada:
+  1. **Layout Travado no Viewport (Zero Window Scroll) via `.pdv-layout-locked`:**
+     - Identificado no layout `admin.php` quando `$activeMenu === 'pdv'`, aplicando a classe `.pdv-layout-locked` na casca `.app-admin-wrapper`;
+     - Regras em `custom.css` que fixam a altura em `100vh; overflow: hidden;` no desktop, reduzem o padding para `8px 12px;` e ocultam o rodapé desnecessário no terminal de caixa;
+     - Garantido que a janela do navegador nunca crie barra de rolagem externa (`body` e `html` fixos);
+  2. **Contenção Estrita de Rolagem (`overscroll-behavior: contain`):**
+     - Aplicado em `.pdv-products-grid` e `.pdv-cart-body`, garantindo que a roda do mouse role exclusivamente o catálogo ou a cesta de compras, sem nunca movimentar a casca da página;
+  3. **Otimização de Densidade Vertical na Cesta de Compras:**
+     - Bloco de Dinheiro reorganizado horizontalmente: campo de valor recebido alinhado na mesma linha dos botões rápidos `[Exato] [+10] [+20] [+50]`, seguido de uma barra esguia de troco sugerido, reduzindo a altura do bloco de 135px para 58px;
+     - Identificação de Aluno/Colaborador compacta: quando o cliente é selecionado, o campo de busca é substituído por um card esguio com nome, turma, saldo e botão discreto `✕` para troca rápida, economizando mais de 70px;
+     - Cesta de compras (`.pdv-cart-body`) com `min-height: 130px;` garantido e tipografia compacta com quebra de linha inteligente (`word-break: break-word`), acomodando confortavelmente de 4 a 6 itens sem corte de texto;
+  4. **Validação:** Aprovadas todas as baterias de testes do PDV (`tests/pdv_web_test.php`, `tests/pdv_modal_test.php`, `tests/pdv_formas_pagamento_test.php` e `tests/pdv_estoque_baixa_test.php`).
+- Como evitar no futuro: Telas de frente de caixa e terminais operacionais (POS) devem sempre operar sob arquitetura de *viewport-locked layout* (`height: 100vh; overflow: hidden;`), sem barra de rolagem na janela (`window`), utilizando `overscroll-behavior: contain;` e contêineres internos de rolagem independente com orçamentos verticais compactos.

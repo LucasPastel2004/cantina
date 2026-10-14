@@ -515,10 +515,14 @@ class PdfService
     }
 
     /**
-     * 2. Tickets de Lanche de Alunos (80mm)
+     * 2. Tickets de Lanche de Alunos (Bobina 80mm e Folha A4)
      */
     public static function gerarEspelhoTicketsLoteHtml(array $tickets, array $parametros = []): string
     {
+        $formato = strtolower($parametros['formato'] ?? '80mm');
+        if ($formato === 'a4') {
+            return self::gerarEspelhoTicketsLoteA4Html($tickets, $parametros);
+        }
         return self::renderView('tickets/ticket_80mm', ['tickets' => $tickets, 'parametros' => $parametros]);
     }
 
@@ -527,8 +531,40 @@ class PdfService
         return self::renderView('tickets/ticket_80mm', ['tickets' => [$ticket], 'parametros' => $parametros]);
     }
 
+    /**
+     * 2.1 Grade de Tickets em Folha A4 (8 tickets por página para recorte com tesoura/guilhotina)
+     */
+    public static function gerarEspelhoTicketsLoteA4Html(array $tickets, array $parametros = []): string
+    {
+        return self::renderView('tickets/ticket_a4', ['tickets' => $tickets, 'parametros' => $parametros]);
+    }
+
+    public static function gerarTicketsLoteA4Pdf(array $tickets, array $parametros = []): string
+    {
+        $html = self::gerarEspelhoTicketsLoteA4Html($tickets, $parametros);
+        $pdf = self::htmlToPdf($html, [
+            'paperWidth'  => 8.27, // A4 largura (210mm)
+            'paperHeight' => 11.69, // A4 altura (297mm)
+            'marginTop'   => 0.3,
+            'marginBottom'=> 0.3,
+            'marginLeft'  => 0.3,
+            'marginRight' => 0.3
+        ]);
+        if ($pdf !== null) {
+            return $pdf;
+        }
+
+        // Fallback contingência para 80mm caso motor A4 falhe
+        return self::gerarTicketsLotePdf($tickets, array_merge($parametros, ['formato' => '80mm']));
+    }
+
     public static function gerarTicketsLotePdf(array $tickets, array $parametros = []): string
     {
+        $formato = strtolower($parametros['formato'] ?? '80mm');
+        if ($formato === 'a4') {
+            return self::gerarTicketsLoteA4Pdf($tickets, $parametros);
+        }
+
         $html = self::gerarEspelhoTicketsLoteHtml($tickets, $parametros);
         $pdf = self::htmlToPdf($html, ['paperWidth' => 3.15]);
         if ($pdf !== null) {

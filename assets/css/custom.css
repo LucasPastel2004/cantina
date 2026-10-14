@@ -307,45 +307,69 @@ input[type="number"].text-end {
 }
 
 /* Faixa de Métricas e Indicadores de Alta Densidade (Stat Strip) */
-.stat-strip {
+.stat-strip,
+.stat-strip-enterprise {
   display: flex;
-  background-color: var(--surface-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+  background-color: var(--surface-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
   overflow: hidden;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-4, 1.5rem);
   box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
 }
 
 .stat-strip-item,
-.stat-strip .stat-item {
-  flex: 1;
-  padding: 14px 20px;
-  border-right: 1px solid var(--border-subtle);
+.stat-strip .stat-item,
+.stat-strip-enterprise .stat-item,
+.stat-strip-enterprise .stat-strip-item {
+  flex: 1 1 180px;
+  min-width: 170px;
+  padding: 14px 18px;
+  border-right: 1px solid var(--border-subtle, #e2e8f0);
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  background-color: #ffffff;
 }
 
 .stat-strip-item:last-child,
-.stat-strip .stat-item:last-child {
+.stat-strip .stat-item:last-child,
+.stat-strip-enterprise .stat-item:last-child,
+.stat-strip-enterprise .stat-strip-item:last-child {
   border-right: none;
 }
 
 .stat-strip-label,
-.stat-strip .stat-label {
+.stat-strip .stat-label,
+.stat-strip-enterprise .stat-label,
+.stat-strip-enterprise .stat-strip-label {
   font-size: 11px;
   font-weight: 600;
-  color: #475569;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.025em;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  display: block;
 }
 
 .stat-strip-value,
-.stat-strip .stat-value {
-  font-size: 13px;
+.stat-strip .stat-value,
+.stat-strip-enterprise .stat-value,
+.stat-strip-enterprise .stat-strip-value {
+  font-size: 17px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-primary, #0f172a);
+  line-height: 1.25;
+  display: block;
+}
+
+.stat-strip .stat-subtext,
+.stat-strip-enterprise .stat-subtext {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+  display: block;
 }
 
 /* Bento Card Interativo e Organizado */
@@ -1323,6 +1347,42 @@ textarea.form-control {
   border-top: 1px solid var(--border-subtle);
   background-color: #ffffff;
   padding: 12px 32px;
+}
+
+/* Modo Terminal de Caixa (PDV Frente de Caixa) — Layout travado no Viewport sem Scroll de Janela */
+@media (min-width: 961px) {
+  .app-admin-wrapper.pdv-layout-locked {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  .app-admin-wrapper.pdv-layout-locked .app-main-area {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .app-admin-wrapper.pdv-layout-locked .app-topbar {
+    flex-shrink: 0;
+    height: 48px;
+    padding: 0 16px;
+  }
+  .app-admin-wrapper.pdv-layout-locked .app-page-content {
+    flex: 1;
+    min-height: 0;
+    height: calc(100vh - 48px);
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+  .app-admin-wrapper.pdv-layout-locked .app-admin-footer {
+    display: none !important;
+  }
 }
 
 /* Offcanvas Sidebar Mobile */

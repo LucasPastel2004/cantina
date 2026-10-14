@@ -94,13 +94,26 @@ class TicketsController extends Controller
     }
 
     /**
-     * Espelho de Impressão Contínua da Bobina de 80mm do Turno (/operacional/tickets/lote)
+     * Normaliza e valida o formato de impressão ('a4' ou '80mm')
+     */
+    protected function normalizarFormato(?string $formato, string $padrao = 'a4'): string
+    {
+        if (is_string($formato) && in_array(strtolower(trim($formato)), ['a4', '80mm'], true)) {
+            return strtolower(trim($formato));
+        }
+        return $padrao;
+    }
+
+    /**
+     * Espelho de Impressão de Tickets do Turno (/operacional/tickets/lote)
+     * Suporta ?formato=a4 (Folha A4 em grade) e ?formato=80mm (Bobina contínua)
      */
     public function lote(): void
     {
         $hoje = date('Y-m-d');
         $dataConsumo = $this->normalizarData($_GET['data'] ?? null, $hoje);
         $turnoConsumo = $this->normalizarTurno($_GET['turno'] ?? null);
+        $formato = $this->normalizarFormato($_GET['formato'] ?? null, 'a4');
 
         $tickets = Ticket::listarPorTurnoEData($dataConsumo, $turnoConsumo);
 
@@ -115,11 +128,16 @@ class TicketsController extends Controller
         Ticket::marcarComoImpresso($ticketIds);
 
         $baseUrl = '';
-        $html = PdfService::gerarEspelhoTicketsLoteHtml($tickets, [
+        $parametros = [
             'data'    => $dataConsumo,
             'turno'   => $turnoConsumo,
-            'baseUrl' => $baseUrl
-        ]);
+            'baseUrl' => $baseUrl,
+            'formato' => $formato
+        ];
+
+        $html = ($formato === '80mm')
+            ? PdfService::gerarEspelhoTicketsLoteHtml($tickets, $parametros)
+            : PdfService::gerarEspelhoTicketsLoteA4Html($tickets, $parametros);
 
         if (!headers_sent()) {
             header('Content-Type: text/html; charset=UTF-8');
@@ -130,13 +148,15 @@ class TicketsController extends Controller
     }
 
     /**
-     * Download do PDF 1.4 da Bobina Contínua de 80mm do Turno (/operacional/tickets/lote/pdf)
+     * Download do PDF de Tickets do Turno (/operacional/tickets/lote/pdf)
+     * Suporta ?formato=a4 (Folha A4 em grade) e ?formato=80mm (Bobina contínua)
      */
     public function lotePdf(): void
     {
         $hoje = date('Y-m-d');
         $dataConsumo = $this->normalizarData($_GET['data'] ?? null, $hoje);
         $turnoConsumo = $this->normalizarTurno($_GET['turno'] ?? null);
+        $formato = $this->normalizarFormato($_GET['formato'] ?? null, 'a4');
 
         $tickets = Ticket::listarPorTurnoEData($dataConsumo, $turnoConsumo);
 
@@ -150,14 +170,23 @@ class TicketsController extends Controller
         $ticketIds = array_column($tickets, 'ticket_id');
         Ticket::marcarComoImpresso($ticketIds);
 
-        $pdf = PdfService::gerarTicketsLotePdf($tickets, [
-            'data'  => $dataConsumo,
-            'turno' => $turnoConsumo
-        ]);
+        $parametros = [
+            'data'    => $dataConsumo,
+            'turno'   => $turnoConsumo,
+            'formato' => $formato
+        ];
+
+        if ($formato === '80mm') {
+            $pdf = PdfService::gerarTicketsLotePdf($tickets, $parametros);
+            $filename = "tickets-bobina-80mm-{$dataConsumo}-{$turnoConsumo}.pdf";
+        } else {
+            $pdf = PdfService::gerarTicketsLoteA4Pdf($tickets, $parametros);
+            $filename = "tickets-grade-a4-{$dataConsumo}-{$turnoConsumo}.pdf";
+        }
 
         if (!headers_sent()) {
             header('Content-Type: application/pdf');
-            header('Content-Disposition: inline; filename="tickets-bobina-80mm-' . $dataConsumo . '-' . $turnoConsumo . '.pdf"');
+            header('Content-Disposition: inline; filename="' . $filename . '"');
             header('Content-Length: ' . strlen($pdf));
         }
 
@@ -166,7 +195,7 @@ class TicketsController extends Controller
     }
 
     /**
-     * Impressão Contínua da Bobina de 80mm de uma Turma Específica (/operacional/tickets/turma/{id})
+     * Impressão de Tickets de uma Turma Específica (/operacional/tickets/turma/{id})
      */
     public function turma(mixed $params): void
     {
@@ -174,6 +203,7 @@ class TicketsController extends Controller
         $hoje = date('Y-m-d');
         $dataConsumo = $this->normalizarData($_GET['data'] ?? null, $hoje);
         $turnoConsumo = $this->normalizarTurno($_GET['turno'] ?? null);
+        $formato = $this->normalizarFormato($_GET['formato'] ?? null, 'a4');
 
         $tickets = Ticket::listarPorTurnoEData($dataConsumo, $turnoConsumo, $turmaId > 0 ? $turmaId : null);
 
@@ -188,12 +218,17 @@ class TicketsController extends Controller
         Ticket::marcarComoImpresso($ticketIds);
 
         $baseUrl = '';
-        $html = PdfService::gerarEspelhoTicketsLoteHtml($tickets, [
+        $parametros = [
             'data'     => $dataConsumo,
             'turno'    => $turnoConsumo,
             'turma_id' => $turmaId,
-            'baseUrl'  => $baseUrl
-        ]);
+            'baseUrl'  => $baseUrl,
+            'formato'  => $formato
+        ];
+
+        $html = ($formato === '80mm')
+            ? PdfService::gerarEspelhoTicketsLoteHtml($tickets, $parametros)
+            : PdfService::gerarEspelhoTicketsLoteA4Html($tickets, $parametros);
 
         if (!headers_sent()) {
             header('Content-Type: text/html; charset=UTF-8');
@@ -204,7 +239,7 @@ class TicketsController extends Controller
     }
 
     /**
-     * Download do PDF 1.4 de 80mm de uma Turma Específica (/operacional/tickets/turma/{id}/pdf)
+     * Download do PDF de Tickets de uma Turma Específica (/operacional/tickets/turma/{id}/pdf)
      */
     public function turmaPdf(mixed $params): void
     {
@@ -212,6 +247,7 @@ class TicketsController extends Controller
         $hoje = date('Y-m-d');
         $dataConsumo = $this->normalizarData($_GET['data'] ?? null, $hoje);
         $turnoConsumo = $this->normalizarTurno($_GET['turno'] ?? null);
+        $formato = $this->normalizarFormato($_GET['formato'] ?? null, 'a4');
 
         $tickets = Ticket::listarPorTurnoEData($dataConsumo, $turnoConsumo, $turmaId > 0 ? $turmaId : null);
 
@@ -221,18 +257,28 @@ class TicketsController extends Controller
             return;
         }
 
+        // Marca como impressos
         $ticketIds = array_column($tickets, 'ticket_id');
         Ticket::marcarComoImpresso($ticketIds);
 
-        $pdf = PdfService::gerarTicketsLotePdf($tickets, [
+        $parametros = [
             'data'     => $dataConsumo,
             'turno'    => $turnoConsumo,
-            'turma_id' => $turmaId
-        ]);
+            'turma_id' => $turmaId,
+            'formato'  => $formato
+        ];
+
+        if ($formato === '80mm') {
+            $pdf = PdfService::gerarTicketsLotePdf($tickets, $parametros);
+            $filename = "tickets-turma-{$turmaId}-bobina-80mm-{$dataConsumo}-{$turnoConsumo}.pdf";
+        } else {
+            $pdf = PdfService::gerarTicketsLoteA4Pdf($tickets, $parametros);
+            $filename = "tickets-turma-{$turmaId}-grade-a4-{$dataConsumo}-{$turnoConsumo}.pdf";
+        }
 
         if (!headers_sent()) {
             header('Content-Type: application/pdf');
-            header('Content-Disposition: inline; filename="tickets-turma-' . $turmaId . '-' . $dataConsumo . '.pdf"');
+            header('Content-Disposition: inline; filename="' . $filename . '"');
             header('Content-Length: ' . strlen($pdf));
         }
 

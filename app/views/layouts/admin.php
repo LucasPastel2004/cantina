@@ -28,14 +28,15 @@ $dataAtual = date('d/m/Y');
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
 
     <!-- Design System Corporativo Anti-Slop (Enterprise High-Density) -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=<?php echo $assetVersion ?? '5.9.9'; ?>">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=<?php echo $assetVersion ?? '6.0.1'; ?>">
 
     <!-- Favicon Oficial -->
     <link rel="icon" type="image/jpeg" href="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg">
 </head>
 <body class="bg-surface">
 
-<div class="app-admin-wrapper">
+<?php $isPdvActive = ($activeMenu ?? '') === 'pdv'; ?>
+<div class="app-admin-wrapper <?php echo $isPdvActive ? 'pdv-layout-locked' : ''; ?>">
     <!-- Barra Lateral de Navegação (Sidebar 240px) -->
     <?php require __DIR__ . '/sidebar.php'; ?>
 

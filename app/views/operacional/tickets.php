@@ -45,25 +45,51 @@ $turnoNome = ($turnoConsumo === 'matutino') ? 'Matutino' : 'Vespertino';
         </p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <a href="<?php echo $baseUrl; ?>/operacional/tickets/lote?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
-           target="_blank"
-           class="btn btn-enterprise btn-primary btn-sm"
-           title="Abrir bobina contínua para impressão direta no navegador">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1">
-                <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-            </svg>
-            Imprimir Bobina do Turno (80mm)
-        </a>
-        <a href="<?php echo $baseUrl; ?>/operacional/tickets/lote/pdf?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
-           class="btn btn-enterprise btn-primary btn-sm"
-           title="Baixar bobina contínua em formato binário PDF">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1">
-                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-            </svg>
-            Baixar Lote em PDF
-        </a>
+        <!-- Grupo Folha A4 (Grade de Fichas para Impressora Comum) -->
+        <div class="btn-group btn-group-sm">
+            <a href="<?php echo $baseUrl; ?>/operacional/tickets/lote?formato=a4&data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
+               target="_blank"
+               class="btn btn-enterprise btn-primary"
+               title="Visualizar e imprimir fichas em Folha A4 (grade de 8 tickets por folha)">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1">
+                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                </svg>
+                Imprimir Folha A4 (Grade)
+            </a>
+            <a href="<?php echo $baseUrl; ?>/operacional/tickets/lote/pdf?formato=a4&data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
+               class="btn btn-enterprise btn-primary"
+               title="Baixar lote de tickets em PDF A4 (8 tickets por página)">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+                PDF A4
+            </a>
+        </div>
+
+        <!-- Grupo Bobina Térmica 80mm -->
+        <div class="btn-group btn-group-sm">
+            <a href="<?php echo $baseUrl; ?>/operacional/tickets/lote?formato=80mm&data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
+               target="_blank"
+               class="btn btn-enterprise btn-secondary"
+               title="Abrir bobina contínua 80mm para impressora térmica de cupom">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1">
+                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                </svg>
+                Bobina Térmica (80mm)
+            </a>
+            <a href="<?php echo $baseUrl; ?>/operacional/tickets/lote/pdf?formato=80mm&data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
+               class="btn btn-enterprise btn-secondary"
+               title="Baixar bobina contínua 80mm em PDF">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+                PDF 80mm
+            </a>
+        </div>
     </div>
 </div>
 
@@ -213,22 +239,25 @@ $turnoNome = ($turnoConsumo === 'matutino') ? 'Matutino' : 'Vespertino';
                             </td>
                             <td class="text-end pe-3">
                                 <div class="d-inline-flex gap-1">
-                                    <a href="<?php echo $baseUrl; ?>/operacional/tickets/turma/<?php echo (int)$tg['turma_id']; ?>?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
+                                    <a href="<?php echo $baseUrl; ?>/operacional/tickets/turma/<?php echo (int)$tg['turma_id']; ?>?formato=a4&data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
                                        target="_blank"
-                                       class="btn btn-enterprise btn-secondary btn-sm"
-                                       title="Imprimir bobina contínua apenas desta turma">
-                                        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
-                                            <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                                            <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-                                        </svg>
+                                       class="btn btn-enterprise btn-primary btn-sm py-0 px-2"
+                                       style="font-size: 11px;"
+                                       title="Imprimir fichas desta turma em Folha A4">
+                                        Imprimir A4
                                     </a>
-                                    <a href="<?php echo $baseUrl; ?>/operacional/tickets/turma/<?php echo (int)$tg['turma_id']; ?>/pdf?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
-                                       class="btn btn-enterprise btn-secondary btn-sm"
-                                       title="Baixar PDF desta turma">
-                                        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
-                                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                                            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-                                        </svg>
+                                    <a href="<?php echo $baseUrl; ?>/operacional/tickets/turma/<?php echo (int)$tg['turma_id']; ?>/pdf?formato=a4&data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
+                                       class="btn btn-enterprise btn-secondary btn-sm py-0 px-2"
+                                       style="font-size: 11px;"
+                                       title="Baixar PDF A4 desta turma">
+                                        PDF A4
+                                    </a>
+                                    <a href="<?php echo $baseUrl; ?>/operacional/tickets/turma/<?php echo (int)$tg['turma_id']; ?>?formato=80mm&data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
+                                       target="_blank"
+                                       class="btn btn-enterprise btn-secondary btn-sm py-0 px-2"
+                                       style="font-size: 11px;"
+                                       title="Imprimir bobina contínua 80mm desta turma">
+                                        80mm
                                     </a>
                                 </div>
                             </td>
