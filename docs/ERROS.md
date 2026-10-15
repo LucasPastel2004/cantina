@@ -1813,3 +1813,27 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - Aplicadas regras de layout flex inline nos 5 cards de Cash-In, tornando a exibição visual elegante, alinhada e imune a caches antigos de CSS;
      - Versão dos assets no layout `admin.php` atualizada para `?v=6.0.2`.
 - Como evitar no futuro: Em métodos de renderização de PDF/impressão (`renderView`), garantir que arrays de dados estejam sempre acessíveis sob sua chave canônica (`$_viewVars['dados']`) e proteger todas as variáveis em views com operadores defensivos `?? 0` ou `?? ''`. Para botões de exportação que abrem novas abas, preferir links `<a>` com `href` atualizado dinamicamente em vez de botões com `formaction` e `formtarget="_blank"` fora do formulário.
+
+---
+
+## 2026-10-15 - Corte sub-pixel na borda direita das tabelas em relatórios PDF do Gotenberg (Chromium)
+- Sintoma: Ao abrir os relatórios em PDF gerados pelo Gotenberg no visualizador nativo do Chrome ou imprimi-los, a borda preta vertical mais à direita das tabelas apresentava corte ou espessura inconsistente/intermitente ("cortam um pedacinho na direita"). Adicionalmente, no relatório de arrecadação financeira, o cabeçalho `PARTICIPAÇÃO` quebrava a letra 'O' para a segunda linha.
+- Causa:
+  1. No motor Chromium (Gotenberg 8), o `@page` estava configurado com `margin: 10mm 12mm 10mm 12mm;`. Quando tabelas utilizam `width: 100% !important; border-collapse: collapse;`, a especificação de colapso de bordas do CSS posiciona a borda externa de 1px exatamente sobre a linha limite da área imprimível. No renderizador PDFium do Chrome e em resoluções de tela padrão (96 DPI a 100% ou 125% de zoom), o arredondamento de sub-pixel e o *clip rect* da página descartavam a metade externa da linha preta, reduzindo-a a um fade cinza claro de apenas 1 pixel subpixel ou eliminando-a por completo;
+  2. A coluna de `Participação` na Tabela 1 de Arrecadação possuía largura insuficiente de `12%` (~22mm), fazendo com que a palavra de 12 caracteres quebrasse com `PARTICIPAÇÃ` na linha superior e `O` na linha inferior;
+  3. O elemento de cabeçalho com alinhamento à direita (`.school-meta-col` / `.header-meta`) ficava colado na coordenada de corte sem respiro.
+- Solução aplicada:
+  1. **Calibração Óptica Simétrica de 14mm no `@page`:**
+     - Atualizado `@page` em todos os 10 templates de relatórios A4 (`arrecadacao_pdf.php`, `extrato_aluno_pdf.php`, `corte_pdf.php`, `desconto_folha_pdf.php`, `desconto_folha_individual_pdf.php`, `fechamento_caixa_pdf.php`, `med_negativados_pdf.php`, `vendas_alimento_pdf.php`, `estoque_movimentacoes_pdf.php` e `dre_pdf.php`) para margens simétricas e nobres de 14mm: `@page { margin: 10mm 14mm 10mm 14mm; }`;
+     - Ajustado o contêiner em `@media screen` para `padding: 10mm 14mm;`, espelhando perfeitamente a visão física;
+  2. **Respiro e Eliminação de Quebra de Palavras:**
+     - Calibradas as larguras de colunas da Tabela 1 em `arrecadacao_pdf.php` (Canal: 30%, Origem: 27%, Transações: 12%, Total: 16%, Participação: 15%), garantindo que `PARTICIPAÇÃO` nunca quebre;
+     - Calibradas as larguras da Tabela 3 (Data: 11%, Dia: 10%, Recarga Pix: 13%, Recarga Din: 12%, Venda Din: 12%, Venda Pix: 12%, Arrecadado Dia: 15%, Consumo Saldo: 15%);
+     - Injetado `padding-right: 2px;` nos blocos de metadados do cabeçalho escolar;
+     - Injetado `padding: 3.5px 6px !important;` nas células das tabelas para respiro das colunas numéricas;
+  3. **Ponto Seguro de Rollback:**
+     - Criada tag e branch Git `rollback-pdf-ponto-seguro` no commit funcional imediatamente anterior;
+  4. **Validação Rigorosa:**
+     - Auditoria óptica a 288 DPI via `pypdfium2` comprovando traço contínuo `[0, 0, 0, 255, 255, 255]` e simetria de 14.0mm esquerda x 13.8mm direita (diferença de 0.18mm) em 100% dos relatórios;
+     - Suíte `tests/teste_todos_pdfs.php` (10 relatórios), `tests/arrecadacao_dre_regimes_test.php` (89 testes) e `tests/fase23_test.php` (220 testes) aprovadas com 100% de sucesso.
+- Como evitar no futuro: Em documentos A4 gerados pelo Chromium com tabelas em `border-collapse: collapse;`, utilizar margens laterais no `@page` de no mínimo 14mm (em vez de 12mm) para garantir que a metade externa das bordas pretas nunca coincida com a linha de *clipping* da folha de papel.

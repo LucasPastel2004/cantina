@@ -67,7 +67,7 @@ if ($emitirAlim && $emitirAluno) {
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 12mm 10mm 12mm;
+            margin: 10mm 14mm 10mm 14mm;
         }
         * {
             box-sizing: border-box !important;
@@ -154,7 +154,7 @@ if ($emitirAlim && $emitirAluno) {
                 min-height: 297mm;
                 margin: 0 auto;
                 background: #ffffff;
-                padding: 10mm 12mm;
+                padding: 10mm 14mm;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
                 box-sizing: border-box;
                 border-radius: 2px;

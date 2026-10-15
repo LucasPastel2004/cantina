@@ -383,7 +383,7 @@ $totalPaginas = count($paginas);
            ========================================================================== */
         @page {
             size: <?php echo $isPaisagem ? 'A4 landscape' : 'A4 portrait'; ?>;
-            margin: 10mm 12mm 10mm 12mm;
+            margin: 10mm 14mm 10mm 14mm;
         }
 
         * {
@@ -456,7 +456,7 @@ $totalPaginas = count($paginas);
             max-width: calc(100% - 32px);
             min-height: <?php echo $isPaisagem ? '195mm' : '280mm'; ?>;
             margin: 0 auto 24px auto;
-            padding: 10mm 12mm;
+            padding: 10mm 14mm;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             border-radius: 2px;
             position: relative;

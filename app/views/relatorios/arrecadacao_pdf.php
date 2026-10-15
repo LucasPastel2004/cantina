@@ -30,7 +30,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 12mm 10mm 12mm;
+            margin: 10mm 14mm 10mm 14mm;
         }
         * {
             box-sizing: border-box !important;
@@ -117,7 +117,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 min-height: 297mm;
                 margin: 0 auto;
                 background: #ffffff;
-                padding: 10mm 12mm;
+                padding: 10mm 14mm;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
                 box-sizing: border-box;
                 border-radius: 2px;
@@ -197,6 +197,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             font-size: 7.5pt;
             color: #334155;
             line-height: 1.3;
+            padding-right: 2px;
         }
 
         /* Faixa de Parâmetros */
@@ -224,7 +225,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         table.table-doc-excel th,
         table.table-doc-excel td {
             border: 1px solid #000000 !important;
-            padding: 3.5px 5px !important;
+            padding: 3.5px 6px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
             word-break: break-word;
@@ -343,11 +344,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <table class="table-doc-excel">
         <thead>
             <tr>
-                <th style="width: 32%; text-align: left;">Canal / Meio de Pagamento</th>
-                <th style="width: 28%; text-align: left;">Origem / Ambiente</th>
+                <th style="width: 30%; text-align: left;">Canal / Meio de Pagamento</th>
+                <th style="width: 27%; text-align: left;">Origem / Ambiente</th>
                 <th style="width: 12%; text-align: right;">Transações</th>
                 <th style="width: 16%; text-align: right;">Total Arrecadado</th>
-                <th style="width: 12%; text-align: right;">Participação</th>
+                <th style="width: 15%; text-align: right;">Participação</th>
             </tr>
         </thead>
         <tbody>
@@ -447,14 +448,14 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <table class="table-doc-excel">
         <thead>
             <tr>
-                <th style="width: 12%; text-align: center;">Data</th>
-                <th style="width: 11%; text-align: left;">Dia</th>
+                <th style="width: 11%; text-align: center;">Data</th>
+                <th style="width: 10%; text-align: left;">Dia</th>
                 <th style="width: 13%; text-align: right;">Recarga Pix</th>
                 <th style="width: 12%; text-align: right;">Recarga Din</th>
                 <th style="width: 12%; text-align: right;">Venda Din</th>
                 <th style="width: 12%; text-align: right;">Venda Pix</th>
-                <th style="width: 14%; text-align: right; background-color: #f1f5f9 !important;">Arrecadado Dia</th>
-                <th style="width: 14%; text-align: right;">Consumo Saldo</th>
+                <th style="width: 15%; text-align: right; background-color: #f1f5f9 !important;">Arrecadado Dia</th>
+                <th style="width: 15%; text-align: right;">Consumo Saldo</th>
             </tr>
         </thead>
         <tbody>

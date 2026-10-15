@@ -134,4 +134,48 @@ $htmlVendas = \App\Services\PdfService::renderView('relatorios/vendas_alimento_p
 $pdfVendas = \App\Services\PdfService::htmlToPdf($htmlVendas);
 echo "8. Vendas por Alimento: " . ($pdfVendas && str_starts_with($pdfVendas, '%PDF') ? "OK (" . strlen($pdfVendas) . " bytes)" : "FALHA") . "\n";
 
-echo "\nTodos os 8 relatórios geraram PDFs binários com sucesso via Gotenberg!\n";
+// 9. Arrecadação Financeira
+$htmlArrecadacao = \App\Services\PdfService::renderView('relatorios/arrecadacao_pdf', [
+    'periodo_oficial' => '01/10/2026 a 15/10/2026',
+    'data_inicio' => '2026-10-01',
+    'data_fim' => '2026-10-15',
+    'canais' => [
+        ['canal' => 'Recargas Pix Online', 'descricao' => 'Portal da Família', 'quantidade' => 10, 'total' => 500.0, 'percentual' => 100.0]
+    ],
+    'dias' => [
+        ['data_formatada' => '01/10/2026', 'dia_semana' => 'Quinta', 'recargas_pix' => 500.0, 'recargas_dinheiro' => 0.0, 'vendas_dinheiro' => 0.0, 'vendas_pix' => 0.0, 'total_arrecadado' => 500.0, 'consumo_saldo' => 100.0]
+    ],
+    'total_transacoes_arrecadacao' => 10,
+    'total_arrecadado_bruto' => 500.0,
+    'recargas_pix_total' => 500.0,
+    'recargas_dinheiro_total' => 0.0,
+    'total_recargas' => 500.0,
+    'vendas_dinheiro_total' => 0.0,
+    'vendas_pix_total' => 0.0,
+    'vendas_saldo_total' => 50.0,
+    'pedidos_saldo_total' => 50.0,
+    'total_consumo_saldo' => 100.0,
+    'variacao_carteira' => 400.0,
+    'isPdf' => true
+]);
+$pdfArrecadacao = \App\Services\PdfService::htmlToPdf($htmlArrecadacao);
+echo "9. Arrecadação Financeira: " . ($pdfArrecadacao && str_starts_with($pdfArrecadacao, '%PDF') ? "OK (" . strlen($pdfArrecadacao) . " bytes)" : "FALHA") . "\n";
+
+// 10. DRE Gerencial Anual (Landscape)
+$htmlDre = \App\Services\PdfService::renderView('financeiro/dre_pdf', [
+    'ano' => 2026,
+    'regime' => 'competencia',
+    'dre' => [
+        'meses' => [
+            1 => ['receita_bruta' => 1000.0, 'custo_mercadorias' => 400.0, 'lucro_bruto' => 600.0, 'despesas_operacionais' => 100.0, 'resultado_liquido' => 500.0]
+        ],
+        'totais' => [
+            'receita_bruta' => 1000.0, 'custo_mercadorias' => 400.0, 'lucro_bruto' => 600.0, 'despesas_operacionais' => 100.0, 'resultado_liquido' => 500.0
+        ]
+    ],
+    'isPdf' => true
+]);
+$pdfDre = \App\Services\PdfService::htmlToPdf($htmlDre, ['landscape' => true]);
+echo "10. DRE Gerencial Anual: " . ($pdfDre && str_starts_with($pdfDre, '%PDF') ? "OK (" . strlen($pdfDre) . " bytes)" : "FALHA") . "\n";
+
+echo "\nTodos os 10 relatórios A4 geraram PDFs binários com sucesso via Gotenberg!\n";

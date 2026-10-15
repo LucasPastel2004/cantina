@@ -44,7 +44,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 12mm 10mm 12mm;
+            margin: 10mm 14mm 10mm 14mm;
         }
         * {
             box-sizing: border-box !important;
@@ -117,7 +117,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
                 max-width: calc(100% - 24px);
                 min-height: 297mm;
                 background: #ffffff;
-                padding: 10mm 12mm;
+                padding: 10mm 14mm;
                 margin: 0 auto;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
                 box-sizing: border-box;
@@ -211,6 +211,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             font-size: 8pt;
             color: #334155;
             line-height: 1.35;
+            padding-right: 2px;
         }
 
         /* Bloco de Identificação do Aluno (Fiel ao Relatório Oficial) */

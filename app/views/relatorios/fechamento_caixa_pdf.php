@@ -76,7 +76,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 12mm 10mm 12mm;
+            margin: 10mm 14mm 10mm 14mm;
         }
         * {
             box-sizing: border-box !important;
@@ -105,7 +105,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
                 min-height: 297mm;
                 margin: 0 auto;
                 background: #ffffff;
-                padding: 10mm 12mm;
+                padding: 10mm 14mm;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
                 box-sizing: border-box;
                 position: relative;
@@ -165,6 +165,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         .emission-date {
             font-size: 8.5pt;
             color: #000000;
+            padding-right: 2px;
         }
         .doc-title {
             font-size: 10pt;

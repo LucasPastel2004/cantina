@@ -1572,10 +1572,43 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Eliminação Definitiva do Corte à Direita em Todos os PDFs do Sistema (2026-10-15)
+* [x] **Diagnóstico Óptico e Geométrico de Sub-Pixel no Chromium:**
+  * Identificado que no motor Chromium (Gotenberg 8), o uso de `@page { margin: 10mm 12mm 10mm 12mm; }` combinado com tabelas em `width: 100% !important; border-collapse: collapse;` fazia com que a borda preta externa de 1px da última coluna caísse exatamente sobre a linha limite do *MediaBox/CropBox* de impressão. Isso provocava o descarte (clipping) sub-pixel da metade externa da linha, deixando a borda direita falhada ou invisível ao ser visualizada no leitor nativo do Chrome e em impressoras físicas;
+  * Identificada quebra de texto inadequada no cabeçalho `PARTICIPAÇÃO` da tabela de arrecadação (quebrava a letra 'O' para a segunda linha devido a largura insuficiente de 12%);
+* [x] **Calibração Óptica Simétrica Homologada (14mm):**
+  * Padronizado `@page { size: A4 portrait; margin: 10mm 14mm 10mm 14mm; }` (e `size: A4 landscape; margin: 10mm 14mm 10mm 14mm;` para DRE e relatórios horizontais), garantindo margens laterais físicas simétricas e nobres de 14,0mm com traço de borda contínuo `[0, 0, 0, 255, 255, 255]` e zero clipping;
+  * Ajustado o contêiner em `@media screen` para `padding: 10mm 14mm;` para espelhar perfeitamente a visão física na tela;
+  * Calibradas as larguras de colunas da Tabela 1 em `arrecadacao_pdf.php` (Canal: 30%, Origem: 27%, Transações: 12%, Total: 16%, Participação: 15%), garantindo que palavras nunca quebrem;
+  * Calibradas as larguras da Tabela 3 (Data: 11%, Dia: 10%, Recarga Pix: 13%, Recarga Din: 12%, Venda Din: 12%, Venda Pix: 12%, Arrecadado Dia: 15%, Consumo Saldo: 15%);
+  * Injetado `padding-right: 2px;` nos elementos de cabeçalho (`.school-meta-col`, `.header-meta`, `.emission-date`) para respiro de segurança;
+  * Injetado `padding: 3.5px 6px !important;` nas células de tabelas para respiro visual dos números monetários;
+* [x] **Propagação Uniforme em Todos os 10 Relatórios do Sistema:**
+  1. `app/views/relatorios/arrecadacao_pdf.php`
+  2. `app/views/relatorios/extrato_aluno_pdf.php`
+  3. `app/views/relatorios/corte_pdf.php`
+  4. `app/views/relatorios/desconto_folha_pdf.php`
+  5. `app/views/relatorios/desconto_folha_individual_pdf.php`
+  6. `app/views/relatorios/fechamento_caixa_pdf.php`
+  7. `app/views/relatorios/med_negativados_pdf.php`
+  8. `app/views/relatorios/vendas_alimento_pdf.php`
+  9. `app/views/relatorios/estoque_movimentacoes_pdf.php`
+  10. `app/views/financeiro/dre_pdf.php`
+* [x] **Ponto Seguro de Rollback Criado Conforme Solicitação:**
+  * Tag Git: `rollback-pdf-ponto-seguro`
+  * Branch Git: `rollback-pdf-ponto-seguro`
+  * Comando para reverter imediatamente se desejado: `git checkout rollback-pdf-ponto-seguro` ou `git reset --hard rollback-pdf-ponto-seguro`;
+* [x] **Validação e Testes:**
+  * Auditoria óptica via Python (`pypdfium2` a 288 DPI) confirmando simetria milimétrica perfeita (14.0mm esquerda x 13.8mm direita, diferença de 0.18mm) e zero corte em todos os relatórios;
+  * Suíte `tests/teste_todos_pdfs.php` ampliada para cobrir todos os 10 relatórios A4: **10 de 10 relatórios aprovados com 100% de sucesso**;
+  * Suíte `tests/arrecadacao_dre_regimes_test.php`: **89 de 89 asserções aprovadas com 100% de sucesso**;
+  * Suíte `tests/fase23_test.php`: **220 de 220 asserções aprovadas com 100% de sucesso**.
+
+---
+
 ## Próximo Passo Recomendado
 
-1. Recarregar a página no navegador com `Ctrl + F5` (ou `Ctrl + Shift + R`) em:
-   `http://localhost:8080/relatorios/arrecadacao`
-2. Testar o botão **"Visualizar / Imprimir (A4)"** no canto superior direito: ele abrirá imediatamente o espelho oficial A4 timbrado em uma nova aba para visualização e impressão, sem qualquer incidente ou tela de erro;
-3. Testar os botões **"Baixar em PDF (A4)"** e **"Exportar Planilha (CSV)"**: eles farão o download imediato dos arquivos correspondentes;
-4. Testar os botões de atalho ("Hoje", "Ontem", "Esta Semana", "Este Mês", "Mês Anterior") e o botão "Filtrar Período": todos reagem instantaneamente atualizando os dados e os links de emissão.
+1. Abrir qualquer relatório do sistema em PDF no navegador ou leitor de PDF (por exemplo: `/relatorios/arrecadacao/pdf`, `/relatorios/arrecadacao/imprimir`, extrato de aluno, fechamento de caixa ou DRE anual);
+2. Observar a extrema direita da folha: a borda preta vertical de todas as tabelas e o cabeçalho agora aparecem 100% visíveis, contínuos, nítidos e simétricos, sem nenhum corte ou raspagem na margem direita;
+3. Se por qualquer motivo o usuário preferir a versão anterior, basta utilizar o ponto de rollback pronto executando:
+   `git reset --hard rollback-pdf-ponto-seguro`

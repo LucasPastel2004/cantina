@@ -27,7 +27,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 12mm 10mm 12mm;
+            margin: 10mm 14mm 10mm 14mm;
         }
         * {
             box-sizing: border-box !important;
@@ -60,7 +60,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
                 min-height: 297mm;
                 margin: 0 auto;
                 background: #ffffff;
-                padding: 10mm 12mm;
+                padding: 10mm 14mm;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
                 box-sizing: border-box;
                 position: relative;
@@ -214,7 +214,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
                 <div class="report-sub">Emissão do Sistema Cantina Web &bull; <?php echo $emissao; ?></div>
             </div>
         </div>
-        <div style="text-align: right;">
+        <div style="text-align: right; padding-right: 2px;">
             <div style="font-size: 13px; font-weight: 700; color: #0f172a;"><?php echo $dataFmt; ?> &bull; <?php echo $turno; ?></div>
             <div style="font-size: 9px; color: #16a34a; font-weight: 600; text-transform: uppercase;"><?php echo htmlspecialchars($statusCorte); ?></div>
         </div>
