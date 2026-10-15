@@ -1679,16 +1679,15 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   - **Rotina de Backup Automático:** O workflow verifica se já existem arquivos na pasta de destino da Hostnet e gera um arquivo compactado `.tar.gz` em `~/deploy-backups/` antes de enviar os novos arquivos.
   - **Deploy com rsync:** Sincronização via SSH utilizando `rsync -avz` respeitando o `deploy-exclude.txt` e sem a flag destrutiva `--delete` no primeiro deploy.
   - **Secrets Necessários Mapeados:** `HOSTNET_HOST`, `HOSTNET_USER`, `HOSTNET_PORT`, `HOSTNET_PATH` e `HOSTNET_SSH_KEY`.
-  - **Status do Primeiro Deploy:** Pendente de execução manual pelo usuário após configuração dos secrets no GitHub e credenciais reais de banco no `config/config.php` na Hostnet.
+  - **Status do Primeiro Deploy:** Executado com 100% de sucesso via GitHub Actions (**Deploy Hostnet #3**, duração total de 23s com sincronização rsync em 19s). Todos os arquivos de produção foram transferidos e isolados na Hostnet com sucesso!
 
 ---
 
 ## Próximo Passo Recomendado
 
-1. Fazer `git push origin main` para enviar o workflow e o arquivo de exclusões para o repositório remoto no GitHub.
-2. Cadastrar os 5 Secrets no GitHub (`Settings -> Secrets and variables -> Actions`).
-3. Criar a chave SSH e autorizar a chave pública na Hostnet.
-4. Criar o banco de dados MySQL e o arquivo de configuração real `config/config.php` diretamente na Hostnet.
-5. Executar o workflow manualmente na aba **Actions** do GitHub (**Deploy Hostnet** -> **Run workflow**).
-6. Rodar as migrações em produção e validar pelo checklist pós-deploy.
+1. Criar o banco de dados MySQL no painel da Hostnet.
+2. Criar o arquivo `config/config.php` na Hostnet com as credenciais do banco de produção.
+3. Executar as 26 migrações oficiais via navegador (`database/runner.php?token=...`) ou CLI para estruturar as tabelas.
+4. Validar o funcionamento pelo checklist pós-deploy.
+
 
