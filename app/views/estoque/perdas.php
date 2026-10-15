@@ -42,7 +42,7 @@ $baseUrl = $baseUrl ?? '';
                     <span class="text-muted" style="font-size: 12px;">Conforme RN-15 do FSD, toda perda exige justificativa e gera auditoria técnica imediata.</span>
                 </div>
 
-                <form method="POST" action="<?php echo $baseUrl; ?>/estoque/perdas/salvar" id="formPerda" onsubmit="return validarEnvioPerda()">
+                <form method="POST" action="<?php echo $baseUrl; ?>/estoque/perdas/salvar" id="formPerda" onsubmit="return validarEnvioPerda(event)">
                     <input type="hidden" name="csrf_token" value="<?php echo \App\Core\Session::getCsrfToken(); ?>">
 
                     <!-- Seleção do Produto -->
@@ -226,7 +226,22 @@ function validarEnvioPerda() {
         return false;
     }
 
-    return confirm('Confirmar o registro da perda de ' + qtd + ' un deste produto? Esta ação debitará o estoque e gravará registro de auditoria.');
+    if (event) {
+        event.preventDefault();
+    }
+    const form = document.getElementById('formPerda');
+    window.confirmarAcao({
+        titulo: 'Registro de Perda de Estoque',
+        mensagem: 'Confirmar o registro da perda de ' + qtd + ' un deste produto? Esta ação debitará o estoque e gravará registro de auditoria.',
+        tipo: 'danger',
+        textoConfirmar: 'Sim, Registrar Perda',
+        textoCancelar: 'Cancelar'
+    }).then(function(confirmado) {
+        if (confirmado && form) {
+            form.submit();
+        }
+    });
+    return false;
 }
 
 // Dispara no carregamento se houver pré-seleção

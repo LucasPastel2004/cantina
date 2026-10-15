@@ -1824,6 +1824,42 @@ textarea.form-control {
   padding: 10px 18px;
 }
 
+/* Modal de Confirmação Corporativo Unificado */
+.modal-confirm-enterprise {
+  z-index: 1075 !important;
+}
+
+.modal-confirm-enterprise .modal-dialog {
+  max-width: 440px;
+  margin: 1.75rem auto;
+}
+
+.modal-confirm-enterprise .modal-content {
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+  border-radius: 8px;
+}
+
+.modal-confirm-enterprise .modal-header {
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  padding: 10px 16px;
+}
+
+.modal-confirm-enterprise .modal-body {
+  padding: 16px;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.modal-confirm-enterprise .modal-footer {
+  border-top: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  padding: 10px 16px;
+  gap: 8px;
+}
+
 /* Empty State Corporativo */
 .empty-state-enterprise {
   text-align: center;

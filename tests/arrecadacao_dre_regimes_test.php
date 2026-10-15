@@ -299,6 +299,8 @@ class ArrecadacaoDreRegimesTest
         $this->assert(str_contains($htmlArrec, 'Arrecadação Financeira & Fluxo de Entradas'), "RelatoriosController::arrecadacao renderiza view principal");
         $this->assert(str_contains($htmlArrec, 'Total Arrecadado (Cash-In Real)'), "View de Arrecadação exibe stat-item de Cash-In");
         $this->assert(str_contains($htmlArrec, 'Detalhamento Diário de Entradas e Consumo'), "View de Arrecadação exibe tabela diária");
+        $this->assert(preg_match('#href="[^"]*/relatorios/arrecadacao"[^>]*class="nav-link\s+active"#', $htmlArrec) === 1, "Sidebar marca Arrecadação & Entradas como menu ativo");
+        $this->assert(preg_match('#href="[^"]*/relatorios"[^>]*class="nav-link\s+active"#', $htmlArrec) === 0, "Sidebar NÃO marca Relatórios Gerenciais como ativo quando na tela de Arrecadação");
 
         // 4.5 RelatoriosController::arrecadacaoImprimir tela A4
         ob_start();

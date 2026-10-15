@@ -24,7 +24,12 @@ $baseUrl = $baseUrl ?? '';
             <h1 class="h5 fw-bold text-slate-900 mb-0">Conferência de Entrada — NF-e nº <?php echo htmlspecialchars($nfe['numero_nota'], ENT_QUOTES, 'UTF-8'); ?></h1>
         </div>
         <div class="d-flex gap-2">
-            <a href="<?php echo $baseUrl; ?>/estoque/importar-xml/cancelar" class="btn btn-enterprise btn-secondary btn-sm" onclick="return confirm('Deseja descartar a importação desta nota fiscal?')">
+            <a href="<?php echo $baseUrl; ?>/estoque/importar-xml/cancelar" 
+               class="btn btn-enterprise btn-secondary btn-sm" 
+               data-confirm="Deseja descartar a importação desta nota fiscal?"
+               data-confirm-title="Descartar Nota Fiscal"
+               data-confirm-type="danger"
+               data-confirm-btn="Sim, Descartar">
                 Cancelar Importação
             </a>
         </div>
@@ -165,7 +170,12 @@ $baseUrl = $baseUrl ?? '';
 
         <!-- Barra Inferior de Ação -->
         <div class="d-flex justify-content-between align-items-center p-3 card-enterprise bg-light">
-            <a href="<?php echo $baseUrl; ?>/estoque/importar-xml/cancelar" class="btn btn-enterprise btn-secondary btn-sm" onclick="return confirm('Deseja cancelar o processo de entrada?')">
+            <a href="<?php echo $baseUrl; ?>/estoque/importar-xml/cancelar" 
+               class="btn btn-enterprise btn-secondary btn-sm" 
+               data-confirm="Deseja cancelar o processo de entrada?"
+               data-confirm-title="Cancelar Entrada"
+               data-confirm-type="warning"
+               data-confirm-btn="Sim, Cancelar Entrada">
                 Cancelar e Descartar
             </a>
             <button type="submit" id="btnConfirmarEntrada" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-2">

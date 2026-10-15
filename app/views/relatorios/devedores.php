@@ -10,6 +10,17 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
 $familias = $familias ?? [];
+$busca = $busca ?? '';
+$status = $status ?? 'todos';
+
+$paramsDevedores = [];
+if (!empty($busca)) {
+    $paramsDevedores['busca'] = $busca;
+}
+if (!empty($status) && $status !== 'todos') {
+    $paramsDevedores['status'] = $status;
+}
+$queryStringDevedores = !empty($paramsDevedores) ? '?' . http_build_query($paramsDevedores) : '';
 ?>
 
 <div class="container-fluid px-2 pb-5" style="max-width: 1400px; margin: 0 auto;">
@@ -22,7 +33,18 @@ $familias = $familias ?? [];
         </p>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <a href="<?php echo $baseUrl; ?>/admin/contestacoes/pdf" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Baixar Relatório Executivo em PDF A4 Timbrado">
+        <a href="<?php echo $baseUrl; ?>/relatorios/devedores/imprimir<?php echo $queryStringDevedores; ?>" 
+           target="_blank" 
+           id="btnImprimirA4"
+           class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" 
+           title="Visualizar espelho oficial para conferência e impressão em nova aba">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+            Visualizar / Imprimir (A4)
+        </a>
+        <a href="<?php echo $baseUrl; ?>/relatorios/devedores/pdf<?php echo $queryStringDevedores; ?>" 
+           id="btnPdfA4"
+           class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" 
+           title="Baixar Relatório Executivo em PDF A4 Timbrado">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
             Exportar PDF (A4 Timbrado)
         </a>
@@ -187,3 +209,36 @@ $familias = $familias ?? [];
 </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var inputBusca = document.getElementById('inputBusca');
+    var filtroStatus = document.getElementById('filtroStatus');
+    var btnPdf = document.getElementById('btnPdfA4');
+    var btnImprimir = document.getElementById('btnImprimirA4');
+    var baseUrl = <?php echo json_encode($baseUrl); ?>;
+
+    function atualizarLinks() {
+        var busca = (inputBusca ? inputBusca.value : '').trim();
+        var status = (filtroStatus ? filtroStatus.value : 'todos').trim();
+        var params = [];
+        if (busca) params.push('busca=' + encodeURIComponent(busca));
+        if (status && status !== 'todos') params.push('status=' + encodeURIComponent(status));
+        var qs = params.length > 0 ? '?' + params.join('&') : '';
+
+        if (btnPdf) {
+            btnPdf.href = baseUrl + '/relatorios/devedores/pdf' + qs;
+        }
+        if (btnImprimir) {
+            btnImprimir.href = baseUrl + '/relatorios/devedores/imprimir' + qs;
+        }
+    }
+
+    if (inputBusca) {
+        inputBusca.addEventListener('input', atualizarLinks);
+    }
+    if (filtroStatus) {
+        filtroStatus.addEventListener('change', atualizarLinks);
+    }
+});
+</script>

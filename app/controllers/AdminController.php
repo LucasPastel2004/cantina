@@ -1472,7 +1472,17 @@ class AdminController extends Controller
      */
     public function contestacoesPdf(): void
     {
-        $dados = Responsavel::listarNegativadosMed([], 1, 1000);
+        $busca = trim((string)$this->input('busca', ''));
+        $status = trim((string)$this->input('status', 'todos'));
+        $filtros = [];
+        if (!empty($busca)) {
+            $filtros['busca'] = $busca;
+        }
+        if (!empty($status) && $status !== 'todos') {
+            $filtros['status'] = $status;
+        }
+
+        $dados = Responsavel::listarNegativadosMed($filtros, 1, 1000);
         $totalDevedor = Responsavel::somarSaldoDevedorMed();
         $usuario = Auth::user();
 
@@ -1485,14 +1495,18 @@ class AdminController extends Controller
 
         $nomeArquivo = 'relatorio_negativados_med_' . date('Ymd_His') . '.pdf';
 
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-        header('Content-Length: ' . strlen($pdfBinario));
-        header('Cache-Control: private, max-age=0, must-revalidate');
-        header('Pragma: public');
+        if (!headers_sent()) {
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+            header('Content-Length: ' . strlen($pdfBinario));
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+        }
 
         echo $pdfBinario;
-        exit;
+        if (!defined('CANTINA_TEST_MODE')) {
+            exit;
+        }
     }
 }
 

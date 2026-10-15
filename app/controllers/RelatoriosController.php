@@ -734,6 +734,82 @@ class RelatoriosController extends Controller
         ], 'admin');
     }
 
+    /**
+     * Emissão do Relatório A4 em PDF Timbrado de Devedores e Inadimplência MED (FSD Tela 8.4)
+     */
+    public function devedoresPdf(): void
+    {
+        $status = trim((string)$this->input('status', 'todos'));
+        $busca = trim((string)$this->input('busca', ''));
+
+        $filtros = [];
+        if (!empty($busca)) {
+            $filtros['busca'] = $busca;
+        }
+        if (!empty($status) && $status !== 'todos') {
+            $filtros['status'] = $status;
+        }
+
+        $dados = Responsavel::listarNegativadosMed($filtros, 1, 1000);
+        $totalDevedor = Responsavel::somarSaldoDevedorMed();
+        $usuario = Auth::user();
+
+        $pdfBinario = PdfService::gerarRelatorioNegativadosMedPdf([
+            'familias'       => $dados['itens'],
+            'total_devedor'  => $totalDevedor,
+            'total_familias' => $dados['total'],
+            'operador'       => $usuario['nome'] ?? 'Administração'
+        ]);
+
+        $nomeArquivo = 'relatorio_inadimplencia_med_' . date('Ymd_His') . '.pdf';
+
+        if (!headers_sent()) {
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+            header('Content-Length: ' . strlen($pdfBinario));
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+        }
+
+        echo $pdfBinario;
+        if (!defined('CANTINA_TEST_MODE')) {
+            exit;
+        }
+    }
+
+    /**
+     * Espelho HTML para visualização / impressão rápida em folha A4
+     */
+    public function devedoresImprimir(): void
+    {
+        $status = trim((string)$this->input('status', 'todos'));
+        $busca = trim((string)$this->input('busca', ''));
+
+        $filtros = [];
+        if (!empty($busca)) {
+            $filtros['busca'] = $busca;
+        }
+        if (!empty($status) && $status !== 'todos') {
+            $filtros['status'] = $status;
+        }
+
+        $dados = Responsavel::listarNegativadosMed($filtros, 1, 1000);
+        $totalDevedor = Responsavel::somarSaldoDevedorMed();
+        $usuario = Auth::user();
+
+        echo PdfService::renderView('relatorios/med_negativados_pdf', [
+            'dadosMed' => [
+                'familias'       => $dados['itens'],
+                'total_devedor'  => $totalDevedor,
+                'total_familias' => $dados['total'],
+                'operador'       => $usuario['nome'] ?? 'Administração'
+            ]
+        ]);
+        if (!defined('CANTINA_TEST_MODE')) {
+            exit;
+        }
+    }
+
     // =========================================================================
     // MÉTODOS AUXILIARES DE CONSULTA E PROCESSAMENTO (DATABASE ENGINE)
     // =========================================================================
@@ -2611,7 +2687,7 @@ class RelatoriosController extends Controller
 
         $this->render('relatorios/arrecadacao', [
             'title'       => 'Arrecadação Financeira & Fluxo de Entradas — Colégio Monteiro Lobato',
-            'activeMenu'  => 'relatorios',
+            'activeMenu'  => 'arrecadacao',
             'dados'       => $dados,
             'dataInicio'  => $dataInicio,
             'dataFim'     => $dataFim,

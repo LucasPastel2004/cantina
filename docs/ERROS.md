@@ -1837,3 +1837,69 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - Auditoria óptica a 288 DPI via `pypdfium2` comprovando traço contínuo `[0, 0, 0, 255, 255, 255]` e simetria de 14.0mm esquerda x 13.8mm direita (diferença de 0.18mm) em 100% dos relatórios;
      - Suíte `tests/teste_todos_pdfs.php` (10 relatórios), `tests/arrecadacao_dre_regimes_test.php` (89 testes) e `tests/fase23_test.php` (220 testes) aprovadas com 100% de sucesso.
 - Como evitar no futuro: Em documentos A4 gerados pelo Chromium com tabelas em `border-collapse: collapse;`, utilizar margens laterais no `@page` de no mínimo 14mm (em vez de 12mm) para garantir que a metade externa das bordas pretas nunca coincida com a linha de *clipping* da folha de papel.
+
+---
+
+## 2026-10-15 - Botão 'Exportar PDF (A4 Timbrado)' inoperante na tela de Relatório de Inadimplência e Bloqueios MED (/relatorios/devedores)
+
+- Sintoma: Ao clicar no botão azul "Exportar PDF (A4 Timbrado)" na tela de Relatório de Inadimplência e Bloqueios MED (`/relatorios/devedores`), nada era baixado ou o navegador retornava tela de erro HTTP 404 (Página Não Encontrada).
+- Causa:
+  1. *Rotas ausentes no Front Controller `index.php`:* A rota `/admin/contestacoes/pdf` (para a qual o botão apontava no HTML) e as rotas canônicas do módulo de relatórios `/relatorios/devedores/pdf` e `/relatorios/devedores/imprimir` não estavam registradas no roteador;
+  2. *Métodos de emissão ausentes em `RelatoriosController`:* O controlador `RelatoriosController` possuía apenas o método `devedores()` para exibição da tela web, faltando os métodos `devedoresPdf()` e `devedoresImprimir()`;
+  3. *Perda de filtros na exportação:* O link do botão apontava para um endpoint estático sem preservar os parâmetros de consulta (`busca` e `status`), impedindo que o operador exportasse relatórios filtrados por responsável específico ou apenas bloqueados;
+  4. *Campos não formatados no template PDF:* Em `med_negativados_pdf.php`, o template exibia a coluna "WhatsApp" (deixando vazio para responsáveis com apenas e-mail/telefone cadastrado) e não utilizava o CPF formatado nem os dependentes com turma.
+- Solução aplicada:
+  1. *Registro de Rotas em `index.php`:* Registradas formalmente as rotas `GET /relatorios/devedores/pdf`, `GET /relatorios/devedores/imprimir` e `GET /admin/contestacoes/pdf` protegidas por RBAC para o perfil Administrador;
+  2. *Implementação dos Métodos no Controller:*
+     - Adicionados `RelatoriosController::devedoresPdf()` (download direto do arquivo `.pdf`) e `RelatoriosController::devedoresImprimir()` (espelho HTML timbrado com botão de impressão rápida);
+     - Ambos os métodos capturam e aplicam fielmente os filtros de busca e status da URL, com guarda defensiva `if (!headers_sent())`;
+     - Atualizado `AdminController::contestacoesPdf()` para também respeitar filtros de consulta;
+  3. *Atualização da View `devedores.php`:*
+     - Botão "Exportar PDF (A4 Timbrado)" atualizado para a rota canônica `/relatorios/devedores/pdf`, com `queryString` automática preservando filtros;
+     - Adicionado botão "Visualizar / Imprimir (A4)" (`/relatorios/devedores/imprimir`) abrindo em nova aba;
+     - Injetado listener JavaScript para atualizar os atributos `href` de ambos os botões dinamicamente conforme o usuário digita no campo de busca ou altera o select de situação;
+  4. *Refinamento do Template `med_negativados_pdf.php`:*
+     - Coluna alterada de "WhatsApp" para "Contato", priorizando WhatsApp e fazendo fallback resiliente para e-mail e telefone;
+     - Exibição de CPF formatado (`000.000.000-00`) e dependentes com turma (`Nome (Ano/Turma)`);
+  5. *Testes Automatizados:*
+     - Criado teste `tests/teste_devedores_pdf_rotas.php` e validadas 9/9 requisições HTTP autênticas no Apache via container Docker com HTTP 200 OK e PDFs binários íntegros.
+- Como evitar no futuro: Toda view com botões de exportação (PDF, CSV ou Impressão) deve ter suas rotas obrigatoriamente registradas no `index.php`, com métodos correspondentes no Controller que preservem os parâmetros de filtro ativos e testes de requisição HTTP automatizados.
+
+
+---
+
+## 2026-10-15 - Item incorreto destacado na navegação lateral (Sidebar) na tela de Arrecadação
+
+- Sintoma: Ao navegar para a página de Arrecadação Financeira & Fluxo de Entradas (`/relatorios/arrecadacao`), o menu lateral (sidebar) destacava com a classe `.active` o item "Relatórios Gerenciais" em vez de "Arrecadação & Entradas".
+- Causa: No método `RelatoriosController::arrecadacao()`, o array de dados repassado para `$this->render('relatorios/arrecadacao', ...)` definia `'activeMenu' => 'relatorios'`, enquanto o link correspondente em `app/views/layouts/sidebar.php` validava `($activeMenu === 'arrecadacao') ? 'active' : ''`. Com isso, a sidebar ativava o link de `/relatorios` ("Relatórios Gerenciais") e deixava o link de "Arrecadação & Entradas" apagado.
+- Solução aplicada:
+  1. Alterado `'activeMenu' => 'arrecadacao'` no método `arrecadacao()` em `app/controllers/RelatoriosController.php`;
+  2. Adicionadas asserções automatizadas no teste `tests/arrecadacao_dre_regimes_test.php` verificando que a sidebar renderiza o link `/relatorios/arrecadacao` com a classe `active` e que o link `/relatorios` não fica ativo;
+  3. Bateria de testes executada com 91 de 91 asserções aprovadas com 100% de sucesso.
+- Como evitar no futuro: Ao criar ou refatorar controladores que renderizam telas com layouts que contêm sidebar de navegação, certificar-se de que o valor da variável `'activeMenu'` coincida exatamente com a chave correspondente daquele link na sidebar (`app/views/layouts/sidebar.php`), incluindo testes unitários de renderização que verifiquem a classe ativa.
+
+---
+
+## 2026-10-15 - Caixas nativas de confirmação do navegador (confirm()) no fluxo operacional e cadastral
+
+- Sintoma: Ao realizar ações críticas (ex.: fechamento de caixa, registro de perda de estoque, inativação de alunos/colaboradores/turmas/produtos, exclusão de exceções do calendário e cancelamento de importação de XML), o navegador disparava a caixa de confirmação nativa síncrona cinza e antiestética (`localhost:8080 diz: ... [OK] [Cancelar]`), quebrando o padrão visual do Design System e a experiência corporativa de alta densidade.
+- Causa: Presença de chamadas legadas com `onsubmit="return confirm(...)"`, `onclick="return confirm(...)"` e funções locais contendo `return confirm(...)` espalhadas por formulários operacionais e de administração.
+- Solução aplicada:
+  1. **Sistema Corporativo de Confirmação (`assets/js/app.js`):**
+     - Criada a função utilitária `window.confirmarAcao(options)` e alias `window.confirmModal`, que gera e gerencia de forma assíncrona o modal singleton `#modalConfirmacaoSistema`;
+     - O modal implementa classes `.modal-enterprise` e `.modal-confirm-enterprise` no `assets/css/custom.css`, com `z-index: 1075` e backdrop em `1070` (garantindo sobreposição suave e perfeita mesmo sobre outro modal aberto, como na tela de Fechamento de Caixa);
+     - Tipos configuráveis com ícones e botões semânticos (`danger`, `warning`, `success`, `primary`), com botão de fechamento acessível e preservação do estado de rolagem do body (`modal-open`);
+  2. **Interceptors Declarativos Universais (`data-confirm`):**
+     - Criados listeners globais em `app.js` interceptando qualquer formulário ou link que possua atributos `data-confirm`, `data-confirm-title`, `data-confirm-type` e `data-confirm-btn`;
+     - Implementada varredura automática no `DOMContentLoaded` (`inicializarConfirmacaoCorporativa`) para migração dinâmica defensiva de qualquer chamada inline remanescente;
+  3. **Refatoração Cirúrgica das Views:**
+     - `app/views/operacional/caixa.php` e `app/views/operacional/fechamento_caixa.php`: Atualizada a função `confirmarFechamento(event)` para utilizar `window.confirmarAcao` assíncrono;
+     - `app/views/operacional/estorno_vendas.php`: Atualizado fallback para `window.confirmarAcao`;
+     - `app/views/estoque/perdas.php`: Atualizada a função `validarEnvioPerda(event)` para validar campos e acionar `window.confirmarAcao`;
+     - `app/views/estoque/conferir_xml.php`: Convertidos botões de cancelamento para `data-confirm`;
+     - `app/views/admin/alunos.php`, `turmas.php`, `colaboradores.php`, `produtos.php`, `categorias.php`, `calendario.php`: Convertidos formulários de inativação/exclusão para atributos declarativos `data-confirm`;
+  4. **Controle de Versão de Assets:**
+     - Versão dos assets elevada para `?v=6.1.0` em `Controller.php`, `admin.php` e `portal.php` para invalidação imediata de cache no cliente;
+  5. **Bateria de Testes Automatizados:**
+     - Criado teste `tests/teste_modais_confirmacao.php` com 35 asserções aprovadas com 100% de sucesso, atestando a erradicação de 100% das chamadas a `confirm()` em todas as views do sistema.
+- Como evitar no futuro: Nunca utilizar `confirm()` ou `alert()` nativos do navegador. Em qualquer necessidade de confirmação, utilizar a função padrão `window.confirmarAcao({ titulo, mensagem, tipo, textoConfirmar })` ou os atributos declarativos `data-confirm` no HTML.

@@ -104,7 +104,7 @@ $totalFaturado = (float)($totais['total_geral_faturado'] ?? 0.0);
                     Conte todas as cédulas e moedas físicas existentes na gaveta (incluindo o fundo de troco inicial) e insira o valor total contado.
                 </p>
 
-                <form action="<?php echo $baseUrl; ?>/operacional/caixa/fechar" method="POST" onsubmit="return confirmarFechamento();">
+                <form action="<?php echo $baseUrl; ?>/operacional/caixa/fechar" method="POST" id="formFechamentoAvulso" onsubmit="return confirmarFechamento(event);">
                     <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
                     <input type="hidden" name="sessao_id" value="<?php echo (int)($sessaoAberta['id'] ?? 0); ?>">
                     <input type="hidden" id="valorEsperadoGaveta" value="<?php echo $esperadoGaveta; ?>">
@@ -206,8 +206,23 @@ function calcularQuebraSobra() {
     }
 }
 
-function confirmarFechamento() {
-    return confirm('Atenção: O fechamento de caixa encerrará definitivamente a sessão do turno e emitirá o espelho formal para assinatura. Deseja prosseguir?');
+function confirmarFechamento(event) {
+    if (event) {
+        event.preventDefault();
+    }
+    const form = document.getElementById('formFechamentoAvulso') || document.querySelector('form[action*="/operacional/caixa/fechar"]');
+    window.confirmarAcao({
+        titulo: 'Encerramento Definitivo de Caixa',
+        mensagem: 'Atenção: O fechamento de caixa encerrará definitivamente a sessão do turno e emitirá o espelho formal para assinatura. Deseja prosseguir?',
+        tipo: 'danger',
+        textoConfirmar: 'Sim, Encerrar e Emitir Espelho',
+        textoCancelar: 'Voltar à Conferência'
+    }).then(function(confirmado) {
+        if (confirmado && form) {
+            form.submit();
+        }
+    });
+    return false;
 }
 
 document.addEventListener('DOMContentLoaded', function() {

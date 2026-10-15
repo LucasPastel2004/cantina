@@ -483,6 +483,12 @@ $router->get('/relatorios/fechamento-caixa', [\App\Controllers\RelatoriosControl
 $router->get('/relatorios/devedores', [\App\Controllers\RelatoriosController::class, 'devedores'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
+$router->get('/relatorios/devedores/pdf', [\App\Controllers\RelatoriosController::class, 'devedoresPdf'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/devedores/imprimir', [\App\Controllers\RelatoriosController::class, 'devedoresImprimir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
 
 // 4.2. Extrato Analítico do Aluno (Operador de Balcão e Administrador — FSD Tela 8.5 & Seção 8)
 $router->get('/operacional/extrato-aluno', [\App\Controllers\RelatoriosController::class, 'extratoAluno'], [
@@ -570,6 +576,9 @@ $router->post('/admin/contestacoes/desbloquear', [\App\Controllers\AdminControll
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 $router->get('/admin/contestacoes/sugestoes', [\App\Controllers\AdminController::class, 'contestacoesSugestoes'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/admin/contestacoes/pdf', [\App\Controllers\AdminController::class, 'contestacoesPdf'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 // 6. Módulo Financeiro: Despesas Operacionais e DRE Gerencial Completo (Fase 24 — FSD, Diretrizes e Planilha Modelo Aethos)

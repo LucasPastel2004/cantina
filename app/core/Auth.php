@@ -162,8 +162,8 @@ class Auth
         Session::set('_auth_id', (int)$user['id']);
         Session::set('_auth_username', $user['usuario']);
         Session::set('_auth_nome', $user['nome']);
-        Session::set('_auth_email', $user['email']);
-        Session::set('_auth_role', $user['perfil']); // 'operador' | 'administrador'
+        Session::set('_auth_email', $user['email'] ?? '');
+        Session::set('_auth_role', $user['perfil'] ?? ($user['role'] ?? 'operador')); // 'operador' | 'administrador'
     }
 
     /**

@@ -228,7 +228,10 @@ $csrfToken = $csrf_token ?? '';
                                             </svg>
                                         </button>
                                         <form action="<?php echo $baseUrl; ?>/admin/produtos/excluir" method="POST" class="d-inline m-0"
-                                              onsubmit="return confirm('Deseja realmente inativar este produto do cardápio? Ele será mantido no histórico contábil.');">
+                                              data-confirm="Deseja realmente inativar este produto do cardápio? Ele será mantido no histórico contábil."
+                                              data-confirm-title="Inativar Produto"
+                                              data-confirm-type="danger"
+                                              data-confirm-btn="Sim, Inativar">
                                             <?php echo $csrfField; ?>
                                             <input type="hidden" name="id" value="<?php echo (int)$prod['id']; ?>">
                                             <button type="submit" class="btn-action btn-action-delete" title="Excluir Produto">

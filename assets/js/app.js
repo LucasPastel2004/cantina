@@ -100,6 +100,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Auto-dismiss de alertas de notificação após 5 segundos (com pausa no hover)
   iniciarAutoDismissAlertas();
+
+  // Inicialização e escuta do sistema corporativo de modais de confirmação
+  inicializarConfirmacaoCorporativa();
 });
 
 /**
@@ -466,6 +469,279 @@ function fecharAlerta(alertEl) {
       alertEl.parentNode.removeChild(alertEl);
     }
   }, 350);
+}
+
+// ============================================================================
+// SISTEMA CORPORATIVO DE CONFIRMAÇÃO DE AÇÕES (MODAL ANTI-SLOP ENTERPRISE)
+// Substitui categoricamente as caixas nativas confirm() do navegador
+// ============================================================================
+
+/**
+ * Cria ou recupera a instância única do Modal Corporativo de Confirmação
+ * @returns {HTMLElement}
+ */
+function getOrCreateConfirmModal() {
+  let modalEl = document.getElementById('modalConfirmacaoSistema');
+  if (!modalEl) {
+    modalEl = document.createElement('div');
+    modalEl.id = 'modalConfirmacaoSistema';
+    modalEl.className = 'modal fade modal-confirm-enterprise';
+    modalEl.tabIndex = -1;
+    modalEl.setAttribute('aria-hidden', 'true');
+    modalEl.setAttribute('role', 'dialog');
+    modalEl.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content modal-enterprise shadow" style="border: 1px solid #cbd5e1; border-radius: 8px;">
+          <div class="modal-header py-2 px-3 bg-light d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #e2e8f0;">
+            <div class="d-flex align-items-center gap-2">
+              <span id="modalConfirmacaoIcone" class="d-inline-flex align-items-center justify-content-center" style="font-size: 15px;"></span>
+              <span class="font-weight-bold text-dark font-13" id="modalConfirmacaoTitulo">Confirmação Operacional</span>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" style="font-size: 10px;"></button>
+          </div>
+          <div class="modal-body py-3 px-3 text-secondary font-13" id="modalConfirmacaoMensagem" style="line-height: 1.5; color: #334155;">
+          </div>
+          <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-end gap-2" style="border-top: 1px solid #e2e8f0;">
+            <button type="button" class="btn btn-enterprise btn-secondary btn-sm" id="btnModalConfirmacaoCancelar" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-enterprise btn-primary btn-sm px-3" id="btnModalConfirmacaoConfirmar">
+              Confirmar
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modalEl);
+
+    // Ajusta z-index do backdrop se houver outros modais abertos no fundo (como o modal de fechar caixa)
+    modalEl.addEventListener('show.bs.modal', function () {
+      setTimeout(function () {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        if (backdrops.length > 1) {
+          backdrops[backdrops.length - 1].style.zIndex = '1070';
+        }
+      }, 15);
+    });
+
+    // Ao fechar, garante que o body preserve 'modal-open' se houver outro modal aberto
+    modalEl.addEventListener('hidden.bs.modal', function () {
+      if (document.querySelectorAll('.modal.show').length > 0) {
+        document.body.classList.add('modal-open');
+      }
+    });
+  }
+  return modalEl;
+}
+
+/**
+ * Exibe modal corporativo de confirmação com suporte a Promise
+ * @param {Object|string} options
+ * @returns {Promise<boolean>}
+ */
+window.confirmarAcao = function (options) {
+  return new Promise(function (resolve) {
+    if (typeof options === 'string') {
+      options = { mensagem: options };
+    }
+    options = options || {};
+
+    const titulo = options.titulo || 'Confirmação Operacional';
+    const mensagem = options.mensagem || 'Deseja realmente confirmar esta operação?';
+    const textoConfirmar = options.textoConfirmar || 'Confirmar';
+    const textoCancelar = options.textoCancelar || 'Cancelar';
+    const tipo = options.tipo || 'primary'; // 'danger', 'primary', 'warning', 'success'
+
+    const modalEl = getOrCreateConfirmModal();
+    const tituloEl = modalEl.querySelector('#modalConfirmacaoTitulo');
+    const mensagemEl = modalEl.querySelector('#modalConfirmacaoMensagem');
+    const iconeEl = modalEl.querySelector('#modalConfirmacaoIcone');
+    const btnConfirmar = modalEl.querySelector('#btnModalConfirmacaoConfirmar');
+    const btnCancelar = modalEl.querySelector('#btnModalConfirmacaoCancelar');
+
+    tituloEl.textContent = titulo;
+    mensagemEl.innerHTML = mensagem;
+    btnConfirmar.textContent = textoConfirmar;
+    btnCancelar.textContent = textoCancelar;
+
+    // Configurar cor do botão e ícone corporativo sóbrio
+    btnConfirmar.className = 'btn btn-enterprise btn-sm px-3 font-semibold';
+    if (tipo === 'danger') {
+      btnConfirmar.classList.add('btn-danger');
+      iconeEl.innerHTML = '<svg width="15" height="15" viewBox="0 0 16 16" fill="#dc2626"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>';
+    } else if (tipo === 'warning') {
+      btnConfirmar.classList.add('btn-warning');
+      iconeEl.innerHTML = '<svg width="15" height="15" viewBox="0 0 16 16" fill="#d97706"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>';
+    } else if (tipo === 'success') {
+      btnConfirmar.classList.add('btn-success');
+      iconeEl.innerHTML = '<svg width="15" height="15" viewBox="0 0 16 16" fill="#16a34a"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>';
+    } else {
+      btnConfirmar.classList.add('btn-primary');
+      iconeEl.innerHTML = '<svg width="15" height="15" viewBox="0 0 16 16" fill="#1d4ed8"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>';
+    }
+
+    let modalInstance = null;
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl, {
+        backdrop: 'static',
+        keyboard: true
+      });
+    }
+
+    let resolvido = false;
+
+    function cleanup() {
+      btnConfirmar.removeEventListener('click', onConfirm);
+      modalEl.removeEventListener('hidden.bs.modal', onHidden);
+    }
+
+    function onConfirm() {
+      if (!resolvido) {
+        resolvido = true;
+        cleanup();
+        if (modalInstance) {
+          modalInstance.hide();
+        } else {
+          modalEl.classList.remove('show');
+          modalEl.style.display = 'none';
+        }
+        resolve(true);
+      }
+    }
+
+    function onHidden() {
+      if (!resolvido) {
+        resolvido = true;
+        cleanup();
+        resolve(false);
+      }
+    }
+
+    btnConfirmar.addEventListener('click', onConfirm);
+    modalEl.addEventListener('hidden.bs.modal', onHidden);
+
+    if (modalInstance) {
+      modalInstance.show();
+    } else {
+      modalEl.classList.add('show');
+      modalEl.style.display = 'block';
+    }
+  });
+};
+
+// Alias global conveniente
+window.confirmModal = window.confirmarAcao;
+
+/**
+ * Inicializa interceptação declarativa e migração de chamadas legadas
+ */
+function inicializarConfirmacaoCorporativa() {
+  // Varredura de migração automática para formulários legados com onsubmit="return confirm(...)"
+  document.querySelectorAll('form[onsubmit*="confirm("]').forEach(function (form) {
+    const code = form.getAttribute('onsubmit') || '';
+    const match = code.match(/confirm\(\s*['"]([^'"]+)['"]\s*\)/);
+    if (match && match[1]) {
+      form.removeAttribute('onsubmit');
+      form.setAttribute('data-confirm', match[1]);
+      if (!form.hasAttribute('data-confirm-title')) {
+        form.setAttribute('data-confirm-title', 'Confirmação Operacional');
+      }
+      if (!form.hasAttribute('data-confirm-type')) {
+        form.setAttribute('data-confirm-type', 'danger');
+      }
+    }
+  });
+
+  // Varredura de migração automática para links legados com onclick="return confirm(...)"
+  document.querySelectorAll('a[onclick*="confirm("], button[onclick*="confirm("]').forEach(function (btn) {
+    const code = btn.getAttribute('onclick') || '';
+    const match = code.match(/confirm\(\s*['"]([^'"]+)['"]\s*\)/);
+    if (match && match[1]) {
+      btn.removeAttribute('onclick');
+      btn.setAttribute('data-confirm', match[1]);
+      if (!btn.hasAttribute('data-confirm-title')) {
+        btn.setAttribute('data-confirm-title', 'Confirmação');
+      }
+      if (!btn.hasAttribute('data-confirm-type')) {
+        btn.setAttribute('data-confirm-type', 'warning');
+      }
+    }
+  });
+
+  // Interceptor universal para formulários com data-confirm
+  document.addEventListener('submit', function (e) {
+    const form = e.target;
+    if (!form || form.tagName !== 'FORM') return;
+
+    const msg = form.getAttribute('data-confirm');
+    if (msg) {
+      if (form.dataset.confirmed === 'true') {
+        delete form.dataset.confirmed;
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+
+      const titulo = form.getAttribute('data-confirm-title') || 'Confirmação Operacional';
+      const tipo = form.getAttribute('data-confirm-type') || 'danger';
+      const btn = form.getAttribute('data-confirm-btn') || 'Confirmar';
+
+      window.confirmarAcao({
+        titulo: titulo,
+        mensagem: msg,
+        tipo: tipo,
+        textoConfirmar: btn
+      }).then(function (confirmado) {
+        if (confirmado) {
+          form.dataset.confirmed = 'true';
+          if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+          } else {
+            form.submit();
+          }
+        }
+      });
+    }
+  }, true);
+
+  // Interceptor universal para links e botões com data-confirm
+  document.addEventListener('click', function (e) {
+    const trigger = e.target.closest('[data-confirm]');
+    if (!trigger) return;
+    if (trigger.tagName === 'BUTTON' && trigger.type === 'submit' && trigger.form && trigger.form.hasAttribute('data-confirm')) {
+      return;
+    }
+
+    const msg = trigger.getAttribute('data-confirm');
+    if (msg) {
+      if (trigger.dataset.confirmed === 'true') {
+        delete trigger.dataset.confirmed;
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+
+      const titulo = trigger.getAttribute('data-confirm-title') || 'Confirmação';
+      const tipo = trigger.getAttribute('data-confirm-type') || 'warning';
+      const btn = trigger.getAttribute('data-confirm-btn') || 'Confirmar';
+
+      window.confirmarAcao({
+        titulo: titulo,
+        mensagem: msg,
+        tipo: tipo,
+        textoConfirmar: btn
+      }).then(function (confirmado) {
+        if (confirmado) {
+          trigger.dataset.confirmed = 'true';
+          if (trigger.tagName === 'A' && trigger.href) {
+            window.location.href = trigger.href;
+          } else if (trigger.tagName === 'BUTTON' && trigger.type === 'submit' && trigger.form) {
+            trigger.form.submit();
+          }
+        }
+      });
+    }
+  }, true);
 }
 
 

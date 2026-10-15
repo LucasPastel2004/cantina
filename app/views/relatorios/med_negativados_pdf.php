@@ -220,8 +220,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             <tr>
                 <th style="width: 25%;">Responsável Financeiro</th>
                 <th style="width: 15%;">CPF</th>
-                <th style="width: 15%;">WhatsApp</th>
-                <th style="width: 25%;">Estudante(s) Vinculado(s)</th>
+                <th style="width: 17%;">Contato</th>
+                <th style="width: 23%;">Estudante(s) Vinculado(s)</th>
                 <th style="width: 10%; text-align: center;">Status MED</th>
                 <th style="width: 10%; text-align: right;">Saldo Devedor</th>
             </tr>
@@ -234,10 +234,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             <?php else: ?>
                 <?php foreach ($familias as $f): ?>
                     <tr>
-                        <td><strong><?php echo htmlspecialchars($f['nome'] ?? '-'); ?></strong></td>
-                        <td class="font-tabular"><?php echo htmlspecialchars($f['cpf'] ?? '-'); ?></td>
-                        <td class="font-tabular"><?php echo htmlspecialchars($f['whatsapp'] ?? '-'); ?></td>
-                        <td><?php echo htmlspecialchars($f['alunos_str'] ?? '-'); ?></td>
+                        <td><strong><?php echo htmlspecialchars($f['nome'] ?? ($f['responsavel_nome'] ?? '-')); ?></strong></td>
+                        <td class="font-tabular"><?php echo htmlspecialchars($f['cpf_formatado'] ?? ($f['cpf'] ?? ($f['responsavel_cpf'] ?? '-'))); ?></td>
+                        <td class="font-tabular" style="word-break: break-all;"><?php echo htmlspecialchars(!empty($f['whatsapp']) ? $f['whatsapp'] : (!empty($f['email']) ? $f['email'] : (!empty($f['telefone']) ? $f['telefone'] : ($f['responsavel_telefone'] ?? '-')))); ?></td>
+                        <td><?php echo htmlspecialchars($f['dependentes_str'] ?? ($f['alunos_str'] ?? (is_array($f['dependentes'] ?? null) ? '' : ($f['dependentes'] ?? '-')))); ?></td>
                         <td class="text-center">
                             <?php if (!empty($f['bloqueado_med'])): ?>
                                 <span style="color: #b91c1c; font-weight: bold;">BLOQUEADO</span>

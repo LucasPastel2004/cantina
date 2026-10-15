@@ -115,7 +115,10 @@ $csrfField = $csrf_field ?? '';
                                             </svg>
                                         </button>
                                         <form action="<?php echo $baseUrl; ?>/admin/turmas/excluir" method="POST" class="d-inline m-0"
-                                              onsubmit="return confirm('Deseja realmente inativar esta turma? Os históricos escolares de matrículas serão mantidos.');">
+                                              data-confirm="Deseja realmente inativar esta turma? Os históricos escolares de matrículas serão mantidos."
+                                              data-confirm-title="Inativar Turma"
+                                              data-confirm-type="danger"
+                                              data-confirm-btn="Sim, Inativar">
                                             <?php echo $csrfField; ?>
                                             <input type="hidden" name="id" value="<?php echo (int)$t['id']; ?>">
                                             <button type="submit" class="btn-action btn-action-delete" title="Excluir Turma">

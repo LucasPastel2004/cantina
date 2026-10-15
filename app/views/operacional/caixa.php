@@ -555,7 +555,7 @@ if ($resumoOficial) {
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <form action="<?php echo $baseUrl; ?>/operacional/caixa/fechar" method="POST" onsubmit="return confirmarFechamento();">
+            <form action="<?php echo $baseUrl; ?>/operacional/caixa/fechar" method="POST" id="formFecharCaixa" onsubmit="return confirmarFechamento(event);">
                 <div class="modal-body p-4">
                     <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
                     <input type="hidden" name="sessao_id" value="<?php echo (int)$sessaoAberta['id']; ?>">
@@ -910,8 +910,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function confirmarFechamento() {
-    return confirm('Atenção: O fechamento de caixa encerrará a sessão operacional do turno e emitirá o espelho oficial. Deseja realmente concluir?');
+function confirmarFechamento(event) {
+    if (event) {
+        event.preventDefault();
+    }
+    const form = document.getElementById('formFecharCaixa') || document.querySelector('form[action*="/operacional/caixa/fechar"]');
+    window.confirmarAcao({
+        titulo: 'Encerramento de Caixa',
+        mensagem: 'Atenção: O fechamento de caixa encerrará a sessão operacional do turno e emitirá o espelho oficial. Deseja realmente concluir?',
+        tipo: 'danger',
+        textoConfirmar: 'Sim, Encerrar Caixa',
+        textoCancelar: 'Voltar à Conferência'
+    }).then(function(confirmado) {
+        if (confirmado && form) {
+            form.submit();
+        }
+    });
+    return false;
 }
 
 // ============================================================================

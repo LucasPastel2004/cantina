@@ -194,7 +194,11 @@ require __DIR__ . '/../partials/stat_strip.php';
                                                 <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
                                             </svg>
                                         </button>
-                                        <form action="<?php echo $baseUrl; ?>/admin/calendario/excluir" method="POST" class="d-inline m-0" onsubmit="return confirm('Deseja remover esta exceção e restaurar o dia letivo normal?');">
+                                        <form action="<?php echo $baseUrl; ?>/admin/calendario/excluir" method="POST" class="d-inline m-0"
+                                              data-confirm="Deseja remover esta exceção e restaurar o dia letivo normal?"
+                                              data-confirm-title="Restaurar Dia Letivo"
+                                              data-confirm-type="success"
+                                              data-confirm-btn="Sim, Restaurar">
                                             <?php echo $csrfField; ?>
                                             <input type="hidden" name="data" value="<?php echo $dia['data']; ?>">
                                             <button type="submit" class="btn btn-action text-success" title="Restaurar como Dia Letivo Regular">
@@ -289,7 +293,11 @@ require __DIR__ . '/../partials/stat_strip.php';
                                             <?php echo htmlspecialchars($exc['cancelador_nome'] ?? 'Administrador', ENT_QUOTES, 'UTF-8'); ?>
                                         </td>
                                         <td class="cell-right">
-                                            <form action="<?php echo $baseUrl; ?>/admin/calendario/excluir" method="POST" class="d-inline m-0" onsubmit="return confirm('Deseja remover esta data e restaurá-la como dia letivo regular?');">
+                                            <form action="<?php echo $baseUrl; ?>/admin/calendario/excluir" method="POST" class="d-inline m-0"
+                                                  data-confirm="Deseja remover esta data e restaurá-la como dia letivo regular?"
+                                                  data-confirm-title="Restaurar Dia Letivo"
+                                                  data-confirm-type="success"
+                                                  data-confirm-btn="Sim, Restaurar">
                                                 <?php echo $csrfField; ?>
                                                 <input type="hidden" name="data" value="<?php echo $exc['data']; ?>">
                                                 <button type="submit" class="btn btn-action text-danger" title="Excluir exceção">
@@ -408,7 +416,11 @@ require __DIR__ . '/../partials/stat_strip.php';
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <form action="<?php echo $baseUrl; ?>/admin/calendario/emergencial" method="POST" class="m-0" onsubmit="return confirm('Confirma a suspensão de aulas e o estorno imediato dos pedidos para todos os responsáveis?');">
+            <form action="<?php echo $baseUrl; ?>/admin/calendario/emergencial" method="POST" class="m-0"
+                  data-confirm="Confirma a suspensão de aulas e o estorno imediato dos pedidos para todos os responsáveis?"
+                  data-confirm-title="Suspensão Emergencial &amp; Estorno"
+                  data-confirm-type="danger"
+                  data-confirm-btn="Sim, Suspender e Estornar">
                 <?php echo $csrfField; ?>
                 <div class="modal-body p-3">
                     <div class="alert alert-warning border border-warning-subtle d-flex align-items-start gap-2 mb-3" style="font-size: 12px; line-height: 1.4;">

@@ -161,7 +161,11 @@ $filtros      = $filtros ?? ['busca' => '', 'turma_id' => 0, 'turno' => '', 'sta
 
                                         <!-- Botão Inativar / Reativar -->
                                         <?php if ($isAtivo): ?>
-                                            <form action="<?php echo $baseUrl; ?>/admin/alunos/inativar" method="POST" class="d-inline m-0" onsubmit="return confirm('Deseja realmente inativar o aluno <?php echo htmlspecialchars($aluno['nome'], ENT_QUOTES, 'UTF-8'); ?>? Novos agendamentos serão bloqueados, mas o histórico permanece intacto.');">
+                                            <form action="<?php echo $baseUrl; ?>/admin/alunos/inativar" method="POST" class="d-inline m-0"
+                                                  data-confirm="Deseja realmente inativar o aluno <?php echo htmlspecialchars($aluno['nome'], ENT_QUOTES, 'UTF-8'); ?>? Novos agendamentos serão bloqueados, mas o histórico permanece intacto."
+                                                  data-confirm-title="Inativar Aluno"
+                                                  data-confirm-type="danger"
+                                                  data-confirm-btn="Sim, Inativar">
                                                 <?php if (!empty($csrf_field)) echo $csrf_field; ?>
                                                 <input type="hidden" name="id" value="<?php echo $aluno['id']; ?>">
                                                 <button type="submit" class="btn-action btn-action-delete" title="Inativar aluno">

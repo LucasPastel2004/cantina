@@ -109,7 +109,10 @@ $totalProdutosVinculados = array_sum(array_map(static function($c) {
                                                     </svg>
                                                 </button>
                                                 <form action="<?php echo $baseUrl; ?>/admin/categorias/excluir" method="POST" class="d-inline m-0"
-                                                      onsubmit="return confirm('Deseja realmente inativar/excluir esta categoria? Ela será mantida no histórico de produtos.');">
+                                                      data-confirm="Deseja realmente inativar/excluir esta categoria? Ela será mantida no histórico de produtos."
+                                                      data-confirm-title="Inativar Categoria"
+                                                      data-confirm-type="danger"
+                                                      data-confirm-btn="Sim, Inativar">
                                                     <?php echo $csrfField; ?>
                                                     <input type="hidden" name="id" value="<?php echo (int)$cat['id']; ?>">
                                                     <button type="submit" class="btn-action btn-action-delete" title="Excluir Categoria">

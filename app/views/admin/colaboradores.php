@@ -118,7 +118,10 @@ $csrfField = $csrf_field ?? '';
                                             </svg>
                                         </button>
                                         <form action="<?php echo $baseUrl; ?>/admin/colaboradores/excluir" method="POST" class="d-inline m-0"
-                                              onsubmit="return confirm('Deseja realmente inativar este colaborador? O histórico de compras em folha será preservado.');">
+                                              data-confirm="Deseja realmente inativar este colaborador? O histórico de compras em folha será preservado."
+                                              data-confirm-title="Inativar Colaborador"
+                                              data-confirm-type="danger"
+                                              data-confirm-btn="Sim, Inativar">
                                             <?php echo $csrfField; ?>
                                             <input type="hidden" name="id" value="<?php echo (int)$c['id']; ?>">
                                             <button type="submit" class="btn-action btn-action-delete" title="Excluir Colaborador">

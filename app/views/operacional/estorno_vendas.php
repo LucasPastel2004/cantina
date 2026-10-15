@@ -647,9 +647,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (modalConfirmar) {
                 modalConfirmar.show();
             } else {
-                if (confirm('Confirma o estorno de ' + selecionadas.length + ' venda(s)?')) {
-                    formGravar.submit();
-                }
+                window.confirmarAcao({
+                    titulo: 'Confirmação de Estorno',
+                    mensagem: 'Confirma o estorno de ' + selecionadas.length + ' venda(s)?',
+                    tipo: 'danger',
+                    textoConfirmar: 'Sim, Estornar'
+                }).then(function(confirmado) {
+                    if (confirmado) {
+                        formGravar.submit();
+                    }
+                });
             }
         });
     }

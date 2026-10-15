@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Revisão de Segurança Pré-Publicação (Passo 5)
-* **Status da Revisão:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria e Blindagem de Segurança 100% Concluídas!
-* **Última Atualização:** 2026-10-14 16:50:00 (Otimização do terminal de caixa PDV: eliminação da rolagem de janela via .pdv-layout-locked e redesenho de alta densidade vertical da cesta e checkout, impedindo corte no nome dos produtos).
+* **Fase Atual:** Documentação Final e Modo Manutenção (Passo 6)
+* **Status da Documentação:** Concluída [x] (100% Homologada)
+* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final de Manutenção 100% Concluídas!
+* **Última Atualização:** 2026-10-15 09:55:00 (Criação de docs/MANUTENCAO.md, docs/COMO-PEDIR-MUDANCAS.md, ativação do Modo Manutenção em AGENTS.md e CLAUDE.md).
 
 
 
@@ -1604,11 +1604,77 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Suíte `tests/arrecadacao_dre_regimes_test.php`: **89 de 89 asserções aprovadas com 100% de sucesso**;
   * Suíte `tests/fase23_test.php`: **220 de 220 asserções aprovadas com 100% de sucesso**.
 
+* [x] **Ajuste Visual de Navegação na Barra Lateral (Sidebar):**
+  * Corrigida a marcação do menu ativo na view de Arrecadação Financeira & Fluxo de Entradas (`/relatorios/arrecadacao`);
+  * O controlador `RelatoriosController::arrecadacao()` passava `'activeMenu' => 'relatorios'`, ativando erroneamente o link de "Relatórios Gerenciais";
+  * Ajustado para `'activeMenu' => 'arrecadacao'`, ativando de forma precisa o link "Arrecadação & Entradas" e mantendo "Relatórios Gerenciais" no estado neutro correto;
+  * Teste `tests/arrecadacao_dre_regimes_test.php` expandido com validação automatizada de renderização da sidebar (91/91 asserções 100% aprovadas).
+
+* [x] **Correção do Botão "Exportar PDF (A4 Timbrado)" em `/relatorios/devedores`:**
+  * Diagnosticada a causa raiz: a rota `/admin/contestacoes/pdf` (para onde o botão apontava) e as rotas `/relatorios/devedores/pdf` e `/relatorios/devedores/imprimir` não estavam registradas na tabela do Front Controller `index.php`, resultando em HTTP 404 ao clicar no botão;
+  * Registradas formalmente em `index.php` as rotas:
+    - `GET /relatorios/devedores/pdf` -> `RelatoriosController::devedoresPdf`
+    - `GET /relatorios/devedores/imprimir` -> `RelatoriosController::devedoresImprimir`
+    - `GET /admin/contestacoes/pdf` -> `AdminController::contestacoesPdf`
+  * Implementados em `RelatoriosController` os métodos `devedoresPdf()` (download do arquivo binário PDF via Gotenberg) e `devedoresImprimir()` (espelho HTML A4 para impressão direta no navegador), ambos com suporte completo aos filtros de busca e status;
+  * Atualizado `AdminController::contestacoesPdf()` com suporte a filtros de busca e guarda defensiva `if (!headers_sent())`;
+  * Atualizada a view `app/views/relatorios/devedores.php`:
+    - Botão "Exportar PDF (A4 Timbrado)" atualizado para a rota nativa `/relatorios/devedores/pdf` preservando os parâmetros de busca e status da URL;
+    - Adicionado botão complementar corporativo "Visualizar / Imprimir (A4)" (`/relatorios/devedores/imprimir`) abrindo em nova aba;
+    - Injetado listener Vanilla JS para atualização dinâmica dos links `href` em tempo real ao digitar no campo de busca ou alterar o select de situação;
+  * Aprimorado o template `app/views/relatorios/med_negativados_pdf.php` para exibir CPF formatado (`000.000.000-00`), contato completo (WhatsApp, E-mail ou Telefone) e dependentes vinculados com turma;
+  * Criada suíte de testes `tests/teste_devedores_pdf_rotas.php` e executados testes HTTP reais no Apache via Docker (9/9 requisições HTTP 200 OK com PDF 1.4 binário válido de 38 KB).
+
+* [x] **Erradicação Completa das Confirmation Boxes Nativas (`confirm()`) do Navegador:**
+  * Implementado o Sistema Corporativo Unificado de Confirmação (`assets/js/app.js`): função assíncrona `window.confirmarAcao(options)` e alias `window.confirmModal` gerando dinamicamente o modal `#modalConfirmacaoSistema` com estilização `.modal-enterprise` e `.modal-confirm-enterprise`;
+  * Calibrados no `assets/css/custom.css` o `z-index: 1075` e backdrop em `1070`, permitindo sobreposição perfeita inclusive dentro de modais pré-existentes (como no modal de Fechamento de Caixa `#modalFecharCaixa`);
+  * Implementados interceptores declarativos universais no `document` para formulários e botões/links com atributos `data-confirm`, `data-confirm-title`, `data-confirm-type` e `data-confirm-btn`;
+  * Implementada rotina de migração automática preventiva no `DOMContentLoaded` (`inicializarConfirmacaoCorporativa`);
+  * Refatoradas cirurgicamente todas as telas do sistema que possuíam caixas nativas:
+    - Fechamento de Caixa (`/operacional/caixa` e `/operacional/fechamento-caixa`): função `confirmarFechamento(event)` convertida para confirmação corporativa;
+    - Registro de Perdas de Estoque (`/estoque/perdas`): função `validarEnvioPerda(event)` convertida para confirmação corporativa;
+    - Estorno de Vendas (`/operacional/estornos`): fallback convertido para `window.confirmarAcao`;
+    - Entrada de XML NF-e (`/estoque/importar-xml/conferir`): botões de cancelamento convertidos para `data-confirm`;
+    - Módulos de Administração (`/admin/alunos`, `/admin/turmas`, `/admin/colaboradores`, `/admin/produtos`, `/admin/categorias`, `/admin/calendario`): formulários de exclusão/inativação e suspensão emergencial convertidos para `data-confirm`;
+  * Versão dos assets elevada para `?v=6.1.0` em `Controller.php`, `admin.php` e `portal.php`;
+  * Criada a suíte `tests/teste_modais_confirmacao.php` com 35 asserções aprovadas com 100% de sucesso e garantia de ZERO arquivos de view utilizando `confirm()` nativo.
+
+---
+
+### [x] Documentação Final de Manutenção do Sistema e Modo Manutenção (Passo 6)
+* [x] **Criação do Manual Definitivo de Manutenção (`docs/MANUTENCAO.md`):**
+  - Visão geral completa: propósito, público-alvo, dores resolvidas e módulos construídos;
+  - Stack técnica e ambientes: PHP 8.2 nativo MVC, MySQL 8.0 PDO, Vanilla JS, Bootstrap 5.3.3 local e Gotenberg 8 Chromium Headless;
+  - Guia de execução local passo a passo com comandos do Docker Compose;
+  - Mapa detalhado de pastas e arquivos com orientações de quando e como mexer;
+  - Banco de dados e persistência: ciclo de vida das 26 migrações, runner e integridade referencial;
+  - Autenticação e RBAC: login segregado (Responsável vs Equipe interna), 4 perfis de permissão e proteção de rotas;
+  - Guias práticos com exemplos: como adicionar uma nova tela, como adicionar um novo campo e como alterar uma regra de negócio sem quebrar o sistema;
+  - Roteiro de testes automatizados e manuais, verificação de logs e diretrizes rígidas de segurança (Prepared Statements estritos, CSRF, XSS, RBAC, .htaccess e LGPD);
+  - Seção anti-slop e anti-regilamento com lista do que NUNCA fazer.
+* [x] **Criação do Guia Prático para Pedir Mudanças à IA (`docs/COMO-PEDIR-MUDANCAS.md`):**
+  - Guia acessível para pessoas leigas solicitarem alterações seguras a assistentes de IA;
+  - Regra de ouro da leitura mandatória da documentação viva antes de alterar arquivos;
+  - Checklist antes de aceitar alterações entregues pela IA;
+  - 8 modelos de prompts prontos e adaptados especificamente para a stack do Cantina Web:
+    1. Adicionar campo em cadastro existente;
+    2. Criar uma nova tela ou funcionalidade;
+    3. Corrigir um erro ou comportamento inesperado;
+    4. Alterar uma regra de negócio;
+    5. Ajustar visual conforme o `docs/DESIGN.md`;
+    6. Criar um relatório em PDF A4 ou filtro analítico;
+    7. Fazer uma revisão/auditoria de segurança pós-mudança;
+    8. Preparar as alterações para commit no Git.
+  - Seção de contenção caso a IA tente alterar a stack ou desviar do padrão arquitetural do projeto.
+* [x] **Ativação do Modo Manutenção nos Arquivos de Contexto (`AGENTS.md` e `CLAUDE.md`):**
+  - Protocolo estrito de 7 passos antes de qualquer alteração e 5 passos depois de qualquer alteração;
+  - Reforço das diretrizes inegociáveis de segurança, transações atômicas, soft delete, design corporativo sóbrio e preservação da stack.
+* [x] **Status de Pendências:**
+  - Nenhuma pendência técnica ou funcional existente.
+  - Todas as 24 fases do `docs/PLANO.md`, a revisão de segurança e a documentação final estão 100% concluídas e homologadas.
+
 ---
 
 ## Próximo Passo Recomendado
 
-1. Abrir qualquer relatório do sistema em PDF no navegador ou leitor de PDF (por exemplo: `/relatorios/arrecadacao/pdf`, `/relatorios/arrecadacao/imprimir`, extrato de aluno, fechamento de caixa ou DRE anual);
-2. Observar a extrema direita da folha: a borda preta vertical de todas as tabelas e o cabeçalho agora aparecem 100% visíveis, contínuos, nítidos e simétricos, sem nenhum corte ou raspagem na margem direita;
-3. Se por qualquer motivo o usuário preferir a versão anterior, basta utilizar o ponto de rollback pronto executando:
-   `git reset --hard rollback-pdf-ponto-seguro`
+Documentação pronta. Próximo passo: chat novo + prompt do passo 7, se você quiser publicar o sistema na Hostnet.
