@@ -39,33 +39,33 @@ $dias = $dados['dias'] ?? [];
             </p>
         </div>
 
-        <!-- Ações de Exportação e Emissão (Integradas ao Formulário de Filtro) -->
+        <!-- Ações de Exportação e Emissão -->
         <div class="d-flex flex-wrap gap-2">
-            <button type="submit" 
-                    form="formFiltroArrecadacao" 
-                    formaction="<?php echo $baseUrl; ?>/relatorios/arrecadacao/imprimir" 
-                    formtarget="_blank" 
-                    class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
-                    title="Visualizar espelho oficial A4 para conferência e impressão">
+            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/imprimir?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
+               target="_blank" 
+               id="btnImprimirA4"
+               onclick="executarAcaoExportacao(event, 'imprimir')"
+               class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
+               title="Visualizar espelho oficial A4 para conferência e impressão">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
                 <span>Visualizar / Imprimir (A4)</span>
-            </button>
-            <button type="submit" 
-                    form="formFiltroArrecadacao" 
-                    formaction="<?php echo $baseUrl; ?>/relatorios/arrecadacao/pdf" 
-                    class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
-                    title="Baixar demonstrativo timbrado em PDF de alta qualidade">
+            </a>
+            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/pdf?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
+               id="btnPdfA4"
+               onclick="executarAcaoExportacao(event, 'pdf')"
+               class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
+               title="Baixar demonstrativo timbrado em PDF de alta qualidade">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
                 <span>Baixar em PDF (A4)</span>
-            </button>
-            <button type="submit" 
-                    form="formFiltroArrecadacao" 
-                    formaction="<?php echo $baseUrl; ?>/relatorios/arrecadacao/csv" 
-                    class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
-                    title="Exportar dados completos para planilha Microsoft Excel">
+            </a>
+            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/csv?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
+               id="btnCsv"
+               onclick="executarAcaoExportacao(event, 'csv')"
+               class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
+               title="Exportar dados completos para planilha Microsoft Excel">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/><path d="M4.5 12.5A.5.5 0 0 1 5 12h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 10h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 8h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5z"/></svg>
                 <span>Exportar Planilha (CSV)</span>
-            </button>
+            </a>
         </div>
     </div>
 
@@ -96,11 +96,11 @@ $dias = $dados['dias'] ?? [];
                     <div>
                         <span class="text-microcopy text-secondary text-uppercase fw-semibold d-block mb-1">Atalhos de Período</span>
                         <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $hoje; ?>" data-fim="<?php echo $hoje; ?>" onclick="definirDatas('<?php echo $hoje; ?>', '<?php echo $hoje; ?>')">Hoje</button>
-                            <button type="button" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $ontem; ?>" data-fim="<?php echo $ontem; ?>" onclick="definirDatas('<?php echo $ontem; ?>', '<?php echo $ontem; ?>')">Ontem</button>
-                            <button type="button" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $inicioSemana; ?>" data-fim="<?php echo $fimSemana; ?>" onclick="definirDatas('<?php echo $inicioSemana; ?>', '<?php echo $fimSemana; ?>')">Esta Semana</button>
-                            <button type="button" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $inicioMes; ?>" data-fim="<?php echo $fimMes; ?>" onclick="definirDatas('<?php echo $inicioMes; ?>', '<?php echo $fimMes; ?>')">Este Mês</button>
-                            <button type="button" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $inicioMesAnterior; ?>" data-fim="<?php echo $fimMesAnterior; ?>" onclick="definirDatas('<?php echo $inicioMesAnterior; ?>', '<?php echo $fimMesAnterior; ?>')">Mês Anterior</button>
+                            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao?data_inicio=<?php echo $hoje; ?>&data_fim=<?php echo $hoje; ?>" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $hoje; ?>" data-fim="<?php echo $hoje; ?>" onclick="definirDatas(event, '<?php echo $hoje; ?>', '<?php echo $hoje; ?>')">Hoje</a>
+                            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao?data_inicio=<?php echo $ontem; ?>&data_fim=<?php echo $ontem; ?>" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $ontem; ?>" data-fim="<?php echo $ontem; ?>" onclick="definirDatas(event, '<?php echo $ontem; ?>', '<?php echo $ontem; ?>')">Ontem</a>
+                            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao?data_inicio=<?php echo $inicioSemana; ?>&data_fim=<?php echo $fimSemana; ?>" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $inicioSemana; ?>" data-fim="<?php echo $fimSemana; ?>" onclick="definirDatas(event, '<?php echo $inicioSemana; ?>', '<?php echo $fimSemana; ?>')">Esta Semana</a>
+                            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao?data_inicio=<?php echo $inicioMes; ?>&data_fim=<?php echo $fimMes; ?>" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $inicioMes; ?>" data-fim="<?php echo $fimMes; ?>" onclick="definirDatas(event, '<?php echo $inicioMes; ?>', '<?php echo $fimMes; ?>')">Este Mês</a>
+                            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao?data_inicio=<?php echo $inicioMesAnterior; ?>&data_fim=<?php echo $fimMesAnterior; ?>" class="btn btn-enterprise btn-secondary btn-atalho-data" data-inicio="<?php echo $inicioMesAnterior; ?>" data-fim="<?php echo $fimMesAnterior; ?>" onclick="definirDatas(event, '<?php echo $inicioMesAnterior; ?>', '<?php echo $fimMesAnterior; ?>')">Mês Anterior</a>
                         </div>
                     </div>
 
@@ -110,60 +110,60 @@ $dias = $dados['dias'] ?? [];
     </div>
 
     <!-- Stat-Strip de Indicadores Financeiros de Cash-In -->
-    <div class="stat-strip mb-4">
+    <div class="stat-strip mb-4" style="display: flex; flex-wrap: wrap; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);">
         
         <!-- Cartão 1: Total Real Arrecadado (Cash-In) -->
-        <div class="stat-strip-item" style="border-left: 3px solid #16a34a;">
-            <span class="stat-strip-label">Total Arrecadado (Cash-In Real)</span>
-            <span class="stat-strip-value font-tabular" style="color: #15803d !important; font-size: 20px;">
+        <div class="stat-strip-item" style="flex: 1 1 180px; min-width: 170px; padding: 14px 18px; border-right: 1px solid #e2e8f0; border-left: 3px solid #16a34a; background: #ffffff;">
+            <span class="stat-strip-label" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; display: block;">Total Arrecadado (Cash-In Real)</span>
+            <span class="stat-strip-value font-tabular" style="font-size: 20px; font-weight: 700; color: #15803d !important; display: block; line-height: 1.25; margin-top: 2px;">
                 R$ <?php echo number_format((float)($dados['total_arrecadado_bruto'] ?? 0), 2, ',', '.'); ?>
             </span>
-            <span class="stat-subtext font-tabular">
+            <span class="stat-subtext font-tabular" style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">
                 <?php echo number_format((int)($dados['total_transacoes_arrecadacao'] ?? 0), 0, ',', '.'); ?> entradas financeiras reais
             </span>
         </div>
 
         <!-- Cartão 2: Recargas Pix Online (Portal da Família) -->
-        <div class="stat-strip-item">
-            <span class="stat-strip-label">Recargas Pix Online (Portal)</span>
-            <span class="stat-strip-value font-tabular text-dark">
+        <div class="stat-strip-item" style="flex: 1 1 180px; min-width: 170px; padding: 14px 18px; border-right: 1px solid #e2e8f0; background: #ffffff;">
+            <span class="stat-strip-label" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; display: block;">Recargas Pix Online (Portal)</span>
+            <span class="stat-strip-value font-tabular text-dark" style="font-size: 18px; font-weight: 700; display: block; line-height: 1.25; margin-top: 2px;">
                 R$ <?php echo number_format((float)($dados['recargas_pix_total'] ?? 0), 2, ',', '.'); ?>
             </span>
-            <span class="stat-subtext font-tabular">
+            <span class="stat-subtext font-tabular" style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">
                 <?php echo number_format((int)($dados['recargas_pix_qtd'] ?? 0), 0, ',', '.'); ?> recargas pagas via QR Code
             </span>
         </div>
 
         <!-- Cartão 3: Recargas Balcão (Dinheiro Físico) -->
-        <div class="stat-strip-item">
-            <span class="stat-strip-label">Recargas Balcão (Dinheiro)</span>
-            <span class="stat-strip-value font-tabular text-dark">
+        <div class="stat-strip-item" style="flex: 1 1 180px; min-width: 170px; padding: 14px 18px; border-right: 1px solid #e2e8f0; background: #ffffff;">
+            <span class="stat-strip-label" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; display: block;">Recargas Balcão (Dinheiro)</span>
+            <span class="stat-strip-value font-tabular text-dark" style="font-size: 18px; font-weight: 700; display: block; line-height: 1.25; margin-top: 2px;">
                 R$ <?php echo number_format((float)($dados['recargas_dinheiro_total'] ?? 0), 2, ',', '.'); ?>
             </span>
-            <span class="stat-subtext font-tabular">
+            <span class="stat-subtext font-tabular" style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">
                 <?php echo number_format((int)($dados['recargas_dinheiro_qtd'] ?? 0), 0, ',', '.'); ?> inserções presenciais
             </span>
         </div>
 
         <!-- Cartão 4: Vendas Presenciais Balcão (Dinheiro + Pix) -->
-        <div class="stat-strip-item">
-            <span class="stat-strip-label">Vendas Presenciais Balcão</span>
-            <span class="stat-strip-value font-tabular text-dark">
-                R$ <?php echo number_format((float)($dados['vendas_dinheiro_total'] + $dados['vendas_pix_total']), 2, ',', '.'); ?>
+        <div class="stat-strip-item" style="flex: 1 1 180px; min-width: 170px; padding: 14px 18px; border-right: 1px solid #e2e8f0; background: #ffffff;">
+            <span class="stat-strip-label" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; display: block;">Vendas Presenciais Balcão</span>
+            <span class="stat-strip-value font-tabular text-dark" style="font-size: 18px; font-weight: 700; display: block; line-height: 1.25; margin-top: 2px;">
+                R$ <?php echo number_format((float)(($dados['vendas_dinheiro_total'] ?? 0) + ($dados['vendas_pix_total'] ?? 0)), 2, ',', '.'); ?>
             </span>
-            <span class="stat-subtext font-tabular">
-                Dinheiro: R$ <?php echo number_format((float)$dados['vendas_dinheiro_total'], 2, ',', '.'); ?> | Pix: R$ <?php echo number_format((float)$dados['vendas_pix_total'], 2, ',', '.'); ?>
+            <span class="stat-subtext font-tabular" style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">
+                Dinheiro: R$ <?php echo number_format((float)($dados['vendas_dinheiro_total'] ?? 0), 2, ',', '.'); ?> | Pix: R$ <?php echo number_format((float)($dados['vendas_pix_total'] ?? 0), 2, ',', '.'); ?>
             </span>
         </div>
 
         <!-- Cartão 5: Consumo de Saldo no Período (Informativo de Lanches) -->
-        <div class="stat-strip-item">
-            <span class="stat-strip-label">Consumo de Saldo (Lanches)</span>
-            <span class="stat-strip-value font-tabular text-secondary" style="font-size: 18px;">
+        <div class="stat-strip-item" style="flex: 1 1 180px; min-width: 170px; padding: 14px 18px; background: #ffffff;">
+            <span class="stat-strip-label" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; display: block;">Consumo de Saldo (Lanches)</span>
+            <span class="stat-strip-value font-tabular text-secondary" style="font-size: 18px; font-weight: 700; display: block; line-height: 1.25; margin-top: 2px;">
                 R$ <?php echo number_format((float)($dados['total_consumo_saldo'] ?? 0), 2, ',', '.'); ?>
             </span>
-            <span class="stat-subtext font-tabular">
-                Variação: <strong><?php echo ($dados['variacao_carteira'] >= 0 ? '+' : '') . 'R$ ' . number_format((float)$dados['variacao_carteira'], 2, ',', '.'); ?></strong>
+            <span class="stat-subtext font-tabular" style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">
+                Variação: <strong><?php echo (($dados['variacao_carteira'] ?? 0) >= 0 ? '+' : '') . 'R$ ' . number_format((float)($dados['variacao_carteira'] ?? 0), 2, ',', '.'); ?></strong>
             </span>
         </div>
 
@@ -398,40 +398,77 @@ $dias = $dados['dias'] ?? [];
 </div>
 
 <script>
-function definirDatas(inicio, fim) {
+function atualizarLinksExportacao() {
     var inputInicio = document.getElementById('dataInicio');
     var inputFim = document.getElementById('dataFim');
-    var form = document.getElementById('formFiltroArrecadacao');
+    var ini = (inputInicio && inputInicio.value) ? inputInicio.value : '<?php echo $dataInicio; ?>';
+    var fim = (inputFim && inputFim.value) ? inputFim.value : '<?php echo $dataFim; ?>';
     
-    if (inputInicio) {
-        inputInicio.value = inicio;
-    }
-    if (inputFim) {
-        inputFim.value = fim;
-    }
+    var baseUrl = '<?php echo $baseUrl; ?>';
+    var btnImp = document.getElementById('btnImprimirA4');
+    var btnPdf = document.getElementById('btnPdfA4');
+    var btnCsv = document.getElementById('btnCsv');
     
-    if (form) {
-        if (typeof form.requestSubmit === 'function') {
-            form.requestSubmit();
-        } else {
-            form.submit();
-        }
+    var query = '?data_inicio=' + encodeURIComponent(ini) + '&data_fim=' + encodeURIComponent(fim);
+    if (btnImp) btnImp.href = baseUrl + '/relatorios/arrecadacao/imprimir' + query;
+    if (btnPdf) btnPdf.href = baseUrl + '/relatorios/arrecadacao/pdf' + query;
+    if (btnCsv) btnCsv.href = baseUrl + '/relatorios/arrecadacao/csv' + query;
+}
+
+function executarAcaoExportacao(event, tipo) {
+    var inputInicio = document.getElementById('dataInicio');
+    var inputFim = document.getElementById('dataFim');
+    var ini = (inputInicio && inputInicio.value) ? inputInicio.value : '<?php echo $dataInicio; ?>';
+    var fim = (inputFim && inputFim.value) ? inputFim.value : '<?php echo $dataFim; ?>';
+    
+    var url = '<?php echo $baseUrl; ?>/relatorios/arrecadacao/' + tipo + '?data_inicio=' + encodeURIComponent(ini) + '&data_fim=' + encodeURIComponent(fim);
+    
+    if (tipo === 'imprimir') {
+        window.open(url, '_blank');
+        if (event && event.preventDefault) event.preventDefault();
+        return false;
+    } else {
+        window.location.href = url;
+        if (event && event.preventDefault) event.preventDefault();
+        return false;
     }
 }
+
+function definirDatas(event, inicio, fim) {
+    var inputInicio = document.getElementById('dataInicio');
+    var inputFim = document.getElementById('dataFim');
+    
+    if (inputInicio) inputInicio.value = inicio;
+    if (inputFim) inputFim.value = fim;
+    
+    atualizarLinksExportacao();
+    
+    var form = document.getElementById('formFiltroArrecadacao');
+    if (form) {
+        if (event && event.preventDefault) event.preventDefault();
+        form.submit();
+        return false;
+    }
+}
+
+window.atualizarLinksExportacao = atualizarLinksExportacao;
+window.executarAcaoExportacao = executarAcaoExportacao;
 window.definirDatas = definirDatas;
 
 document.addEventListener('DOMContentLoaded', function() {
-    var botoesAtalho = document.querySelectorAll('.btn-atalho-data');
-    botoesAtalho.forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            var inicio = this.getAttribute('data-inicio');
-            var fim = this.getAttribute('data-fim');
-            if (inicio && fim) {
-                definirDatas(inicio, fim);
-            }
-        });
-    });
+    var inputInicio = document.getElementById('dataInicio');
+    var inputFim = document.getElementById('dataFim');
+    
+    if (inputInicio) {
+        inputInicio.addEventListener('change', atualizarLinksExportacao);
+        inputInicio.addEventListener('input', atualizarLinksExportacao);
+    }
+    if (inputFim) {
+        inputFim.addEventListener('change', atualizarLinksExportacao);
+        inputFim.addEventListener('input', atualizarLinksExportacao);
+    }
+    
+    atualizarLinksExportacao();
 });
 </script>
 

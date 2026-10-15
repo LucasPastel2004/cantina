@@ -138,6 +138,11 @@ class PdfService
             $_viewVars['baseUrl'] = ($base === '/' || $base === '.') ? '' : rtrim($base, '/');
         }
 
+        // Blindagem defensiva: assegura disponibilidade de $dados na view
+        if (!isset($_viewVars['dados'])) {
+            $_viewVars['dados'] = $_viewVars;
+        }
+
         extract($_viewVars, EXTR_OVERWRITE);
         ob_start();
         include $viewPath;

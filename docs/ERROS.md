@@ -1787,3 +1787,29 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
      - Cesta de compras (`.pdv-cart-body`) com `min-height: 130px;` garantido e tipografia compacta com quebra de linha inteligente (`word-break: break-word`), acomodando confortavelmente de 4 a 6 itens sem corte de texto;
   4. **Validação:** Aprovadas todas as baterias de testes do PDV (`tests/pdv_web_test.php`, `tests/pdv_modal_test.php`, `tests/pdv_formas_pagamento_test.php` e `tests/pdv_estoque_baixa_test.php`).
 - Como evitar no futuro: Telas de frente de caixa e terminais operacionais (POS) devem sempre operar sob arquitetura de *viewport-locked layout* (`height: 100vh; overflow: hidden;`), sem barra de rolagem na janela (`window`), utilizando `overscroll-behavior: contain;` e contêineres internos de rolagem independente com orçamentos verticais compactos.
+
+---
+
+## 2026-10-15 - Incidente Operacional 500 por variável $dados indefinida em arrecadacao_pdf.php e botões bloqueados por navegador
+
+- Sintoma: Ao clicar no botão "Visualizar / Imprimir (A4)" na tela de Arrecadação Financeira (`/relatorios/arrecadacao`), o sistema disparava a tela vermelha de erro interno 500 de "Incidente Operacional" com a mensagem: `ErrorException: Undefined variable $dados em /var/www/html/app/views/relatorios/arrecadacao_pdf.php:377`. Além disso, o botão "← Voltar à Tela Anterior" na tela de 500 não funcionava por se tratar de aba recém-aberta sem histórico prévio, e na tela principal o uso de `<button type="submit" form="..." formaction="..." formtarget="_blank">` sofria com bloqueio de popups ou falhas de submissão do navegador por estar fora do formulário no DOM.
+- Causa:
+  1. No método `PdfService::renderView(string $view, array $_viewVars)`, a função nativa `extract($_viewVars, EXTR_OVERWRITE)` descompactava as chaves do array `$dados` em variáveis isoladas (`$canais`, `$dias`, etc.), mas a própria variável `$dados` não existia no escopo local da view `arrecadacao_pdf.php`. Como o template acessava `$dados['total_transacoes_arrecadacao']` e chaves do rodapé sem fallbacks `??`, o PHP 8.2 com o `ErrorHandler` estrito ativo converteu o aviso em uma `ErrorException` fatal;
+  2. Na tela de erro 500 (`app/views/errors/500.php`), o botão "← Voltar à Tela Anterior" utilizava puramente `onclick="history.back()"`. Quando a tela de erro é disparada em uma nova aba (`target="_blank"`), o histórico da janela é nulo (`history.length <= 1`), fazendo com que o clique não tivesse nenhum efeito perceptível;
+  3. Na tela principal `app/views/relatorios/arrecadacao.php`, os botões de ação utilizavam `<button type="submit" form="formFiltroArrecadacao" formaction="..." formtarget="_blank">`. Por estarem posicionados antes do `<form>` no DOM, certos navegadores bloqueavam o popup da nova aba ou falhavam na substituição de ação em formulários GET;
+  4. Risco de cache do navegador em `custom.css` afetando a visualização dos 5 cartões de indicadores financeiros.
+- Solução aplicada:
+  1. **Blindagem de Injeção de Dados em `PdfService::renderView` e `RelatoriosController`:**
+     - Adicionada guarda protetiva em `PdfService::renderView`: `if (!isset($_viewVars['dados'])) { $_viewVars['dados'] = $_viewVars; }`;
+     - Injetado explicitamente `$dados['dados'] = $dados` em `RelatoriosController::arrecadacaoImprimir()` e `RelatoriosController::arrecadacaoPdf()`;
+     - Adicionada inicialização defensiva no topo de `arrecadacao_pdf.php` (`if (!isset($dados) || !is_array($dados)) { $dados = get_defined_vars(); }`) e operadores de coalescência nula `?? 0` em todas as leituras de totais (linhas 375-385 e 482-494);
+  2. **Arquitetura Infalível de Botões e Links de Ação (`arrecadacao.php`):**
+     - Substituídos os botões de ação por links `<a>` nativos com atributos `href` dinâmicos atualizados em tempo real via JavaScript (`atualizarLinksExportacao`) nos eventos `input` e `change` dos campos de data;
+     - Criada a função de despacho `executarAcaoExportacao(event, tipo)` para abertura limpa de abas via `window.open` e navegação direta para downloads, imune a bloqueios de popups e com fallback 100% funcional caso o JavaScript esteja inativo;
+     - Transformados os atalhos de período ("Hoje", "Ontem", "Esta Semana", "Este Mês", "Mês Anterior") em links `<a>` nativos com fallback de navegação direta e submissão rápida;
+  3. **Correção do Botão Voltar na Tela 500 (`app/views/errors/500.php`):**
+     - Atualizado para `if (window.history.length > 1) { window.history.back(); } else { window.close(); }`, garantindo que se o usuário estiver em uma nova aba, ela seja imediatamente fechada;
+  4. **Blindagem Inline de Estilos no Stat-Strip:**
+     - Aplicadas regras de layout flex inline nos 5 cards de Cash-In, tornando a exibição visual elegante, alinhada e imune a caches antigos de CSS;
+     - Versão dos assets no layout `admin.php` atualizada para `?v=6.0.2`.
+- Como evitar no futuro: Em métodos de renderização de PDF/impressão (`renderView`), garantir que arrays de dados estejam sempre acessíveis sob sua chave canônica (`$_viewVars['dados']`) e proteger todas as variáveis em views com operadores defensivos `?? 0` ou `?? ''`. Para botões de exportação que abrem novas abas, preferir links `<a>` com `href` atualizado dinamicamente em vez de botões com `formaction` e `formtarget="_blank"` fora do formulário.

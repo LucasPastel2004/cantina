@@ -1555,23 +1555,27 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
-### [x] Correção de Formatação de Indicadores e Botões na Tela de Arrecadação Financeira (2026-10-14)
-* [x] **Diagnóstico e Resolução do Layout de Indicadores:**
-  * Identificada que a classe `.stat-strip-enterprise` não possuía estilização em `assets/css/custom.css`, quebrando o display dos indicadores financeiros e exibindo-os como texto plano empilhado;
-  * Padronizada a view `app/views/relatorios/arrecadacao.php` com o componente oficial `.stat-strip` e `.stat-strip-item`, `.stat-strip-label`, `.stat-strip-value` e `.stat-subtext`;
-  * Adicionado suporte no `assets/css/custom.css` com layout flex responsivo (`flex-wrap: wrap`, cards individuais brancos com bordas sutis `#e2e8f0` e destaque verde no Total Arrecadado);
-* [x] **Integração e Funcionamento dos Botões de Ação e Filtro:**
-  * Transformados os links isolados do topo (`Visualizar / Imprimir A4`, `Baixar em PDF A4`, `Exportar CSV`) em botões `<button type="submit" form="formFiltroArrecadacao" formaction="..." formtarget="...">`, garantindo que qualquer data digitada ou alterada em tela seja sempre enviada para o relatório correspondente;
-  * Alterado o cabeçalho de resposta do PDF em `RelatoriosController::arrecadacaoPdf` para `Content-Disposition: attachment; filename="..."`, assegurando o download imediato do arquivo;
-  * Atualizada a função JavaScript `definirDatas()` com `form.requestSubmit()` nativo HTML5 e suporte a eventos `click` via classe `.btn-atalho-data`, tornando os botões de atalho ("Hoje", "Ontem", "Esta Semana", "Este Mês", "Mês Anterior") 100% funcionais e reativos;
-  * Atualizada a query de cache de assets no layout `admin.php` para `?v=6.0.1`;
+### [x] Resolução Definitiva de Botões e Erro 500 na Tela de Arrecadação Financeira (2026-10-15)
+* [x] **Diagnóstico e Correção da Variável `$dados` no Relatório A4 / PDF:**
+  * O método `PdfService::renderView()` executa `extract($_viewVars, EXTR_OVERWRITE)`. Como a view `arrecadacao_pdf.php` esperava tanto variáveis extraídas quanto o array `$dados` em si, a chamada a `$dados['total_transacoes_arrecadacao']` disparou a `ErrorException: Undefined variable $dados` no PHP 8.2;
+  * Injetada a chave `dados` automaticamente em `PdfService::renderView()` e nos métodos `arrecadacaoImprimir()` e `arrecadacaoPdf()` em `RelatoriosController.php`;
+  * Aplicada blindagem defensiva no topo de `arrecadacao_pdf.php` e operadores `?? 0` em todas as colunas de totalização do rodapé da tabela diária;
+* [x] **Arquitetura Resiliente de Botões e Atalhos (`arrecadacao.php`):**
+  * Substituídos os botões com atributos de formulário por links `<a>` nativos com comportamento duplo: se o JavaScript estiver ativo, eles leem dinamicamente as datas atuais dos seletores e abrem a aba (`window.open`) ou disparam download sem risco de bloqueio por popup blocker; se o JavaScript estiver inativo, os atributos `href` já apontam para a URL completa do período;
+  * Botões de atalho de data ("Hoje", "Ontem", "Esta Semana", "Este Mês", "Mês Anterior") convertidos em links `<a>` com disparo direto e submissão rápida, impedindo qualquer travamento em navegadores modernos;
+* [x] **Estilização Visual Imune a Cache:**
+  * Injetados estilos flex inline diretamente nos 5 cards do `stat-strip` de Cash-In, eliminando qualquer risco de quebra de layout por cache local do arquivo `custom.css`;
+  * Incrementada a versão dos assets no layout `admin.php` para `?v=6.0.2`;
+  * Ajustado o botão "← Voltar à Tela Anterior" em `app/views/errors/500.php` para fechar a aba caso não haja histórico de navegação (`window.close()`).
 * [x] **Homologação:**
-  * Suíte automatizada `tests/arrecadacao_dre_regimes_test.php` reexecutada e **100% aprovada (89/89 asserções)**.
+  * Suíte automatizada `tests/arrecadacao_dre_regimes_test.php` executada e **100% aprovada (89 de 89 asserções)**.
 
 ---
 
 ## Próximo Passo Recomendado
 
-1. Recarregar a página no navegador (`Ctrl + F5` ou `F5`) em `http://localhost:8080/relatorios/arrecadacao?data_inicio=2026-09-01&data_fim=2026-10-14`;
-2. Validar que os 5 indicadores financeiros de cash-in estão perfeitamente encaixados em cards executivos limpos e alinhados;
-3. Clicar nos botões de atalho ("Hoje", "Ontem", "Esta Semana", "Este Mês", "Mês Anterior") e nos botões de ação ("Visualizar / Imprimir (A4)", "Baixar em PDF (A4)" e "Exportar Planilha (CSV)") para conferir a atualização e emissão com as datas ativas.
+1. Recarregar a página no navegador com `Ctrl + F5` (ou `Ctrl + Shift + R`) em:
+   `http://localhost:8080/relatorios/arrecadacao`
+2. Testar o botão **"Visualizar / Imprimir (A4)"** no canto superior direito: ele abrirá imediatamente o espelho oficial A4 timbrado em uma nova aba para visualização e impressão, sem qualquer incidente ou tela de erro;
+3. Testar os botões **"Baixar em PDF (A4)"** e **"Exportar Planilha (CSV)"**: eles farão o download imediato dos arquivos correspondentes;
+4. Testar os botões de atalho ("Hoje", "Ontem", "Esta Semana", "Este Mês", "Mês Anterior") e o botão "Filtrar Período": todos reagem instantaneamente atualizando os dados e os links de emissão.

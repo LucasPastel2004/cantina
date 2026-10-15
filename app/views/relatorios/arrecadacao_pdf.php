@@ -10,11 +10,14 @@
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
-$periodoOficial = $dados['periodo_oficial'] ?? (date('d/m/Y') . ' a ' . date('d/m/Y'));
-$dataInicio = $dados['data_inicio'] ?? date('Y-m-d');
-$dataFim = $dados['data_fim'] ?? date('Y-m-d');
-$canais = $dados['canais'] ?? [];
-$dias = $dados['dias'] ?? [];
+if (!isset($dados) || !is_array($dados)) {
+    $dados = get_defined_vars();
+}
+$periodoOficial = $dados['periodo_oficial'] ?? $periodo_oficial ?? (date('d/m/Y') . ' a ' . date('d/m/Y'));
+$dataInicio = $dados['data_inicio'] ?? $data_inicio ?? date('Y-m-d');
+$dataFim = $dados['data_fim'] ?? $data_fim ?? date('Y-m-d');
+$canais = $dados['canais'] ?? $canais ?? [];
+$dias = $dados['dias'] ?? $dias ?? [];
 $isPdf = $isPdf ?? false;
 
 $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
@@ -374,10 +377,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                     TOTAL GERAL ARRECADADO (CASH-IN LÍQUIDO)
                 </td>
                 <td class="text-end font-tabular">
-                    <?php echo number_format((int)$dados['total_transacoes_arrecadacao'], 0, ',', '.'); ?>
+                    <?php echo number_format((int)($dados['total_transacoes_arrecadacao'] ?? 0), 0, ',', '.'); ?>
                 </td>
                 <td class="text-end font-tabular" style="font-size: 8.5pt;">
-                    R$ <?php echo number_format((float)$dados['total_arrecadado_bruto'], 2, ',', '.'); ?>
+                    R$ <?php echo number_format((float)($dados['total_arrecadado_bruto'] ?? 0), 2, ',', '.'); ?>
                 </td>
                 <td class="text-end font-tabular">
                     100.0%
@@ -401,27 +404,27 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         <tbody>
             <tr>
                 <td class="text-start">(+) Recargas Pix no Portal da Família (Entrada via Banco)</td>
-                <td class="text-end font-tabular">R$ <?php echo number_format((float)$dados['recargas_pix_total'], 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular">R$ <?php echo number_format((float)($dados['recargas_pix_total'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr>
                 <td class="text-start">(+) Recargas no Balcão em Dinheiro (Entrada Física na Gaveta)</td>
-                <td class="text-end font-tabular">R$ <?php echo number_format((float)$dados['recargas_dinheiro_total'], 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular">R$ <?php echo number_format((float)($dados['recargas_dinheiro_total'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr style="font-weight: 700; background-color: #f8fafc !important;">
                 <td class="text-start">(=) Total de Recargas Adicionadas na Carteira no Período</td>
-                <td class="text-end font-tabular"><strong>R$ <?php echo number_format((float)$dados['total_recargas'], 2, ',', '.'); ?></strong></td>
+                <td class="text-end font-tabular"><strong>R$ <?php echo number_format((float)($dados['total_recargas'] ?? 0), 2, ',', '.'); ?></strong></td>
             </tr>
             <tr>
                 <td class="text-start">(-) Lanches Consumidos em Saldo no Balcão (PDV Presencial)</td>
-                <td class="text-end font-tabular">R$ <?php echo number_format((float)$dados['vendas_saldo_total'], 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular">R$ <?php echo number_format((float)($dados['vendas_saldo_total'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr>
                 <td class="text-start">(-) Lanches Consumidos em Pedidos Online (Agendamentos da Semana)</td>
-                <td class="text-end font-tabular">R$ <?php echo number_format((float)$dados['pedidos_saldo_total'], 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular">R$ <?php echo number_format((float)($dados['pedidos_saldo_total'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr style="font-weight: 700; background-color: #f8fafc !important;">
                 <td class="text-start">(=) Total de Lanches Entregues com Saldo (Consumo Real)</td>
-                <td class="text-end font-tabular"><strong>R$ <?php echo number_format((float)$dados['total_consumo_saldo'], 2, ',', '.'); ?></strong></td>
+                <td class="text-end font-tabular"><strong>R$ <?php echo number_format((float)($dados['total_consumo_saldo'] ?? 0), 2, ',', '.'); ?></strong></td>
             </tr>
         </tbody>
         <tfoot>
@@ -430,7 +433,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                     (=) Variação Líquida de Saldo em Custódia (Recargas - Consumo)
                 </td>
                 <td class="text-end font-tabular" style="font-size: 8.5pt;">
-                    <?php echo ($dados['variacao_carteira'] >= 0 ? '+' : '') . 'R$ ' . number_format((float)$dados['variacao_carteira'], 2, ',', '.'); ?>
+                    <?php echo (($dados['variacao_carteira'] ?? 0) >= 0 ? '+' : '') . 'R$ ' . number_format((float)($dados['variacao_carteira'] ?? 0), 2, ',', '.'); ?>
                 </td>
             </tr>
         </tfoot>
@@ -479,14 +482,14 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         <tfoot>
             <tr>
                 <td colspan="2" class="text-start text-uppercase">TOTAIS DO PERÍODO</td>
-                <td class="text-end font-tabular"><?php echo number_format((float)$dados['recargas_pix_total'], 2, ',', '.'); ?></td>
-                <td class="text-end font-tabular"><?php echo number_format((float)$dados['recargas_dinheiro_total'], 2, ',', '.'); ?></td>
-                <td class="text-end font-tabular"><?php echo number_format((float)$dados['vendas_dinheiro_total'], 2, ',', '.'); ?></td>
-                <td class="text-end font-tabular"><?php echo number_format((float)$dados['vendas_pix_total'], 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular"><?php echo number_format((float)($dados['recargas_pix_total'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular"><?php echo number_format((float)($dados['recargas_dinheiro_total'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular"><?php echo number_format((float)($dados['vendas_dinheiro_total'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular"><?php echo number_format((float)($dados['vendas_pix_total'] ?? 0), 2, ',', '.'); ?></td>
                 <td class="text-end font-tabular" style="font-size: 8.5pt;">
-                    R$ <?php echo number_format((float)$dados['total_arrecadado_bruto'], 2, ',', '.'); ?>
+                    R$ <?php echo number_format((float)($dados['total_arrecadado_bruto'] ?? 0), 2, ',', '.'); ?>
                 </td>
-                <td class="text-end font-tabular"><?php echo number_format((float)$dados['total_consumo_saldo'], 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular"><?php echo number_format((float)($dados['total_consumo_saldo'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
         </tfoot>
     </table>

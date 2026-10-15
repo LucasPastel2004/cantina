@@ -65,7 +65,7 @@ $debug = $debug ?? false;
 
             <!-- Botões de Ação com Microinterações Táteis -->
             <div class="d-flex gap-2 pt-2 border-top">
-                <button type="button" onclick="history.back()" class="btn-enterprise btn-secondary flex-grow-1">
+                <button type="button" onclick="if (window.history.length > 1) { window.history.back(); } else { window.close(); }" class="btn-enterprise btn-secondary flex-grow-1">
                     ← Voltar à Tela Anterior
                 </button>
                 <a href="<?php echo $baseUrl; ?>/" class="btn-enterprise btn-primary flex-grow-1">

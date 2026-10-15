@@ -2644,6 +2644,7 @@ class RelatoriosController extends Controller
         $dados = $this->obterDadosArrecadacao($dataInicio, $dataFim);
         $dados['baseUrl'] = $this->getBaseUrl();
         $dados['isPdf'] = true;
+        $dados['dados'] = $dados;
 
         $html = PdfService::renderView('relatorios/arrecadacao_pdf', $dados);
 
@@ -2697,6 +2698,7 @@ class RelatoriosController extends Controller
         $dados = $this->obterDadosArrecadacao($dataInicio, $dataFim);
         $dados['baseUrl'] = $this->getBaseUrl();
         $dados['isPdf'] = false;
+        $dados['dados'] = $dados;
 
         echo PdfService::renderView('relatorios/arrecadacao_pdf', $dados);
         if (!defined('CANTINA_TEST_MODE')) {
