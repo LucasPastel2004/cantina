@@ -154,6 +154,11 @@ class Router
             $path = substr($path, strlen($this->baseUrl));
         }
 
+        // Remove /index.php se presente no início da rota (compatibilidade com proxies e rewrite engines)
+        if (str_starts_with($path, '/index.php')) {
+            $path = substr($path, 10);
+        }
+
         $path = '/' . trim($path, '/');
         if ($path !== '/') {
             $path = rtrim($path, '/');

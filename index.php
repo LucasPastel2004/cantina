@@ -12,7 +12,7 @@ define('CANTINA_SISTEMA', true);
 // 2. Registra o timestamp inicial para métricas de tempo de resposta
 define('CANTINA_START', microtime(true));
 
-// 3. Registra o Autoloader PSR-4 nativo para o namespace App\
+// 3. Registra o Autoloader PSR-4 nativo para o namespace App\ (compatível com Linux case-sensitive e Windows)
 spl_autoload_register(function (string $class): void {
     $prefix = 'App\\';
     $baseDir = __DIR__ . '/app/';
@@ -23,10 +23,19 @@ spl_autoload_register(function (string $class): void {
     }
 
     $relativeClass = substr($class, $len);
-    $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+    $parts = explode('\\', $relativeClass);
+    $className = array_pop($parts);
+    $subDir = strtolower(implode('/', $parts));
+    $file = $baseDir . ($subDir !== '' ? $subDir . '/' : '') . $className . '.php';
 
     if (file_exists($file)) {
         require_once $file;
+        return;
+    }
+
+    $fallbackFile = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+    if (file_exists($fallbackFile)) {
+        require_once $fallbackFile;
     }
 });
 

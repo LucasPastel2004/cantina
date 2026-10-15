@@ -1,8 +1,12 @@
 # Cantina Web — Colégio Monteiro Lobato
 # Configuração Apache / Rewrite Rules
 
+# Define o index.php prioritário
+DirectoryIndex index.php
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /
 
     # Bloqueia acesso a arquivos e pastas que comecem com ponto (.git, .env, etc.)
     RewriteRule (^|/)\.(?!well-known/) - [F]

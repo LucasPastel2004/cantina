@@ -1921,3 +1921,17 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Causa: O OpenSSH no runner Ubuntu falha ao validar o formato da chave privada salva via `echo` se houver quebras de linha no padrão Windows (`\r\n` CRLF) ou ausência de quebra de linha final requerida pela libcrypto/OpenSSL.
 - Solução aplicada: Atualizado o workflow `.github/workflows/deploy-hostnet.yml` injetando a chave via variável de ambiente `SSH_PRIVATE_KEY`, formatando com `printf '%s\n'`, convertendo para quebras de linha Unix estritas com `sed -i 's/\r$//'` e forçando `-o IdentitiesOnly=yes`.
 - Como evitar no futuro: Em workflows CI/CD que manipulam chaves SSH privadas armazenadas em Secrets, sempre injetar via `env:`, garantir formatação com `printf '%s\n'`, limpar quebras de linha do Windows com `sed -i 's/\r$//'` e usar `-o IdentitiesOnly=yes`.
+
+---
+
+## 2026-10-15 - Tela em branco na Hostnet por index.html pré-existente e Autoloader case-sensitive
+
+- Sintoma: Ao acessar o endereço provisório da Hostnet no navegador (`cantinawebmontei.tmp.k8.com.br`), o navegador exibia uma tela completamente em branco.
+- Causa: Dupla ocorrência identificada:
+  1. A Hostnet cria por padrão um arquivo `~/www/index.html` (contendo um iframe para uma página de boas-vindas da Hostnet) que tem prioridade sobre o `index.php` no Apache e era bloqueado por políticas de segurança do navegador;
+  2. No Linux ext4 (estritamente case-sensitive), o autoloader PSR-4 nativo procurava diretórios com a primeira letra em maiúscula (`App\Core` gerando `app/Core/`), enquanto as pastas físicas do projeto em disco utilizam nomes em minúsculo (`app/core/`, `app/controllers/`, `app/models/`), gerando `Fatal error: Class App\Core\ErrorHandler not found`.
+- Solução aplicada:
+  1. Remoção imediata dos arquivos padrão da Hostnet `~/www/index.html` e `~/www/404.html` via SSH;
+  2. Aprimoramento do Autoloader PSR-4 em `index.php` para normalizar nomes de subpastas em minúsculo (`strtolower`), mantendo a compatibilidade transparente entre Windows e Linux;
+  3. Adição de suporte a prefixo `/index.php` no `Router.php` e diretiva `RewriteBase /` com `DirectoryIndex index.php` no `.htaccess`.
+- Como evitar no futuro: Em publicações em hospedagens compartilhadas Linux, sempre remover páginas padrão instaladas pela hospedagem (`index.html`) e garantir que autoloaders manuais normalizem o caminho das pastas físicas para evitar inconsistências de sensibilidade de caixa.

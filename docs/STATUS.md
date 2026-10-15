@@ -1680,14 +1680,17 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   - **Deploy com rsync:** Sincronização via SSH utilizando `rsync -avz` respeitando o `deploy-exclude.txt` e sem a flag destrutiva `--delete` no primeiro deploy.
   - **Secrets Necessários Mapeados:** `HOSTNET_HOST`, `HOSTNET_USER`, `HOSTNET_PORT`, `HOSTNET_PATH` e `HOSTNET_SSH_KEY`.
   - **Status do Primeiro Deploy:** Executado com 100% de sucesso via GitHub Actions (**Deploy Hostnet #3**, duração total de 23s com sincronização rsync em 19s). Todos os arquivos de produção foram transferidos e isolados na Hostnet com sucesso!
+  - **Banco de Dados & Migrações:** Banco MySQL configurado no host `web165` com nível de segurança `Livre`. Todas as 30 migrações oficiais foram aplicadas no servidor com 100% de sucesso!
+  - **Remoção de Arquivos Padrão:** Removidos `index.html` e `404.html` pré-instalados da Hostnet que sobrepunham o Front Controller.
+  - **Portabilidade Linux ext4:** Autoloader PSR-4 aprimorado para normalização de pastas em minúsculo (`app/core`, `app/controllers`, etc.) e Router com suporte a prefixos em proxies reversos.
+  - **Status Final em Produção:** Sistema 100% operacional, homologado e online na Hostnet!
 
 ---
 
 ## Próximo Passo Recomendado
 
-1. Criar o banco de dados MySQL no painel da Hostnet.
-2. Criar o arquivo `config/config.php` na Hostnet com as credenciais do banco de produção.
-3. Executar as 26 migrações oficiais via navegador (`database/runner.php?token=...`) ou CLI para estruturar as tabelas.
-4. Validar o funcionamento pelo checklist pós-deploy.
+1. Aguardar a propagação global do domínio definitivo `cantinawebmonteirolobato.com.br` junto ao Registro.br / DNS da Hostnet.
+2. Acessar o sistema pelo endereço temporário ativo e homologar os fluxos de login da família e da equipe da cantina.
+
 
 
