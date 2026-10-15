@@ -1903,3 +1903,12 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. **Bateria de Testes Automatizados:**
      - Criado teste `tests/teste_modais_confirmacao.php` com 35 asserções aprovadas com 100% de sucesso, atestando a erradicação de 100% das chamadas a `confirm()` em todas as views do sistema.
 - Como evitar no futuro: Nunca utilizar `confirm()` ou `alert()` nativos do navegador. Em qualquer necessidade de confirmação, utilizar a função padrão `window.confirmarAcao({ titulo, mensagem, tipo, textoConfirmar })` ou os atributos declarativos `data-confirm` no HTML.
+
+---
+
+## 2026-10-15 - Erro getaddrinfo no GitHub Actions por host DNS não propagado
+
+- Sintoma: Falha no passo `Preparar chave SSH` do workflow de deploy manual no GitHub Actions (`getaddrinfo ***: Name or service not known`, `Error: Process completed with exit code 1`).
+- Causa: O secret `HOSTNET_HOST` foi cadastrado com o domínio `cantinawebmonteirolobato.com.br` ou `ftp.cantinawebmonteirolobato.com.br`, cujo registro DNS ainda não foi propagado ou não existe na internet pública.
+- Solução aplicada: Substituição do valor do secret `HOSTNET_HOST` no GitHub pelo endereço direto do servidor da Hostnet: `web165.f1.k8.com.br` (ou pelo IP `187.73.33.29`), que responde perfeitamente na porta 22 e resolve em qualquer servidor global.
+- Como evitar no futuro: Em publicações iniciais ou ambientes de pré-lançamento na Hostnet onde o domínio final ainda não concluiu a propagação de DNS, utilizar sempre o "Host provisório" fornecido pelo painel da Hostnet (ex.: `web165.f1.k8.com.br`).
