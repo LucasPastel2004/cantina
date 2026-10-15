@@ -1689,8 +1689,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Próximo Passo Recomendado
 
-1. Aguardar a propagação global do domínio definitivo `cantinawebmonteirolobato.com.br` junto ao Registro.br / DNS da Hostnet.
-2. Acessar o sistema pelo endereço temporário ativo e homologar os fluxos de login da família e da equipe da cantina.
+1. **Carga de Dados de Teste/Demonstração (Amanhã cedo):** Exportar os dados locais populados (produtos, turmas, alunos, responsáveis, cardápio) e importar no MySQL da Hostnet para que a equipe e diretores da escola possam testar e homologar todas as telas pelo endereço provisório de suas próprias casas.
+2. **Rotina de Zeramento/Limpeza Pré-Lançamento:** Criar script seguro com token de autorização para limpar e purgar 100% dos dados transacionais de teste (pedidos, caixas, vendas balcão, movimentações de carteira) mantendo as tabelas mestras e cadastros limpos para a inauguração oficial aos clientes.
+3. **Propagação do Domínio Definitivo:** Acompanhar a ativação do domínio `cantinawebmonteirolobato.com.br` e habilitar o certificado SSL gratuito (HTTPS).
+
 
 
 
