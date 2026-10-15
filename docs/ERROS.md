@@ -1912,3 +1912,12 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Causa: O secret `HOSTNET_HOST` foi cadastrado com o domínio `cantinawebmonteirolobato.com.br` ou `ftp.cantinawebmonteirolobato.com.br`, cujo registro DNS ainda não foi propagado ou não existe na internet pública.
 - Solução aplicada: Substituição do valor do secret `HOSTNET_HOST` no GitHub pelo endereço direto do servidor da Hostnet: `web165.f1.k8.com.br` (ou pelo IP `187.73.33.29`), que responde perfeitamente na porta 22 e resolve em qualquer servidor global.
 - Como evitar no futuro: Em publicações iniciais ou ambientes de pré-lançamento na Hostnet onde o domínio final ainda não concluiu a propagação de DNS, utilizar sempre o "Host provisório" fornecido pelo painel da Hostnet (ex.: `web165.f1.k8.com.br`).
+
+---
+
+## 2026-10-15 - Erro libcrypto ao carregar chave SSH privada no GitHub Actions
+
+- Sintoma: `Load key "/home/runner/.ssh/hostnet_deploy": error in libcrypto`, `Permission denied (publickey,password)`, `exit code 255` no passo `Testar conexão SSH`.
+- Causa: O OpenSSH no runner Ubuntu falha ao validar o formato da chave privada salva via `echo` se houver quebras de linha no padrão Windows (`\r\n` CRLF) ou ausência de quebra de linha final requerida pela libcrypto/OpenSSL.
+- Solução aplicada: Atualizado o workflow `.github/workflows/deploy-hostnet.yml` injetando a chave via variável de ambiente `SSH_PRIVATE_KEY`, formatando com `printf '%s\n'`, convertendo para quebras de linha Unix estritas com `sed -i 's/\r$//'` e forçando `-o IdentitiesOnly=yes`.
+- Como evitar no futuro: Em workflows CI/CD que manipulam chaves SSH privadas armazenadas em Secrets, sempre injetar via `env:`, garantir formatação com `printf '%s\n'`, limpar quebras de linha do Windows com `sed -i 's/\r$//'` e usar `-o IdentitiesOnly=yes`.

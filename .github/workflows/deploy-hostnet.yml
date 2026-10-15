@@ -13,21 +13,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Preparar chave SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.HOSTNET_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.HOSTNET_SSH_KEY }}" > ~/.ssh/hostnet_deploy
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/hostnet_deploy
+          sed -i 's/\r$//' ~/.ssh/hostnet_deploy
           chmod 600 ~/.ssh/hostnet_deploy
           ssh-keyscan -p ${{ secrets.HOSTNET_PORT }} -H ${{ secrets.HOSTNET_HOST }} >> ~/.ssh/known_hosts
 
       - name: Testar conexão SSH
         run: |
-          ssh -i ~/.ssh/hostnet_deploy -p ${{ secrets.HOSTNET_PORT }} \
+          ssh -i ~/.ssh/hostnet_deploy -o IdentitiesOnly=yes -p ${{ secrets.HOSTNET_PORT }} \
             ${{ secrets.HOSTNET_USER }}@${{ secrets.HOSTNET_HOST }} \
             "echo 'Conexão SSH com a Hostnet funcionando.'"
 
       - name: Backup da versão atual na Hostnet
         run: |
-          ssh -i ~/.ssh/hostnet_deploy -p ${{ secrets.HOSTNET_PORT }} \
+          ssh -i ~/.ssh/hostnet_deploy -o IdentitiesOnly=yes -p ${{ secrets.HOSTNET_PORT }} \
             ${{ secrets.HOSTNET_USER }}@${{ secrets.HOSTNET_HOST }} \
             "mkdir -p ~/deploy-backups && \
              if [ -d '${{ secrets.HOSTNET_PATH }}' ] && [ \"\$(ls -A '${{ secrets.HOSTNET_PATH }}')\" ]; then \
@@ -38,5 +41,5 @@ jobs:
         run: |
           rsync -avz \
             --exclude-from=deploy-exclude.txt \
-            -e "ssh -i ~/.ssh/hostnet_deploy -p ${{ secrets.HOSTNET_PORT }}" \
+            -e "ssh -i ~/.ssh/hostnet_deploy -o IdentitiesOnly=yes -p ${{ secrets.HOSTNET_PORT }}" \
             ./ ${{ secrets.HOSTNET_USER }}@${{ secrets.HOSTNET_HOST }}:${{ secrets.HOSTNET_PATH }}
