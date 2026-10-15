@@ -1,0 +1,42 @@
+name: Deploy Hostnet
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Enviar arquivos para a Hostnet
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Preparar chave SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HOSTNET_SSH_KEY }}" > ~/.ssh/hostnet_deploy
+          chmod 600 ~/.ssh/hostnet_deploy
+          ssh-keyscan -p ${{ secrets.HOSTNET_PORT }} -H ${{ secrets.HOSTNET_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Testar conexão SSH
+        run: |
+          ssh -i ~/.ssh/hostnet_deploy -p ${{ secrets.HOSTNET_PORT }} \
+            ${{ secrets.HOSTNET_USER }}@${{ secrets.HOSTNET_HOST }} \
+            "echo 'Conexão SSH com a Hostnet funcionando.'"
+
+      - name: Backup da versão atual na Hostnet
+        run: |
+          ssh -i ~/.ssh/hostnet_deploy -p ${{ secrets.HOSTNET_PORT }} \
+            ${{ secrets.HOSTNET_USER }}@${{ secrets.HOSTNET_HOST }} \
+            "mkdir -p ~/deploy-backups && \
+             if [ -d '${{ secrets.HOSTNET_PATH }}' ] && [ \"\$(ls -A '${{ secrets.HOSTNET_PATH }}')\" ]; then \
+               tar -czf ~/deploy-backups/backup-\$(date +%Y%m%d-%H%M%S).tar.gz -C '${{ secrets.HOSTNET_PATH }}' . ; \
+             else echo 'Primeiro deploy: sem backup.'; fi"
+
+      - name: Deploy com rsync
+        run: |
+          rsync -avz \
+            --exclude-from=deploy-exclude.txt \
+            -e "ssh -i ~/.ssh/hostnet_deploy -p ${{ secrets.HOSTNET_PORT }}" \
+            ./ ${{ secrets.HOSTNET_USER }}@${{ secrets.HOSTNET_HOST }}:${{ secrets.HOSTNET_PATH }}

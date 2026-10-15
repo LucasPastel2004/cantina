@@ -1,0 +1,94 @@
+# ==============================================================================
+# Cantina Web — Colégio Monteiro Lobato
+# Lista de Exclusões para Deploy em Produção (Hostnet) via rsync
+# ==============================================================================
+
+# Controle de Versão e CI/CD
+.git/
+.github/
+.gitignore
+.gitattributes
+deploy-exclude.txt
+
+# Assistentes de IA, Regras, Prompts e Documentação Técnica
+.agent/
+.agents/
+docs/
+prompts/
+scratch/
+AGENTS.md
+CLAUDE.md
+README.md
+README*.md
+
+# Ambientes Locais de Teste e Containers Docker
+docker-compose.yml
+docker-data/
+.docker/
+tests/
+
+# Configurações de Exemplo e Arquivos Sensíveis Locais
+*.example
+*.example.*
+config/config.example.php
+config/config.php
+config/config.local.php
+*.local.php
+.env
+.env.*
+
+# Certificados Digitais, Chaves Privadas e Tokens
+*.key
+*.pem
+*.crt
+*.cer
+*.pfx
+*.p12
+
+# Dumps, Backups e Dados Sensíveis (Conformidade LGPD)
+*.sql
+*.sql.gz
+*.dump
+*.bak
+*.backup
+backups/
+dumps/
+database/matriculas_reais.json
+
+# Logs do Sistema e Arquivos Temporários
+logs/
+*.log
+error_log
+storage/logs/*.log
+*.tmp
+*.temp
+*.cache
+cache/
+storage/*.pdf
+tmp/
+temp/
+
+# Arquivos de Upload Dinâmico Locais (Preserva arquivos existentes no servidor)
+storage/uploads/private/*
+storage/uploads/public/*
+
+# Gerenciadores de Pacotes e Dependências de Desenvolvimento
+vendor/
+composer.phar
+.vscode/
+.idea/
+
+# Arquivos Temporários e Metadados de Sistema Operacional
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+desktop.ini
+*~
+.directory

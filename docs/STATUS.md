@@ -6,10 +6,10 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Documentação Final e Modo Manutenção (Passo 6)
+* **Fase Atual:** Preparação e Configuração de Deploy Manual na Hostnet (Passo 7)
 * **Status da Documentação:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final de Manutenção 100% Concluídas!
-* **Última Atualização:** 2026-10-15 09:55:00 (Criação de docs/MANUTENCAO.md, docs/COMO-PEDIR-MUDANCAS.md, ativação do Modo Manutenção em AGENTS.md e CLAUDE.md).
+* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Automação de Deploy Manual na Hostnet Configurada!
+* **Última Atualização:** 2026-10-15 12:45:00 (Criação de deploy-exclude.txt e .github/workflows/deploy-hostnet.yml para deploy manual via SSH/rsync na Hostnet).
 
 
 
@@ -1673,8 +1673,22 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   - Nenhuma pendência técnica ou funcional existente.
   - Todas as 24 fases do `docs/PLANO.md`, a revisão de segurança e a documentação final estão 100% concluídas e homologadas.
 
+* [x] **Configuração de Deploy Manual na Hostnet (Passo 7):**
+  - **Arquivo de Exclusões (`deploy-exclude.txt`):** Criado na raiz do projeto para isolar estritamente o código de produção, excluindo `.git/`, `.github/`, `docs/`, `tests/`, `.agent/`, `.agents/`, `scratch/`, `docker-compose.yml`, segredos, dumps, logs locais e arquivos temporários.
+  - **Workflow do GitHub Actions (`.github/workflows/deploy-hostnet.yml`):** Criado com disparo manual exclusivo (`workflow_dispatch`), garantindo que o deploy não ocorra automaticamente em pushes.
+  - **Rotina de Backup Automático:** O workflow verifica se já existem arquivos na pasta de destino da Hostnet e gera um arquivo compactado `.tar.gz` em `~/deploy-backups/` antes de enviar os novos arquivos.
+  - **Deploy com rsync:** Sincronização via SSH utilizando `rsync -avz` respeitando o `deploy-exclude.txt` e sem a flag destrutiva `--delete` no primeiro deploy.
+  - **Secrets Necessários Mapeados:** `HOSTNET_HOST`, `HOSTNET_USER`, `HOSTNET_PORT`, `HOSTNET_PATH` e `HOSTNET_SSH_KEY`.
+  - **Status do Primeiro Deploy:** Pendente de execução manual pelo usuário após configuração dos secrets no GitHub e credenciais reais de banco no `config/config.php` na Hostnet.
+
 ---
 
 ## Próximo Passo Recomendado
 
-Documentação pronta. Próximo passo: chat novo + prompt do passo 7, se você quiser publicar o sistema na Hostnet.
+1. Fazer `git push origin main` para enviar o workflow e o arquivo de exclusões para o repositório remoto no GitHub.
+2. Cadastrar os 5 Secrets no GitHub (`Settings -> Secrets and variables -> Actions`).
+3. Criar a chave SSH e autorizar a chave pública na Hostnet.
+4. Criar o banco de dados MySQL e o arquivo de configuração real `config/config.php` diretamente na Hostnet.
+5. Executar o workflow manualmente na aba **Actions** do GitHub (**Deploy Hostnet** -> **Run workflow**).
+6. Rodar as migrações em produção e validar pelo checklist pós-deploy.
+
