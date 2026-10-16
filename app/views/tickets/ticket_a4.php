@@ -27,7 +27,7 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
     <style>
         @page {
             size: A4 portrait;
-            margin: 8mm;
+            margin: 0;
         }
         * {
             box-sizing: border-box;
@@ -288,11 +288,22 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
                 padding: 0 !important;
             }
             .a4-sheet {
+                width: 210mm !important;
+                max-width: 210mm !important;
+                min-height: 297mm !important;
+                height: 297mm !important;
                 margin: 0 auto !important;
-                padding: 0 !important;
+                padding: 8mm 6mm !important;
                 box-shadow: none !important;
                 border-radius: 0 !important;
                 background: #ffffff !important;
+                box-sizing: border-box !important;
+                page-break-after: always !important;
+                break-after: page !important;
+            }
+            .a4-sheet:last-child {
+                page-break-after: auto !important;
+                break-after: auto !important;
             }
         }
     </style>

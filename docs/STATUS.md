@@ -1719,6 +1719,21 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
       - Arquivos atualizados transferidos com sucesso para a Hostnet via SCP;
       - Testes automatizados executados remotamente com login autenticado de `gestor.cantina`, validando a presença e funcionamento de todos os novos botões com 100% de aprovação.
 
+* [x] **Calibração Universal de Impressão e Eliminação de Cabeçalhos/Rodapés do Navegador (Passo 10):**
+  - **Contexto e Diagnóstico Técnico:**
+    * Ao utilizar o diálogo nativo do Chromium (*"Salvar como PDF"* ou *"Imprimir"*), a presença de margens físicas em `@page` reservava espaço periférico onde o navegador injetava automaticamente a URL, título da página, numeração (`1 of 1`) e data/hora;
+    * Além disso, a visualização de Bobina Térmica 80mm enviada para impressora laser A4 multifuncional comum (como a Kyocera do operador) gerava faixas estreitas divididas em múltiplas folhas A4;
+  - **Soluções Implementadas em Todas as Views de Impressão/PDF:**
+    * **Eliminação Universal de Metadados do Navegador via CSS:**
+      - Aplicada a regra `@page { size: A4 portrait; margin: 0; }` (ou `size: 80mm auto; margin: 0;`) em 100% dos relatórios e tickets: `corte_pdf.php`, `ticket_a4.php`, `ticket_80mm.php`, `fechamento_caixa_pdf.php`, `dre_pdf.php`, `arrecadacao_pdf.php`, `desconto_folha_pdf.php`, `desconto_folha_individual_pdf.php`, `extrato_aluno_pdf.php`, `vendas_alimento_pdf.php`, `med_negativados_pdf.php` e `estoque_movimentacoes_pdf.php`;
+      - As margens institucionais de segurança e estética (10mm 14mm ou 8mm 6mm) foram transferidas para dentro dos contêineres de folha (`.container`, `.doc-page`, `.a4-sheet`) via padding no `@media print`, anulando a área onde o Chrome injeta URL e datas;
+    * **Orientação e Clareza de Hardware na Bobina Térmica 80mm:**
+      - Inserido banner explicativo amigável em `ticket_80mm.php` alertando que aquele formato contínuo é exclusivo para impressoras térmicas de cupom de balcão (Epson, Elgin, Bematech);
+      - Adicionado botão direto **"Usar Folha A4"** para orientar o operador a utilizar o formato de grade com 8 fichas por página sempre que for imprimir em folha A4 em impressoras comuns ou salvar um PDF A4 para recortar lanches;
+    * **Deploy em Produção e Testes Automatizados:**
+      - Todos os 12 arquivos atualizados foram transferidos para o servidor Hostnet via SCP com sucesso;
+      - Suíte de testes automatizados (`tests/fase12_test.php` e `tests/fase5_test.php`) executada com 100% de aprovação (65/65 e 74/74 asserções aprovadas).
+
 ---
 
 ## Próximo Passo Recomendado

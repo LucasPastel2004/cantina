@@ -261,33 +261,41 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
 <body>
 
 <div class="no-print">
-    <div class="no-print-info">
-        <span class="no-print-status-dot">●</span>
-        <strong>Bobina Térmica (80mm)</strong> &bull; 
-        <span><?php echo $totalTickets; ?> ticket(s)</span> &bull; 
-        <span style="color: #64748b;"><?php echo htmlspecialchars($dataConsumoFmt); ?> (<?php echo htmlspecialchars($turnoFmt); ?>)</span>
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 8px;">
+        <div class="no-print-info">
+            <span class="no-print-status-dot">●</span>
+            <strong>Bobina Térmica (80mm)</strong> &bull; 
+            <span><?php echo $totalTickets; ?> ticket(s)</span> &bull; 
+            <span style="color: #64748b;"><?php echo htmlspecialchars($dataConsumoFmt); ?> (<?php echo htmlspecialchars($turnoFmt); ?>)</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <button onclick="window.print()" class="btn-print" title="Disparar impressão em impressora térmica de bobina 80mm">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                </svg>
+                Imprimir na Bobina (80mm)
+            </button>
+
+            <?php
+                $queryA4 = $_GET;
+                $queryA4['formato'] = 'a4';
+                $urlA4 = '?' . http_build_query($queryA4);
+            ?>
+            <a href="<?php echo htmlspecialchars($urlA4); ?>" class="btn-action-neutral" title="Alternar para visualização em grade de 8 fichas por Folha A4">
+                Alternar para Folha A4
+            </a>
+
+            <button onclick="window.close()" class="btn-action-neutral" title="Fechar visualização">
+                Fechar
+            </button>
+        </div>
     </div>
-    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-        <button onclick="window.print()" class="btn-print" title="Imprimir em impressora térmica ou Salvar como PDF">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-            </svg>
-            Imprimir ou Salvar em PDF
-        </button>
-
-        <?php
-            $queryA4 = $_GET;
-            $queryA4['formato'] = 'a4';
-            $urlA4 = '?' . http_build_query($queryA4);
-        ?>
-        <a href="<?php echo htmlspecialchars($urlA4); ?>" class="btn-action-neutral" title="Alternar para visualização em grade de Folha A4">
-            Alternar para Folha A4
+    <div style="width: 100%; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 6px 12px; border-radius: 4px; font-size: 8pt; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+        <span><strong>💡 Nota de Impressão:</strong> Esta visualização contínua de 80mm é formatada exclusivamente para <strong>impressoras térmicas de cupom (rolo estreito de 80mm)</strong>. Se você estiver usando uma impressora de escritório comum (como a Kyocera ou impressora laser A4) ou quiser salvar em PDF para imprimir em folha comum, utilize a <strong>Folha A4</strong> para preencher a página inteira com 8 fichas organizadas.</span>
+        <a href="<?php echo htmlspecialchars($urlA4); ?>" style="background: #1d4ed8; color: #fff; padding: 4px 10px; border-radius: 3px; text-decoration: none; font-weight: bold; white-space: nowrap; font-size: 8pt;">
+            Usar Folha A4 &rarr;
         </a>
-
-        <button onclick="window.close()" class="btn-action-neutral" title="Fechar visualização">
-            Fechar
-        </button>
     </div>
 </div>
 

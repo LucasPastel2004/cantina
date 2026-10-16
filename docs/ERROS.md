@@ -2002,3 +2002,27 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Na barra superior `.no-print` dos espelhos de impressão, implementado botão de destaque **"Imprimir ou Salvar em PDF"** acionando `window.print()`, permitindo ao usuário tanto o envio direto para a impressora quanto a opção nativa do Chromium *"Destino: Salvar como PDF"* com fidelidade vetorial absoluta;
   3. Nos controladores `TicketsController` e `PedidosController`, redirecionadas todas as requisições diretas aos endpoints `/pdf` para suas respectivas telas de preview de impressão, garantindo compatibilidade retroativa total.
 - Como evitar no futuro: Em projetos hospedados em ambientes compartilhados gerenciados sem suporte a microsserviços Chromium headless orquestrados, padronizar a emissão documental através do recurso nativo `@media print` e diálogo do navegador, evitando soluções pesadas ou fallbacks rudimentares em PHP puro.
+
+---
+
+## 2026-10-16 - Cabeçalhos e rodapés do navegador (URL, título, data e paginação) gerados no PDF
+
+- Sintoma: Ao salvar o relatório ou tickets em PDF através do diálogo de impressão do navegador (*"Salvar como PDF"*), apareciam no topo da página o título do relatório e a URL completa (`http://cantinawebmontei.tmp.k8.com.br/...`), e no rodapé a paginação (`1 of 1`) e a data/hora (`16/10/2026, 09:32`), poluindo o documento oficial da escola.
+- Causa: Quando o CSS `@page` declara margens físicas explícitas (ex: `margin: 10mm 14mm`), o motor Chromium (Google Chrome, Microsoft Edge) reserva esse espaço marginal periférico para injetar metadados de impressão (cabeçalhos e rodapés padrão do navegador).
+- Solução aplicada: 
+  1. Definido `@page { margin: 0; }` em todas as views de relatórios e tickets (`ticket_a4.php`, `ticket_80mm.php`, `corte_pdf.php`, `fechamento_caixa_pdf.php`, `dre_pdf.php`, `arrecadacao_pdf.php`, `desconto_folha_pdf.php`, `desconto_folha_individual_pdf.php`, `extrato_aluno_pdf.php`, `vendas_alimento_pdf.php`, `med_negativados_pdf.php`, `estoque_movimentacoes_pdf.php`);
+  2. As margens institucionais exigidas pelo `docs/DESIGN.md` (10mm 14mm ou 8mm 6mm) foram transferidas para dentro do container da folha (`.container`, `.doc-page`, `.a4-sheet`) via padding no bloco `@media print`;
+  3. Isso anula a área reservada do Chromium, eliminando compulsoriamente a URL, título e data das bordas sem depender de desmarcação manual do usuário no diálogo.
+- Como evitar no futuro: Em documentos institucionais e relatórios formais formatados para `@media print`, sempre definir `@page { margin: 0; }` e aplicar o espaçamento físico de segurança via padding no container interno da página.
+
+---
+
+## 2026-10-16 - Impressão da bobina térmica 80mm fragmentada em folha A4 em impressoras multifuncionais de escritório
+
+- Sintoma: Ao abrir a visualização de Bobina Térmica 80mm (`?formato=80mm`) e disparar a impressão em uma impressora multifuncional laser A4 comum de escritório (como Kyocera TASKalfa 3010i), os tickets saíram impressos como uma tira estreita de 80mm centralizada no papel, dividindo o conteúdo verticalmente em 3 folhas A4 com grande desperdício de papel.
+- Causa: A visualização de Bobina Térmica 80mm foi projetada com dimensões CSS de rolo contínuo (`size: 80mm auto`) para impressoras não-fiscais de balcão (Epson TM-T20, Elgin, Bematech). Quando enviada para uma impressora física laser A4 com driver padrão de folha solta, o driver força a divisão de página para a altura padrão A4 (297mm), fragmentando a bobina contínua.
+- Solução aplicada:
+  1. Adicionado banner informativo fixo na barra `.no-print` da view `ticket_80mm.php` explicando de forma clara que aquele formato é exclusivo para impressoras de cupom térmico e oferecendo botão em destaque **"Usar Folha A4"**;
+  2. Ajustado o layout de `ticket_80mm.php` com `@page { size: 80mm auto; margin: 0; }` e `ticket-wrapper` com `page-break-inside: avoid` estrito;
+  3. Orientado o usuário a utilizar a opção **"Grade de Fichas (Folha A4)"** sempre que desejar imprimir em sua impressora de escritório ou salvar um PDF A4 para recortar lanches em grade 2x4 (8 fichas por folha).
+- Como evitar no futuro: Disponibilizar mensagens claras de contexto ao usuário sobre a destinação de hardware para cada formato (bobina 80mm vs folha solta A4), com atalhos diretos para alternância de formato.

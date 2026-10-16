@@ -31,7 +31,7 @@ $isCaixa = ($regime === 'caixa');
            ========================================================================== */
         @page {
             size: A4 landscape;
-            margin: 10mm 14mm 10mm 14mm;
+            margin: 0;
         }
 
         *, *:before, *:after {
@@ -79,13 +79,14 @@ $isCaixa = ($regime === 'caixa');
                 display: none !important;
             }
             .doc-page {
-                width: 100% !important;
-                max-width: 100% !important;
-                min-height: auto !important;
-                margin: 0 !important;
-                padding: 0 !important;
+                width: 297mm !important;
+                max-width: 297mm !important;
+                min-height: 210mm !important;
+                margin: 0 auto !important;
+                padding: 10mm 14mm !important;
                 box-shadow: none !important;
                 border: none !important;
+                box-sizing: border-box !important;
             }
         }
 
