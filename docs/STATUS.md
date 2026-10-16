@@ -1734,6 +1734,14 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
       - Todos os 12 arquivos atualizados foram transferidos para o servidor Hostnet via SCP com sucesso;
       - Suíte de testes automatizados (`tests/fase12_test.php` e `tests/fase5_test.php`) executada com 100% de aprovação (65/65 e 74/74 asserções aprovadas).
 
+* [x] **Correção Imediata do PDV Balcão — Resolução de Escopo de Função no PHP (Passo 11):**
+  - **Sintoma:** Tela de contingência `55e247d1-4846-eb88` reportada pelo usuário ao acessar `/operacional/pdv` devido a `Call to undefined function repararUtf8() in pdv.php:701`.
+  - **Causa Raiz:** A função auxiliar `repararUtf8()` foi declarada sob o `namespace App\Core;` em `Sanitizer.php`, ficando fora do escopo global das views. Além disso, a chamada era redundante, já que o `Controller::render()` entrega os dados 100% higienizados.
+  - **Solução:**
+    * Removidas as chamadas redundantes a `repararUtf8()` em `app/views/operacional/pdv.php`;
+    * Registrado o helper global `repararUtf8()` no `index.php` (no escopo raiz sem namespace) para resiliência universal;
+    * Arquivos atualizados transferidos para a Hostnet via SCP e testados remotamente com retorno de sucesso de 112 KB renderizados sem erros.
+
 ---
 
 ## Próximo Passo Recomendado

@@ -2026,3 +2026,18 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Ajustado o layout de `ticket_80mm.php` com `@page { size: 80mm auto; margin: 0; }` e `ticket-wrapper` com `page-break-inside: avoid` estrito;
   3. Orientado o usuário a utilizar a opção **"Grade de Fichas (Folha A4)"** sempre que desejar imprimir em sua impressora de escritório ou salvar um PDF A4 para recortar lanches em grade 2x4 (8 fichas por folha).
 - Como evitar no futuro: Disponibilizar mensagens claras de contexto ao usuário sobre a destinação de hardware para cada formato (bobina 80mm vs folha solta A4), com atalhos diretos para alternância de formato.
+
+---
+
+## 2026-10-16 - Erro fatal "Call to undefined function repararUtf8()" no PDV de balcão
+
+- Sintoma: Ao acessar o balcão PDV (`/operacional/pdv`), a tela de contingência de erro seguro foi disparada com o código `55e247d1-4846-eb88` e mensagem: `Fatal error: Uncaught Error: Call to undefined function repararUtf8() in /home/cantinawebmontei/www/app/views/operacional/pdv.php:701`.
+- Causa:
+  1. No arquivo `app/core/Sanitizer.php`, a função auxiliar `repararUtf8()` foi declarada no final do arquivo abaixo da diretiva `namespace App\Core;`. Em PHP, funções procedurais declaradas sob um `namespace` passam a residir naquele namespace (`\App\Core\repararUtf8`), e não no escopo global raiz (`\repararUtf8`);
+  2. Como os arquivos de visualização (views) rodam no escopo global sem namespace, a chamada à função sem namespace `repararUtf8()` disparou erro de função não definida;
+  3. Além disso, a chamada era redundante, uma vez que a classe base `Controller::render()` já higieniza preventivamente 100% de todos os dados do array `$data` (`$categorias`, `$produtos`, etc.) através de `Sanitizer::repararUtf8($data)` antes de passá-los para a view.
+- Solução aplicada:
+  1. Removidas as chamadas redundantes a `repararUtf8()` em `app/views/operacional/pdv.php` (linhas 701, 724 e 725), passando a utilizar diretamente os dados já higienizados pelo `Controller`;
+  2. Registrada a função helper global `repararUtf8()` no Front Controller `index.php` (no escopo raiz sem namespace) para resiliência e retrocompatibilidade universal em qualquer script ou view;
+  3. Arquivos sincronizados via SCP para o servidor Hostnet e execução validada com sucesso (`PDV_SUCCESS: Gerou 112024 bytes sem erros!`).
+- Como evitar no futuro: Funções helper globais devem ser registradas exclusivamente em arquivos de bootstrap sem declaração de namespace (ou com declaração de namespace explícita global). Em views MVC, evitar reprocessar dados que o Controller já entrega higienizados.

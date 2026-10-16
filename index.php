@@ -39,6 +39,14 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
+// 3.1 Registra helper global para reparação defensiva de UTF-8
+if (!function_exists('repararUtf8')) {
+    function repararUtf8(mixed $input): mixed
+    {
+        return \App\Core\Sanitizer::repararUtf8($input);
+    }
+}
+
 // 4. Carrega as configurações centrais da aplicação
 $configFile = __DIR__ . '/config/config.php';
 if (!file_exists($configFile)) {

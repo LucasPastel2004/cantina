@@ -698,7 +698,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     </button>
                     <?php foreach ($categorias as $cat): ?>
                         <button type="button" class="pdv-cat-btn" data-cat="<?php echo (int)$cat['id']; ?>" onclick="filtrarCategoria(<?php echo (int)$cat['id']; ?>, this)">
-                            <?php echo htmlspecialchars(repararUtf8($cat['nome']), ENT_QUOTES, 'UTF-8'); ?>
+                            <?php echo htmlspecialchars($cat['nome'], ENT_QUOTES, 'UTF-8'); ?>
                         </button>
                     <?php endforeach; ?>
                 </div>
@@ -721,8 +721,8 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     $esgotado = (bool)$prod['esgotado'];
                     $estoque = (int)$prod['estoque_atual'];
                     $precoFormatado = number_format((float)$prod['preco_venda'], 2, ',', '.');
-                    $descProdutoLimpa = repararUtf8($prod['descricao']);
-                    $alergenosNomesLimpos = repararUtf8($prod['alergenos_nomes'] ?? '');
+                    $descProdutoLimpa = $prod['descricao'];
+                    $alergenosNomesLimpos = $prod['alergenos_nomes'] ?? '';
                     ?>
                     <div class="pdv-prod-card <?php echo $esgotado ? 'disabled' : ''; ?>"
                          data-id="<?php echo (int)$prod['id']; ?>"
