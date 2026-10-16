@@ -136,10 +136,11 @@ O **Cantina Web — Colégio Monteiro Lobato** é uma plataforma web corporativa
 
 5. **Acessar no Navegador:**
    * Abra `http://localhost:8080`
-   * **Credenciais padrão para testes locais:**
-     - **Equipe da Cantina (Administrador):** Usuário `admin` | Senha `admin123`
-     - **Equipe da Cantina (Operador):** Usuário `operador-ana` | Senha `operador123`
-     - **Portal da Família (Responsável):** CPF `111.222.333-44` | Senha `senha123`
+   * **Credenciais padrão para testes da equipe:**
+     - **Equipe da Cantina (Gestão Master):** Usuário `gestor.cantina` | Senha `Monteiro#Cantina2026!`
+     - **Equipe da Cantina (Operador de Caixa):** Usuário `operador` | Senha `Operador#2026!Caixa`
+     - **Portal da Família (Responsável):** CPF `89100832120` | Senha `senha123`
+
 
 ---
 
