@@ -1935,3 +1935,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Aprimoramento do Autoloader PSR-4 em `index.php` para normalizar nomes de subpastas em minúsculo (`strtolower`), mantendo a compatibilidade transparente entre Windows e Linux;
   3. Adição de suporte a prefixo `/index.php` no `Router.php` e diretiva `RewriteBase /` com `DirectoryIndex index.php` no `.htaccess`.
 - Como evitar no futuro: Em publicações em hospedagens compartilhadas Linux, sempre remover páginas padrão instaladas pela hospedagem (`index.html`) e garantir que autoloaders manuais normalizem o caminho das pastas físicas para evitar inconsistências de sensibilidade de caixa.
+
+---
+
+## 2026-10-16 - Risco de mutação via GET e coluna inexistente no utilitário de reset pré-lançamento
+
+- Sintoma: Identificados durante a revisão de código de segurança:
+  1. A confirmação de exclusão em massa aceitava requisições HTTP `GET`, suscetível a disparos involuntários por crawlers de antivírus, links em mensageiros e pré-carregamento especulativo (*speculation rules / prefetching*) de navegadores modernos;
+  2. Tentativa de update da coluna inexistente `estoque_minimo_alerta` na tabela `produtos` (gerando `PDOException: Column not found: 1054`).
+- Causa:
+  1. Utilização de link de âncora `<a>` na interface web em vez de formulário `POST` transacional com token embutido;
+  2. Divergência de nomenclatura em relação ao schema oficial da migração `011_create_produtos_table.php` (onde as colunas são `estoque_atual`, `estoque_reservado` e `estoque_minimo`).
+- Solução aplicada:
+  1. Refatorada a interface web de `database/reset_dados_teste.php` para exigir formulário corporativo com método `POST`, bloqueando sumariamente qualquer mutação via `GET` e aceitando tokens tanto em `$_POST` quanto em `$_GET`;
+  2. Corrigida a query de reset de estoque para `UPDATE produtos SET estoque_atual = 0, estoque_reservado = 0;`, preservando a configuração individual de `estoque_minimo` cadastrada no catálogo;
+  3. Adicionado bloco idiomático `try ... catch ... finally` garantindo a restauração incondicional de `FOREIGN_KEY_CHECKS = 1`.
+- Como evitar no futuro: Operações destrutivas ou de mutação de banco de dados em endpoints web NUNCA devem ser acionadas via método GET; utilizar obrigatoriamente POST com token de validação. Sempre checar as migrações oficiais antes de redigir queries de atualização em massa.

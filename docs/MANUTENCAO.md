@@ -272,6 +272,27 @@ O **Cantina Web — Colégio Monteiro Lobato** é uma plataforma web corporativa
 3. Para executar em ambiente de produção (Hostnet) via navegador com token:
    `https://seudominio.com.br/database/runner.php?token=monteiro_lobato_secret_migration_token_2026`
 
+### Rotina Segura de Limpeza de Dados de Teste Pré-Lançamento
+O sistema dispõe do utilitário `database/reset_dados_teste.php` para purgar e zerar dados operacionais gerados durante os testes e homologação antes da inauguração oficial com clientes reais.
+
+* **Modos de Operação:**
+  * `transacional` (Padrão): Limpa pedidos, vendas de balcão, sessões de caixa, extratos e movimentações de carteira (saldos voltam para R$ 0,00), estoque atual (redefinido para 0), despesas, perdas e logs. Mantém intactos: usuários da cantina, turmas, alunos, responsáveis, catálogo de produtos e migrações.
+  * `total`: Executa o modo transacional e também zera cadastros de alunos, vínculos familiares e colaboradores para reset completo de fábrica.
+* **Execução via Terminal (SSH na Hostnet ou Docker local):**
+  ```bash
+  # Simulação / Verificação de segurança (não altera nada):
+  /usr/bin/php8.2 database/reset_dados_teste.php --modo=transacional
+
+  # Execução efetiva com confirmação:
+  /usr/bin/php8.2 database/reset_dados_teste.php --modo=transacional --confirmar
+  ```
+* **Execução via Navegador (HTTP com Token e Confirmação via POST Seguro):**
+  * Acesse no navegador a tela de checklist e confirmação:
+    `https://seudominio.com.br/database/reset_dados_teste.php?token=SEU_MIGRATION_TOKEN&modo=transacional`
+  * O sistema exibe o resumo completo do que será purgado e do que será preservado, exigindo a submissão do formulário via método `POST` para prevenir disparos acidentais por bots, crawlers ou prefetching de navegadores.
+
+
+
 ### Como criar uma nova migração
 1. Crie um arquivo em `database/migrations/` seguindo a sequência numérica (ex: `027_adicionar_campo_x_na_tabela_y.php`).
 2. Utilize o esqueleto padrão das migrações do projeto:

@@ -6,10 +6,11 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ## Resumo Geral
 
-* **Fase Atual:** Preparação e Configuração de Deploy Manual na Hostnet (Passo 7)
+* **Fase Atual:** Homologação Remota e Ferramenta de Limpeza Pré-Lançamento (Passo 8)
 * **Status da Documentação:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Automação de Deploy Manual na Hostnet Configurada!
-* **Última Atualização:** 2026-10-15 12:45:00 (Criação de deploy-exclude.txt e .github/workflows/deploy-hostnet.yml para deploy manual via SSH/rsync na Hostnet).
+* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Carga de Dados de Demonstração e Utilitário de Limpeza Pré-Lançamento 100% Operacionais!
+* **Última Atualização:** 2026-10-16 07:20:00 (Importação da massa de dados para o MySQL da Hostnet e criação do utilitário database/reset_dados_teste.php com suporte a CLI e Web por token).
+
 
 
 
@@ -1685,13 +1686,29 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   - **Portabilidade Linux ext4:** Autoloader PSR-4 aprimorado para normalização de pastas em minúsculo (`app/core`, `app/controllers`, etc.) e Router com suporte a prefixos em proxies reversos.
   - **Status Final em Produção:** Sistema 100% operacional, homologado e online na Hostnet!
 
+* [x] **Carga de Dados de Teste e Utilitário de Limpeza Pré-Lançamento (Passo 8):**
+  - **Exportação e Carga no MySQL de Produção (Hostnet):** A base de dados completa do ambiente local foi exportada e importada com sucesso no servidor `web165`, populando:
+    * 232 alunos ativos matriculados com fotos, restrições e vínculos;
+    * 195 responsáveis familiares cadastrados com CPFs e saldos de carteira para testes;
+    * 14 produtos cadastrados em 4 categorias com preços, alérgenos e controle de estoque;
+    * 19 turmas e séries escolares cadastradas;
+    * 71 pedidos e agendamentos semanais simulados para validação do corte matutino e vespertino;
+    * Sessões de caixa abertas/fechadas, despesas operacionais simuladas e DRE com dados reais.
+  - **Criação do Utilitário de Limpeza Pré-Lançamento (`database/reset_dados_teste.php`):**
+    * Suporte dual de execução: CLI (via SSH) e HTTP protegido por token (`migration_token`);
+    * Dois modos de operação: `transacional` (limpa movimentações de teste, zera carteiras para R$ 0,00 e zera estoque, mantendo alunos, responsáveis e produtos intactos) e `total` (reset completo de fábrica);
+    * Exceção de segurança adicionada em `database/.htaccess` via `<FilesMatch "^(runner|reset_dados_teste)\.php$">`;
+    * Arquivo enviado e sincronizado no servidor Hostnet;
+    * Testado com sucesso via CLI (dry run de segurança) e via Web com validação de token (HTTP 403 sem token e HTTP 200 com tela de checklist corporativo).
+
 ---
 
 ## Próximo Passo Recomendado
 
-1. **Carga de Dados de Teste/Demonstração (Amanhã cedo):** Exportar os dados locais populados (produtos, turmas, alunos, responsáveis, cardápio) e importar no MySQL da Hostnet para que a equipe e diretores da escola possam testar e homologar todas as telas pelo endereço provisório de suas próprias casas.
-2. **Rotina de Zeramento/Limpeza Pré-Lançamento:** Criar script seguro com token de autorização para limpar e purgar 100% dos dados transacionais de teste (pedidos, caixas, vendas balcão, movimentações de carteira) mantendo as tabelas mestras e cadastros limpos para a inauguração oficial aos clientes.
-3. **Propagação do Domínio Definitivo:** Acompanhar a ativação do domínio `cantinawebmonteirolobato.com.br` e habilitar o certificado SSL gratuito (HTTPS).
+1. **Homologação Externa pela Equipe da Escola:** Equipe da cantina, secretaria e direção realizam testes remotos nas telas operacionais e no Portal da Família a partir de seus computadores e celulares.
+2. **Propagação do Domínio Definitivo:** Acompanhar a ativação do domínio `cantinawebmonteirolobato.com.br` e habilitar o certificado SSL gratuito (HTTPS) na Hostnet.
+3. **Execução da Limpeza Pré-Lançamento:** No dia da inauguração oficial para os alunos e pais reais, executar a limpeza dos dados de teste via navegador ou SSH para iniciar as operações financeiras com base 100% zerada.
+
 
 
 

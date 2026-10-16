@@ -6,12 +6,13 @@
     Deny from all
 </IfModule>
 
-# Permite acesso HTTP ao runner.php para hospedagem compartilhada (Hostnet), protegido por token interno
-<Files "runner.php">
+# Permite acesso HTTP ao runner.php e reset_dados_teste.php para hospedagem compartilhada (Hostnet), protegidos por token interno
+<FilesMatch "^(runner|reset_dados_teste)\.php$">
     <IfModule mod_authz_core.c>
         Require all granted
     </IfModule>
     <IfModule !mod_authz_core.c>
         Allow from all
     </IfModule>
-</Files>
+</FilesMatch>
+
