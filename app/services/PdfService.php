@@ -559,8 +559,100 @@ class PdfService
             return $pdf;
         }
 
-        // Fallback contingência para 80mm caso motor A4 falhe
-        return self::gerarTicketsLotePdf($tickets, array_merge($parametros, ['formato' => '80mm']));
+        // Fallback nativo: Grade de 8 tickets por folha A4 (2 colunas x 4 linhas)
+        $chunks = array_chunk($tickets, 8);
+        $pages = [];
+        $imgPath = self::getLogoThermalPath();
+
+        foreach ($chunks as $chunk) {
+            $st = "";
+            foreach ($chunk as $idx => $t) {
+                $col = $idx % 2;
+                $row = (int)($idx / 2);
+                $x = ($col === 0) ? 24.0 : 306.0;
+                $y = 628.0 - ($row * 198.0);
+                $w = 265.0;
+                $h = 188.0;
+
+                $aluno = self::removerAcentos($t['aluno_nome'] ?? 'Aluno');
+                $turma = self::removerAcentos($t['nome_turma'] ?? ($t['serie'] ?? 'Turma Regular'));
+                $prod = self::removerAcentos($t['produto_descricao'] ?? 'Lanche');
+                $qtd = (int)($t['item_quantidade'] ?? 1);
+                $cod = $t['codigo_ticket'] ?? 'TCK';
+                $via = (int)($t['numero_via'] ?? 1);
+                $dataConsumo = !empty($t['data_consumo']) ? date('d/m/Y', strtotime($t['data_consumo'])) : date('d/m/Y');
+                $turno = ucfirst(self::removerAcentos($t['turno_consumo'] ?? 'Matutino'));
+                $alergenos = trim((string)($t['tag_alergenos'] ?? ''));
+
+                // Borda tracejada do cartão
+                $st .= "[3 3] 0 d\n0.6 w\n0.4 0.4 0.5 RG\n";
+                $st .= sprintf("%.2f %.2f %.2f %.2f re S\n", $x, $y, $w, $h);
+
+                // Logotipo pequeno (22pt) no canto superior esquerdo
+                $st .= self::desenharLogoCircular($x + 8.0, $y + $h - 28.0, 22.0);
+
+                // Cabeçalho da escola ao lado do logo (sem sobreposição!)
+                $st .= "BT\n/F2 7.5 Tf\n0.0 0.0 0.0 rg\n";
+                $st .= sprintf("%.2f %.2f Td\n", $x + 36.0, $y + $h - 14.0);
+                $st .= "(COLEGIO MONTEIRO LOBATO) Tj\nET\n";
+
+                $st .= "BT\n/F1 6.5 Tf\n0.3 0.3 0.3 rg\n";
+                $st .= sprintf("%.2f %.2f Td\n", $x + 36.0, $y + $h - 24.0);
+                $st .= sprintf("(Cantina Escolar - %s [%s]) Tj\nET\n", $dataConsumo, $turno);
+
+                // Divisória tracejada superior
+                $st .= "[2 2] 0 d\n0.5 w\n0.7 0.7 0.7 RG\n";
+                $st .= sprintf("%.2f %.2f m %.2f %.2f l S\n", $x + 6.0, $y + $h - 32.0, $x + $w - 6.0, $y + $h - 32.0);
+
+                // Código do ticket
+                $st .= "BT\n/F2 9 Tf\n0.0 0.0 0.0 rg\n";
+                $st .= sprintf("%.2f %.2f Td\n", $x + 8.0, $y + $h - 45.0);
+                $st .= sprintf("(%s%s) Tj\nET\n", self::escapeText($cod), $via > 1 ? " [{$via}a VIA]" : "");
+
+                // Estudante / Turma
+                $st .= "BT\n/F1 6.5 Tf\n0.4 0.4 0.4 rg\n";
+                $st .= sprintf("%.2f %.2f Td\n", $x + 8.0, $y + $h - 57.0);
+                $st .= "(Estudante / Turma:) Tj\nET\n";
+
+                $st .= "BT\n/F2 9 Tf\n0.0 0.0 0.0 rg\n";
+                $st .= sprintf("%.2f %.2f Td\n", $x + 8.0, $y + $h - 69.0);
+                $st .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($aluno, 0, 34)));
+
+                $st .= "BT\n/F1 8 Tf\n0.15 0.15 0.15 rg\n";
+                $st .= sprintf("%.2f %.2f Td\n", $x + 8.0, $y + $h - 80.0);
+                $st .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($turma, 0, 36)));
+
+                // Box do Produto (contorno sólido)
+                $st .= "[] 0 d\n0.7 w\n0.1 0.1 0.1 RG\n";
+                $st .= sprintf("%.2f %.2f %.2f %.2f re S\n", $x + 6.0, $y + 36.0, $w - 12.0, 64.0);
+
+                $st .= "BT\n/F2 9 Tf\n0.0 0.0 0.0 rg\n";
+                $st .= sprintf("%.2f %.2f Td\n", $x + 12.0, $y + 84.0);
+                $st .= sprintf("(%s) Tj\nET\n", self::escapeText(strtoupper(substr($prod, 0, 32))));
+
+                $st .= "BT\n/F2 8 Tf\n0.1 0.1 0.1 rg\n";
+                $st .= sprintf("%.2f %.2f Td\n", $x + 12.0, $y + 70.0);
+                $st .= sprintf("(QUANTIDADE: %d UN) Tj\nET\n", $qtd);
+
+                if (!empty($alergenos)) {
+                    $st .= "BT\n/F2 6.5 Tf\n0.6 0.2 0.0 rg\n";
+                    $st .= sprintf("%.2f %.2f Td\n", $x + 12.0, $y + 56.0);
+                    $st .= sprintf("([ATENCAO: %s]) Tj\nET\n", self::escapeText(substr(self::removerAcentos($alergenos), 0, 38)));
+                }
+
+                // Rodapé do cartão
+                $st .= "BT\n/F1 6 Tf\n0.4 0.4 0.4 rg\n";
+                $st .= sprintf("%.2f %.2f Td\n", $x + 8.0, $y + 22.0);
+                $st .= "(Entregar no balcao da cantina no recreio.) Tj\nET\n";
+
+                $st .= "BT\n/F1 5.5 Tf\n0.6 0.6 0.6 rg\n";
+                $st .= sprintf("%.2f %.2f Td\n", $x + 8.0, $y + 8.0);
+                $st .= "(- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -) Tj\nET\n";
+            }
+            $pages[] = $st;
+        }
+
+        return self::montarPdfMultiPaginas($pages, self::PAGE_WIDTH, self::PAGE_HEIGHT, $imgPath);
     }
 
     public static function gerarTicketsLotePdf(array $tickets, array $parametros = []): string
@@ -576,37 +668,94 @@ class PdfService
             return $pdf;
         }
 
-        // Fallback canônico de contingência
+        // Fallback nativo: Cupom contínuo de Bobina Térmica 80mm
         $streams = [];
         $imgPath = self::getLogoThermalPath();
+
         foreach ($tickets as $t) {
             $st = "";
             $aluno = self::removerAcentos($t['aluno_nome'] ?? 'Aluno');
+            $turma = self::removerAcentos($t['nome_turma'] ?? ($t['serie'] ?? 'Turma Regular'));
             $prod = self::removerAcentos($t['produto_descricao'] ?? 'Lanche');
+            $qtd = (int)($t['item_quantidade'] ?? 1);
             $cod = $t['codigo_ticket'] ?? 'TCK';
+            $via = (int)($t['numero_via'] ?? 1);
+            $dataConsumo = !empty($t['data_consumo']) ? date('d/m/Y', strtotime($t['data_consumo'])) : date('d/m/Y');
+            $turno = ucfirst(self::removerAcentos($t['turno_consumo'] ?? 'Matutino'));
+            $alergenos = trim((string)($t['tag_alergenos'] ?? ''));
 
-            $st .= self::desenharLogoCircular(93.38, 380.0, 40.0);
-            $st .= "BT\n/F2 10 Tf\n0.0 0.0 0.0 rg\n";
-            $st .= sprintf("%.2f %.2f Td\n", 40.0, 410.0);
+            // Logo centralizado de 32pt (Y de 222 a 254)
+            $st .= self::desenharLogoCircular(97.38, 222.0, 32.0);
+
+            // Nome da escola ABAIXO do logo (Y=208, sem sobreposição!)
+            $st .= "BT\n/F2 8 Tf\n0.0 0.0 0.0 rg\n";
+            $st .= "56.00 208.00 Td\n";
             $st .= "(COLEGIO MONTEIRO LOBATO) Tj\nET\n";
 
-            $st .= "BT\n/F2 10 Tf\n0.0 0.0 0.0 rg\n";
-            $st .= sprintf("%.2f %.2f Td\n", 20.0, 360.0);
-            $st .= sprintf("(%s) Tj\nET\n", self::escapeText($cod));
+            // Subtítulo
+            $st .= "BT\n/F1 6.5 Tf\n0.2 0.2 0.2 rg\n";
+            $st .= "48.00 197.00 Td\n";
+            $st .= sprintf("(Cantina Escolar - %s [%s]) Tj\nET\n", $dataConsumo, $turno);
 
-            $st .= "BT\n/F2 11 Tf\n0.0 0.0 0.0 rg\n";
-            $st .= sprintf("%.2f %.2f Td\n", 20.0, 330.0);
-            $st .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($aluno, 0, 25)));
+            // Divisória tracejada
+            $st .= "[2 2] 0 d\n0.5 w\n0.2 0.2 0.2 RG\n12.00 190.00 m 214.77 190.00 l S\n";
 
-            $st .= "BT\n/F1 10 Tf\n0.0 0.0 0.0 rg\n";
-            $st .= sprintf("%.2f %.2f Td\n", 20.0, 300.0);
-            $st .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($prod, 0, 28)));
+            // Código do ticket
+            $st .= "BT\n/F2 9.5 Tf\n0.0 0.0 0.0 rg\n";
+            $st .= "65.00 178.00 Td\n";
+            $st .= sprintf("(%s%s) Tj\nET\n", self::escapeText($cod), $via > 1 ? " [{$via}a VIA]" : "");
+
+            $st .= "[2 2] 0 d\n0.5 w\n0.2 0.2 0.2 RG\n12.00 171.00 m 214.77 171.00 l S\n";
+
+            // Estudante / Turma
+            $st .= "BT\n/F1 6.5 Tf\n0.35 0.35 0.35 rg\n";
+            $st .= "14.00 161.00 Td\n(ESTUDANTE / TURMA:) Tj\nET\n";
+
+            $st .= "BT\n/F2 9.5 Tf\n0.0 0.0 0.0 rg\n";
+            $st .= "14.00 149.00 Td\n";
+            $st .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($aluno, 0, 32)));
+
+            $st .= "BT\n/F1 8.5 Tf\n0.1 0.1 0.1 rg\n";
+            $st .= "14.00 137.00 Td\n";
+            $st .= sprintf("(%s) Tj\nET\n", self::escapeText(substr($turma, 0, 35)));
+
+            // Box do Produto
+            $st .= "[] 0 d\n0.8 w\n0.0 0.0 0.0 RG\n12.00 78.00 202.77 52.00 re S\n";
+
+            $st .= "BT\n/F2 9.5 Tf\n0.0 0.0 0.0 rg\n";
+            $st .= "18.00 114.00 Td\n";
+            $st .= sprintf("(%s) Tj\nET\n", self::escapeText(strtoupper(substr($prod, 0, 30))));
+
+            $st .= "BT\n/F2 8.5 Tf\n0.0 0.0 0.0 rg\n";
+            $st .= "18.00 100.00 Td\n";
+            $st .= sprintf("(QUANTIDADE: %d UN) Tj\nET\n", $qtd);
+
+            if (!empty($alergenos)) {
+                $st .= "BT\n/F2 7 Tf\n0.6 0.2 0.0 rg\n";
+                $st .= "18.00 87.00 Td\n";
+                $st .= sprintf("([ATENCAO: %s]) Tj\nET\n", self::escapeText(substr(self::removerAcentos($alergenos), 0, 36)));
+            }
+
+            $st .= "[2 2] 0 d\n0.5 w\n0.2 0.2 0.2 RG\n12.00 70.00 m 214.77 70.00 l S\n";
+
+            // Rodapé
+            $st .= "BT\n/F1 6.5 Tf\n0.25 0.25 0.25 rg\n";
+            $st .= "28.00 56.00 Td\n(Entregar no balcao da cantina no recreio.) Tj\nET\n";
+
+            $st .= "BT\n/F1 6 Tf\n0.35 0.35 0.35 rg\n";
+            $st .= "18.00 46.00 Td\n(Uso individual e intransferivel. Descartar apos o consumo.) Tj\nET\n";
+
+            $st .= "[3 3] 0 d\n0.5 w\n0.5 0.5 0.5 RG\n12.00 24.00 m 214.77 24.00 l S\n";
+
+            $st .= "BT\n/F1 6.5 Tf\n0.4 0.4 0.4 rg\n";
+            $st .= "16.00 14.00 Td\n(- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -) Tj\nET\n";
 
             $streams[] = $st;
         }
 
-        return self::montarPdfMultiPaginas($streams, self::PAGE_WIDTH_THERMAL, 450.0, $imgPath);
+        return self::montarPdfMultiPaginas($streams, self::PAGE_WIDTH_THERMAL, 260.0, $imgPath);
     }
+
 
     public static function gerarTicketIndividualPdf(array $ticket): string
     {

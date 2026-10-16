@@ -1960,3 +1960,14 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Causa: Ao executar `mysqldump` com redirecionador `>` no PowerShell do Windows (`docker compose exec db mysqldump ... > dump.sql`), o PowerShell interceptou a saída decodificando os bytes segundo a página de código OEM da console (CP850/CP437) e regravou o arquivo, gerando dupla codificação UTF-8 sobreposta.
 - Solução aplicada: O dump dos dados de teste foi extraído estritamente dentro do contêiner Docker (`sh -c "mysqldump --default-character-set=utf8mb4 ... > /tmp/dump.sql"`), copiado diretamente via binário (`docker compose cp`) e importado no MySQL da Hostnet com `--default-character-set=utf8mb4`. Teste automatizado via navegador confirmou ZERO caracteres corrompidos nas telas operacionais e de cupons térmicos 80mm.
 - Como evitar no futuro: NUNCA utilizar pipes ou redirecionamento de texto do PowerShell (`>`) para exportar dumps SQL do MySQL. Gerar o arquivo diretamente dentro do ambiente Linux ou contêiner e copiar como arquivo binário.
+
+---
+
+## 2026-10-16 - Layout corrompido nos downloads de PDF de tickets (A4 e 80mm) sem Gotenberg
+
+- Sintoma: Ao clicar em "PDF A4" ou "PDF 80mm", o PDF gerado no navegador exibia 1 ticket por folha com sobreposição do logotipo sobre o texto da escola ("COLEGIO MONTEIRO LOBATO"), ausência da grade 2x4 em A4 e excesso de margens em branco.
+- Causa: Em ambiente de hospedagem compartilhada (Hostnet), o microsserviço Chromium headless (Gotenberg) não está em execução. O método `PdfService::htmlToPdf` acionava a rotina de contingência nativa que: (1) não implementava o layout em grade A4 de 8 fichas por folha; (2) desenhava coordenadas com sobreposição física entre a imagem circular e o texto de cabeçalho; (3) utilizava altura excessiva no formato térmico.
+- Solução aplicada: Refatorados cirurgicamente os geradores nativos de contingência em `app/services/PdfService.php`:
+  1. `gerarTicketsLoteA4Pdf`: Desenvolveu-se a grade nativa PDF 1.4 de 2 colunas x 4 linhas (8 tickets por página) com bordas tracejadas de corte, logo no topo sem sobreposição, caixas de produtos, alérgenos e paginação precisa (12 tickets gerando exatamente 2 folhas A4);
+  2. `gerarTicketsLotePdf`: Calibrada a bobina térmica nativa de 80mm (largura 226.77 pt, altura 260 pt), posicionando o logo centralizado acima do título institucional, código em destaque, dados de turma/estudante, caixa sólida para o lanche e picote de tesoura inferior.
+- Como evitar no futuro: Em arquiteturas com microsserviços opcionais (Chromium/Gotenberg), garantir que a camada de contingência nativa possua calibração milimétrica idêntica aos padrões visuais corporativos do `docs/DESIGN.md`.
