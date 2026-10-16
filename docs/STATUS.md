@@ -1742,6 +1742,26 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Registrado o helper global `repararUtf8()` no `index.php` (no escopo raiz sem namespace) para resiliência universal;
     * Arquivos atualizados transferidos para a Hostnet via SCP e testados remotamente com retorno de sucesso de 112 KB renderizados sem erros.
 
+* [x] **Remoção de Botões Redundantes de Download de PDF & Blindagem de Planilhas Excel (Passo 12):**
+  - **Contexto e Solicitação do Usuário:**
+    * Remoção do botão avulso redundante *"Baixar em PDF"* em todas as telas do sistema, consolidando as ações no botão oficial *"Imprimir / Salvar PDF"* (que já abre a pré-visualização A4/80mm perfeita e nativa);
+    * Correção de todas as planilhas CSV exportadas pelo sistema que abriam no Microsoft Excel exibindo popup de erro de sintaxe (*"Encontramos um problema com esta fórmula..."*).
+  - **Causa Raiz do Erro de Fórmula no Excel:**
+    * O motor do Microsoft Excel avalia compulsoriamente como fórmula qualquer texto numa célula que comece com `=`, `+`, `-` ou `@`;
+    * No DRE, os marcadores contábeis iniciavam com `(+)`, `(-)` e `(=)` (ex: `(=) RECEITA LÍQUIDA`);
+    * Na Arrecadação e Estoque, valores monetários e balanços positivos iniciavam com `+` (ex: `+150,00`, `+50 un`);
+    * A sanitização anterior tentava escapar com apóstrofo `'`, que gerava sujeira visível e falhas em versões em português do Excel.
+  - **Soluções Implementadas:**
+    * **Remoção dos Botões de Download Avulso nas Views:**
+      - Atualizadas e padronizadas as views `arrecadacao.php`, `dre.php`, `caixa.php`, `caixa_detalhes.php`, `pdv.php`, `estoque_filtros.php`, `extrato_aluno.php`, `vendas_filtros.php`, `vendas_alimento.php`, `devedores.php`, `cupom_pdv_80mm.php` e `recarga_dinheiro_pdf.php`;
+      - Mantidos apenas os botões claros, elegantes e neutros: **"Imprimir / Salvar PDF (A4)"** (ou 80mm) e **"Exportar Planilha (CSV)"**.
+    * **Blindagem da Geração de Planilhas CSV (`RelatoriosController.php` e `DreController.php`):**
+      - `DreController.php`: Marcadores contábeis convertidos para colchetes seguros: `[+] RECEITA BRUTA`, `[-] DEDUÇÕES`, `[=] RECEITA LÍQUIDA`, `[-] CMV`, `[=] LUCRO BRUTO`, `[-] DESPESAS OPERACIONAIS`, `[=] RESULTADO LÍQUIDO`;
+      - `RelatoriosController.php`: Refatorado o método `sanitizarCsvCelula` e `sanitizarCsvLinha` para remover automaticamente o sinal `+` inicial antes de dígitos (`^\+\s*\d`), preservar números negativos e monetários brasileiros (`-50,00`), neutralizar caracteres de fórmula com espaço invisível e passar todas as linhas (inclusive cabeçalhos e totais) pela higienização;
+      - Removido prefixo `+` de variação de carteira e balanço de estoque;
+      - Script de teste unitário `tests/teste_csv_excel_sintaxe.php` criado e validado com 100% de sucesso;
+      - Todos os arquivos sincronizados via SCP para o servidor Hostnet.
+
 ---
 
 ## Próximo Passo Recomendado

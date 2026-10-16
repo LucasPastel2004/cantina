@@ -189,20 +189,13 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
         <span class="toolbar-tag">Bobina Térmica 80mm</span>
     </div>
     <div class="toolbar-actions">
-        <button type="button" class="btn-action btn-print-primary" onclick="window.print();" title="Imprimir Comprovante (Ctrl + P)">
+        <button type="button" class="btn-action btn-print-primary" onclick="window.print();" title="Imprimir ou Salvar PDF (Ctrl + P)">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                 <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
             </svg>
-            Imprimir Comprovante
+            Imprimir / Salvar PDF
         </button>
-        <a href="<?php echo htmlspecialchars($urlPdf); ?>" class="btn-action btn-action-secondary" target="_blank" title="Baixar arquivo em PDF">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-            </svg>
-            Baixar PDF
-        </a>
         <button type="button" class="btn-action btn-action-secondary" onclick="window.close();" title="Fechar Janela">
             Fechar
         </button>

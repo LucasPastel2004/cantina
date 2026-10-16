@@ -73,15 +73,10 @@ $produtosRentaveis = $graficos['produtos_rentaveis'] ?? [];
                     <span>Lançar Despesas</span>
                 </a>
 
-                <!-- Trio Oficial de Emissão do DRE -->
-                <button type="submit" formaction="<?php echo $baseUrl; ?>/financeiro/dre/imprimir" formtarget="_blank" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1" title="Visualizar e imprimir o DRE oficial A4">
+                <!-- Dupla Oficial de Emissão do DRE -->
+                <button type="submit" formaction="<?php echo $baseUrl; ?>/financeiro/dre/imprimir" formtarget="_blank" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1" title="Visualizar, imprimir ou salvar em PDF o DRE oficial A4">
                     <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
-                    <span>Visualizar / Imprimir (A4)</span>
-                </button>
-
-                <button type="submit" formaction="<?php echo $baseUrl; ?>/financeiro/dre/pdf" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1" title="Baixar relatório oficial DRE em PDF timbrado">
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/><path d="M4.603 14.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.127.24-.4.655-.657 1.2-.767.433-.088.94-.108 1.487-.066.36.027.734.076 1.11.144.33-.374.657-.79.967-1.233.568-.813.99-1.637 1.258-2.434.204-.606.326-1.144.37-1.597.042-.435-.02-.756-.18-.946-.145-.172-.37-.24-.653-.199-.333.048-.602.21-.79.479-.196.282-.294.67-.294 1.14 0 .363.073.742.217 1.126.155.412.378.835.66 1.254-.182.493-.388.976-.615 1.439-.24.492-.505.952-.788 1.368-.42.062-.84.103-1.25.122-.44.02-.857.01-1.24-.031a2.827 2.827 0 0 1-.58-.124zm2.84-2.82c-.3-.396-.54-.805-.72-1.21-.14-.325-.23-.623-.27-.887-.02-.12-.03-.223-.03-.306 0-.312.06-.523.18-.62.08-.065.18-.088.3-.067.14.024.25.105.32.234.07.13.1.32.1.56a4.2 4.2 0 0 1-.08.625 5.56 5.56 0 0 1-.22.68c-.06.15-.12.29-.18.423z"/></svg>
-                    <span>Baixar em PDF (A4)</span>
+                    <span>Imprimir / Salvar PDF (A4)</span>
                 </button>
 
                 <button type="submit" formaction="<?php echo $baseUrl; ?>/financeiro/dre/csv" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1" title="Exportar dados do DRE para planilha Excel">
@@ -320,7 +315,7 @@ $produtosRentaveis = $graficos['produtos_rentaveis'] ?? [];
             <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" class="text-primary flex-shrink-0"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
             <div class="text-microcopy text-secondary" style="line-height: 1.45;">
                 <strong class="text-dark">Emissão Oficial do Demonstrativo Contábil (DRE):</strong>
-                A tabela analítica de DRE contábil com apuração formal de Receita Bruta, Deduções, CMV, Lucro Bruto e Despesas Operacionais é gerada sob demanda para o período selecionado (<strong><?php echo date('d/m/Y', strtotime($dataInicio)); ?> a <?php echo date('d/m/Y', strtotime($dataFim)); ?></strong>) através dos botões <strong>Visualizar / Imprimir (A4)</strong> ou <strong>Baixar em PDF (A4)</strong> no topo da página.
+                A tabela analítica de DRE contábil com apuração formal de Receita Bruta, Deduções, CMV, Lucro Bruto e Despesas Operacionais é gerada sob demanda para o período selecionado (<strong><?php echo date('d/m/Y', strtotime($dataInicio)); ?> a <?php echo date('d/m/Y', strtotime($dataFim)); ?></strong>) através do botão <strong>Imprimir / Salvar PDF (A4)</strong> no topo da página.
             </div>
         </div>
     </div>

@@ -46,17 +46,9 @@ $dias = $dados['dias'] ?? [];
                id="btnImprimirA4"
                onclick="executarAcaoExportacao(event, 'imprimir')"
                class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
-               title="Visualizar espelho oficial A4 para conferência e impressão">
+               title="Visualizar espelho oficial A4 para conferência, impressão ou salvar em PDF">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
-                <span>Visualizar / Imprimir (A4)</span>
-            </a>
-            <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/pdf?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
-               id="btnPdfA4"
-               onclick="executarAcaoExportacao(event, 'pdf')"
-               class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
-               title="Baixar demonstrativo timbrado em PDF de alta qualidade">
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
-                <span>Baixar em PDF (A4)</span>
+                <span>Imprimir / Salvar PDF (A4)</span>
             </a>
             <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/csv?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
                id="btnCsv"

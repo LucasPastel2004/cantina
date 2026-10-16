@@ -162,48 +162,26 @@ if ($resumoOficial) {
     <!-- Barra Superior de Ferramentas / Ações do Caixa -->
     <div class="card-enterprise-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 px-3">
         <div class="d-flex align-items-center gap-2">
-            <!-- Botão Emitir com Opções de Visualizar/Imprimir e Baixar PDF -->
+            <!-- Botão Imprimir / Salvar PDF (A4) do Fechamento de Caixa -->
             <?php if ($sessaoIdAtual): ?>
-                <div class="dropdown d-inline-block">
-                    <button class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1 font-semibold dropdown-toggle" 
-                            type="button" 
-                            id="dropdownEmitirCaixa" 
-                            data-bs-toggle="dropdown" 
-                            aria-expanded="false" 
-                            title="Emitir Relatório Oficial de Fechamento de Caixa">
-                        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                            <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-                        </svg>
-                        Emitir
-                    </button>
-                    <ul class="dropdown-menu shadow-sm" aria-labelledby="dropdownEmitirCaixa" style="font-size: 12.5px;">
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $sessaoIdAtual; ?>" target="_blank" onclick="window.open(this.href, '_blank'); return false;">
-                                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-primary">
-                                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-                                </svg>
-                                <span>Visualizar / Imprimir (A4)</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?php echo $baseUrl; ?>/operacional/caixa/fechamento/pdf?id=<?php echo $sessaoIdAtual; ?>" target="_blank">
-                                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="text-danger">
-                                    <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 1.5l3 3H9.5v-3zM4.5 9h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0-4h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1 0-1z"/>
-                                </svg>
-                                <span>Baixar em PDF (A4)</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa/espelho/<?php echo $sessaoIdAtual; ?>" 
+                   target="_blank" 
+                   onclick="window.open(this.href, '_blank'); return false;"
+                   class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1 font-semibold"
+                   title="Imprimir ou Salvar em PDF (A4) o Relatório Oficial de Fechamento de Caixa">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                    </svg>
+                    Imprimir / Salvar PDF (A4)
+                </a>
             <?php else: ?>
                 <button type="button" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1" disabled title="Nenhuma sessão disponível para emissão">
                     <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                         <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
                     </svg>
-                    Emitir
+                    Imprimir / Salvar PDF (A4)
                 </button>
             <?php endif; ?>
 
@@ -808,11 +786,8 @@ if ($resumoOficial) {
                                 <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                                 <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
                             </svg>
-                            Imprimir Comprovante Térmico (80mm)
+                            Imprimir / Salvar PDF (80mm)
                         </button>
-                        <a href="#" target="_blank" class="btn btn-enterprise btn-primary px-3" id="recargaBtnBaixarPdf">
-                            Baixar Comprovante em PDF
-                        </a>
                         <button type="button" class="btn btn-enterprise btn-primary px-3" onclick="window.location.reload();">
                             Concluir e Atualizar Caixa
                         </button>
@@ -1177,7 +1152,9 @@ function confirmarFechamento(event) {
             imprimirComprovanteRecargaIframe(data.transacao_id);
         };
 
-        btnBaixarPdf.href = urlPdf;
+        if (btnBaixarPdf) {
+            btnBaixarPdf.href = urlPdf;
+        }
 
         const btnAba = document.getElementById('recargaBtnAba');
         if (btnAba) {

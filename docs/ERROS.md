@@ -2041,3 +2041,20 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Registrada a função helper global `repararUtf8()` no Front Controller `index.php` (no escopo raiz sem namespace) para resiliência e retrocompatibilidade universal em qualquer script ou view;
   3. Arquivos sincronizados via SCP para o servidor Hostnet e execução validada com sucesso (`PDV_SUCCESS: Gerou 112024 bytes sem erros!`).
 - Como evitar no futuro: Funções helper globais devem ser registradas exclusivamente em arquivos de bootstrap sem declaração de namespace (ou com declaração de namespace explícita global). Em views MVC, evitar reprocessar dados que o Controller já entrega higienizados.
+
+---
+
+## 2026-10-16 - Erro de sintaxe de fórmula no Microsoft Excel ("Encontramos um problema com esta fórmula...") em planilhas CSV
+
+- Sintoma: Ao abrir os arquivos CSV exportados pelo sistema (DRE, Arrecadação, Vendas, Extrato de Aluno e Estoque) no Microsoft Excel no Windows, o aplicativo abria exibindo uma caixa de diálogo de alerta: *"Encontramos um problema com esta fórmula. Você não está tentando digitar uma fórmula? Ao digitar o primeiro caractere como um sinal de igual (=) ou menos (-), o Excel deduz que é uma fórmula..."*.
+- Causa:
+  1. No relatório de DRE (`DreController.php`), as linhas contábeis iniciavam literalmente com `(+)`, `(-)` e `(=)` (ex: `(+) RECEITA BRUTA`, `(=) RECEITA LÍQUIDA DE VENDAS`). Como o Excel avalia compulsoriamente como fórmula qualquer célula iniciada com `=`, `+`, `-` ou `@`, a presença de parênteses como `(=)` violava a gramática de fórmulas do Excel;
+  2. Nos relatórios de Arrecadação e Estoque (`RelatoriosController.php`), valores positivos eram formatados com sinal `+` explícito (ex: `+150,00`, `+7.602,50`, `+50 un`). O Excel tentava avaliar como expressão matemática e falhava devido à pontuação de milhar e texto;
+  3. A sanitização anterior tentava escapar caracteres de fórmula prefixando um apóstrofo `'` (ex: `'+150,00`), o que deixava o apóstrofo visível na célula em planilhas abertas no Excel brasileiro.
+- Solução aplicada:
+  1. No DRE (`DreController.php`), os marcadores contábeis foram convertidos para colchetes neutros e elegantes: `[+] RECEITA BRUTA`, `[-] DEDUÇÕES`, `[=] RECEITA LÍQUIDA`, `[-] CMV`, `[=] LUCRO BRUTO`, `[-] DESPESAS OPERACIONAIS`, `[=] RESULTADO LÍQUIDO`, imunes à interpretação de fórmulas;
+  2. No método `sanitizarCsvCelula` (`RelatoriosController.php`), implementada remoção automática de `+` inicial se seguido de dígitos (`^\+\s*\d`), preservando números negativos legítimos (`-50,00`) e neutralizando fórmulas perigosas em texto livre com espaço invisível (`' ' . $valor`);
+  3. Removido o prefixo `+` manual de `variacao_saldo`, `variacao_carteira` e balanço do período de estoque;
+  4. Garantido que 100% das linhas exportadas em todas as ações de CSV passem por `self::sanitizarCsvLinha()`;
+  5. Criado teste unitário `tests/teste_csv_excel_sintaxe.php` validando todas as regras e executado com 100% de sucesso.
+- Como evitar no futuro: Em exportações CSV para Microsoft Excel, nunca iniciar o conteúdo de células com `=`, `+`, `-` ou `@`, exceto para valores puramente numéricos negativos (ex: `-50,00`). Rótulos contábeis que indiquem soma ou subtração devem sempre utilizar colchetes (`[+]`, `[-]`, `[=]`) em vez de parênteses.

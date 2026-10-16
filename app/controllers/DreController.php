@@ -256,23 +256,23 @@ class DreController extends Controller
         };
 
         // 1. Receitas
-        $escreverLinha('(+) RECEITA BRUTA DE VENDAS', 'receita_bruta');
+        $escreverLinha('[+] RECEITA BRUTA DE VENDAS', 'receita_bruta');
         $escreverLinha('    Vendas Cantina Web (Online)', 'receita_online');
         $escreverLinha('    Vendas Presenciais no Balcão', 'receita_balcao');
         
         // 2. Deduções
-        $escreverLinha('(-) DEDUÇÕES E ABATIMENTOS', 'total_deducoes');
+        $escreverLinha('[-] DEDUÇÕES E ABATIMENTOS', 'total_deducoes');
         $escreverLinha('    Estornos de Balcão', 'estornos_balcao');
         $escreverLinha('    Estornos Pedidos Online', 'estornos_online');
         
         // 3. Receita Líquida
-        $escreverLinha('(=) RECEITA LÍQUIDA DE VENDAS', 'receita_liquida');
+        $escreverLinha('[=] RECEITA LÍQUIDA DE VENDAS', 'receita_liquida');
         
         // 4. CMV
-        $escreverLinha('(-) CUSTO DAS MERCADORIAS VENDIDAS (CMV)', 'cmv');
+        $escreverLinha('[-] CUSTO DAS MERCADORIAS VENDIDAS (CMV)', 'cmv');
         
         // 5. Lucro Bruto
-        $escreverLinha('(=) LUCRO BRUTO', 'lucro_bruto');
+        $escreverLinha('[=] LUCRO BRUTO', 'lucro_bruto');
         
         // Margem Bruta
         $linhaMargemBruta = ['    Margem Bruta (%)'];
@@ -283,7 +283,7 @@ class DreController extends Controller
         fputcsv($output, $linhaMargemBruta, ';');
 
         // 6. Despesas Operacionais
-        $escreverLinha('(-) DESPESAS OPERACIONAIS', 'total_despesas');
+        $escreverLinha('[-] DESPESAS OPERACIONAIS', 'total_despesas');
         $escreverLinha('    Despesas Administrativas', 'despesas_administrativas');
         $escreverLinha('    Despesas com Pessoal & Salários', 'despesas_pessoal');
         $escreverLinha('    Despesas com Vendas & Embalagens', 'despesas_vendas');
@@ -292,7 +292,7 @@ class DreController extends Controller
         $escreverLinha('    Outras Despesas Operacionais', 'despesas_outras');
 
         // 7. Resultado Líquido
-        $escreverLinha('(=) RESULTADO LÍQUIDO DO EXERCÍCIO (LUCRO LÍQUIDO)', 'resultado_liquido');
+        $escreverLinha('[=] RESULTADO LÍQUIDO DO EXERCÍCIO (LUCRO LÍQUIDO)', 'resultado_liquido');
 
         // Margem Líquida
         $linhaMargemLiq = ['    Margem Líquida (%)'];

@@ -36,13 +36,43 @@ class RelatoriosController extends Controller
         if ($trim === '') {
             return $valor;
         }
+
+        // 1. Remove sinal de '+' inicial antes de dígitos (ex: '+150,00' -> '150,00', '+50 un' -> '50 un')
+        if (str_starts_with($trim, '+') && preg_match('/^\+\s*\d/', $trim)) {
+            return ltrim($trim, '+');
+        }
+
+        // 2. Preserva números negativos legítimos no padrão brasileiro (ex: '-50,00', '-1.234,56', '-10%')
+        if (str_starts_with($trim, '-') && preg_match('/^-[\d\.,\s]+%?$/', $trim)) {
+            return $trim;
+        }
+
+        // 3. Converte marcadores contábeis iniciais que usam parênteses para colchetes
+        // Isso impede que o Excel tente calcular como fórmula matemática
+        if (str_starts_with($trim, '(=)')) {
+            return '[=]' . substr($trim, 3);
+        }
+        if (str_starts_with($trim, '(+)')) {
+            return '[+]' . substr($trim, 3);
+        }
+        if (str_starts_with($trim, '(-)')) {
+            return '[-]' . substr($trim, 3);
+        }
+
+        // 4. Se começar com traço textual avulso (ex: '- Produto'), substitui por traço gráfico '–'
+        if (str_starts_with($trim, '- ')) {
+            return '– ' . substr($trim, 2);
+        }
+        if ($trim === '-') {
+            return '';
+        }
+
+        // 5. Prevenção de CSV Formula Injection: se começar com '=', '+', '-', '@' em texto livre
         $primeiro = $trim[0];
         if (in_array($primeiro, ['=', '+', '-', '@', "\t", "\r"], true)) {
-            if (is_numeric($trim)) {
-                return $valor;
-            }
-            return "'" . $valor;
+            return ' ' . $valor; // Espaço inicial anula a interpretação de fórmula no Excel de forma limpa e invisível
         }
+
         return $valor;
     }
 
@@ -302,21 +332,21 @@ class RelatoriosController extends Controller
         fputs($out, "\xEF\xBB\xBF"); // UTF-8 BOM para Excel
         $delimitador = ';';
 
-        fputcsv($out, ['COLÉGIO MONTEIRO LOBATO - EXTRATO DE CONSUMO DO ALUNO'], $delimitador);
-        fputcsv($out, ['Período:', $dadosExtrato['periodo']], $delimitador);
-        fputcsv($out, ['Aluno:', $dadosExtrato['aluno']['nome'], 'Matrícula:', $dadosExtrato['aluno']['matricula'], 'Turma:', ($dadosExtrato['aluno']['serie'] ?? '') . ' ' . ($dadosExtrato['aluno']['nome_turma'] ?? '')], $delimitador);
-        fputcsv($out, ['Saldo Atual:', 'R$ ' . number_format($dadosExtrato['saldo_atual'], 2, ',', '.')], $delimitador);
+        fputcsv($out, self::sanitizarCsvLinha(['COLÉGIO MONTEIRO LOBATO - EXTRATO DE CONSUMO DO ALUNO']), $delimitador);
+        fputcsv($out, self::sanitizarCsvLinha(['Período:', $dadosExtrato['periodo']]), $delimitador);
+        fputcsv($out, self::sanitizarCsvLinha(['Aluno:', $dadosExtrato['aluno']['nome'], 'Matrícula:', $dadosExtrato['aluno']['matricula'], 'Turma:', ($dadosExtrato['aluno']['serie'] ?? '') . ' ' . ($dadosExtrato['aluno']['nome_turma'] ?? '')]), $delimitador);
+        fputcsv($out, self::sanitizarCsvLinha(['Saldo Atual:', 'R$ ' . number_format($dadosExtrato['saldo_atual'], 2, ',', '.')]), $delimitador);
         fputcsv($out, [], $delimitador);
 
         if ($apenasSaldo) {
-            fputcsv($out, ['Resumo Financeiro do Aluno'], $delimitador);
-            fputcsv($out, ['Saldo Inicial:', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')], $delimitador);
-            fputcsv($out, ['Total Recarregado no Período:', number_format($dadosExtrato['total_recargas'], 2, ',', '.')], $delimitador);
-            fputcsv($out, ['Total Gasto no Período:', number_format($dadosExtrato['total_gasto'], 2, ',', '.')], $delimitador);
-            fputcsv($out, ['Saldo Atual da Carteira:', number_format($dadosExtrato['saldo_atual'], 2, ',', '.')], $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['Resumo Financeiro do Aluno']), $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['Saldo Inicial:', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')]), $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['Total Recarregado no Período:', number_format($dadosExtrato['total_recargas'], 2, ',', '.')]), $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['Total Gasto no Período:', number_format($dadosExtrato['total_gasto'], 2, ',', '.')]), $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['Saldo Atual da Carteira:', number_format($dadosExtrato['saldo_atual'], 2, ',', '.')]), $delimitador);
         } else {
-            fputcsv($out, ['Data', 'Descrição', 'Qtd', 'V. Unitário (R$)', 'V. Total (R$)', 'Forma Pagamento', 'Saldo (R$)'], $delimitador);
-            fputcsv($out, ['', 'Saldo inicial', '', '', '', '', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')], $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['Data', 'Descrição', 'Qtd', 'V. Unitário (R$)', 'V. Total (R$)', 'Forma Pagamento', 'Saldo (R$)']), $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['', 'Saldo inicial', '', '', '', '', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')]), $delimitador);
 
             foreach ($dadosExtrato['linhas'] as $l) {
                 fputcsv($out, self::sanitizarCsvLinha([
@@ -330,7 +360,7 @@ class RelatoriosController extends Controller
                 ]), $delimitador);
             }
 
-            fputcsv($out, ['', 'Total gasto no periodo', '', '', number_format($dadosExtrato['total_gasto'], 2, ',', '.'), '', ''], $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['', 'Total gasto no periodo', '', '', number_format($dadosExtrato['total_gasto'], 2, ',', '.'), '', '']), $delimitador);
         }
 
         fclose($out);
@@ -501,8 +531,16 @@ class RelatoriosController extends Controller
         $filtros = $this->extrairFiltrosVendas();
         $dadosRelatorio = $this->obterDadosVendasAvancadas($filtros);
 
-        $csv = "\xEF\xBB\xBF"; // UTF-8 BOM para Excel
-        
+        $nomeArquivo = 'vendas_cantina_' . str_replace('-', '', $filtros['data_inicio']) . '_' . str_replace('-', '', $filtros['data_fim']) . '.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF"); // UTF-8 BOM para Excel
+
         $emitirObs = ($filtros['emitir_observacao'] === 'sim');
         $emitirForma = ($filtros['emitir_forma_pagamento'] === 'sim');
         $emitirHorario = ($filtros['emitir_horario'] === 'sim');
@@ -520,40 +558,41 @@ class RelatoriosController extends Controller
         if ($emitirForma) $cabecalho[] = "FORMA_PAGAMENTO";
         if ($emitirObs) $cabecalho[] = "OBSERVACAO";
 
-        $csv .= implode(';', $cabecalho) . "\r\n";
+        fputcsv($output, $cabecalho, ';');
 
         // Linhas de dados
         $itens = $dadosRelatorio['itens'] ?? [];
         foreach ($itens as $item) {
             $linha = [];
-            $linha[] = $item['data_fmt'] ?? ($item['data_venda'] ?? '-');
-            if ($emitirHorario) $linha[] = $item['hora_venda'] ?? '-';
-            if ($agruparTipo) $linha[] = str_replace(';', ' ', $item['tipo_pessoa'] ?? 'Aluno');
-            $linha[] = str_replace(';', ' ', $item['descricao'] ?? ($item['produto_nome'] ?? '-'));
-            $linha[] = str_replace(';', ' ', $item['categoria_nome'] ?? '-');
+            $linha[] = $item['data_fmt'] ?? ($item['data_venda'] ?? '');
+            if ($emitirHorario) $linha[] = $item['hora_venda'] ?? '';
+            if ($agruparTipo) $linha[] = $item['tipo_pessoa'] ?? 'Aluno';
+            $linha[] = $item['descricao'] ?? ($item['produto_nome'] ?? '');
+            $linha[] = $item['categoria_nome'] ?? '';
             $linha[] = (int)($item['quantidade'] ?? ($item['quantidade_total'] ?? 0));
-            $linha[] = number_format((float)($item['preco_unitario'] ?? ($item['preco_medio'] ?? 0.0)), 2, ',', '');
-            $linha[] = number_format((float)($item['subtotal'] ?? ($item['valor_total'] ?? 0.0)), 2, ',', '');
-            if ($emitirForma) $linha[] = str_replace(';', ' ', $item['forma_pagamento'] ?? '-');
-            if ($emitirObs) $linha[] = str_replace([';', "\r", "\n"], ' ', $item['observacao'] ?? '-');
+            $linha[] = number_format((float)($item['preco_unitario'] ?? ($item['preco_medio'] ?? 0.0)), 2, ',', '.');
+            $linha[] = number_format((float)($item['subtotal'] ?? ($item['valor_total'] ?? 0.0)), 2, ',', '.');
+            if ($emitirForma) $linha[] = $item['forma_pagamento'] ?? '';
+            if ($emitirObs) $linha[] = str_replace(["\r", "\n"], ' ', $item['observacao'] ?? '');
 
-            $csv .= implode(';', self::sanitizarCsvLinha($linha)) . "\r\n";
+            fputcsv($output, self::sanitizarCsvLinha($linha), ';');
         }
 
-        // Totais do período no CSV
-        $totalFat = number_format((float)($dadosRelatorio['totais']['faturamento_total'] ?? 0.0), 2, ',', '');
+        // Totais do período no CSV com correspondência exata de colunas
+        $totalFat = number_format((float)($dadosRelatorio['totais']['faturamento_total'] ?? 0.0), 2, ',', '.');
         $totalQtd = (int)($dadosRelatorio['totais']['quantidade_total'] ?? 0);
-        $csv .= "TOTAL DO PERIODO;;;;;{$totalQtd};;{$totalFat}\r\n";
 
-        $nomeArquivo = 'vendas_cantina_' . str_replace('-', '', $filtros['data_inicio']) . '_' . str_replace('-', '', $filtros['data_fim']) . '.csv';
+        $linhaTotal = array_fill(0, count($cabecalho), '');
+        $linhaTotal[0] = 'TOTAL DO PERÍODO';
+        
+        // Localiza índices das colunas QUANTIDADE e VALOR_TOTAL_RS
+        $idxQtd = array_search('QUANTIDADE', $cabecalho);
+        $idxTotal = array_search('VALOR_TOTAL_RS', $cabecalho);
+        if ($idxQtd !== false) $linhaTotal[$idxQtd] = $totalQtd;
+        if ($idxTotal !== false) $linhaTotal[$idxTotal] = $totalFat;
 
-        header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-        header('Content-Length: ' . strlen($csv));
-        header('Cache-Control: private, max-age=0, must-revalidate');
-        header('Pragma: public');
-
-        echo $csv;
+        fputcsv($output, self::sanitizarCsvLinha($linhaTotal), ';');
+        fclose($output);
         exit;
     }
 
@@ -2038,7 +2077,7 @@ class RelatoriosController extends Controller
 
         // Totais no rodapé da planilha
         fputcsv($output, [], ';');
-        fputcsv($output, [
+        fputcsv($output, self::sanitizarCsvLinha([
             'TOTAIS DO PERÍODO',
             '',
             '',
@@ -2049,9 +2088,9 @@ class RelatoriosController extends Controller
             $dados['totais']['total_entradas'],
             $dados['totais']['total_saidas'],
             'Balanço Líquido:',
-            ($dados['totais']['balanco_periodo'] >= 0 ? '+' : '') . $dados['totais']['balanco_periodo'] . ' un',
+            $dados['totais']['balanco_periodo'] . ' un',
             ''
-        ], ';');
+        ]), ';');
 
         fclose($output);
         exit;
@@ -2865,12 +2904,12 @@ class RelatoriosController extends Controller
                 number_format($d['vendas_pix'], 2, ',', '.'),
                 number_format($d['total_arrecadado'], 2, ',', '.'),
                 number_format($d['consumo_saldo'], 2, ',', '.'),
-                ($d['variacao_saldo'] >= 0 ? '+' : '') . number_format($d['variacao_saldo'], 2, ',', '.')
+                number_format($d['variacao_saldo'], 2, ',', '.')
             ]), ';');
         }
 
         fputcsv($output, [], ';');
-        fputcsv($output, [
+        fputcsv($output, self::sanitizarCsvLinha([
             'TOTAIS CONSOLIDADOS DO PERÍODO',
             '',
             number_format($dados['recargas_pix_total'], 2, ',', '.'),
@@ -2879,8 +2918,8 @@ class RelatoriosController extends Controller
             number_format($dados['vendas_pix_total'], 2, ',', '.'),
             number_format($dados['total_arrecadado_bruto'], 2, ',', '.'),
             number_format($dados['total_consumo_saldo'], 2, ',', '.'),
-            ($dados['variacao_carteira'] >= 0 ? '+' : '') . number_format($dados['variacao_carteira'], 2, ',', '.')
-        ], ';');
+            number_format($dados['variacao_carteira'], 2, ',', '.')
+        ]), ';');
 
         fclose($output);
         if (!defined('CANTINA_TEST_MODE')) {
