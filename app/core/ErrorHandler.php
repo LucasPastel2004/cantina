@@ -49,6 +49,11 @@ class ErrorHandler
      */
     public static function handleError(int $level, string $message, string $file, int $line): bool
     {
+        // Ignora avisos de depreciação do PHP para não interromper requisições operacionais
+        if ($level === E_DEPRECATED || $level === E_USER_DEPRECATED) {
+            return true;
+        }
+
         if (!(error_reporting() & $level)) {
             return false;
         }

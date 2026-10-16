@@ -332,21 +332,21 @@ class RelatoriosController extends Controller
         fputs($out, "\xEF\xBB\xBF"); // UTF-8 BOM para Excel
         $delimitador = ';';
 
-        fputcsv($out, self::sanitizarCsvLinha(['COLÉGIO MONTEIRO LOBATO - EXTRATO DE CONSUMO DO ALUNO']), $delimitador);
-        fputcsv($out, self::sanitizarCsvLinha(['Período:', $dadosExtrato['periodo']]), $delimitador);
-        fputcsv($out, self::sanitizarCsvLinha(['Aluno:', $dadosExtrato['aluno']['nome'], 'Matrícula:', $dadosExtrato['aluno']['matricula'], 'Turma:', ($dadosExtrato['aluno']['serie'] ?? '') . ' ' . ($dadosExtrato['aluno']['nome_turma'] ?? '')]), $delimitador);
-        fputcsv($out, self::sanitizarCsvLinha(['Saldo Atual:', 'R$ ' . number_format($dadosExtrato['saldo_atual'], 2, ',', '.')]), $delimitador);
-        fputcsv($out, [], $delimitador);
+        fputcsv($out, self::sanitizarCsvLinha(['COLÉGIO MONTEIRO LOBATO - EXTRATO DE CONSUMO DO ALUNO']), $delimitador, '"', "\\");
+        fputcsv($out, self::sanitizarCsvLinha(['Período:', $dadosExtrato['periodo']]), $delimitador, '"', "\\");
+        fputcsv($out, self::sanitizarCsvLinha(['Aluno:', $dadosExtrato['aluno']['nome'], 'Matrícula:', $dadosExtrato['aluno']['matricula'], 'Turma:', ($dadosExtrato['aluno']['serie'] ?? '') . ' ' . ($dadosExtrato['aluno']['nome_turma'] ?? '')]), $delimitador, '"', "\\");
+        fputcsv($out, self::sanitizarCsvLinha(['Saldo Atual:', 'R$ ' . number_format($dadosExtrato['saldo_atual'], 2, ',', '.')]), $delimitador, '"', "\\");
+        fputcsv($out, [], $delimitador, '"', "\\");
 
         if ($apenasSaldo) {
-            fputcsv($out, self::sanitizarCsvLinha(['Resumo Financeiro do Aluno']), $delimitador);
-            fputcsv($out, self::sanitizarCsvLinha(['Saldo Inicial:', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')]), $delimitador);
-            fputcsv($out, self::sanitizarCsvLinha(['Total Recarregado no Período:', number_format($dadosExtrato['total_recargas'], 2, ',', '.')]), $delimitador);
-            fputcsv($out, self::sanitizarCsvLinha(['Total Gasto no Período:', number_format($dadosExtrato['total_gasto'], 2, ',', '.')]), $delimitador);
-            fputcsv($out, self::sanitizarCsvLinha(['Saldo Atual da Carteira:', number_format($dadosExtrato['saldo_atual'], 2, ',', '.')]), $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['Resumo Financeiro do Aluno']), $delimitador, '"', "\\");
+            fputcsv($out, self::sanitizarCsvLinha(['Saldo Inicial:', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')]), $delimitador, '"', "\\");
+            fputcsv($out, self::sanitizarCsvLinha(['Total Recarregado no Período:', number_format($dadosExtrato['total_recargas'], 2, ',', '.')]), $delimitador, '"', "\\");
+            fputcsv($out, self::sanitizarCsvLinha(['Total Gasto no Período:', number_format($dadosExtrato['total_gasto'], 2, ',', '.')]), $delimitador, '"', "\\");
+            fputcsv($out, self::sanitizarCsvLinha(['Saldo Atual da Carteira:', number_format($dadosExtrato['saldo_atual'], 2, ',', '.')]), $delimitador, '"', "\\");
         } else {
-            fputcsv($out, self::sanitizarCsvLinha(['Data', 'Descrição', 'Qtd', 'V. Unitário (R$)', 'V. Total (R$)', 'Forma Pagamento', 'Saldo (R$)']), $delimitador);
-            fputcsv($out, self::sanitizarCsvLinha(['', 'Saldo inicial', '', '', '', '', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')]), $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['Data', 'Descrição', 'Qtd', 'V. Unitário (R$)', 'V. Total (R$)', 'Forma Pagamento', 'Saldo (R$)']), $delimitador, '"', "\\");
+            fputcsv($out, self::sanitizarCsvLinha(['', 'Saldo inicial', '', '', '', '', number_format($dadosExtrato['saldo_inicial'], 2, ',', '.')]), $delimitador, '"', "\\");
 
             foreach ($dadosExtrato['linhas'] as $l) {
                 fputcsv($out, self::sanitizarCsvLinha([
@@ -357,10 +357,10 @@ class RelatoriosController extends Controller
                     is_numeric($l['valor_total']) ? number_format((float)$l['valor_total'], 2, ',', '.') : $l['valor_total'],
                     $l['forma_pagamento'] ?? '',
                     is_numeric($l['saldo']) ? number_format((float)$l['saldo'], 2, ',', '.') : ''
-                ]), $delimitador);
+                ]), $delimitador, '"', "\\");
             }
 
-            fputcsv($out, self::sanitizarCsvLinha(['', 'Total gasto no periodo', '', '', number_format($dadosExtrato['total_gasto'], 2, ',', '.'), '', '']), $delimitador);
+            fputcsv($out, self::sanitizarCsvLinha(['', 'Total gasto no periodo', '', '', number_format($dadosExtrato['total_gasto'], 2, ',', '.'), '', '']), $delimitador, '"', "\\");
         }
 
         fclose($out);
@@ -558,7 +558,7 @@ class RelatoriosController extends Controller
         if ($emitirForma) $cabecalho[] = "FORMA_PAGAMENTO";
         if ($emitirObs) $cabecalho[] = "OBSERVACAO";
 
-        fputcsv($output, $cabecalho, ';');
+        fputcsv($output, $cabecalho, ';', '"', "\\");
 
         // Linhas de dados
         $itens = $dadosRelatorio['itens'] ?? [];
@@ -575,7 +575,7 @@ class RelatoriosController extends Controller
             if ($emitirForma) $linha[] = $item['forma_pagamento'] ?? '';
             if ($emitirObs) $linha[] = str_replace(["\r", "\n"], ' ', $item['observacao'] ?? '');
 
-            fputcsv($output, self::sanitizarCsvLinha($linha), ';');
+            fputcsv($output, self::sanitizarCsvLinha($linha), ';', '"', "\\");
         }
 
         // Totais do período no CSV com correspondência exata de colunas
@@ -591,7 +591,7 @@ class RelatoriosController extends Controller
         if ($idxQtd !== false) $linhaTotal[$idxQtd] = $totalQtd;
         if ($idxTotal !== false) $linhaTotal[$idxTotal] = $totalFat;
 
-        fputcsv($output, self::sanitizarCsvLinha($linhaTotal), ';');
+        fputcsv($output, self::sanitizarCsvLinha($linhaTotal), ';', '"', "\\");
         fclose($output);
         exit;
     }
@@ -2037,10 +2037,10 @@ class RelatoriosController extends Controller
         fwrite($output, "\xEF\xBB\xBF");
 
         // Cabeçalho institucional do Colégio
-        fputcsv($output, ['COLÉGIO MONTEIRO LOBATO — SISTEMA CANTINA WEB'], ';');
-        fputcsv($output, ['RELATÓRIO GERENCIAL DE MOVIMENTAÇÕES DE ESTOQUE'], ';');
-        fputcsv($output, ['PERÍODO:', $dados['periodo_oficial'], 'CENTRO DE CUSTO:', 'Cantina Geral', 'EMISSÃO:', date('d/m/Y H:i:s')], ';');
-        fputcsv($output, [], ';');
+        fputcsv($output, ['COLÉGIO MONTEIRO LOBATO — SISTEMA CANTINA WEB'], ';', '"', "\\");
+        fputcsv($output, ['RELATÓRIO GERENCIAL DE MOVIMENTAÇÕES DE ESTOQUE'], ';', '"', "\\");
+        fputcsv($output, ['PERÍODO:', $dados['periodo_oficial'], 'CENTRO DE CUSTO:', 'Cantina Geral', 'EMISSÃO:', date('d/m/Y H:i:s')], ';', '"', "\\");
+        fputcsv($output, [], ';', '"', "\\");
 
         // Linha de cabeçalho das colunas
         fputcsv($output, [
@@ -2056,7 +2056,7 @@ class RelatoriosController extends Controller
             'Operador Responsável',
             'Documento / NF',
             'Justificativa / Motivo'
-        ], ';');
+        ], ';', '"', "\\");
 
         foreach ($dados['movimentacoes'] as $m) {
             fputcsv($output, self::sanitizarCsvLinha([
@@ -2072,11 +2072,11 @@ class RelatoriosController extends Controller
                 $m['operador_nome'],
                 $m['documento_ref'],
                 $m['justificativa_completa']
-            ]), ';');
+            ]), ';', '"', "\\");
         }
 
         // Totais no rodapé da planilha
-        fputcsv($output, [], ';');
+        fputcsv($output, [], ';', '"', "\\");
         fputcsv($output, self::sanitizarCsvLinha([
             'TOTAIS DO PERÍODO',
             '',
@@ -2090,7 +2090,7 @@ class RelatoriosController extends Controller
             'Balanço Líquido:',
             $dados['totais']['balanco_periodo'] . ' un',
             ''
-        ]), ';');
+        ]), ';', '"', "\\");
 
         fclose($output);
         exit;
@@ -2854,13 +2854,13 @@ class RelatoriosController extends Controller
         $output = fopen('php://output', 'w');
         fwrite($output, "\xEF\xBB\xBF"); // BOM UTF-8
 
-        fputcsv($output, ['COLÉGIO MONTEIRO LOBATO — SISTEMA CANTINA WEB'], ';');
-        fputcsv($output, ['RELATÓRIO DE ARRECADAÇÃO FINANCEIRA & FLUXO DE ENTRADAS (CASH-IN)'], ';');
-        fputcsv($output, ['PERÍODO:', $dados['periodo_oficial'], 'EMISSÃO:', date('d/m/Y H:i:s')], ';');
-        fputcsv($output, [], ';');
+        fputcsv($output, ['COLÉGIO MONTEIRO LOBATO — SISTEMA CANTINA WEB'], ';', '"', "\\");
+        fputcsv($output, ['RELATÓRIO DE ARRECADAÇÃO FINANCEIRA & FLUXO DE ENTRADAS (CASH-IN)'], ';', '"', "\\");
+        fputcsv($output, ['PERÍODO:', $dados['periodo_oficial'], 'EMISSÃO:', date('d/m/Y H:i:s')], ';', '"', "\\");
+        fputcsv($output, [], ';', '"', "\\");
 
-        fputcsv($output, ['RESUMO POR CANAIS DE ARRECADAÇÃO'], ';');
-        fputcsv($output, ['Canal / Meio de Pagamento', 'Descrição', 'Ambiente', 'Qtd Transações', 'Total Arrecadado (R$)', 'Participação (%)'], ';');
+        fputcsv($output, ['RESUMO POR CANAIS DE ARRECADAÇÃO'], ';', '"', "\\");
+        fputcsv($output, ['Canal / Meio de Pagamento', 'Descrição', 'Ambiente', 'Qtd Transações', 'Total Arrecadado (R$)', 'Participação (%)'], ';', '"', "\\");
         foreach ($dados['canais'] as $c) {
             fputcsv($output, self::sanitizarCsvLinha([
                 $c['canal'],
@@ -2869,7 +2869,7 @@ class RelatoriosController extends Controller
                 $c['quantidade'],
                 number_format($c['total'], 2, ',', '.'),
                 number_format($c['percentual'], 1, ',', '.') . '%'
-            ]), ';');
+            ]), ';', '"', "\\");
         }
         fputcsv($output, [
             'TOTAL GERAL ARRECADADO',
@@ -2878,10 +2878,10 @@ class RelatoriosController extends Controller
             $dados['total_transacoes_arrecadacao'],
             number_format($dados['total_arrecadado_bruto'], 2, ',', '.'),
             '100.0%'
-        ], ';');
-        fputcsv($output, [], ';');
+        ], ';', '"', "\\");
+        fputcsv($output, [], ';', '"', "\\");
 
-        fputcsv($output, ['DETALHAMENTO DIÁRIO DE ENTRADAS E CONSUMO'], ';');
+        fputcsv($output, ['DETALHAMENTO DIÁRIO DE ENTRADAS E CONSUMO'], ';', '"', "\\");
         fputcsv($output, [
             'Data',
             'Dia da Semana',
@@ -2892,7 +2892,7 @@ class RelatoriosController extends Controller
             'Total Arrecadado Dia (R$)',
             'Consumo em Saldo (R$)',
             'Variação Saldo (R$)'
-        ], ';');
+        ], ';', '"', "\\");
 
         foreach ($dados['dias'] as $d) {
             fputcsv($output, self::sanitizarCsvLinha([
@@ -2905,10 +2905,10 @@ class RelatoriosController extends Controller
                 number_format($d['total_arrecadado'], 2, ',', '.'),
                 number_format($d['consumo_saldo'], 2, ',', '.'),
                 number_format($d['variacao_saldo'], 2, ',', '.')
-            ]), ';');
+            ]), ';', '"', "\\");
         }
 
-        fputcsv($output, [], ';');
+        fputcsv($output, [], ';', '"', "\\");
         fputcsv($output, self::sanitizarCsvLinha([
             'TOTAIS CONSOLIDADOS DO PERÍODO',
             '',
@@ -2919,7 +2919,7 @@ class RelatoriosController extends Controller
             number_format($dados['total_arrecadado_bruto'], 2, ',', '.'),
             number_format($dados['total_consumo_saldo'], 2, ',', '.'),
             number_format($dados['variacao_carteira'], 2, ',', '.')
-        ]), ';');
+        ]), ';', '"', "\\");
 
         fclose($output);
         if (!defined('CANTINA_TEST_MODE')) {

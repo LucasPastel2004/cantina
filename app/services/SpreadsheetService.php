@@ -188,7 +188,7 @@ class SpreadsheetService
         // Volta ao início do arquivo
         rewind($handle);
 
-        $cabecalho = fgetcsv($handle, 0, $delimitador);
+        $cabecalho = fgetcsv($handle, 0, $delimitador, '"', "\\");
         if (!$cabecalho || empty($cabecalho)) {
             fclose($handle);
             return [
@@ -233,7 +233,7 @@ class SpreadsheetService
 
         $numeroLinha = 1;
 
-        while (($linhaRaw = fgetcsv($handle, 0, $delimitador)) !== false) {
+        while (($linhaRaw = fgetcsv($handle, 0, $delimitador, '"', "\\")) !== false) {
             $numeroLinha++;
 
             // Pula linha completamente vazia
@@ -417,7 +417,7 @@ class SpreadsheetService
         $delimitador   = self::detectarDelimitador($primeiraLinha);
         rewind($handle);
 
-        $cabecalho = fgetcsv($handle, 0, $delimitador);
+        $cabecalho = fgetcsv($handle, 0, $delimitador, '"', "\\");
         $cabecalho = array_map([self::class, 'converterParaUtf8'], $cabecalho);
         $mapa      = self::identificarMapaColunas($cabecalho);
 
@@ -439,7 +439,7 @@ class SpreadsheetService
         $numeroLinha = 1;
 
         try {
-            while (($linhaRaw = fgetcsv($handle, 0, $delimitador)) !== false) {
+            while (($linhaRaw = fgetcsv($handle, 0, $delimitador, '"', "\\")) !== false) {
                 $numeroLinha++;
 
                 if (empty(array_filter($linhaRaw, fn($v) => trim($v) !== ''))) {

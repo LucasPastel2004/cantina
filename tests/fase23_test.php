@@ -285,7 +285,7 @@ assertTeste(str_contains($htmlFiltros, 'name="quebra_pagina"'), "Controle de que
 assertTeste(str_contains($htmlFiltros, 'Cantina Geral'), "Centro de Custo 'Cantina Geral' referenciado");
 assertTeste(!str_contains($htmlFiltros, 'id="dropdownEmitirEstoque"'), "Botão repetido/dropdown do topo foi devidamente removido");
 assertTeste(str_contains($htmlFiltros, 'id="btnEmitirImprimir"'), "Botão oficial de emissão 'Visualizar / Imprimir (A4)' presente");
-assertTeste(str_contains($htmlFiltros, 'id="btnEmitirPdf"'), "Botão oficial de emissão 'Baixar em PDF (A4)' presente");
+assertTeste(!str_contains($htmlFiltros, 'id="btnEmitirPdf"'), "Botão redundante 'Baixar em PDF (A4)' removido em favor da unificação na tela de impressão");
 assertTeste(str_contains($htmlFiltros, 'id="btnEmitirCsv"'), "Botão oficial de emissão 'Exportar Planilha (CSV)' presente");
 
 // -------------------------------------------------------------------

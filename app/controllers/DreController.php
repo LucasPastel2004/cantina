@@ -229,11 +229,11 @@ class DreController extends Controller
 
         // Cabeçalho da Empresa
         $rotuloRegime = ($regime === 'caixa') ? 'REGIME DE CAIXA (RECARGAS & ARRECADAÇÃO)' : 'REGIME DE COMPETÊNCIA (VENDAS & CONSUMO)';
-        fputcsv($output, ['COLÉGIO MONTEIRO LOBATO - CANTINA WEB'], ';');
-        fputcsv($output, ["DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE) - {$rotuloRegime}"], ';');
-        fputcsv($output, ["PERÍODO: " . date('d/m/Y', strtotime($dataInicio)) . " A " . date('d/m/Y', strtotime($dataFim)) . " (Exercício {$ano})"], ';');
-        fputcsv($output, ['Emissão: ' . date('d/m/Y H:i:s')], ';');
-        fputcsv($output, [], ';');
+        fputcsv($output, ['COLÉGIO MONTEIRO LOBATO - CANTINA WEB'], ';', '"', "\\");
+        fputcsv($output, ["DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE) - {$rotuloRegime}"], ';', '"', "\\");
+        fputcsv($output, ["PERÍODO: " . date('d/m/Y', strtotime($dataInicio)) . " A " . date('d/m/Y', strtotime($dataFim)) . " (Exercício {$ano})"], ';', '"', "\\");
+        fputcsv($output, ['Emissão: ' . date('d/m/Y H:i:s')], ';', '"', "\\");
+        fputcsv($output, [], ';', '"', "\\");
 
         // Linha de Cabeçalho dos Meses
         $cabecalho = ['ESTRUTURA DRE'];
@@ -241,7 +241,7 @@ class DreController extends Controller
             $cabecalho[] = Dre::MESES_ABREV[$m] . '/' . substr((string)$ano, 2);
         }
         $cabecalho[] = 'TOTAL DO PERÍODO';
-        fputcsv($output, $cabecalho, ';');
+        fputcsv($output, $cabecalho, ';', '"', "\\");
 
         // Função auxiliar para montar linha de valores
         $escreverLinha = function(string $rotulo, string $chave, bool $formatarValor = true) use ($output, $dreAno, $drePeriodo) {
@@ -252,7 +252,7 @@ class DreController extends Controller
             }
             $totalVal = $drePeriodo[$chave] ?? 0.00;
             $linha[] = $formatarValor ? number_format((float)$totalVal, 2, ',', '.') : $totalVal;
-            fputcsv($output, $linha, ';');
+            fputcsv($output, $linha, ';', '"', "\\");
         };
 
         // 1. Receitas
@@ -280,7 +280,7 @@ class DreController extends Controller
             $linhaMargemBruta[] = number_format((float)($dreAno['meses'][$m]['margem_bruta_percent'] ?? 0), 1, ',', '.') . '%';
         }
         $linhaMargemBruta[] = number_format((float)($dreAno['totais']['margem_bruta_percent'] ?? 0), 1, ',', '.') . '%';
-        fputcsv($output, $linhaMargemBruta, ';');
+        fputcsv($output, $linhaMargemBruta, ';', '"', "\\");
 
         // 6. Despesas Operacionais
         $escreverLinha('[-] DESPESAS OPERACIONAIS', 'total_despesas');
@@ -300,7 +300,7 @@ class DreController extends Controller
             $linhaMargemLiq[] = number_format((float)($dreAno['meses'][$m]['margem_liquida_percent'] ?? 0), 1, ',', '.') . '%';
         }
         $linhaMargemLiq[] = number_format((float)($dreAno['totais']['margem_liquida_percent'] ?? 0), 1, ',', '.') . '%';
-        fputcsv($output, $linhaMargemLiq, ';');
+        fputcsv($output, $linhaMargemLiq, ';', '"', "\\");
 
         fclose($output);
         exit;

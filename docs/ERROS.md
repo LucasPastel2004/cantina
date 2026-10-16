@@ -2058,3 +2058,17 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Garantido que 100% das linhas exportadas em todas as ações de CSV passem por `self::sanitizarCsvLinha()`;
   5. Criado teste unitário `tests/teste_csv_excel_sintaxe.php` validando todas as regras e executado com 100% de sucesso.
 - Como evitar no futuro: Em exportações CSV para Microsoft Excel, nunca iniciar o conteúdo de células com `=`, `+`, `-` ou `@`, exceto para valores puramente numéricos negativos (ex: `-50,00`). Rótulos contábeis que indiquem soma ou subtração devem sempre utilizar colchetes (`[+]`, `[-]`, `[=]`) em vez de parênteses.
+
+---
+
+## 2026-10-16 - Planilhas CSV gerando erro de sintaxe no Excel por tela 500 decorrente de aviso E_DEPRECATED no PHP 8.4
+
+- Sintoma: Ao baixar planilhas CSV pelo sistema no servidor Hostnet (ex.: DRE em `/financeiro/dre/csv` ou Estoque em `/relatorios/estoque-movimentacoes/csv`), o arquivo baixado abria no Excel acusando erro de sintaxe. O conteúdo do arquivo não era o CSV esperado, mas sim o HTML da tela 500 institucional ("Falha Operacional Interceptada | Cantina Web").
+- Causa: O ambiente de produção da Hostnet roda PHP 8.4.26. No PHP 8.4, chamadas a `fputcsv()` e `fgetcsv()` sem o 5º parâmetro explícito (`$escape = "\\"`) emitem aviso de depreciação `E_DEPRECATED` ("the \$escape parameter must be provided as its default value will change"). Como o `ErrorHandler::handleError()` do sistema interceptava todo aviso e lançava `new \ErrorException()`, a requisição era abortada pelo capturador de exceção após os cabeçalhos de download CSV já terem sido enviados ao navegador, descarregando o HTML completo da página de erro 500 dentro do arquivo `.csv`.
+- Solução aplicada:
+  1. Em `app/core/ErrorHandler.php`: Adicionada verificação preventiva em `handleError()` ignorando explicitamente `E_DEPRECATED` e `E_USER_DEPRECATED`, garantindo que avisos de versões futuras da linguagem não interrompam operações em produção.
+  2. Em `app/controllers/DreController.php`: Todas as chamadas a `fputcsv()` atualizadas com os 5 argumentos explícitos (`fputcsv($output, $linha, ';', '"', "\\")`).
+  3. Em `app/controllers/RelatoriosController.php`: Todas as chamadas a `fputcsv()` dos métodos `extratoAlunoCsv`, `vendasFiltrosCsv`, `estoqueMovimentacoesCsv` e `arrecadacaoCsv` atualizadas com os 5 argumentos explícitos.
+  4. Em `app/services/SpreadsheetService.php`: Todas as chamadas a `fgetcsv()` atualizadas com os parâmetros de delimitador, aspas e escape explícitos.
+  5. Sincronização via SCP com o servidor da Hostnet e validação remota executada com sucesso via PHP 8.4 (`TAMANHO_CSV: 2191`, BOM UTF-8 `\xEF\xBB\xBF` presente e zero tags HTML).
+- Como evitar no futuro: Em PHP 8.4+, sempre explicitar todos os 5 parâmetros nas funções de I/O de CSV (`$stream, $fields, $delimiter, $enclosure, $escape`). Garantir que classes globais de tratamento de erro nunca promovam avisos de depreciação para exceções fatais em rotas de download de arquivos.

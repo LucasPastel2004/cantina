@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Sustentação e Ajustes Pós-Deploy em Produção
 * **Status da Documentação:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Blindagem Universal de Encoding UTF-8 + Ajuste Responsivo da Barra do PDV Homologados!
-* **Última Atualização:** 2026-10-16 09:12:00 (Implementação da Sanitizer::repararUtf8() no Model/Controller, correção do layout e overflow da stat-strip do PDV, criação da migração 031 e do utilitário database/corrigir_encoding.php).
+* **Última Atualização:** 2026-10-16 13:55:00 (Blindagem de exportações CSV contra avisos E_DEPRECATED no PHP 8.4 da Hostnet, adição de parâmetros explícitos em fputcsv/fgetcsv, e supressão de deprecation notices no ErrorHandler).
 
 
 
