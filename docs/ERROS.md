@@ -1951,3 +1951,12 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Corrigida a query de reset de estoque para `UPDATE produtos SET estoque_atual = 0, estoque_reservado = 0;`, preservando a configuração individual de `estoque_minimo` cadastrada no catálogo;
   3. Adicionado bloco idiomático `try ... catch ... finally` garantindo a restauração incondicional de `FOREIGN_KEY_CHECKS = 1`.
 - Como evitar no futuro: Operações destrutivas ou de mutação de banco de dados em endpoints web NUNCA devem ser acionadas via método GET; utilizar obrigatoriamente POST com token de validação. Sempre checar as migrações oficiais antes de redigir queries de atualização em massa.
+
+---
+
+## 2026-10-16 - Corrupção de acentos e caracteres especiais no MySQL por redirecionamento do PowerShell
+
+- Sintoma: Acentos e símbolos no sistema online na Hostnet apareciam corrompidos (ex: `6º` aparecendo como `6┬║`, `1ª Via` como `1┬¬ Via`, `Sanduíche` como `SANDU├ìCHE`).
+- Causa: Ao executar `mysqldump` com redirecionador `>` no PowerShell do Windows (`docker compose exec db mysqldump ... > dump.sql`), o PowerShell interceptou a saída decodificando os bytes segundo a página de código OEM da console (CP850/CP437) e regravou o arquivo, gerando dupla codificação UTF-8 sobreposta.
+- Solução aplicada: O dump dos dados de teste foi extraído estritamente dentro do contêiner Docker (`sh -c "mysqldump --default-character-set=utf8mb4 ... > /tmp/dump.sql"`), copiado diretamente via binário (`docker compose cp`) e importado no MySQL da Hostnet com `--default-character-set=utf8mb4`. Teste automatizado via navegador confirmou ZERO caracteres corrompidos nas telas operacionais e de cupons térmicos 80mm.
+- Como evitar no futuro: NUNCA utilizar pipes ou redirecionamento de texto do PowerShell (`>`) para exportar dumps SQL do MySQL. Gerar o arquivo diretamente dentro do ambiente Linux ou contêiner e copiar como arquivo binário.
