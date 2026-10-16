@@ -1971,3 +1971,22 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   1. `gerarTicketsLoteA4Pdf`: Desenvolveu-se a grade nativa PDF 1.4 de 2 colunas x 4 linhas (8 tickets por página) com bordas tracejadas de corte, logo no topo sem sobreposição, caixas de produtos, alérgenos e paginação precisa (12 tickets gerando exatamente 2 folhas A4);
   2. `gerarTicketsLotePdf`: Calibrada a bobina térmica nativa de 80mm (largura 226.77 pt, altura 260 pt), posicionando o logo centralizado acima do título institucional, código em destaque, dados de turma/estudante, caixa sólida para o lanche e picote de tesoura inferior.
 - Como evitar no futuro: Em arquiteturas com microsserviços opcionais (Chromium/Gotenberg), garantir que a camada de contingência nativa possua calibração milimétrica idêntica aos padrões visuais corporativos do `docs/DESIGN.md`.
+
+---
+
+## 2026-10-16 - Botões do PDV cortados em resoluções padrão e resquício de mojibake CP850 pós-deploy
+
+- Sintoma: Três ocorrências relatadas pelo usuário após deploy na Hostnet (`/operacional/pdv`):
+  1. O botão "Estorno" da barra superior do PDV aparecia cortado na borda direita, a tag `[F8]` e o botão "Sobras [F9]" foram empurrados para fora e ocultados;
+  2. A categoria "Lanches & Sanduíches" aparecia como `Lanches & Sandu├¡ches`;
+  3. A tag de alérgenos nos cards de produtos aparecia como `GL├║TEN`.
+- Causa:
+  1. No layout do PDV, a barra superior de métricas herdava `.stat-strip { overflow: hidden; }` do `assets/css/custom.css`. Cada um dos 6 blocos de métricas herdava `min-width: 170px; flex: 1 1 180px; padding: 14px 18px;`. Isso ocupava mais de 1.020px somente nas métricas. Em resoluções como 1366x768 ou 1080p com escala de 125% (típicas de notebooks Windows), a largura combinada com os botões de ação ultrapassava a tela e o container cortava o lado direito;
+  2. e 3. Registros inseridos previamente no banco remoto permaneceram com resquícios de decodificação indevida segundo a página OEM CP850 do terminal Windows (`0xC3` = `├`, `0xBA` = `║`, `0xAD` = `¡`), gerando `├¡` em vez de `í` e `├║` em vez de `ú`.
+- Solução aplicada:
+  1. Ajustado `assets/css/custom.css` para `.stat-strip, .stat-strip-enterprise { overflow: visible; }`;
+  2. Refatorado o CSS escopado em `app/views/operacional/pdv.php`, aplicando `min-width: 0 !important; flex: 0 0 auto !important; padding: 2px 10px !important;` nas métricas, margem automática e `stat-actions-group` com `text-nowrap` nos botões de ação, e quebra responsiva limpa para telas estreitas;
+  3. Criada a classe utilitária universal `app/core/Sanitizer.php` com o método `repararUtf8()`, integrada nativamente em `app/core/Model.php` (`fetchOne()` e `fetchAll()`) e `app/core/Controller.php` (`render()` e `json()`), protegendo 100% de todas as telas e APIs da aplicação de forma transparente;
+  4. Criada a migração oficial `database/migrations/031_corrigir_mojibake_e_acentuacao.php` e o utilitário standalone `database/corrigir_encoding.php` (executável via CLI ou navegador com token) para atualizar o MySQL permanentemente;
+  5. Atualizado `database/.htaccess` liberando o endpoint de correção e incrementada a versão de cache dos assets para `6.1.1` em todos os layouts.
+- Como evitar no futuro: Nunca aplicar `overflow: hidden` em faixas utilitárias com botões de ação críticos. Manter camada defensiva de sanitização de strings no núcleo arquitetural MVC (Model/Controller) para imunizar a interface contra inconsistências de encoding no banco de dados.

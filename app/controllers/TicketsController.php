@@ -148,8 +148,7 @@ class TicketsController extends Controller
     }
 
     /**
-     * Download do PDF de Tickets do Turno (/operacional/tickets/lote/pdf)
-     * Suporta ?formato=a4 (Folha A4 em grade) e ?formato=80mm (Bobina contínua)
+     * Redireciona endpoint de PDF para a visualização unificada oficial de impressão e PDF (/operacional/tickets/lote/pdf)
      */
     public function lotePdf(): void
     {
@@ -158,40 +157,7 @@ class TicketsController extends Controller
         $turnoConsumo = $this->normalizarTurno($_GET['turno'] ?? null);
         $formato = $this->normalizarFormato($_GET['formato'] ?? null, 'a4');
 
-        $tickets = Ticket::listarPorTurnoEData($dataConsumo, $turnoConsumo);
-
-        if (empty($tickets)) {
-            Session::setFlash('warning', 'Nenhum ticket encontrado para geração de PDF no turno selecionado.');
-            $this->redirect('/operacional/tickets?data=' . urlencode($dataConsumo) . '&turno=' . urlencode($turnoConsumo));
-            return;
-        }
-
-        // Marca automaticamente os tickets como impressos
-        $ticketIds = array_column($tickets, 'ticket_id');
-        Ticket::marcarComoImpresso($ticketIds);
-
-        $parametros = [
-            'data'    => $dataConsumo,
-            'turno'   => $turnoConsumo,
-            'formato' => $formato
-        ];
-
-        if ($formato === '80mm') {
-            $pdf = PdfService::gerarTicketsLotePdf($tickets, $parametros);
-            $filename = "tickets-bobina-80mm-{$dataConsumo}-{$turnoConsumo}.pdf";
-        } else {
-            $pdf = PdfService::gerarTicketsLoteA4Pdf($tickets, $parametros);
-            $filename = "tickets-grade-a4-{$dataConsumo}-{$turnoConsumo}.pdf";
-        }
-
-        if (!headers_sent()) {
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: inline; filename="' . $filename . '"');
-            header('Content-Length: ' . strlen($pdf));
-        }
-
-        echo $pdf;
-        exit;
+        $this->redirect('/operacional/tickets/lote?formato=' . urlencode($formato) . '&data=' . urlencode($dataConsumo) . '&turno=' . urlencode($turnoConsumo));
     }
 
     /**
@@ -239,7 +205,7 @@ class TicketsController extends Controller
     }
 
     /**
-     * Download do PDF de Tickets de uma Turma Específica (/operacional/tickets/turma/{id}/pdf)
+     * Redireciona endpoint de PDF para a visualização unificada oficial de impressão e PDF (/operacional/tickets/turma/{id}/pdf)
      */
     public function turmaPdf(mixed $params): void
     {
@@ -249,41 +215,7 @@ class TicketsController extends Controller
         $turnoConsumo = $this->normalizarTurno($_GET['turno'] ?? null);
         $formato = $this->normalizarFormato($_GET['formato'] ?? null, 'a4');
 
-        $tickets = Ticket::listarPorTurnoEData($dataConsumo, $turnoConsumo, $turmaId > 0 ? $turmaId : null);
-
-        if (empty($tickets)) {
-            Session::setFlash('warning', 'Nenhum ticket encontrado para a turma selecionada.');
-            $this->redirect('/operacional/tickets?data=' . urlencode($dataConsumo) . '&turno=' . urlencode($turnoConsumo));
-            return;
-        }
-
-        // Marca como impressos
-        $ticketIds = array_column($tickets, 'ticket_id');
-        Ticket::marcarComoImpresso($ticketIds);
-
-        $parametros = [
-            'data'     => $dataConsumo,
-            'turno'    => $turnoConsumo,
-            'turma_id' => $turmaId,
-            'formato'  => $formato
-        ];
-
-        if ($formato === '80mm') {
-            $pdf = PdfService::gerarTicketsLotePdf($tickets, $parametros);
-            $filename = "tickets-turma-{$turmaId}-bobina-80mm-{$dataConsumo}-{$turnoConsumo}.pdf";
-        } else {
-            $pdf = PdfService::gerarTicketsLoteA4Pdf($tickets, $parametros);
-            $filename = "tickets-turma-{$turmaId}-grade-a4-{$dataConsumo}-{$turnoConsumo}.pdf";
-        }
-
-        if (!headers_sent()) {
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: inline; filename="' . $filename . '"');
-            header('Content-Length: ' . strlen($pdf));
-        }
-
-        echo $pdf;
-        exit;
+        $this->redirect('/operacional/tickets/turma/' . $turmaId . '?formato=' . urlencode($formato) . '&data=' . urlencode($dataConsumo) . '&turno=' . urlencode($turnoConsumo));
     }
 
     /**
@@ -355,28 +287,11 @@ class TicketsController extends Controller
     }
 
     /**
-     * Download em PDF de Ticket Individual / 2ª Via (/operacional/tickets/imprimir/{id}/pdf)
+     * Redireciona endpoint de PDF para a visualização unificada de impressão e PDF (/operacional/tickets/imprimir/{id}/pdf)
      */
     public function imprimirTicketPdf(mixed $params): void
     {
         $ticketId = is_array($params) ? (int)($params['id'] ?? 0) : (int)$params;
-        $ticket = Ticket::buscarPorId($ticketId);
-
-        if (!$ticket) {
-            Session::setFlash('danger', 'Ticket não localizado.');
-            $this->redirect('/operacional/tickets');
-            return;
-        }
-
-        $pdf = PdfService::gerarTicketIndividualPdf($ticket);
-
-        if (!headers_sent()) {
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: inline; filename="ticket-' . ($ticket['codigo_ticket'] ?? $ticketId) . '.pdf"');
-            header('Content-Length: ' . strlen($pdf));
-        }
-
-        echo $pdf;
-        exit;
+        $this->redirect('/operacional/tickets/imprimir/' . $ticketId);
     }
 }

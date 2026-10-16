@@ -193,11 +193,15 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
 <div class="container">
     <div class="no-print">
         <span><strong>Relatório de Corte do Turno</strong> — <?php echo htmlspecialchars($dataFmt . ' ' . $turno); ?></span>
-        <div>
-            <button onclick="window.print()" style="padding: 5px 12px; font-weight: bold; background: #1d4ed8; color: #fff; border: 1px solid #1e40af; cursor: pointer; border-radius: 3px;">
-                Imprimir Documento
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button onclick="window.print()" style="padding: 6px 14px; font-weight: bold; background: #1d4ed8; color: #fff; border: 1px solid #1e40af; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; font-size: 11px;" title="Imprimir em folha A4 ou Salvar como PDF">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                </svg>
+                Imprimir ou Salvar em PDF
             </button>
-            <button onclick="window.close()" style="padding: 5px 10px; background: #fff; border: 1px solid #cbd5e1; cursor: pointer; border-radius: 3px; margin-left: 6px;">
+            <button onclick="window.close()" style="padding: 6px 12px; background: #fff; color: #334155; border: 1px solid #cbd5e1; cursor: pointer; border-radius: 4px; font-size: 11px;" title="Fechar visualização">
                 Fechar
             </button>
         </div>

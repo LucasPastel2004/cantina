@@ -10,6 +10,8 @@ namespace App\Core;
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
+require_once __DIR__ . '/Sanitizer.php';
+
 abstract class Model
 {
     /**
@@ -170,7 +172,10 @@ abstract class Model
     {
         $stmt = self::query($sql, $params);
         $result = $stmt->fetch();
-        return $result ?: null;
+        if (!$result) {
+            return null;
+        }
+        return Sanitizer::repararUtf8($result);
     }
 
     /**
@@ -179,7 +184,11 @@ abstract class Model
     public static function fetchAll(string $sql, array $params = []): array
     {
         $stmt = self::query($sql, $params);
-        return $stmt->fetchAll();
+        $result = $stmt->fetchAll();
+        if (empty($result)) {
+            return [];
+        }
+        return Sanitizer::repararUtf8($result);
     }
 
     /**

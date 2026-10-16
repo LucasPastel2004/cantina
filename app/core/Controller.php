@@ -10,6 +10,8 @@ namespace App\Core;
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
+require_once __DIR__ . '/Sanitizer.php';
+
 abstract class Controller
 {
     /**
@@ -41,10 +43,13 @@ abstract class Controller
         $data['baseUrl'] = $baseUrl;
         $data['csrf_token'] = Session::getCsrfToken();
         $data['csrf_field'] = Session::csrfField();
-        $data['assetVersion'] = '6.1.0';
+        $data['assetVersion'] = '6.1.1';
         if (!isset($data['user']) && Auth::check()) {
             $data['user'] = Auth::user();
         }
+
+        // Sanitização universal preventiva contra mojibake em todas as views
+        $data = Sanitizer::repararUtf8($data);
 
         // Extrai variáveis com escopo isolado
         extract($data, EXTR_SKIP);
@@ -98,6 +103,7 @@ abstract class Controller
             header('Content-Type: application/json; charset=utf-8');
         }
 
+        $data = Sanitizer::repararUtf8($data);
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         if (!defined('CANTINA_TEST_MODE') || !CANTINA_TEST_MODE) {
             exit;

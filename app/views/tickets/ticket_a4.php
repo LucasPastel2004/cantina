@@ -308,36 +308,24 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
         <span style="color: #64748b;"><?php echo htmlspecialchars($dataConsumoFmt); ?> (<?php echo htmlspecialchars($turnoFmt); ?>)</span>
     </div>
     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-        <button onclick="window.print()" class="btn-print" title="Disparar impressão em Folha A4">
+        <button onclick="window.print()" class="btn-print" title="Imprimir em folha A4 ou Salvar como PDF">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                 <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
             </svg>
-            Imprimir Folha A4
+            Imprimir ou Salvar em PDF
         </button>
 
         <?php
-            $queryPdf = $_GET;
-            $queryPdf['formato'] = 'a4';
-            $urlPdf = 'pdf?' . http_build_query($queryPdf);
-
             $query80mm = $_GET;
             $query80mm['formato'] = '80mm';
             $url80mm = '?' . http_build_query($query80mm);
         ?>
-        <a href="<?php echo htmlspecialchars($urlPdf); ?>" class="btn-action-neutral" title="Baixar grade de tickets em PDF A4">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-            </svg>
-            PDF A4
-        </a>
-
         <a href="<?php echo htmlspecialchars($url80mm); ?>" class="btn-action-neutral" title="Alternar para visualização em bobina térmica de 80mm">
             Alternar para Bobina 80mm
         </a>
 
-        <button onclick="window.close()" class="btn-action-neutral">
+        <button onclick="window.close()" class="btn-action-neutral" title="Fechar visualização">
             Fechar
         </button>
     </div>

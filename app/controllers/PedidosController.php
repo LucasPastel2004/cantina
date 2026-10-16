@@ -87,7 +87,7 @@ class PedidosController extends Controller
     }
 
     /**
-     * Emissão e download de relatório consolidado em PDF A4 timbrado (/operacional/corte/pdf)
+     * Redireciona endpoint de PDF para a visualização unificada oficial de impressão e PDF (/operacional/corte/pdf)
      */
     public function cortePdf(): void
     {
@@ -99,21 +99,7 @@ class PedidosController extends Controller
             $turnoConsumo = Pedido::TURNO_MATUTINO;
         }
 
-        $dadosCorte = Pedido::consolidarCorte($dataConsumo, $turnoConsumo);
-        $pdfContent = PdfService::gerarRelatorioCortePdf($dadosCorte);
-
-        $nomeArquivo = sprintf("pedido_fornecedor_%s_%s.pdf", $dataConsumo, $turnoConsumo);
-
-        if (!headers_sent()) {
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-            header('Content-Length: ' . strlen($pdfContent));
-            header('Cache-Control: private, max-age=0, must-revalidate');
-            header('Pragma: public');
-        }
-
-        echo $pdfContent;
-        exit;
+        $this->redirect('/operacional/corte/imprimir?data=' . urlencode($dataConsumo) . '&turno=' . urlencode($turnoConsumo));
     }
 
     /**

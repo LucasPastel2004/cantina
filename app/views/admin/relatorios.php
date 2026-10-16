@@ -34,8 +34,8 @@ $baseUrl = $baseUrl ?? '';
                     </p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="<?php echo $baseUrl; ?>/operacional/corte/pdf?data=<?php echo date('Y-m-d'); ?>&turno=matutino" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center" target="_blank">
-                        Baixar PDF (Manhã)
+                    <a href="<?php echo $baseUrl; ?>/operacional/corte/imprimir?data=<?php echo date('Y-m-d'); ?>&turno=matutino" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center" target="_blank" title="Imprimir ou Salvar em PDF">
+                        Imprimir / PDF (Manhã)
                     </a>
                     <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-primary btn-sm">
                         Painel

@@ -45,29 +45,19 @@ $corteAberto = $statusCorte['pode_alterar'] ?? false;
         </p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <a href="<?php echo $baseUrl; ?>/operacional/corte/pdf?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
-           class="btn btn-enterprise btn-primary" 
-           title="Download do Relatório Consolidado A4 Timbrado em PDF">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1" style="vertical-align: -2px;">
-                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-            </svg>
-            Exportar PDF (A4)
-        </a>
-
         <a href="<?php echo $baseUrl; ?>/operacional/corte/imprimir?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
            class="btn btn-enterprise btn-primary" 
            target="_blank" 
-           title="Abrir versão de impressão no navegador">
+           title="Visualizar relatório timbrado oficial para impressão ou salvar em PDF">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1" style="vertical-align: -2px;">
                 <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                 <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
             </svg>
-            Imprimir A4
+            Imprimir / Salvar PDF (A4)
         </a>
 
         <a href="<?php echo $baseUrl; ?>/operacional/recebimento?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
-           class="btn btn-enterprise btn-primary" 
+           class="btn btn-enterprise btn-secondary" 
            title="Avançar para a tela de conferência física de entrega">
             Conferir Recebimento &rarr;
         </a>

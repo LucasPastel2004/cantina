@@ -197,8 +197,8 @@ $baseUrl = $baseUrl ?? '';
                     <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
                         Painel de Corte
                     </a>
-                    <a href="<?php echo $baseUrl; ?>/operacional/corte/pdf?data=<?php echo date('Y-m-d'); ?>&turno=matutino" class="btn btn-enterprise btn-primary btn-sm text-center fw-medium" target="_blank" title="Baixar PDF A4 de Hoje">
-                        PDF Hoje
+                    <a href="<?php echo $baseUrl; ?>/operacional/corte/imprimir?data=<?php echo date('Y-m-d'); ?>&turno=matutino" class="btn btn-enterprise btn-primary btn-sm text-center fw-medium" target="_blank" title="Imprimir ou Salvar em PDF">
+                        Imprimir / PDF
                     </a>
                 </div>
             </div>

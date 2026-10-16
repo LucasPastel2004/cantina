@@ -47,24 +47,49 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 4px 10px;
-    gap: 4px 10px;
+    padding: 6px 12px;
+    gap: 6px 10px;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     flex-shrink: 0;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    overflow: visible !important;
 }
 
 .pdv-wrapper .stat-strip-item {
     display: flex;
     flex-direction: column;
-    padding-right: 10px;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    padding: 2px 10px !important;
     border-right: 1px solid #f1f5f9;
+    background-color: transparent !important;
 }
 
 .pdv-wrapper .stat-strip-item:last-child {
     border-right: none;
     margin-left: auto;
-    padding-right: 0;
+    padding: 2px 0 2px 8px !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    flex-shrink: 0;
+}
+
+.pdv-wrapper .stat-actions-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+}
+
+@media (max-width: 1240px) {
+    .pdv-wrapper .stat-strip-item:last-child {
+        margin-left: 0;
+        width: 100%;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 6px !important;
+        justify-content: flex-end;
+    }
 }
 
 .pdv-wrapper .stat-strip-label {
@@ -604,26 +629,28 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 R$ <?php echo number_format((float)($metricas['total_saldo'] ?? 0), 2, ',', '.'); ?>
             </span>
         </div>
-        <div class="stat-strip-item d-flex flex-row align-items-center gap-1">
-            <!-- Alternador de Turno -->
-            <div class="btn-group btn-group-sm me-1" role="group" aria-label="Seletor de Turno PDV">
-                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=matutino" class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-outline-primary'; ?>" style="font-size: 10.5px; padding: 3px 6px;">Manhã</a>
-                <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=vespertino" class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-outline-primary'; ?>" style="font-size: 10.5px; padding: 3px 6px;">Tarde</a>
-            </div>
-            <?php if (!$caixaAberto && !$sessaoOutroTurno): ?>
-                <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModal('modalAbrirCaixa')">
-                    Abrir Caixa
+        <div class="stat-strip-item">
+            <div class="stat-actions-group">
+                <!-- Alternador de Turno -->
+                <div class="btn-group btn-group-sm me-1" role="group" aria-label="Seletor de Turno PDV">
+                    <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=matutino" class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-outline-primary'; ?> text-nowrap" style="font-size: 10.5px; padding: 3px 6px;">Manhã</a>
+                    <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=vespertino" class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-outline-primary'; ?> text-nowrap" style="font-size: 10.5px; padding: 3px 6px;">Tarde</a>
+                </div>
+                <?php if (!$caixaAberto && !$sessaoOutroTurno): ?>
+                    <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1 text-nowrap" style="font-size: 11px;" onclick="abrirModal('modalAbrirCaixa')">
+                        Abrir Caixa
+                    </button>
+                <?php endif; ?>
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-primary btn-sm px-2 py-1 text-nowrap" style="font-size: 11px;" title="Gestão e Fechamento de Caixa [F7]">
+                    Caixa <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F7</span>
+                </a>
+                <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1 text-nowrap" style="font-size: 11px;" onclick="abrirModal('modalEstornoBalcao')" title="Estorno de Ticket [F8]">
+                    Estorno <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F8</span>
                 </button>
-            <?php endif; ?>
-            <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-primary btn-sm px-2 py-1" style="font-size: 11px;" title="Gestão e Fechamento de Caixa [F7]">
-                Caixa <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F7</span>
-            </a>
-            <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModal('modalEstornoBalcao')" title="Estorno de Ticket [F8]">
-                Estorno <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F8</span>
-            </button>
-            <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1" style="font-size: 11px;" onclick="abrirModalSobras()" title="Aproveitamento de Sobras do Recreio [F9]">
-                Sobras <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F9</span>
-            </button>
+                <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1 text-nowrap" style="font-size: 11px;" onclick="abrirModalSobras()" title="Aproveitamento de Sobras do Recreio [F9]">
+                    Sobras <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F9</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -671,7 +698,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     </button>
                     <?php foreach ($categorias as $cat): ?>
                         <button type="button" class="pdv-cat-btn" data-cat="<?php echo (int)$cat['id']; ?>" onclick="filtrarCategoria(<?php echo (int)$cat['id']; ?>, this)">
-                            <?php echo htmlspecialchars($cat['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                            <?php echo htmlspecialchars(repararUtf8($cat['nome']), ENT_QUOTES, 'UTF-8'); ?>
                         </button>
                     <?php endforeach; ?>
                 </div>
@@ -694,21 +721,23 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     $esgotado = (bool)$prod['esgotado'];
                     $estoque = (int)$prod['estoque_atual'];
                     $precoFormatado = number_format((float)$prod['preco_venda'], 2, ',', '.');
+                    $descProdutoLimpa = repararUtf8($prod['descricao']);
+                    $alergenosNomesLimpos = repararUtf8($prod['alergenos_nomes'] ?? '');
                     ?>
                     <div class="pdv-prod-card <?php echo $esgotado ? 'disabled' : ''; ?>"
                          data-id="<?php echo (int)$prod['id']; ?>"
                          data-codigo="<?php echo htmlspecialchars($prod['codigo_interno'], ENT_QUOTES, 'UTF-8'); ?>"
-                         data-nome="<?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>"
+                         data-nome="<?php echo htmlspecialchars($descProdutoLimpa, ENT_QUOTES, 'UTF-8'); ?>"
                          data-preco="<?php echo (float)$prod['preco_venda']; ?>"
                          data-categoria="<?php echo (int)$prod['categoria_id']; ?>"
                          data-estoque="<?php echo $estoque; ?>"
                          data-alergenos="<?php echo htmlspecialchars($prod['alergenos_ids'] ? implode(',', $prod['alergenos_ids']) : '', ENT_QUOTES, 'UTF-8'); ?>"
-                         data-alergenos-nomes="<?php echo htmlspecialchars($prod['alergenos_nomes'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                         data-alergenos-nomes="<?php echo htmlspecialchars($alergenosNomesLimpos, ENT_QUOTES, 'UTF-8'); ?>"
                          onclick="adicionarAoCarrinho(<?php echo (int)$prod['id']; ?>)">
                         
                         <div class="prod-thumb-box">
                             <?php if (!empty($prod['foto_url'])): ?>
-                                <img src="<?php echo $baseUrl . '/' . htmlspecialchars($prod['foto_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>" loading="lazy">
+                                <img src="<?php echo $baseUrl . '/' . htmlspecialchars($prod['foto_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($descProdutoLimpa, ENT_QUOTES, 'UTF-8'); ?>" loading="lazy">
                             <?php else: ?>
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -719,11 +748,11 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                         </div>
 
                         <div>
-                            <div class="pdv-prod-title" title="<?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>">
-                                <?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?>
+                            <div class="pdv-prod-title" title="<?php echo htmlspecialchars($descProdutoLimpa, ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php echo htmlspecialchars($descProdutoLimpa, ENT_QUOTES, 'UTF-8'); ?>
                             </div>
-                            <?php if (!empty($prod['alergenos_nomes'])): ?>
-                                <span class="tag-alergeno" title="Contém alérgenos"><?php echo htmlspecialchars($prod['alergenos_nomes'], ENT_QUOTES, 'UTF-8'); ?></span>
+                            <?php if (!empty($alergenosNomesLimpos)): ?>
+                                <span class="tag-alergeno" title="Contém alérgenos"><?php echo htmlspecialchars($alergenosNomesLimpos, ENT_QUOTES, 'UTF-8'); ?></span>
                             <?php endif; ?>
                         </div>
 
