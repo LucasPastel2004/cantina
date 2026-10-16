@@ -1990,3 +1990,15 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Criada a migração oficial `database/migrations/031_corrigir_mojibake_e_acentuacao.php` e o utilitário standalone `database/corrigir_encoding.php` (executável via CLI ou navegador com token) para atualizar o MySQL permanentemente;
   5. Atualizado `database/.htaccess` liberando o endpoint de correção e incrementada a versão de cache dos assets para `6.1.1` em todos os layouts.
 - Como evitar no futuro: Nunca aplicar `overflow: hidden` em faixas utilitárias com botões de ação críticos. Manter camada defensiva de sanitização de strings no núcleo arquitetural MVC (Model/Controller) para imunizar a interface contra inconsistências de encoding no banco de dados.
+
+---
+
+## 2026-10-16 - Inviabilidade de Docker/Gotenberg em hospedagem compartilhada e unificação de impressão com preview nativo
+
+- Sintoma: Em ambiente de produção na Hostnet, o download direto de arquivos binários de PDF (gerados via scripts PHP por falta do Gotenberg/Chromium headless) apresentava perdas de layout CSS e limitações visuais quando comparado às telas de pré-visualização HTML do sistema, que estavam 100% perfeitas e simétricas.
+- Causa: A hospedagem gerenciada compartilhada Apache da Hostnet não permite a execução de contêineres Docker nem processos daemon Chromium headless em background. As bibliotecas ou geradores PHP puros não dispõem de motor de renderização de fontes e CSS Grid comparável aos navegadores modernos.
+- Solução aplicada: Unificado o fluxo de impressão e PDF através das telas oficiais de pré-visualização HTML e CSS (`@media print` com `@page` milimétrico):
+  1. No painel de Tickets e de Corte do Turno, substituídos os botões de download de PDF cru por botões unificados **"Imprimir / Salvar PDF (A4)"** e **"Bobina Térmica (80mm)"**;
+  2. Na barra superior `.no-print` dos espelhos de impressão, implementado botão de destaque **"Imprimir ou Salvar em PDF"** acionando `window.print()`, permitindo ao usuário tanto o envio direto para a impressora quanto a opção nativa do Chromium *"Destino: Salvar como PDF"* com fidelidade vetorial absoluta;
+  3. Nos controladores `TicketsController` e `PedidosController`, redirecionadas todas as requisições diretas aos endpoints `/pdf` para suas respectivas telas de preview de impressão, garantindo compatibilidade retroativa total.
+- Como evitar no futuro: Em projetos hospedados em ambientes compartilhados gerenciados sem suporte a microsserviços Chromium headless orquestrados, padronizar a emissão documental através do recurso nativo `@media print` e diálogo do navegador, evitando soluções pesadas ou fallbacks rudimentares em PHP puro.

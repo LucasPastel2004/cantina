@@ -1701,11 +1701,29 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
     * Arquivo enviado e sincronizado no servidor Hostnet;
     * Testado com sucesso via CLI (dry run de segurança) e via Web com validação de token (HTTP 403 sem token e HTTP 200 com tela de checklist corporativo).
 
+* [x] **Unificação da Pré-visualização de Impressão e Exportação em PDF (Passo 9):**
+  - **Contexto Operacional e Diagnóstico:**
+    * O ambiente de hospedagem gerenciada da Hostnet não permite contêineres Docker nem Chromium headless em background (Gotenberg 8), tornando inviável a compilação binária de PDFs com fidelidade CSS nativa via servidor;
+    * Em contrapartida, as telas de pré-visualização HTML simétricas do sistema (`ticket_80mm.php`, `ticket_a4.php`, `corte_pdf.php` e `fechamento_caixa_pdf.php`) contam com folhas de estilo estritas `@media print`, regras `@page` milimétricas e layout visual 100% perfeito em todos os navegadores desktop e móveis (Chrome, Edge, Safari, Firefox).
+  - **Melhorias e Ajustes Implementados:**
+    * **Unificação na Tela de Tickets (`app/views/operacional/tickets.php`):**
+      - Substituídos os botões separados de download de PDF cru por um botão de destaque: **"Imprimir / Salvar PDF (A4)"** e botão **"Bobina Térmica (80mm)"**;
+      - Na tabela de turmas, unificadas as ações em dois botões coesos: `Imprimir / PDF A4` e `80mm`.
+    * **Barra de Controle Superior dos Previews (`ticket_80mm.php`, `ticket_a4.php` e `corte_pdf.php`):**
+      - Atualizado o botão de ação principal para **"Imprimir ou Salvar em PDF"** com ícone de impressora/arquivo e acionamento instantâneo via `window.print()`;
+      - Removidos os links de download direto de PDFs binários crus deformados;
+      - Mantidos os botões de alternância de formato (`Folha A4` / `Bobina 80mm`) e fechamento de aba (`window.close()`).
+    * **Redirecionamento Defensivo nos Controladores (`TicketsController.php` e `PedidosController.php`):**
+      - Requisições diretas ou legadas aos endpoints `/pdf` (`tickets/lote/pdf`, `tickets/turma/{id}/pdf`, `tickets/imprimir/{id}/pdf` e `corte/pdf`) agora redirecionam suavemente para o respectivo preview HTML oficial de impressão (`/lote`, `/turma/{id}`, `/imprimir/{id}` e `/corte/imprimir`), garantindo que nenhum usuário receba documentos corrompidos;
+    * **Sincronização em Produção e Testes Remotos:**
+      - Arquivos atualizados transferidos com sucesso para a Hostnet via SCP;
+      - Testes automatizados executados remotamente com login autenticado de `gestor.cantina`, validando a presença e funcionamento de todos os novos botões com 100% de aprovação.
+
 ---
 
 ## Próximo Passo Recomendado
 
-1. **Homologação Externa pela Equipe da Escola:** Equipe da cantina, secretaria e direção realizam testes remotos nas telas operacionais e no Portal da Família a partir de seus computadores e celulares.
+1. **Homologação Externa pela Equipe da Escola:** Equipe da cantina, secretaria e direção realizam testes remotos nas telas operacionais (tickets, corte de turno, PDV) e no Portal da Família a partir de seus computadores e celulares.
 2. **Propagação do Domínio Definitivo:** Acompanhar a ativação do domínio `cantinawebmonteirolobato.com.br` e habilitar o certificado SSL gratuito (HTTPS) na Hostnet.
 3. **Execução da Limpeza Pré-Lançamento:** No dia da inauguração oficial para os alunos e pais reais, executar a limpeza dos dados de teste via navegador ou SSH para iniciar as operações financeiras com base 100% zerada.
 
