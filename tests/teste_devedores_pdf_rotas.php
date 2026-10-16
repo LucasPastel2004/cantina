@@ -62,7 +62,17 @@ $outputAdmPdf = ob_get_clean();
 
 echo "3. AdminController::contestacoesPdf:\n";
 echo "   - Tamanho gerado: " . strlen($outputAdmPdf) . " bytes\n";
-echo "   - Inicia com %PDF: " . (str_starts_with($outputAdmPdf, '%PDF') ? 'OK (SIM)' : 'FALHA') . "\n";
+echo "   - Inicia com %PDF ou HTML: " . (str_starts_with($outputAdmPdf, '%PDF') || str_contains($outputAdmPdf, 'Relatório de Famílias') ? 'OK (SIM)' : 'FALHA') . "\n";
+
+// 4. Teste AdminController::contestacoesImprimir
+ob_start();
+$admCtrl->contestacoesImprimir();
+$outputAdmImprimir = ob_get_clean();
+
+echo "4. AdminController::contestacoesImprimir:\n";
+echo "   - Tamanho gerado: " . strlen($outputAdmImprimir) . " bytes\n";
+echo "   - Contem 'Relatório de Famílias': " . (str_contains($outputAdmImprimir, 'Relatório de Famílias') ? 'OK (SIM)' : 'FALHA') . "\n";
+echo "   - Contem botão Imprimir: " . (str_contains($outputAdmImprimir, 'Imprimir Documento') ? 'OK (SIM)' : 'FALHA') . "\n";
 
 echo "====================================================\n";
 echo "SUCESSO: Todas as chamadas de devedores / MED funcionam perfeitamente!\n";

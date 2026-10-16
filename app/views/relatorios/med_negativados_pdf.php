@@ -242,11 +242,13 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
                         <td class="text-center">
                             <?php if (!empty($f['bloqueado_med'])): ?>
                                 <span style="color: #b91c1c; font-weight: bold;">BLOQUEADO</span>
+                            <?php elseif (($f['saldo_atual'] ?? 0) < 0): ?>
+                                <span style="color: #b91c1c; font-weight: 600;">Saldo Devedor</span>
                             <?php else: ?>
-                                <span style="color: #475569;">Ativo</span>
+                                <span style="color: #15803d; font-weight: 600;">Regularizado</span>
                             <?php endif; ?>
                         </td>
-                        <td class="text-right font-tabular" style="color: #b91c1c; font-weight: bold;">
+                        <td class="text-right font-tabular" style="color: <?php echo (($f['saldo_atual'] ?? 0) < 0) ? '#b91c1c' : '#0f172a'; ?>; font-weight: bold;">
                             R$ <?php echo number_format((float)($f['saldo_atual'] ?? 0), 2, ',', '.'); ?>
                         </td>
                     </tr>

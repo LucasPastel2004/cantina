@@ -800,6 +800,12 @@ class RelatoriosController extends Controller
             'operador'       => $usuario['nome'] ?? 'Administração'
         ]);
 
+        // Se Gotenberg não estiver disponível (ex: produção Hostnet), renderiza a visualização HTML oficial para impressão/PDF
+        if (empty($pdfBinario) || strlen($pdfBinario) < 2000) {
+            $this->devedoresImprimir();
+            return;
+        }
+
         $nomeArquivo = 'relatorio_inadimplencia_med_' . date('Ymd_His') . '.pdf';
 
         if (!headers_sent()) {

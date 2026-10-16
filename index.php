@@ -598,6 +598,9 @@ $router->get('/admin/contestacoes/sugestoes', [\App\Controllers\AdminController:
 $router->get('/admin/contestacoes/pdf', [\App\Controllers\AdminController::class, 'contestacoesPdf'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
+$router->get('/admin/contestacoes/imprimir', [\App\Controllers\AdminController::class, 'contestacoesImprimir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
 // 6. Módulo Financeiro: Despesas Operacionais e DRE Gerencial Completo (Fase 24 — FSD, Diretrizes e Planilha Modelo Aethos)
 $router->get('/financeiro/despesas', [\App\Controllers\DespesasController::class, 'index'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)

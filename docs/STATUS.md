@@ -9,7 +9,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * **Fase Atual:** Sustentação e Ajustes Pós-Deploy em Produção
 * **Status da Documentação:** Concluída [x] (100% Homologada)
 * **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Blindagem Universal de Encoding UTF-8 + Ajuste Responsivo da Barra do PDV Homologados!
-* **Última Atualização:** 2026-10-16 13:55:00 (Blindagem de exportações CSV contra avisos E_DEPRECATED no PHP 8.4 da Hostnet, adição de parâmetros explícitos em fputcsv/fgetcsv, e supressão de deprecation notices no ErrorHandler).
+* **Última Atualização:** 2026-10-16 14:22:00 (Adição do botão unificado Imprimir / Salvar PDF na tela de Contestações MED, criação da rota /admin/contestacoes/imprimir e fallback seguro em contestacoesPdf e devedoresPdf).
 
 
 

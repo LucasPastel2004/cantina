@@ -1468,6 +1468,38 @@ class AdminController extends Controller
     }
 
     /**
+     * Espelho HTML para visualização / impressão rápida em folha A4 e salvar em PDF
+     */
+    public function contestacoesImprimir(): void
+    {
+        $busca = trim((string)$this->input('busca', ''));
+        $status = trim((string)$this->input('status', 'todos'));
+        $filtros = [];
+        if (!empty($busca)) {
+            $filtros['busca'] = $busca;
+        }
+        if (!empty($status) && $status !== 'todos') {
+            $filtros['status'] = $status;
+        }
+
+        $dados = Responsavel::listarNegativadosMed($filtros, 1, 1000);
+        $totalDevedor = Responsavel::somarSaldoDevedorMed();
+        $usuario = Auth::user();
+
+        echo \App\Services\PdfService::renderView('relatorios/med_negativados_pdf', [
+            'dadosMed' => [
+                'familias'       => $dados['itens'],
+                'total_devedor'  => $totalDevedor,
+                'total_familias' => $dados['total'],
+                'operador'       => $usuario['nome'] ?? 'Administração'
+            ]
+        ]);
+        if (!defined('CANTINA_TEST_MODE')) {
+            exit;
+        }
+    }
+
+    /**
      * Emissão do Relatório A4 em PDF Timbrado de Negativados MED (FSD Tela 8.4)
      */
     public function contestacoesPdf(): void
@@ -1492,6 +1524,12 @@ class AdminController extends Controller
             'total_familias' => $dados['total'],
             'operador'       => $usuario['nome'] ?? 'Administração'
         ]);
+
+        // Se Gotenberg não estiver disponível (ex: produção Hostnet), renderiza a visualização HTML oficial para impressão/PDF
+        if (empty($pdfBinario) || strlen($pdfBinario) < 2000) {
+            $this->contestacoesImprimir();
+            return;
+        }
 
         $nomeArquivo = 'relatorio_negativados_med_' . date('Ymd_His') . '.pdf';
 

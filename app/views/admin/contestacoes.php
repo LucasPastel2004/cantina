@@ -24,6 +24,15 @@ $filtroBusca = $filtroBusca ?? '';
 $filtroStatus = $filtroStatus ?? 'todos';
 $pagina = $pagina ?? 1;
 $totalPaginas = $totalPaginas ?? 1;
+
+$paramsMed = [];
+if (!empty($filtroBusca)) {
+    $paramsMed['busca'] = $filtroBusca;
+}
+if (!empty($filtroStatus) && $filtroStatus !== 'todos') {
+    $paramsMed['status'] = $filtroStatus;
+}
+$queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -34,14 +43,16 @@ $totalPaginas = $totalPaginas ?? 1;
         </p>
     </div>
     <div class="d-flex gap-2">
-        <a href="<?php echo $baseUrl; ?>/admin/contestacoes/pdf<?php echo !empty($filtroBusca) ? '?busca=' . urlencode($filtroBusca) : ''; ?>" 
+        <a href="<?php echo $baseUrl; ?>/admin/contestacoes/imprimir<?php echo $queryStringMed; ?>" 
            target="_blank" 
-           class="btn btn-enterprise btn-primary" 
-           title="Exportar Relatório Oficial em PDF Timbrado">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1" aria-hidden="true">
-                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 1.5 13 5H9.5V1.5zM3 14V2a1 1 0 0 1 1-1h5v4.5a.5.5 0 0 0 .5.5H13v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
+           id="btnImprimirMedA4"
+           class="btn btn-enterprise btn-secondary d-inline-flex align-items-center gap-1.5" 
+           title="Visualizar espelho oficial para conferência e impressão / salvar PDF em nova aba">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
             </svg>
-            Exportar PDF
+            Imprimir / Salvar PDF (A4)
         </a>
         <button type="button" 
                 class="btn btn-enterprise btn-primary" 
@@ -148,6 +159,7 @@ $totalPaginas = $totalPaginas ?? 1;
                     <option value="todos" <?php echo ($filtroStatus === 'todos' || empty($filtroStatus)) ? 'selected' : ''; ?>>Todos os Registros</option>
                     <option value="bloqueados" <?php echo ($filtroStatus === 'bloqueados') ? 'selected' : ''; ?>>Apenas Bloqueados MED</option>
                     <option value="negativos" <?php echo ($filtroStatus === 'negativos') ? 'selected' : ''; ?>>Saldo Devedor (< R$ 0)</option>
+                    <option value="regularizados" <?php echo ($filtroStatus === 'regularizados') ? 'selected' : ''; ?>>Contas Regularizadas (Quitadas)</option>
                 </select>
             </div>
 
