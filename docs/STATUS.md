@@ -8,8 +8,8 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 * **Fase Atual:** Sustentação e Ajustes Pós-Deploy em Produção
 * **Status da Documentação:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Blindagem Universal de Encoding UTF-8 + Ajuste Responsivo da Barra do PDV Homologados!
-* **Última Atualização:** 2026-10-16 14:22:00 (Adição do botão unificado Imprimir / Salvar PDF na tela de Contestações MED, criação da rota /admin/contestacoes/imprimir e fallback seguro em contestacoesPdf e devedoresPdf).
+* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Blindagem Universal de Encoding UTF-8 + Ajuste Responsivo da Barra do PDV + Nova Aba de Entrada Manual de Estoque (sem NF-e) Homologados!
+* **Última Atualização:** 2026-10-19 09:30:00 (Implementação da tela e fluxo de Entrada de Estoque manual sem notas fiscais, substituição da aba Entrada XML NF-e por Entrada de Estoque, Migration 032 e 31 testes aprovados).
 
 
 
@@ -1760,7 +1760,34 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
       - `RelatoriosController.php`: Refatorado o método `sanitizarCsvCelula` e `sanitizarCsvLinha` para remover automaticamente o sinal `+` inicial antes de dígitos (`^\+\s*\d`), preservar números negativos e monetários brasileiros (`-50,00`), neutralizar caracteres de fórmula com espaço invisível e passar todas as linhas (inclusive cabeçalhos e totais) pela higienização;
       - Removido prefixo `+` de variação de carteira e balanço de estoque;
       - Script de teste unitário `tests/teste_csv_excel_sintaxe.php` criado e validado com 100% de sucesso;
-      - Todos os arquivos sincronizados via SCP para o servidor Hostnet.
+* [x] **Nova Aba e Fluxo de Entrada Manual de Estoque (Substituição de Entrada XML NF-e por Entrada de Estoque):**
+  - **Contexto e Solicitação do Usuário:**
+    * A cantina não utiliza notas fiscais eletrônicas (XML) no dia a dia para abastecer o estoque e necessitava de uma opção direta e ágil para dar entrada física em qualquer item do estoque;
+    * Troca da aba *"Entrada XML NF-e"* (no menu lateral e no botão de ação da tela de saldos `/estoque`) por uma nova aba dedicada: **"Entrada de Estoque"**;
+    * Na nova tela, o operador ou administrador seleciona o produto do cardápio, escolhe/digita o fornecedor e informa a quantidade de itens a adicionar.
+  - **Estrutura de Banco de Dados (Migration 032):**
+    * Criação de `database/migrations/032_add_fornecedor_to_estoque_movimentacoes.php`, adicionando a coluna `fornecedor VARCHAR(150) NULL AFTER motivo_perda` com índice `idx_mov_fornecedor` na tabela `estoque_movimentacoes`.
+  - **Regras de Negócio e Modelo (`app/models/Estoque.php`):**
+    * Implementação do método atômico transacional `Estoque::darEntradaManual($produtoId, $quantidade, $fornecedor, $precoCusto, $observacoes, $operadorId)`:
+      - Trava com `FOR UPDATE` e validação de quantidade (> 0) e fornecedor (mínimo 2 caracteres);
+      - Incremento atômico de `produtos.estoque_atual`;
+      - Atualização opcional de `produtos.preco_custo` caso o custo unitário seja informado;
+      - Inserção em `estoque_movimentacoes` com tipo `entrada_fornecedor` e o fornecedor preenchido;
+      - Registro compulsório de auditoria em `logs_auditoria`.
+    * Implementação de `Estoque::listarEntradasRecentes(20)` e `Estoque::listarFornecedoresSugestao()`;
+    * Atualização de `listarMovimentacoes` e `contarMovimentacoes` para incluir busca por `fornecedor`.
+  - **Controlador (`app/controllers/EstoqueController.php`):**
+    * Criação das actions `entrada()` e `entradaSalvar()`, com proteção CSRF e mensagens Flash de feedback.
+  - **Interface Visual e Design System (`docs/DESIGN.md`):**
+    * **Sidebar (`app/views/layouts/sidebar.php`):** Opção "Entrada XML NF-e" substituída por **"Entrada de Estoque"** (`/estoque/entrada`), disponível tanto para Operadores quanto Administradores;
+    * **Tela de Saldos (`app/views/estoque/index.php`):** Botão superior direito atualizado para `+ Entrada de Estoque`;
+    * **Nova View (`app/views/estoque/entrada.php`):** Interface corporativa utilitária de 2 colunas com seleção de produto e saldo físico dinâmico, fornecedor com `<datalist>` autocompletar inteligente, quantidade numérica, custo unitário opcional e histórico lateral das últimas 20 entradas registradas com quantidade destacada em verde (`+X un`);
+    * **Extrato de Movimentações (`app/views/estoque/movimentacoes.php`):** Exibição do fornecedor na coluna correspondente e botão de atalho `Nova Entrada`.
+  - **Rotas e Segurança (`index.php`):**
+    * Registradas `GET /estoque/entrada` e `POST /estoque/entrada/salvar` com autorização RBAC para Operadores e Administradores.
+  - **Testes Automatizados:**
+    * Suíte dedicada `tests/entrada_estoque_manual_test.php` criada com 31 asserções aprovadas com 100% de sucesso;
+    * Testes de regressão `tests/estoque_web_test.php` (56/56) e `tests/fase14_test.php` (45/45) executados e aprovados com 100% de sucesso.
 
 ---
 

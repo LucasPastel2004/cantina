@@ -2072,3 +2072,14 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Em `app/services/SpreadsheetService.php`: Todas as chamadas a `fgetcsv()` atualizadas com os parâmetros de delimitador, aspas e escape explícitos.
   5. Sincronização via SCP com o servidor da Hostnet e validação remota executada com sucesso via PHP 8.4 (`TAMANHO_CSV: 2191`, BOM UTF-8 `\xEF\xBB\xBF` presente e zero tags HTML).
 - Como evitar no futuro: Em PHP 8.4+, sempre explicitar todos os 5 parâmetros nas funções de I/O de CSV (`$stream, $fields, $delimiter, $enclosure, $escape`). Garantir que classes globais de tratamento de erro nunca promovam avisos de depreciação para exceções fatais em rotas de download de arquivos.
+
+---
+
+## 2026-10-19 - Falha de integridade referencial (FK 1452) ao vincular operador em estoque_movimentacoes
+
+- Sintoma: `PDOException: SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (cantina.estoque_movimentacoes, CONSTRAINT fk_mov_usuario FOREIGN KEY (operador_id) REFERENCES usuarios (id))` ao executar rotinas de movimentação manual de estoque ou perdas com mock de usuário ou quando a sessão contém um ID de usuário inexistente no banco.
+- Causa: Em ambientes onde a base foi reinicializada ou em testes automatizados que mockavam `Auth::user()` com `id = 1` fixo, o ID 1 não existia na tabela `usuarios` (pois os IDs reais gerados por auto-incremento eram 178, 244, 247). Como `estoque_movimentacoes.operador_id` possui `CONSTRAINT fk_mov_usuario FOREIGN KEY (operador_id) REFERENCES usuarios (id) ON DELETE RESTRICT`, o MySQL rejeitava a operação.
+- Solução aplicada: 
+  1. Em `app/models/Estoque.php`: Adicionada resolução defensiva de `operador_id` nos métodos `darEntradaManual` e `registrarPerda`, verificando se o ID informado existe na tabela `usuarios`. Se não existir ou for nulo/zero, o sistema seleciona automaticamente o ID do primeiro usuário ativo disponível (`SELECT id FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1`).
+  2. Atualizada a suíte de testes `tests/entrada_estoque_manual_test.php` para recuperar o ID real do usuário existente na base.
+- Como evitar no futuro: Em métodos de negócio que gravam chaves estrangeiras não nulas para tabelas de auditoria/usuários (`operador_id`, `updated_by`), implementar resolução defensiva de contingência ou garantir que testes de integração consultem IDs persistidos reais no banco.

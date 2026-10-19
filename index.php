@@ -315,6 +315,12 @@ $router->get('/estoque/perdas', [\App\Controllers\EstoqueController::class, 'per
 $router->post('/estoque/perdas/salvar', [\App\Controllers\EstoqueController::class, 'perdasSalvar'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
+$router->get('/estoque/entrada', [\App\Controllers\EstoqueController::class, 'entrada'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->post('/estoque/entrada/salvar', [\App\Controllers\EstoqueController::class, 'entradaSalvar'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
 $router->post('/estoque/minimo', [\App\Controllers\EstoqueController::class, 'atualizarEstoqueMinimo'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);

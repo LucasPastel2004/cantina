@@ -125,14 +125,12 @@ $isAdmin = ($userRole === 'administrador');
                         <span class="nav-label">Movimentações</span>
                     </a>
                 </li>
-                <?php if ($isAdmin): ?>
                 <li class="nav-item">
-                    <a href="<?php echo $baseUrl; ?>/estoque/importar-xml" class="nav-link <?php echo ($activeMenu === 'xml') ? 'active' : ''; ?>">
+                    <a href="<?php echo $baseUrl; ?>/estoque/entrada" class="nav-link <?php echo ($activeMenu === 'entrada_estoque') ? 'active' : ''; ?>">
                         <span class="nav-bullet">●</span>
-                        <span class="nav-label">Entrada XML NF-e</span>
+                        <span class="nav-label">Entrada de Estoque</span>
                     </a>
                 </li>
-                <?php endif; ?>
             </ul>
         </div>
 

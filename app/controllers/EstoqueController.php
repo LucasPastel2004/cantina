@@ -240,6 +240,79 @@ class EstoqueController extends Controller
     }
 
     /**
+     * Tela: Entrada Manual de Estoque (Substitui o fluxo XML de NF-e)
+     */
+    public function entrada(): void
+    {
+        $produtos         = Produto::listarTodos();
+        $ultimasEntradas  = Estoque::listarEntradasRecentes(20);
+        $fornecedores     = Estoque::listarFornecedoresSugestao();
+        $produtoPreSel    = isset($_GET['produto_id']) ? (int)$_GET['produto_id'] : null;
+
+        $this->render('estoque/entrada', [
+            'produtos'        => $produtos,
+            'ultimasEntradas' => $ultimasEntradas,
+            'fornecedores'    => $fornecedores,
+            'produtoPreSel'   => $produtoPreSel,
+            'activeMenu'      => 'entrada_estoque',
+            'title'           => 'Entrada de Estoque & Mercadorias'
+        ], 'admin');
+    }
+
+    /**
+     * Processa a gravação da entrada manual de estoque
+     */
+    public function entradaSalvar(): void
+    {
+        if (!$this->validateCsrf(null, '/estoque/entrada')) {
+            return;
+        }
+
+        $produtoId   = (int)($_POST['produto_id'] ?? 0);
+        $quantidade  = (int)($_POST['quantidade'] ?? 0);
+        $fornecedor  = trim($_POST['fornecedor'] ?? '');
+        $precoCusto  = !empty($_POST['preco_custo']) ? (float)str_replace(['.', ','], ['', '.'], $_POST['preco_custo']) : null;
+        $observacoes = trim($_POST['observacoes'] ?? '');
+
+        if ($produtoId <= 0) {
+            Session::setFlash('danger', 'Selecione o produto para dar entrada.');
+            $this->redirect('/estoque/entrada');
+            return;
+        }
+
+        if ($quantidade <= 0) {
+            Session::setFlash('danger', 'A quantidade da entrada deve ser maior que zero.');
+            $this->redirect('/estoque/entrada?produto_id=' . $produtoId);
+            return;
+        }
+
+        if (mb_strlen($fornecedor, 'UTF-8') < 2) {
+            Session::setFlash('danger', 'Informe o nome do fornecedor (mínimo 2 caracteres).');
+            $this->redirect('/estoque/entrada?produto_id=' . $produtoId);
+            return;
+        }
+
+        $usuario = Auth::user();
+        $operadorId = (int)($usuario['id'] ?? 1);
+
+        try {
+            Estoque::darEntradaManual($produtoId, $quantidade, $fornecedor, $precoCusto, $observacoes, $operadorId);
+
+            $produto = Produto::buscarPorId($produtoId);
+            $nomeProd = $produto['descricao'] ?? 'Produto';
+
+            Session::setFlash('success', "Entrada de {$quantidade} un de '{$nomeProd}' (Fornecedor: {$fornecedor}) registrada com sucesso no estoque!");
+            $this->redirect('/estoque/entrada');
+        } catch (\DomainException $de) {
+            Session::setFlash('danger', $de->getMessage());
+            $this->redirect('/estoque/entrada?produto_id=' . $produtoId);
+        } catch (\Throwable $e) {
+            Session::setFlash('danger', 'Erro inesperado ao registrar a entrada: ' . $e->getMessage());
+            $this->redirect('/estoque/entrada');
+        }
+    }
+
+    /**
      * Tela 6.2: Upload de XML de NF-e (Acesso exclusivo para Administrador)
      */
     public function importarXml(): void

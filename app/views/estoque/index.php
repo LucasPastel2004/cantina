@@ -29,12 +29,10 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M7.005 3.1a1 1 0 1 1 1.99 0l-.388 6.35a.61.61 0 0 1-1.214 0zM8 12a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>
                 Lançar Perda
             </a>
-            <?php if ($isAdmin): ?>
-            <a href="<?php echo $baseUrl; ?>/estoque/importar-xml" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1">
+            <a href="<?php echo $baseUrl; ?>/estoque/entrada" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/></svg>
-                Entrada XML NF-e
+                Entrada de Estoque
             </a>
-            <?php endif; ?>
         </div>
     </div>
 

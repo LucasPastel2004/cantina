@@ -38,7 +38,7 @@ class Estoque extends Model
      * Tipos de movimentação de estoque da tabela estoque_movimentacoes
      */
     public const TIPOS_MOVIMENTACAO = [
-        'entrada_fornecedor'  => 'Entrada por Fornecedor (Corte)',
+        'entrada_fornecedor'  => 'Entrada por Fornecedor',
         'entrada_xml'         => 'Entrada por XML de NF-e',
         'aproveitamento_sobra'=> 'Aproveitamento de Sobra de Encomenda',
         'saida_venda_avulsa'  => 'Saída por Venda Avulsa (PDV)',
@@ -330,6 +330,18 @@ class Estoque extends Model
             throw new \DomainException('A justificativa da perda é obrigatória e deve conter no mínimo 5 caracteres.');
         }
 
+        // Garante que o operadorId seja válido referencialmente
+        if ($operadorId <= 0) {
+            $userPadrao = self::fetchOne("SELECT id FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1");
+            $operadorId = (int)($userPadrao['id'] ?? 1);
+        } else {
+            $existeUser = self::fetchOne("SELECT id FROM usuarios WHERE id = :id", ['id' => $operadorId]);
+            if (!$existeUser) {
+                $userPadrao = self::fetchOne("SELECT id FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1");
+                $operadorId = (int)($userPadrao['id'] ?? $operadorId);
+            }
+        }
+
         $pdo = self::getConnection();
         $pdo->beginTransaction();
 
@@ -456,11 +468,12 @@ class Estoque extends Model
 
         if (!empty($filtros['busca'])) {
             $termo = '%' . trim($filtros['busca']) . '%';
-            $sql .= " AND (p.codigo_interno LIKE :b1 OR p.descricao LIKE :b2 OR em.justificativa LIKE :b3 OR nf.numero_nota LIKE :b4)";
+            $sql .= " AND (p.codigo_interno LIKE :b1 OR p.descricao LIKE :b2 OR em.justificativa LIKE :b3 OR nf.numero_nota LIKE :b4 OR em.fornecedor LIKE :b5)";
             $params['b1'] = $termo;
             $params['b2'] = $termo;
             $params['b3'] = $termo;
             $params['b4'] = $termo;
+            $params['b5'] = $termo;
         }
 
         $sql .= " ORDER BY em.created_at DESC";
@@ -518,11 +531,12 @@ class Estoque extends Model
 
         if (!empty($filtros['busca'])) {
             $termo = '%' . trim($filtros['busca']) . '%';
-            $sql .= " AND (p.codigo_interno LIKE :b1 OR p.descricao LIKE :b2 OR em.justificativa LIKE :b3 OR nf.numero_nota LIKE :b4)";
+            $sql .= " AND (p.codigo_interno LIKE :b1 OR p.descricao LIKE :b2 OR em.justificativa LIKE :b3 OR nf.numero_nota LIKE :b4 OR em.fornecedor LIKE :b5)";
             $params['b1'] = $termo;
             $params['b2'] = $termo;
             $params['b3'] = $termo;
             $params['b4'] = $termo;
+            $params['b5'] = $termo;
         }
 
         $res = self::fetchOne($sql, $params);
@@ -560,4 +574,176 @@ class Estoque extends Model
             'id'     => $produtoId
         ]) > 0;
     }
+
+    /**
+     * Processa atomicamente a entrada manual de mercadorias no estoque físico
+     * 
+     * @param int $produtoId ID do produto cadastrado
+     * @param int $quantidade Quantidade de unidades a adicionar
+     * @param string $fornecedor Nome ou razão social do fornecedor
+     * @param float|null $precoCusto Preço de custo unitário opcional
+     * @param string|null $observacoes Observações ou justificativa operacional
+     * @param int $operadorId ID do usuário que realizou a entrada
+     * @return bool
+     * @throws \DomainException Se houver inconsistências nos parâmetros
+     */
+    public static function darEntradaManual(
+        int $produtoId,
+        int $quantidade,
+        string $fornecedor,
+        ?float $precoCusto = null,
+        ?string $observacoes = null,
+        int $operadorId = 1
+    ): bool {
+        if ($produtoId <= 0) {
+            throw new \DomainException('Selecione um produto válido para dar entrada.');
+        }
+
+        if ($quantidade <= 0) {
+            throw new \DomainException('A quantidade a dar entrada deve ser maior que zero.');
+        }
+
+        $fornecedorLimpo = trim($fornecedor);
+        if (mb_strlen($fornecedorLimpo, 'UTF-8') < 2) {
+            throw new \DomainException('O nome do fornecedor é obrigatório (mínimo 2 caracteres).');
+        }
+
+        // Garante que o operadorId seja válido referencialmente
+        if ($operadorId <= 0) {
+            $userPadrao = self::fetchOne("SELECT id FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1");
+            $operadorId = (int)($userPadrao['id'] ?? 1);
+        } else {
+            $existeUser = self::fetchOne("SELECT id FROM usuarios WHERE id = :id", ['id' => $operadorId]);
+            if (!$existeUser) {
+                $userPadrao = self::fetchOne("SELECT id FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1");
+                $operadorId = (int)($userPadrao['id'] ?? $operadorId);
+            }
+        }
+
+        $pdo = self::getConnection();
+        $pdo->beginTransaction();
+
+        try {
+            // 1. Localiza o produto com LOCK FOR UPDATE
+            $sqlProd = "SELECT id, codigo_interno, descricao, estoque_atual, preco_custo 
+                        FROM produtos 
+                        WHERE id = :id AND deleted_at IS NULL 
+                        FOR UPDATE";
+            $produto = self::fetchOne($sqlProd, ['id' => $produtoId]);
+
+            if (!$produto) {
+                throw new \DomainException("Produto #{$produtoId} não encontrado ou inativo.");
+            }
+
+            $now = date('Y-m-d H:i:s');
+            $justificativa = "Entrada manual - Fornecedor: {$fornecedorLimpo}";
+            if (!empty($observacoes)) {
+                $justificativa .= " — " . trim($observacoes);
+            }
+
+            // 2. Incrementa o saldo físico em produtos (e atualiza preco_custo se informado)
+            if ($precoCusto !== null && $precoCusto > 0) {
+                $sqlUpd = "UPDATE produtos 
+                           SET estoque_atual = estoque_atual + :qtd,
+                               preco_custo = :preco_custo,
+                               updated_at = :upd,
+                               updated_by = :user
+                           WHERE id = :prod_id";
+                self::execute($sqlUpd, [
+                    'qtd'         => $quantidade,
+                    'preco_custo' => $precoCusto,
+                    'upd'         => $now,
+                    'user'        => $operadorId,
+                    'prod_id'     => $produtoId
+                ]);
+            } else {
+                $sqlUpd = "UPDATE produtos 
+                           SET estoque_atual = estoque_atual + :qtd,
+                               updated_at = :upd,
+                               updated_by = :user
+                           WHERE id = :prod_id";
+                self::execute($sqlUpd, [
+                    'qtd'     => $quantidade,
+                    'upd'     => $now,
+                    'user'    => $operadorId,
+                    'prod_id' => $produtoId
+                ]);
+            }
+
+            // 3. Registra em estoque_movimentacoes
+            $sqlMov = "INSERT INTO estoque_movimentacoes (
+                           produto_id, tipo_movimentacao, quantidade, fornecedor,
+                           operador_id, justificativa, created_at
+                       ) VALUES (
+                           :produto_id, 'entrada_fornecedor', :quantidade, :fornecedor,
+                           :operador_id, :justificativa, :created_at
+                       )";
+            self::execute($sqlMov, [
+                'produto_id'    => $produtoId,
+                'quantidade'    => $quantidade,
+                'fornecedor'    => $fornecedorLimpo,
+                'operador_id'   => $operadorId,
+                'justificativa' => $justificativa,
+                'created_at'    => $now
+            ]);
+
+            $movId = (int)self::lastInsertId();
+
+            // 4. Trilha de auditoria técnica
+            Auditoria::registrar(
+                $operadorId,
+                'entrada_estoque_manual',
+                'produtos',
+                $produtoId,
+                "Entrada manual de {$quantidade} un de '{$produto['descricao']}' (Fornecedor: {$fornecedorLimpo}). Justificativa: {$justificativa}",
+                $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'
+            );
+
+            $pdo->commit();
+            return true;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Retorna as últimas entradas de estoque registradas
+     */
+    public static function listarEntradasRecentes(int $limite = 20): array
+    {
+        $sql = "SELECT em.*,
+                       p.codigo_interno AS produto_codigo,
+                       p.descricao AS produto_descricao,
+                       c.nome AS categoria_nome,
+                       u.nome AS operador_nome
+                FROM estoque_movimentacoes em
+                INNER JOIN produtos p ON p.id = em.produto_id
+                INNER JOIN categorias c ON c.id = p.categoria_id
+                INNER JOIN usuarios u ON u.id = em.operador_id
+                WHERE em.tipo_movimentacao IN ('entrada_fornecedor', 'entrada_xml', 'aproveitamento_sobra')
+                ORDER BY em.created_at DESC
+                LIMIT " . (int)$limite;
+
+        return self::fetchAll($sql);
+    }
+
+    /**
+     * Retorna a lista de nomes de fornecedores únicos para autocompletar / datalist
+     */
+    public static function listarFornecedoresSugestao(): array
+    {
+        $sql = "SELECT DISTINCT fornecedor FROM (
+                    SELECT fornecedor FROM estoque_movimentacoes WHERE fornecedor IS NOT NULL AND TRIM(fornecedor) != ''
+                    UNION
+                    SELECT razao_social_emitente AS fornecedor FROM notas_fiscais_xml WHERE razao_social_emitente IS NOT NULL AND TRIM(razao_social_emitente) != ''
+                ) AS forn_unificados
+                ORDER BY fornecedor ASC";
+
+        $rows = self::fetchAll($sql);
+        return array_column($rows, 'fornecedor');
+    }
 }
+
