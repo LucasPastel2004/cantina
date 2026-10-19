@@ -110,6 +110,61 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 max-width: calc(100% - 32px);
                 margin: 0 auto 16px auto;
                 box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+                position: sticky;
+                top: 10px;
+                z-index: 1000;
+            }
+            .no-print .zoom-controls {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background: rgba(255, 255, 255, 0.15);
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                border-radius: 4px;
+                padding: 2px 6px;
+                margin-right: 8px;
+            }
+            .no-print .btn-zoom {
+                background: transparent;
+                color: #ffffff;
+                border: none;
+                width: 22px;
+                height: 22px;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                border-radius: 3px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+                transition: all 0.15s ease;
+            }
+            .no-print .btn-zoom:hover {
+                background: rgba(255, 255, 255, 0.25);
+                color: #93c5fd;
+            }
+            .no-print .btn-zoom-val {
+                background: transparent;
+                color: #ffffff;
+                border: none;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                padding: 2px 5px;
+                border-radius: 3px;
+                min-width: 40px;
+                text-align: center;
+                font-variant-numeric: tabular-nums;
+            }
+            .no-print .btn-zoom-val:hover {
+                background: rgba(255, 255, 255, 0.25);
+                text-decoration: underline;
+            }
+            .document-zoom-area {
+                zoom: var(--doc-zoom, 1);
+                transform-origin: top center;
+                transition: zoom 0.1s ease-out;
             }
             .container {
                 width: 210mm;
@@ -127,6 +182,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         /* Impressão Direta (Física / Browser Print / Gotenberg PDF) */
         @media print {
+            .document-zoom-area {
+                zoom: 1 !important;
+                transform: none !important;
+            }
             html, body {
                 width: 100% !important;
                 background: #ffffff !important;
@@ -295,7 +354,15 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         <span style="font-weight: 700; font-size: 12px; color: #0f172a;">Cantina Web — Relatório Oficial de Arrecadação</span>
         <span style="color: #64748b; margin-left: 8px;">Período: <?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?></span>
     </div>
-    <div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+        <!-- Controles de Zoom para Conferência -->
+        <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes antes de imprimir ou salvar">
+            <span style="font-size: 11px; color: #cbd5e1; margin-right: 2px;">Zoom:</span>
+            <button type="button" class="btn-zoom" id="btnZoomOut" title="Diminuir Zoom (Ctrl -)" onclick="alterarZoom(-0.15)">−</button>
+            <button type="button" class="btn-zoom-val" id="btnZoomReset" title="Clique para redefinir para 100% (Ctrl 0)" onclick="resetarZoom()">100%</button>
+            <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
+        </div>
+
         <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" class="btn-back-action">
             ← Voltar aos Filtros
         </a>
@@ -309,6 +376,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 </div>
 <?php endif; ?>
 
+<div id="document-zoom-area" class="document-zoom-area">
 <div class="container">
 
     <!-- Cabeçalho Oficial Escolar -->
@@ -511,9 +579,93 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <div class="doc-footer-meta">
         <div>Colégio Monteiro Lobato • Sistema Integrado Cantina Web • Documento Contábil Autenticado</div>
         <div>Emissão: <?php echo date('d/m/Y H:i:s'); ?></div>
-    </div>
-
 </div>
+</div> <!-- /#document-zoom-area -->
 
+<?php if (!$isPdf): ?>
+<script>
+    let currentZoom = 1.0;
+    const minZoom = 0.5;
+    const maxZoom = 2.5;
+
+    function aplicarZoom(novoZoom) {
+        currentZoom = Math.min(Math.max(novoZoom, minZoom), maxZoom);
+        currentZoom = Math.round(currentZoom * 100) / 100;
+        
+        const zoomArea = document.getElementById('document-zoom-area');
+        const zoomValueBtn = document.getElementById('btnZoomReset');
+        
+        if (zoomArea) {
+            zoomArea.style.zoom = currentZoom;
+            zoomArea.style.setProperty('--doc-zoom', currentZoom);
+        }
+        
+        if (zoomValueBtn) {
+            zoomValueBtn.textContent = Math.round(currentZoom * 100) + '%';
+        }
+
+        try {
+            localStorage.setItem('cantina_report_zoom', currentZoom);
+        } catch(e) {}
+    }
+
+    function alterarZoom(delta) {
+        aplicarZoom(currentZoom + delta);
+    }
+
+    function resetarZoom() {
+        aplicarZoom(1.0);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const savedZoom = localStorage.getItem('cantina_report_zoom');
+            if (savedZoom) {
+                const z = parseFloat(savedZoom);
+                if (!isNaN(z) && z >= minZoom && z <= maxZoom) {
+                    aplicarZoom(z);
+                }
+            }
+        } catch(e) {}
+    });
+
+    window.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
+            e.preventDefault();
+            alterarZoom(0.15);
+        } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
+            e.preventDefault();
+            alterarZoom(-0.15);
+        } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+            e.preventDefault();
+            resetarZoom();
+        }
+    });
+
+    window.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                alterarZoom(0.1);
+            } else {
+                alterarZoom(-0.1);
+            }
+        }
+    }, { passive: false });
+
+    window.addEventListener('beforeprint', function() {
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.zoom = 1;
+        }
+    });
+    window.addEventListener('afterprint', function() {
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.zoom = currentZoom;
+        }
+    });
+</script>
+<?php endif; ?>
 </body>
 </html>

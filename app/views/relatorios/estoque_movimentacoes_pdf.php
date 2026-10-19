@@ -420,6 +420,56 @@ $totalPaginas = count($paginas);
             margin: 0 auto 16px auto;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 10px;
+            z-index: 1000;
+        }
+        .no-print-bar .zoom-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 2px 6px;
+        }
+        .no-print-bar .btn-zoom {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: all 0.15s ease;
+        }
+        .no-print-bar .btn-zoom:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #93c5fd;
+        }
+        .no-print-bar .btn-zoom-val {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-variant-numeric: tabular-nums;
+            min-width: 44px;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+        .no-print-bar .btn-zoom-val:hover {
+            background: rgba(255, 255, 255, 0.2);
+            text-decoration: underline;
         }
         .no-print-bar .btn-action {
             background: #ffffff;
@@ -447,6 +497,13 @@ $totalPaginas = count($paginas);
         .no-print-bar .btn-primary:hover {
             background: #1e40af;
             color: #ffffff;
+        }
+
+        /* Área de Zoom Dinâmico das Páginas A4 */
+        .document-zoom-area {
+            zoom: var(--doc-zoom, 1);
+            transform-origin: top center;
+            transition: zoom 0.1s ease-out;
         }
 
         /* Folha Física A4 Simulada (com quebra visual e estrutural) */
@@ -755,6 +812,10 @@ $totalPaginas = count($paginas);
                 table-layout: fixed !important;
                 width: 100% !important;
             }
+            .document-zoom-area {
+                zoom: 1 !important;
+                transform: none !important;
+            }
             thead {
                 display: table-header-group !important;
             }
@@ -772,6 +833,15 @@ $totalPaginas = count($paginas);
         <div style="font-size: 12px; font-weight: 600;">
             Relatório de Estoque • Orientação: <?php echo $isPaisagem ? 'Paisagem (Landscape)' : 'Retrato (Portrait)'; ?> • Total de Páginas: <?php echo $totalPaginas; ?>
         </div>
+
+        <!-- Controles de Zoom para Conferência -->
+        <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes e números antes de imprimir ou salvar">
+            <span style="font-size: 11px; color: #cbd5e1; margin-right: 2px;">Zoom:</span>
+            <button type="button" class="btn-zoom" id="btnZoomOut" title="Diminuir Zoom (Ctrl -)" onclick="alterarZoom(-0.15)">−</button>
+            <button type="button" class="btn-zoom-val" id="btnZoomReset" title="Clique para redefinir para 100% (Ctrl 0)" onclick="resetarZoom()">100%</button>
+            <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
+        </div>
+
         <div style="display: flex; gap: 8px;">
             <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="btn-action">
                 ← Voltar aos Filtros
@@ -784,6 +854,9 @@ $totalPaginas = count($paginas);
             </button>
         </div>
     </div>
+
+    <!-- ÁREA ESCALÁVEL COM ZOOM PARA CONFERÊNCIA -->
+    <div id="document-zoom-area" class="document-zoom-area">
 
     <!-- ITERAÇÃO DAS FOLHAS A4 (CADA UMA É UMA PÁGINA FÍSICA) -->
     <?php foreach ($paginas as $indexPagina => $pag): 
@@ -1176,8 +1249,98 @@ $totalPaginas = count($paginas);
 
         </div> <!-- /.page-sheet -->
     <?php endforeach; ?>
+    </div> <!-- /#document-zoom-area -->
 
     <script>
+        // =====================================================================
+        // CONTROLE DE ZOOM PARA CONFERÊNCIA VISUAL DE IMPRESSÃO / SALVAR EM PDF
+        // =====================================================================
+        let currentZoom = 1.0;
+        const minZoom = 0.5;
+        const maxZoom = 2.5;
+
+        function aplicarZoom(novoZoom) {
+            currentZoom = Math.min(Math.max(novoZoom, minZoom), maxZoom);
+            currentZoom = Math.round(currentZoom * 100) / 100;
+            
+            const zoomArea = document.getElementById('document-zoom-area');
+            const zoomValueBtn = document.getElementById('btnZoomReset');
+            
+            if (zoomArea) {
+                zoomArea.style.zoom = currentZoom;
+                zoomArea.style.setProperty('--doc-zoom', currentZoom);
+            }
+            
+            if (zoomValueBtn) {
+                zoomValueBtn.textContent = Math.round(currentZoom * 100) + '%';
+            }
+
+            try {
+                localStorage.setItem('cantina_report_zoom', currentZoom);
+            } catch(e) {}
+        }
+
+        function alterarZoom(delta) {
+            aplicarZoom(currentZoom + delta);
+        }
+
+        function resetarZoom() {
+            aplicarZoom(1.0);
+        }
+
+        // Restaura zoom preferido da sessão ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const savedZoom = localStorage.getItem('cantina_report_zoom');
+                if (savedZoom) {
+                    const z = parseFloat(savedZoom);
+                    if (!isNaN(z) && z >= minZoom && z <= maxZoom) {
+                        aplicarZoom(z);
+                    }
+                }
+            } catch(e) {}
+        });
+
+        // Atalhos de Teclado (Ctrl + / Ctrl - / Ctrl 0)
+        window.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
+                e.preventDefault();
+                alterarZoom(0.15);
+            } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
+                e.preventDefault();
+                alterarZoom(-0.15);
+            } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+                e.preventDefault();
+                resetarZoom();
+            }
+        });
+
+        // Atalho Ctrl + Roda do Mouse
+        window.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    alterarZoom(0.1);
+                } else {
+                    alterarZoom(-0.1);
+                }
+            }
+        }, { passive: false });
+
+        // Proteção de Impressão: força 100% mandatória antes de abrir diálogo de impressão
+        window.addEventListener('beforeprint', function() {
+            const zoomArea = document.getElementById('document-zoom-area');
+            if (zoomArea) {
+                zoomArea.style.zoom = 1;
+            }
+        });
+        window.addEventListener('afterprint', function() {
+            const zoomArea = document.getElementById('document-zoom-area');
+            if (zoomArea) {
+                zoomArea.style.zoom = currentZoom;
+            }
+        });
+
         function fecharJanela() {
             window.close();
             setTimeout(function() {

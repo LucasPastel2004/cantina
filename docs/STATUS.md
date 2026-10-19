@@ -8,8 +8,8 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 * **Fase Atual:** Sustentação e Ajustes Pós-Deploy em Produção
 * **Status da Documentação:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Blindagem Universal de Encoding UTF-8 + Ajuste Responsivo da Barra do PDV + Nova Aba de Entrada Manual de Estoque (sem NF-e) Homologados!
-* **Última Atualização:** 2026-10-19 09:30:00 (Implementação da tela e fluxo de Entrada de Estoque manual sem notas fiscais, substituição da aba Entrada XML NF-e por Entrada de Estoque, Migration 032 e 31 testes aprovados).
+* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Blindagem Universal de Encoding UTF-8 + Ajuste Responsivo da Barra do PDV + Nova Aba de Entrada Manual de Estoque (sem NF-e) + Opção de Zoom em Relatórios de Impressão/PDF + Simetria Visual na Aba de Layout de Estoque Homologados!
+* **Última Atualização:** 2026-10-19 10:45:00 (Implementação de controles de zoom interativo [50% a 250%] com sticky toolbar, atalhos de teclado e proteção 1:1 na impressão; remoção do bloco inativo de centro de custo, subida da quebra de página e expansão em 100% da dica de layout na emissão de estoque; 13 testes de homologação aprovados).
 
 
 

@@ -300,20 +300,7 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                             </small>
                         </div>
 
-                        <!-- 2. Agrupamento por centro de custo: Mostrar / Ocultar (desabilitado em Ocultar) -->
-                        <div class="col-12 col-sm-6 col-md-3">
-                            <label class="label-campo-escolar">Agrupamento por centro de custo</label>
-                            <div class="btn-toggle-group-escolar w-100 opacity-75">
-                                <button type="button" class="btn btn-escolar-segment flex-fill text-center disabled" disabled>Mostrar</button>
-                                <button type="button" class="btn btn-escolar-segment flex-fill text-center disabled fw-bold text-secondary" style="background:#e2e8f0;" disabled>Ocultar</button>
-                                <input type="hidden" name="agrupar_centro_custo" value="ocultar">
-                            </div>
-                            <small class="text-muted d-block mt-1" style="font-size: 11px;">
-                                Fixo (Centro único Cantina Geral)
-                            </small>
-                        </div>
-
-                        <!-- 3. Agrupamento por grupo de produtos: Mostrar / Ocultar -->
+                        <!-- 2. Agrupamento por grupo de produtos: Mostrar / Ocultar -->
                         <div class="col-12 col-sm-6 col-md-3">
                             <label class="label-campo-escolar">Agrupamento por grupo de produtos</label>
                             <div class="btn-toggle-group-escolar w-100">
@@ -328,7 +315,7 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                             </small>
                         </div>
 
-                        <!-- 4. Agrupamento por produto: Mostrar / Ocultar -->
+                        <!-- 3. Agrupamento por produto: Mostrar / Ocultar -->
                         <div class="col-12 col-sm-6 col-md-3">
                             <label class="label-campo-escolar">Agrupamento por produto</label>
                             <div class="btn-toggle-group-escolar w-100">
@@ -342,10 +329,8 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                                 Agrupa e totaliza item a item
                             </small>
                         </div>
-                    </div>
 
-                    <!-- Linha 2 de Layout: Quebra de Página -->
-                    <div class="row g-4 pt-3 border-top">
+                        <!-- 4. Quebra de página: Mostrar / Ocultar (subido da linha inferior para simetria total) -->
                         <div class="col-12 col-sm-6 col-md-3">
                             <label class="label-campo-escolar">Quebra de página</label>
                             <div class="btn-toggle-group-escolar w-100">
@@ -360,7 +345,13 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                             </small>
                         </div>
 
-                        <div class="col-12 col-md-9 d-flex align-items-center">
+                        <!-- Parâmetro fixo de centro de custo mantido oculto para conformidade com o backend -->
+                        <input type="hidden" name="agrupar_centro_custo" value="ocultar">
+                    </div>
+
+                    <!-- Linha 2 de Layout: Mensagem de Ajuda Expandida para Cobrir Toda a Largura -->
+                    <div class="row pt-3 border-top">
+                        <div class="col-12">
                             <div class="p-3 bg-light rounded border w-100">
                                 <div class="d-flex align-items-center gap-2">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" class="text-primary"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>

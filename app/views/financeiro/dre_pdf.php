@@ -105,6 +105,52 @@ $isCaixa = ($regime === 'caixa');
             z-index: 1000;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
+        .action-bar-top .zoom-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            padding: 2px 6px;
+        }
+        .action-bar-top .btn-zoom {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            width: 22px;
+            height: 22px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: all 0.15s ease;
+        }
+        .action-bar-top .btn-zoom:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: #93c5fd;
+        }
+        .action-bar-top .btn-zoom-val {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 3px;
+            min-width: 40px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+        .action-bar-top .btn-zoom-val:hover {
+            background: rgba(255, 255, 255, 0.25);
+            text-decoration: underline;
+        }
         .action-bar-top .btn-action-nav {
             background: #ffffff;
             color: #0f172a;
@@ -121,6 +167,18 @@ $isCaixa = ($regime === 'caixa');
         }
         .action-bar-top .btn-action-nav:hover {
             background: #f1f5f9;
+        }
+
+        .document-zoom-area {
+            zoom: var(--doc-zoom, 1);
+            transform-origin: top center;
+            transition: zoom 0.1s ease-out;
+        }
+        @media print {
+            .document-zoom-area {
+                zoom: 1 !important;
+                transform: none !important;
+            }
         }
 
         /* ==========================================================================
@@ -272,7 +330,15 @@ $isCaixa = ($regime === 'caixa');
             Período: <?php echo date('d/m/Y', strtotime($dataInicio ?? date('Y-01-01'))); ?> a <?php echo date('d/m/Y', strtotime($dataFim ?? date('Y-m-d'))); ?> &bull; Formato A4 Paisagem
         </span>
     </div>
-    <div style="display: flex; gap: 8px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <!-- Controles de Zoom para Conferência -->
+        <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes antes de imprimir ou salvar">
+            <span style="font-size: 11px; color: #cbd5e1; margin-right: 2px;">Zoom:</span>
+            <button type="button" class="btn-zoom" id="btnZoomOut" title="Diminuir Zoom (Ctrl -)" onclick="alterarZoom(-0.15)">−</button>
+            <button type="button" class="btn-zoom-val" id="btnZoomReset" title="Clique para redefinir para 100% (Ctrl 0)" onclick="resetarZoom()">100%</button>
+            <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
+        </div>
+
         <a href="<?php echo $baseUrl; ?>/financeiro/dre?data_inicio=<?php echo $dataInicio ?? ''; ?>&data_fim=<?php echo $dataFim ?? ''; ?>&regime=<?php echo $regime; ?>" class="btn-action-nav">
             ← Voltar ao Painel
         </a>
@@ -286,6 +352,7 @@ $isCaixa = ($regime === 'caixa');
 </div>
 <?php endif; ?>
 
+<div id="document-zoom-area" class="document-zoom-area">
 <div class="doc-page">
     <!-- Cabeçalho Oficial -->
     <div class="header-box">
@@ -558,11 +625,92 @@ $isCaixa = ($regime === 'caixa');
 
     <div class="footer-doc">
         <div>Colégio Monteiro Lobato • Sistema Integrado Cantina Web • Módulo Financeiro & DRE</div>
-        <div>Página 1 de 1</div>
     </div>
-</div>
+</div> <!-- /#document-zoom-area -->
 
 <script>
+let currentZoom = 1.0;
+const minZoom = 0.5;
+const maxZoom = 2.5;
+
+function aplicarZoom(novoZoom) {
+    currentZoom = Math.min(Math.max(novoZoom, minZoom), maxZoom);
+    currentZoom = Math.round(currentZoom * 100) / 100;
+    
+    const zoomArea = document.getElementById('document-zoom-area');
+    const zoomValueBtn = document.getElementById('btnZoomReset');
+    
+    if (zoomArea) {
+        zoomArea.style.zoom = currentZoom;
+        zoomArea.style.setProperty('--doc-zoom', currentZoom);
+    }
+    
+    if (zoomValueBtn) {
+        zoomValueBtn.textContent = Math.round(currentZoom * 100) + '%';
+    }
+
+    try {
+        localStorage.setItem('cantina_report_zoom', currentZoom);
+    } catch(e) {}
+}
+
+function alterarZoom(delta) {
+    aplicarZoom(currentZoom + delta);
+}
+
+function resetarZoom() {
+    aplicarZoom(1.0);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const savedZoom = localStorage.getItem('cantina_report_zoom');
+        if (savedZoom) {
+            const z = parseFloat(savedZoom);
+            if (!isNaN(z) && z >= minZoom && z <= maxZoom) {
+                aplicarZoom(z);
+            }
+        }
+    } catch(e) {}
+});
+
+window.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
+        e.preventDefault();
+        alterarZoom(0.15);
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
+        e.preventDefault();
+        alterarZoom(-0.15);
+    } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        resetarZoom();
+    }
+});
+
+window.addEventListener('wheel', function(e) {
+    if (e.ctrlKey) {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+            alterarZoom(0.1);
+        } else {
+            alterarZoom(-0.1);
+        }
+    }
+}, { passive: false });
+
+window.addEventListener('beforeprint', function() {
+    const zoomArea = document.getElementById('document-zoom-area');
+    if (zoomArea) {
+        zoomArea.style.zoom = 1;
+    }
+});
+window.addEventListener('afterprint', function() {
+    const zoomArea = document.getElementById('document-zoom-area');
+    if (zoomArea) {
+        zoomArea.style.zoom = currentZoom;
+    }
+});
+
 function fecharJanela() {
     window.close();
     setTimeout(function() {
