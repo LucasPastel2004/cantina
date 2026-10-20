@@ -355,17 +355,15 @@ function initSidebarAutoHide() {
   const wrapper = document.querySelector('.app-admin-wrapper');
   if (!wrapper) return;
 
-  // 1. Restaura preferência salva de fixação da barra lateral (Padrão: ABERTA / EXPANDIDA)
+  // 1. No novo dock vertical de 60px, a barra lateral fica sempre ativa e fixa sem esconder a tela
+  if (wrapper) {
+    wrapper.classList.remove('sidebar-collapsed');
+    wrapper.classList.remove('sidebar-peek-open');
+  }
   try {
     const pref = localStorage.getItem('cantina_sidebar_preference');
-    
-    // No Desktop / Notebooks (>= 768px): respeita a preferência salva
-    if (window.innerWidth >= 768) {
-      if (pref === 'pinned_collapsed') {
-        wrapper.classList.add('sidebar-collapsed');
-      } else {
-        wrapper.classList.remove('sidebar-collapsed');
-      }
+    if (pref === 'pinned_collapsed') {
+      localStorage.removeItem('cantina_sidebar_preference');
     }
   } catch (e) {}
 

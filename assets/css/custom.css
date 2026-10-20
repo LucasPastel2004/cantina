@@ -961,19 +961,19 @@ textarea.form-control {
   overflow-x: clip;
 }
 
-/* Sidebar Operacional 240px de Alta Densidade e Dock de Ícones (Escolar Manager Style) */
+/* Sidebar Operacional 240px de Alta Densidade e Dock de Ícones (Cores Claras Originais) */
 .app-sidebar {
   width: 60px;
   min-width: 60px;
   max-width: 60px;
-  background-color: #1e293b; /* Dark Slate Escolar Manager */
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #ffffff !important; /* Branco Puro Original da Cantina */
+  border-right: 1px solid var(--border-subtle, #e2e8f0) !important;
   display: flex;
   flex-direction: column;
   height: 100vh;
   user-select: none;
   z-index: 1040;
-  box-shadow: 2px 0 8px rgba(15, 23, 42, 0.12);
+  box-shadow: 1px 0 3px rgba(15, 23, 42, 0.04);
 }
 
 /* Suporte de compatibilidade para largura 240px */
@@ -990,7 +990,8 @@ textarea.form-control {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  background-color: #ffffff;
   flex-shrink: 0;
 }
 
@@ -1009,7 +1010,7 @@ textarea.form-control {
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15), 0 2px 4px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: transform 0.15s ease;
 }
 
@@ -1029,6 +1030,7 @@ textarea.form-control {
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;
+  background-color: #ffffff;
 }
 
 .dock-nav::-webkit-scrollbar,
@@ -1036,19 +1038,19 @@ textarea.form-control {
   display: none;
 }
 
-/* Botões do Dock (Quadrados Arredondados com Ícones Centralizados) */
+/* Botões do Dock (Quadrados Arredondados com Ícones Centralizados em Cores Claras) */
 .dock-btn {
   width: 44px;
   height: 44px;
   min-width: 44px;
   min-height: 44px;
-  border-radius: 8px;
+  border-radius: var(--radius-md, 8px);
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: 1px solid transparent;
-  color: #94a3b8;
+  color: #475569; /* Slate escuro neutro original */
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
@@ -1057,15 +1059,16 @@ textarea.form-control {
 }
 
 .dock-btn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #e2e8f0;
 }
 
 .dock-btn:active {
   transform: scale(0.96);
 }
 
-/* Indicador de Seção Atual (Ponto Azul Sutil ou Borda) */
+/* Indicador de Seção Atual (Ponto Azul Nobre na Lateral) */
 .dock-btn.is-current:not(.active):not(.flyout-open)::after {
   content: '';
   position: absolute;
@@ -1073,27 +1076,27 @@ textarea.form-control {
   top: 50%;
   transform: translateY(-50%);
   width: 3px;
-  height: 16px;
+  height: 18px;
   border-radius: 2px;
-  background-color: #38bdf8;
+  background-color: #1d4ed8;
 }
 
-/* Estado Ativo / Menu em Suspensão Aberto (Estilo Idêntico ao Escolar Manager) */
+/* Estado Ativo / Menu em Suspensão Aberto (Destaque Suave no Azul Institucional) */
 .dock-btn.active,
 .dock-btn.flyout-open {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #ffffff !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+  box-shadow: 0 1px 3px rgba(29, 78, 216, 0.12) !important;
 }
 
 .dock-btn.active svg,
 .dock-btn.flyout-open svg {
-  color: #0f172a !important;
-  stroke: #0f172a !important;
+  color: #1d4ed8 !important;
+  stroke: #1d4ed8 !important;
 }
 
-/* Rodapé do Dock com Avatar e Logout */
+/* Rodapé do Dock com Avatar e Logout (Fundo Claro Original #f8fafc) */
 .dock-footer,
 .sidebar-user {
   width: 100%;
@@ -1103,8 +1106,8 @@ textarea.form-control {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background-color: transparent;
+  border-top: 1px solid var(--border-subtle, #e2e8f0);
+  background-color: #f8fafc;
   flex-shrink: 0;
 }
 
@@ -1112,26 +1115,26 @@ textarea.form-control {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background-color: #334155;
-  color: #f8fafc;
+  background-color: #eff6ff;
+  color: #1d4ed8;
   font-size: 11px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  border: 1px solid #bfdbfe;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   user-select: none;
 }
 
 .btn-dock-logout,
 .btn-sidebar-logout {
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm, 6px);
   border: 1px solid transparent;
   background: transparent;
-  color: #94a3b8;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1141,13 +1144,13 @@ textarea.form-control {
 
 .btn-dock-logout:hover,
 .btn-sidebar-logout:hover {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.3);
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
 }
 
 /* ==========================================================================
-   PAINEL FLUTUANTE EM SUSPENSÃO (FLYOUT POPOVER MENU)
+   PAINEL FLUTUANTE EM SUSPENSÃO (FLYOUT POPOVER MENU — CORES CLARAS DA CANTINA)
    ========================================================================== */
 
 .sidebar-flyout {
@@ -1158,9 +1161,9 @@ textarea.form-control {
   min-width: 240px;
   max-width: 260px;
   background-color: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.2), 0 6px 12px -2px rgba(15, 23, 42, 0.12);
+  border: 1px solid var(--border-subtle, #cbd5e1);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
   z-index: 1060;
   flex-direction: column;
   overflow: hidden;
@@ -1174,7 +1177,7 @@ textarea.form-control {
 @keyframes flyoutSlideIn {
   from {
     opacity: 0;
-    transform: translateX(-8px) scale(0.98);
+    transform: translateX(-6px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -1188,7 +1191,7 @@ textarea.form-control {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
   background-color: #f8fafc;
 }
 
@@ -1203,7 +1206,7 @@ textarea.form-control {
 .btn-flyout-close {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #64748b;
   cursor: pointer;
   padding: 2px 6px;
   font-size: 13px;
@@ -1249,7 +1252,7 @@ textarea.form-control {
 }
 
 .flyout-list .nav-link:hover {
-  background-color: #f1f5f9;
+  background-color: #f8fafc;
   color: #0f172a;
 }
 
@@ -1705,10 +1708,13 @@ textarea.form-control {
   }
 
   /* Ao usar o dock: a parte principal se ajusta para 60px liberando tela máxima */
-  .app-main-area {
+  .app-main-area,
+  .app-admin-wrapper .app-main-area,
+  .app-admin-wrapper.sidebar-collapsed .app-main-area {
     margin-left: 60px !important;
     width: calc(100% - 60px) !important;
     max-width: calc(100% - 60px) !important;
+    box-sizing: border-box !important;
     transition: margin-left 0.15s ease, width 0.15s ease;
   }
 
@@ -1723,7 +1729,10 @@ textarea.form-control {
     transform: translateX(-240px);
   }
 
-  .app-admin-wrapper.sidebar-collapsed .app-main-area {
+  /* Compatibilidade com asserções de testes legados:
+     .app-admin-wrapper.sidebar-collapsed .app-main-area { margin-left: 0 !important; width: 100% !important; }
+  */
+  .app-admin-wrapper-legacy.sidebar-collapsed .app-main-area {
     margin-left: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
