@@ -43,3 +43,9 @@ jobs:
             --exclude-from=deploy-exclude.txt \
             -e "ssh -i ~/.ssh/hostnet_deploy -o IdentitiesOnly=yes -p ${{ secrets.HOSTNET_PORT }}" \
             ./ ${{ secrets.HOSTNET_USER }}@${{ secrets.HOSTNET_HOST }}:${{ secrets.HOSTNET_PATH }}
+
+      - name: Executar migrações do banco de dados na Hostnet
+        run: |
+          ssh -i ~/.ssh/hostnet_deploy -o IdentitiesOnly=yes -p ${{ secrets.HOSTNET_PORT }} \
+            ${{ secrets.HOSTNET_USER }}@${{ secrets.HOSTNET_HOST }} \
+            "php ${{ secrets.HOSTNET_PATH }}/database/runner.php"

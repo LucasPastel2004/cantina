@@ -58,9 +58,10 @@ $assertCustom(str_contains($customCss, 'color: #475569; /* Neutro uniforme para 
 $assertCustom(str_contains($customCss, '.dock-btn:hover svg') && str_contains($customCss, 'color: #1d4ed8 !important;'), "Todos os botões do dock (inclusive Cardápio) ficam com ícone azul no hover");
 $assertCustom(str_contains($customCss, '.sidebar-flyout.flyout-pinned'), "custom.css define elevação do menu travado .sidebar-flyout.flyout-pinned");
 
-// 4. Verificação do Rodapé do Dock (Apenas Botão de Logout, sem avatar AD)
+// 4. Verificação do Rodapé do Dock (Apenas Botão de Logout, sem avatar AD) e Link do Logotipo
 $assertCustom(!str_contains($sidebarContent, 'dock-user-avatar'), "Avatar com iniciais/foto foi removido do rodapé do dock");
 $assertCustom(str_contains($sidebarContent, 'btn-dock-logout') && str_contains($sidebarContent, '/logout'), "Botão de encerramento de sessão (Logout) mantido no rodapé do dock");
+$assertCustom(str_contains($sidebarContent, 'href="<?php echo $baseUrl; ?>/admin"') && str_contains($sidebarContent, 'dock-brand'), "Logotipo oficial do Monteiro Lobato no dock redireciona para a visão geral /admin");
 
 echo "\n=======================================================\n";
 echo " RESULTADO: {$passou} / {$total} testes passaram!\n";

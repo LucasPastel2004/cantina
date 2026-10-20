@@ -36,9 +36,9 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
 
 <!-- Dock de Navegação Principal (Barra Estreita de 60px) -->
 <aside class="app-sidebar app-sidebar-dock" id="appSidebar">
-    <!-- Topo do Dock com Logotipo Oficial -->
+    <!-- Topo do Dock com Logotipo Oficial (Redireciona para a Visão Geral /admin) -->
     <div class="dock-header sidebar-header">
-        <a href="<?php echo $baseUrl; ?>/operacional/corte" class="dock-brand sidebar-brand" title="Monteiro Lobato — Painel da Cantina" aria-label="Painel da Cantina">
+        <a href="<?php echo $baseUrl; ?>/admin" class="dock-brand sidebar-brand" title="Monteiro Lobato — Visão Geral da Cantina" aria-label="Visão Geral da Cantina">
             <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" width="36" height="36" class="header-logo" style="width: 36px; height: 36px; max-width: 36px; max-height: 36px; border-radius: 50%; object-fit: cover;">
             <div class="sidebar-brand-text d-none" aria-hidden="true">
                 <span class="sidebar-brand-name">Monteiro Lobato</span>
