@@ -2083,3 +2083,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   1. Em `app/models/Estoque.php`: Adicionada resolução defensiva de `operador_id` nos métodos `darEntradaManual` e `registrarPerda`, verificando se o ID informado existe na tabela `usuarios`. Se não existir ou for nulo/zero, o sistema seleciona automaticamente o ID do primeiro usuário ativo disponível (`SELECT id FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1`).
   2. Atualizada a suíte de testes `tests/entrada_estoque_manual_test.php` para recuperar o ID real do usuário existente na base.
 - Como evitar no futuro: Em métodos de negócio que gravam chaves estrangeiras não nulas para tabelas de auditoria/usuários (`operador_id`, `updated_by`), implementar resolução defensiva de contingência ou garantir que testes de integração consultem IDs persistidos reais no banco.
+
+---
+
+## 2026-10-20 - Controles de zoom invisíveis na barra de impressão e estouro visual da coluna Quantidade no relatório de vendas
+
+- Sintoma: 
+  1. Nas telas de impressão/PDF de vendas e arrecadação, os controles de zoom (ícone de lupa, botões `-`, `100%`, `+`) não eram visíveis para o usuário ("não tem lupa nenhuma");
+  2. No relatório de vendas (`vendas_alimento_pdf.php`), o título da coluna "Quantidade" vazava e transbordava para fora da célula, sobrepondo a coluna vizinha "Valor Unitário".
+- Causa:
+  1. A barra `.no-print` nas views `vendas_alimento_pdf.php` e `arrecadacao_pdf.php` utilizava fundo branco (`background: #ffffff`). Como os estilos de `.btn-zoom`, `.btn-zoom-val` e do container de zoom tinham cor branca (`color: #ffffff`) e a lupa SVG tinha tom cinza claríssimo (`#cbd5e1`), os elementos ficaram completamente camuflados em branco sobre branco;
+  2. A variável de largura `$wQtd` estava fixada em apenas 8% da largura útil da página (~14.5mm). A palavra "Quantidade" (10 caracteres) possui cerca de 18mm a 8pt. Por possuir alinhamento à direita (`text-right`) em tabela com `table-layout: fixed`, o texto estourava os limites da coluna.
+- Solução aplicada:
+  1. Padronizada a barra `.no-print` de todas as telas de impressão para o tema escuro corporativo homologado (`background-color: #1e293b; color: #ffffff`), conferindo alto contraste à lupa SVG (`#cbd5e1`), aos controles de zoom e aos botões de navegação e impressão;
+  2. Em `vendas_alimento_pdf.php`, ampliada a coluna `$wQtd` para 12% (11% quando colunas opcionais estiverem ativas), garantindo mais de 21.8mm de largura com folga tipográfica, recalibrando proporcionalmente as colunas de valores e descrição;
+  3. Adicionadas as propriedades `white-space: nowrap; overflow: hidden;` ao cabeçalho `table.tabela-relatorio th`, garantindo blindagem estrita contra colisões celulares.
+- Como evitar no futuro: Ao implementar componentes de barra utilitária compartilhados, validar o contraste cromático (WCAG 2.2 AA) das variantes de fundo claro e escuro. Em tabelas com largura fixa para impressão A4, dimensionar colunas com base no número real de caracteres do cabeçalho mais longo em milímetros, assegurando contenção celular via CSS.

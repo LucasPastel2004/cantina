@@ -8,8 +8,8 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 * **Fase Atual:** Sustentação e Ajustes Pós-Deploy em Produção
 * **Status da Documentação:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Blindagem Universal de Encoding UTF-8 + Ajuste Responsivo da Barra do PDV + Nova Aba de Entrada Manual de Estoque (sem NF-e) + Opção de Zoom com Ícone de Lupa em Relatórios de Impressão/PDF + Simetria Visual na Aba de Layout de Estoque Homologados e Publicados em Produção na Hostnet!
-* **Última Atualização:** 2026-10-20 08:00:00 (Substituição da palavra textual 'Zoom:' pelo ícone SVG corporativo de lupa nas barras de impressão/PDF [estoque, vendas, arrecadação, DRE]; testes automatizados e suíte Gotenberg aprovados com 100% de sucesso).
+* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Blindagem Universal de Encoding UTF-8 + Ajuste Responsivo da Barra do PDV + Nova Aba de Entrada Manual de Estoque (sem NF-e) + Opção de Zoom com Ícone de Lupa em Alto Contraste em Relatórios de Impressão/PDF + Correção de Largura da Coluna Quantidade + Simetria Visual na Aba de Layout de Estoque Homologados e Publicados em Produção na Hostnet!
+* **Última Atualização:** 2026-10-20 08:50:00 (Padronização do tema escuro de alto contraste #1e293b para a barra de impressão em todas as views de relatório, garantindo visibilidade total do ícone SVG de lupa e controles de zoom; ampliação da coluna Quantidade para 12% com white-space: nowrap no relatório de vendas; testes automatizados 20/20 aprovados com 100% de sucesso).
 
 
 
@@ -1788,6 +1788,15 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   - **Testes Automatizados:**
     * Suíte dedicada `tests/entrada_estoque_manual_test.php` criada com 31 asserções aprovadas com 100% de sucesso;
     * Testes de regressão `tests/estoque_web_test.php` (56/56) e `tests/fase14_test.php` (45/45) executados e aprovados com 100% de sucesso.
+
+---
+
+### [x] Sustentação — Alto Contraste na Barra de Impressão (Lupa Visível) e Ajuste da Coluna Quantidade (2026-10-20)
+* [x] **Diagnóstico de Contraste:** Identificado que em `vendas_alimento_pdf.php` e `arrecadacao_pdf.php` a barra de ações `.no-print` possuía fundo branco, tornando invisíveis os controles de zoom e a lupa SVG (brancos sobre branco).
+* [x] **Padronização Visual:** Migrada a barra `.no-print` para o tema escuro corporativo `#1e293b` com texto branco e lupa SVG `#cbd5e1` em alto contraste em todas as views de impressão.
+* [x] **Correção da Coluna Quantidade:** Em `vendas_alimento_pdf.php`, ampliada a coluna `$wQtd` de 8% para 12% (~21.8mm úteis), eliminando qualquer colisão com a coluna "Valor Unitário".
+* [x] **Blindagem CSS:** Adicionados `white-space: nowrap; overflow: hidden;` ao cabeçalho `table.tabela-relatorio th`.
+* [x] **Testes Automatizados:** Suíte `tests/lupa_e_coluna_quantidade_test.php` criada com 20 asserções e suíte `tests/teste_todos_pdfs.php` (10 relatórios) aprovadas com 100% de sucesso.
 
 ---
 

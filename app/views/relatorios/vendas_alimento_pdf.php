@@ -91,23 +91,26 @@ if ($emitirAlim && $emitirAluno) {
 
         /* Barra de Ações para Navegador (Oculta na Impressão e no PDF) */
         .no-print {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            padding: 10px 16px;
+            background-color: #1e293b;
+            color: #ffffff;
+            border: 1px solid #0f172a;
+            padding: 8px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 11px;
             border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
         .no-print button, .no-print a {
             cursor: pointer;
-            padding: 6px 14px;
+            padding: 5px 12px;
             font-size: 11px;
             font-weight: 600;
             border-radius: 4px;
             text-decoration: none;
             display: inline-block;
+            transition: all 0.15s ease-in-out;
         }
         .btn-print-action {
             background: #1d4ed8;
@@ -119,7 +122,7 @@ if ($emitirAlim && $emitirAluno) {
         }
         .btn-back-action {
             background: #ffffff;
-            color: #1d4ed8 !important;
+            color: #0f172a !important;
             border: 1px solid #cbd5e1;
             margin-right: 6px;
         }
@@ -128,7 +131,7 @@ if ($emitirAlim && $emitirAluno) {
         }
         .btn-close-action {
             background: #ffffff;
-            color: #475569 !important;
+            color: #0f172a !important;
             border: 1px solid #cbd5e1;
             margin-left: 6px;
         }
@@ -146,7 +149,6 @@ if ($emitirAlim && $emitirAluno) {
                 width: 210mm;
                 max-width: calc(100% - 32px);
                 margin: 0 auto 16px auto;
-                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
                 position: sticky;
                 top: 10px;
                 z-index: 1000;
@@ -155,8 +157,8 @@ if ($emitirAlim && $emitirAluno) {
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
-                background: rgba(255, 255, 255, 0.15);
-                border: 1px solid rgba(255, 255, 255, 0.25);
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.2);
                 border-radius: 4px;
                 padding: 2px 6px;
                 margin-right: 8px;
@@ -193,6 +195,7 @@ if ($emitirAlim && $emitirAluno) {
                 min-width: 40px;
                 text-align: center;
                 font-variant-numeric: tabular-nums;
+                transition: all 0.15s ease;
             }
             .no-print .btn-zoom-val:hover {
                 background: rgba(255, 255, 255, 0.25);
@@ -305,6 +308,8 @@ if ($emitirAlim && $emitirAluno) {
             color: #000000;
             font-size: 8pt;
             background: #ffffff !important;
+            white-space: nowrap;
+            overflow: hidden;
         }
         table.tabela-relatorio th:first-child,
         table.tabela-relatorio td:first-child {
@@ -451,8 +456,8 @@ if ($emitirAlim && $emitirAluno) {
 
 <!-- Barra de Controle de Impressão (Apenas na Visualização em Tela) -->
 <div class="no-print">
-    <div style="display: flex; align-items: center; gap: 8px;">
-        <strong>Relatório de Emissão de Vendas</strong> &bull; Período: <?php echo htmlspecialchars($periodoOficial); ?>
+    <div style="display: flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 600;">
+        <span>Relatório de Emissão de Vendas &bull; Período: <?php echo htmlspecialchars($periodoOficial); ?></span>
     </div>
     <div style="display: flex; align-items: center; gap: 6px;">
         <!-- Controles de Zoom para Conferência -->
@@ -471,10 +476,10 @@ if ($emitirAlim && $emitirAluno) {
             &larr; Voltar aos Filtros
         </a>
         <button type="button" class="btn-print-action" onclick="window.print()">
-            Imprimir Documento
+            🖨 Imprimir Documento
         </button>
         <button type="button" class="btn-close-action" onclick="window.close()">
-            Fechar Janela
+            ✕ Fechar
         </button>
     </div>
 </div>
@@ -496,15 +501,16 @@ if ($emitirAlim && $emitirAluno) {
         <?php if ($agruparPer): ?>
             <!-- CASO 1.1: AGRUPADO POR DIA (Conforme relatorio de vendas por período.pdf) -->
             <?php
-            $wData = 11;
-            $wHora = $emitirHora ? 8 : 0;
-            $wTipo = $agruparTipo ? 11 : 0;
-            $wQtd  = 8;
-            $wUnit = 11;
-            $wTot  = 11;
-            $wForma = $emitirForma ? 11 : 0;
-            $wObs  = $emitirObs ? 14 : 0;
-            $wAlim = 100 - ($wData + $wHora + $wTipo + $wQtd + $wUnit + $wTot + $wForma + $wObs);
+            $temExtras = ($emitirHora || $agruparTipo || $emitirForma || $emitirObs);
+            $wData  = $temExtras ? 9 : 10;
+            $wHora  = $emitirHora ? 7 : 0;
+            $wTipo  = $agruparTipo ? 9 : 0;
+            $wQtd   = $temExtras ? 11 : 12;
+            $wUnit  = $temExtras ? 12 : 13;
+            $wTot   = $temExtras ? 12 : 13;
+            $wForma = $emitirForma ? 9 : 0;
+            $wObs   = $emitirObs ? 11 : 0;
+            $wAlim  = 100 - ($wData + $wHora + $wTipo + $wQtd + $wUnit + $wTot + $wForma + $wObs);
             ?>
             <table class="tabela-relatorio">
                 <thead>
@@ -590,11 +596,11 @@ if ($emitirAlim && $emitirAluno) {
                 <thead>
                     <tr>
                         <th style="width: 12%;">Código</th>
-                        <th style="width: 38%;">Alimento</th>
+                        <th style="width: 36%;">Alimento</th>
                         <th style="width: 16%;">Categoria</th>
-                        <th style="width: 10%;" class="text-right">Qtd Total</th>
+                        <th style="width: 11%;" class="text-right">Qtd Total</th>
                         <th style="width: 12%;" class="text-right">Preço Médio</th>
-                        <th style="width: 12%;" class="text-right">Valor Total</th>
+                        <th style="width: 13%;" class="text-right">Valor Total</th>
                     </tr>
                 </thead>
                 <tbody>
