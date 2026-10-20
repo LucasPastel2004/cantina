@@ -2117,3 +2117,13 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. Padronizado o botão de ação principal como "🖨 Imprimir / Salvar PDF" acionando `window.print()`, permitindo ao operador tanto a impressão física quanto a geração de PDF diretamente pelo navegador ("Salvar como PDF"), sem dependência de microsserviços Docker (compatível com a hospedagem Hostnet).
 - Como evitar no futuro: Em folhas A4 que possam ultrapassar uma página e exijam suporte a `window.print()`, nunca definir `@page { margin: 0; }` em conjunto com containers de altura fixa ou padding. Utilizar margens explícitas no `@page` e `border-collapse: separate; border-spacing: 0;` na regra `@media print` para garantir que o Chromium não fatie linhas de tabela.
 
+---
+
+## 2026-10-20 - Falha de sintaxe ao executar migrações de banco via SSH na Hostnet devido à versão legada de PHP CLI
+
+- Sintoma: Durante o workflow de deploy no GitHub Actions (`deploy-hostnet.yml`), o passo pós-rsync `Executar migrações do banco de dados na Hostnet` falhou com a mensagem: `Erro fatal de banco de dados: syntax error, unexpected '?', expecting function (T_FUNCTION) or const (T_CONST)` ao executar `php database/runner.php`.
+- Causa: Em conexões SSH não-interativas na hospedagem compartilhada da Hostnet, o comando `php` disponível no `$PATH` padrão aponta para um interpretador PHP legado (PHP 7.0/7.1). Ao tentar interpretar o arquivo `config/database.php`, o interpretador antigo não reconhecia propriedades de classe tipadas com nullable (`private static ?\PDO $instance = null;`), funcionalidade introduzida no PHP 7.4 e exigida pelo projeto (PHP 8.2+).
+- Solução aplicada: Atualizado o workflow `.github/workflows/deploy-hostnet.yml` com um script de resolução dinâmica de interpretador via `bash -s`. A rotina testa múltiplos binários e caminhos de instalação do PHP 8.2+ na Hostnet (incluindo `/usr/local/php84/bin/php`, `/usr/local/php83/bin/php`, `/usr/local/php82/bin/php`, caminhos cPanel/CloudLinux `/opt/alt/php8*` e `/opt/cpanel/ea-php8*`), validando `PHP_VERSION_ID >= 80200` via CLI antes de invocar o `database/runner.php`. Após a execução, o workflow exibe a tabela completa com o status das migrações (`--status`).
+- Como evitar no futuro: Em ambientes de hospedagem compartilhada, nunca confiar que o comando genérico `php` no SSH utilize a mesma versão do PHP configurada para o Apache/Web. Sempre implementar resolução defensiva que localize e utilize explicitamente o binário do PHP 8.2+ suportado pelo sistema.
+
+
