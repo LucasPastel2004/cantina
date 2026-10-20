@@ -1050,12 +1050,18 @@ textarea.form-control {
   justify-content: center;
   background: transparent;
   border: 1px solid transparent;
-  color: #475569; /* Slate escuro neutro original */
+  color: #475569; /* Neutro uniforme para todos os ícones em repouso */
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
   position: relative;
   padding: 0;
+}
+
+.dock-btn svg {
+  color: #475569;
+  stroke: #475569;
+  transition: color 0.12s ease, stroke 0.12s ease;
 }
 
 .dock-btn:hover {
@@ -1064,18 +1070,13 @@ textarea.form-control {
   border-color: #e2e8f0;
 }
 
+.dock-btn:hover svg {
+  color: #0f172a;
+  stroke: #0f172a;
+}
+
 .dock-btn:active {
   transform: scale(0.96);
-}
-
-/* Indicador de Seção Atual (Apenas realce sutil no ícone, sem barrinha solta na lateral) */
-.dock-btn.is-current:not(.active):not(.flyout-open):not(.flyout-pinned) {
-  color: #1d4ed8;
-}
-
-.dock-btn.is-current:not(.active):not(.flyout-open):not(.flyout-pinned) svg {
-  color: #1d4ed8;
-  stroke: #1d4ed8;
 }
 
 /* Estado Ativo / Menu em Suspensão Aberto por Hover */

@@ -135,7 +135,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
 
         <!-- 6. Cardápio & Preços: Ícone Único com Redirecionamento Direto (Sem Flyout) -->
         <a href="<?php echo $baseUrl; ?>/admin/produtos" 
-           class="dock-btn <?php echo $isProdutosActive ? 'active is-current' : ''; ?>" 
+           class="dock-btn <?php echo $isProdutosActive ? 'is-current' : ''; ?>" 
            id="btnDirectProdutos"
            title="Cardápio & Preços" 
            aria-label="Cardápio & Preços">
