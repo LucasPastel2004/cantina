@@ -186,14 +186,19 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
         <div class="card-enterprise mb-4">
             <div class="card-enterprise-header d-flex justify-content-between align-items-center py-2.5 px-3 bg-light border-bottom">
                 <span class="fw-semibold text-dark text-microcopy text-uppercase">Parâmetros de Emissão & Formatação</span>
-                <span class="text-muted text-microcopy">Selecione as opções desejadas para emitir o relatório</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted text-microcopy d-none d-sm-inline">Selecione as opções desejadas para emitir o relatório</span>
+                    <a href="<?php echo $baseUrl; ?>/relatorios/vendas-filtros" class="btn btn-enterprise btn-secondary btn-sm py-0 px-2" style="font-size: 11px;">
+                        Redefinir Padrões
+                    </a>
+                </div>
             </div>
             <div class="card-enterprise-body p-3">
 
-                <!-- Linha 1 de Toggles -->
+                <!-- Bloco Geral: 2 Linhas de 3 Colunas (Simetria Perfeita) -->
                 <div class="row g-3 mb-3">
-                    <!-- Emitir observação -->
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                    <!-- 1. Emitir observação -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Emitir observação</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="emitir_observacao" id="obs_sim" value="sim" <?php echo $emitirObs ? 'checked' : ''; ?>>
@@ -203,8 +208,8 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                         </div>
                     </div>
 
-                    <!-- Emitir forma de pagamento -->
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                    <!-- 2. Emitir forma de pagamento -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Emitir forma de pagamento</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="emitir_forma_pagamento" id="forma_sim" value="sim" <?php echo $emitirForma ? 'checked' : ''; ?>>
@@ -214,8 +219,8 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                         </div>
                     </div>
 
-                    <!-- Incluir estorno de vendas -->
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                    <!-- 3. Incluir estorno de vendas -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Incluir estorno de vendas</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="incluir_estornos" id="estorno_sim" value="sim" <?php echo $incluirEst ? 'checked' : ''; ?>>
@@ -224,9 +229,11 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                             <label class="btn btn-outline-custom" for="estorno_nao">Não</label>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Agrupar por tipo pessoa -->
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                <div class="row g-3 mb-3">
+                    <!-- 4. Agrupar por tipo pessoa -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Agrupar por tipo pessoa</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="agrupar_tipo_pessoa" id="tipo_pessoa_sim" value="sim" <?php echo $agruparTipo ? 'checked' : ''; ?>>
@@ -236,8 +243,8 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                         </div>
                     </div>
 
-                    <!-- Agrupar consumo por período -->
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                    <!-- 5. Agrupar consumo por período -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Agrupar consumo por período</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="agrupar_periodo" id="periodo_sim" value="sim" <?php echo $agruparPer ? 'checked' : ''; ?>>
@@ -247,8 +254,8 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                         </div>
                     </div>
 
-                    <!-- Emitir horário da venda -->
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                    <!-- 6. Emitir horário da venda -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Emitir horário da venda</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="emitir_horario" id="horario_sim" value="sim" <?php echo $emitirHora ? 'checked' : ''; ?>>
@@ -259,10 +266,10 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                     </div>
                 </div>
 
-                <!-- Linha 2 de Toggles (Alimentos) -->
-                <div class="row g-3 mb-3 pt-2 border-top">
-                    <!-- Emitir vendas por alimento -->
-                    <div class="col-12 col-sm-6 col-md-4">
+                <!-- Bloco Alimentos: 1 Linha de 3 Colunas (Simetria Perfeita) -->
+                <div class="row g-3 mb-3 pt-3 border-top">
+                    <!-- 7. Emitir vendas por alimento -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Emitir vendas por alimento</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="emitir_vendas_alimento" id="alim_sim" value="sim" <?php echo $emitirAlim ? 'checked' : ''; ?> onchange="atualizarEstadoAlimento()">
@@ -272,8 +279,8 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                         </div>
                     </div>
 
-                    <!-- Agrupar por alimento -->
-                    <div class="col-12 col-sm-6 col-md-4">
+                    <!-- 8. Agrupar por alimento -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Agrupar por alimento</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="agrupar_alimento" id="agrup_alim_sim" value="sim" <?php echo $agruparAlim ? 'checked' : ''; ?>>
@@ -283,8 +290,8 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                         </div>
                     </div>
 
-                    <!-- Ordenar por alimentos -->
-                    <div class="col-12 col-sm-12 col-md-4">
+                    <!-- 9. Ordenar por alimentos -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Ordenar por alimentos</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="ordenar_alimentos" id="ord_alim_menos" value="menos_vendidos" <?php echo ($ordenarAlim === 'menos_vendidos') ? 'checked' : ''; ?>>
@@ -295,10 +302,10 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                     </div>
                 </div>
 
-                <!-- Linha 3 de Toggles (Alunos & Turmas) -->
-                <div class="row g-3 mb-3 pt-2 border-top">
-                    <!-- Emitir vendas por aluno -->
-                    <div class="col-12 col-sm-6 col-md-3">
+                <!-- Bloco Alunos & Turmas: 2 Linhas de 3 Colunas (Simetria Perfeita) -->
+                <div class="row g-3 mb-3 pt-3 border-top">
+                    <!-- 10. Emitir vendas por aluno -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Emitir vendas por aluno</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="emitir_vendas_aluno" id="aluno_sim" value="sim" <?php echo $emitirAluno ? 'checked' : ''; ?> onchange="atualizarEstadoAluno()">
@@ -308,8 +315,8 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                         </div>
                     </div>
 
-                    <!-- Agrupar vendas por aluno -->
-                    <div class="col-12 col-sm-6 col-md-3">
+                    <!-- 11. Agrupar vendas por aluno -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Agrupar vendas por aluno</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="agrupar_vendas_aluno" id="agrup_aluno_sim" value="sim" <?php echo $agruparAluno ? 'checked' : ''; ?>>
@@ -319,8 +326,8 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                         </div>
                     </div>
 
-                    <!-- Agrupar por série/turma -->
-                    <div class="col-12 col-sm-6 col-md-3">
+                    <!-- 12. Agrupar por série/turma -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Agrupar por série/turma</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="agrupar_serie_turma" id="turma_sim" value="sim" <?php echo $agruparTurma ? 'checked' : ''; ?>>
@@ -329,9 +336,11 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                             <label class="btn btn-outline-custom" for="turma_nao">Não</label>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Quebrar página por série/turma -->
-                    <div class="col-12 col-sm-6 col-md-3">
+                <div class="row g-3">
+                    <!-- 13. Quebrar página por série/turma -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Quebrar página por turma</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="quebrar_pagina_turma" id="quebra_sim" value="sim" <?php echo $quebrarTurma ? 'checked' : ''; ?>>
@@ -340,12 +349,9 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                             <label class="btn btn-outline-custom" for="quebra_nao">Não</label>
                         </div>
                     </div>
-                </div>
 
-                <!-- Linha 4 de Toggles (Ordenação por Aluno) -->
-                <div class="row g-3 pt-2 border-top">
-                    <!-- Ordenar por consumo do aluno -->
-                    <div class="col-12 col-sm-6 col-md-4">
+                    <!-- 14. Ordenar por consumo do aluno -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Ordenar por consumo do aluno</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="ordenar_consumo_aluno" id="ord_consumo_sim" value="sim" <?php echo $ordConsumo ? 'checked' : ''; ?>>
@@ -355,8 +361,8 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                         </div>
                     </div>
 
-                    <!-- Ordenar por (Menor / Maior consumo) -->
-                    <div class="col-12 col-sm-6 col-md-4">
+                    <!-- 15. Critério de ordenação -->
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-microcopy text-secondary d-block mb-1">Critério de Ordenação</label>
                         <div class="btn-group btn-group-sm w-100 btn-toggle-blue" role="group">
                             <input type="radio" class="btn-check" name="ordenar_por" id="ord_menor" value="menor_consumo" <?php echo ($ordPor === 'menor_consumo') ? 'checked' : ''; ?>>
@@ -364,12 +370,6 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                             <input type="radio" class="btn-check" name="ordenar_por" id="ord_maior" value="maior_consumo" <?php echo ($ordPor === 'maior_consumo') ? 'checked' : ''; ?>>
                             <label class="btn btn-outline-custom" for="ord_maior">Maior consumo</label>
                         </div>
-                    </div>
-
-                    <div class="col-12 col-md-4 d-flex align-items-end justify-content-end">
-                        <a href="<?php echo $baseUrl; ?>/relatorios/vendas-filtros" class="btn btn-enterprise btn-secondary btn-sm">
-                            Redefinir Padrões
-                        </a>
                     </div>
                 </div>
 

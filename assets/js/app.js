@@ -253,12 +253,19 @@ function toggleCategoryFlyout(category) {
 
   // Posiciona o flyout verticalmente em relação ao botão clicado
   const rect = targetBtn.getBoundingClientRect();
-  const flyoutHeight = 320;
+  
+  // Mede dinamicamente a altura real do menu flutuante para nunca cortar itens na base da janela
+  targetFlyout.style.visibility = 'hidden';
+  targetFlyout.style.display = 'flex';
+  const realFlyoutHeight = targetFlyout.offsetHeight || 380;
+  targetFlyout.style.display = '';
+  targetFlyout.style.visibility = '';
+
   let topPos = rect.top - 6;
 
-  // Garante que o menu não transborde a parte inferior da tela
-  if (topPos + flyoutHeight > window.innerHeight) {
-    topPos = Math.max(10, window.innerHeight - flyoutHeight - 16);
+  // Garante que o menu não transborde a parte inferior da tela (barra de tarefas)
+  if (topPos + realFlyoutHeight > window.innerHeight) {
+    topPos = Math.max(10, window.innerHeight - realFlyoutHeight - 16);
   }
   if (topPos < 10) topPos = 10;
 

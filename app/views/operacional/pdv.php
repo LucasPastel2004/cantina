@@ -108,11 +108,11 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     line-height: 1.2;
 }
 
-/* Grid de 2 Colunas (Terminal POS) */
+/* Grid de 2 Colunas (Terminal POS - Caixa Ampliado para Máxima Visibilidade) */
 .pdv-grid {
     display: grid;
-    grid-template-columns: 1fr minmax(340px, 380px);
-    gap: 10px;
+    grid-template-columns: 1fr minmax(460px, 500px);
+    gap: 12px;
     align-items: stretch;
     width: 100%;
     flex: 1;
@@ -122,8 +122,15 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
 @media (min-width: 1440px) {
     .pdv-grid {
-        grid-template-columns: 1fr 410px;
-        gap: 12px;
+        grid-template-columns: 1fr 520px;
+        gap: 14px;
+    }
+}
+
+@media (min-width: 1680px) {
+    .pdv-grid {
+        grid-template-columns: 1fr 560px;
+        gap: 16px;
     }
 }
 
@@ -317,7 +324,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     font-weight: 500;
 }
 
-/* Coluna Direita: Cupom de Venda / Painel do Caixa */
+/* Coluna Direita: Cupom de Venda / Painel do Caixa Ampliado */
 .pdv-cart-panel {
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
@@ -340,7 +347,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 }
 
 .pdv-cart-header {
-    padding: 8px 12px;
+    padding: 10px 14px;
     border-bottom: 1px solid #e2e8f0;
     background-color: #f8fafc;
     border-radius: 8px 8px 0 0;
@@ -352,10 +359,10 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
 .pdv-cart-body {
     flex: 1 1 auto;
-    min-height: 130px;
+    min-height: 140px;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 6px 12px;
+    padding: 8px 14px;
     scrollbar-width: thin;
 }
 
@@ -363,10 +370,10 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 5px 0;
+    padding: 7px 0;
     border-bottom: 1px solid #f1f5f9;
-    gap: 6px;
-    min-height: 40px;
+    gap: 8px;
+    min-height: 46px;
 }
 
 .pdv-cart-item:last-child {
@@ -374,33 +381,33 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 }
 
 .pdv-cart-item-title {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: #0f172a;
-    line-height: 1.25;
+    line-height: 1.3;
     word-break: break-word;
 }
 
 .pdv-cart-item-desc {
-    font-size: 10.5px;
+    font-size: 11.5px;
     color: #64748b;
-    margin-top: 1px;
+    margin-top: 2px;
 }
 
 .pdv-cart-controls {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 
 .pdv-qty-btn {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     border: 1px solid #cbd5e1;
     background-color: #ffffff;
-    border-radius: 4px;
+    border-radius: 6px;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -423,7 +430,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
 .pdv-cart-footer {
     border-top: 1px solid #e2e8f0;
-    padding: 8px 12px;
+    padding: 10px 14px;
     background-color: #ffffff;
     border-radius: 0 0 8px 8px;
     flex-shrink: 0;
@@ -433,19 +440,19 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .pdv-total-label {
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 800;
     color: #475569;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
 }
 
 .pdv-total-val {
-    font-size: 20px;
+    font-size: 26px;
     font-weight: 800;
     color: #0f172a;
     letter-spacing: -0.02em;
@@ -454,8 +461,8 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 .pdv-pay-methods {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 4px;
-    margin-bottom: 6px;
+    gap: 6px;
+    margin-bottom: 8px;
 }
 
 .pdv-pay-methods.has-saldo {
@@ -465,15 +472,15 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 .pdv-pay-btn {
     border: 1px solid #cbd5e1;
     background-color: #ffffff;
-    padding: 5px 3px;
+    padding: 7px 6px;
     border-radius: 6px;
     text-align: center;
     cursor: pointer;
     transition: all 0.15s ease;
     user-select: none;
-    font-size: 11px;
+    font-size: 12px;
     color: #1e293b;
-    line-height: 1.15;
+    line-height: 1.2;
 }
 
 .pdv-pay-btn:hover {
@@ -886,19 +893,19 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 
                 <!-- Detalhes de Pagamento em Dinheiro -->
                 <div id="payDetailsDinheiro" class="mb-2">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <label class="font-11 text-secondary text-uppercase font-semibold mb-0" style="min-width: 65px; flex-shrink: 0;">Recebido:</label>
-                        <input type="text" id="inputValorRecebido" class="form-control form-control-sm font-tabular text-end input-money py-1 font-12" placeholder="R$ 0,00" oninput="calcularTroco()" style="max-width: 105px;">
+                    <div class="d-flex align-items-center gap-2 mb-1.5">
+                        <label class="font-11 text-secondary text-uppercase font-bold mb-0" style="min-width: 68px; flex-shrink: 0;">Recebido:</label>
+                        <input type="text" id="inputValorRecebido" class="form-control form-control-sm font-tabular text-end input-money py-1.5 font-13 font-bold" placeholder="R$ 0,00" oninput="calcularTroco()" style="max-width: 125px;">
                         <div class="btn-group btn-group-sm flex-grow-1" role="group">
-                            <button type="button" class="btn btn-outline-secondary py-1 px-1 font-11" onclick="definirRecebidoExato()" title="Valor Exato">Exato</button>
-                            <button type="button" class="btn btn-outline-secondary py-1 px-1 font-11 font-tabular" onclick="somarRecebido(10)">+10</button>
-                            <button type="button" class="btn btn-outline-secondary py-1 px-1 font-11 font-tabular" onclick="somarRecebido(20)">+20</button>
-                            <button type="button" class="btn btn-outline-secondary py-1 px-1 font-11 font-tabular" onclick="somarRecebido(50)">+50</button>
+                            <button type="button" class="btn btn-outline-secondary py-1.5 px-2 font-12 font-semibold" onclick="definirRecebidoExato()" title="Valor Exato">Exato</button>
+                            <button type="button" class="btn btn-outline-secondary py-1.5 px-2 font-12 font-tabular font-semibold" onclick="somarRecebido(10)">+10</button>
+                            <button type="button" class="btn btn-outline-secondary py-1.5 px-2 font-12 font-tabular font-semibold" onclick="somarRecebido(20)">+20</button>
+                            <button type="button" class="btn btn-outline-secondary py-1.5 px-2 font-12 font-tabular font-semibold" onclick="somarRecebido(50)">+50</button>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center justify-content-between px-2 py-1 rounded bg-light border">
-                        <span class="font-11 font-semibold text-secondary">Troco Sugerido:</span>
-                        <span class="font-13 font-tabular font-bold text-success" id="displayTroco">R$ 0,00</span>
+                    <div class="d-flex align-items-center justify-content-between px-2.5 py-1.5 rounded bg-light border">
+                        <span class="font-12 font-semibold text-secondary">Troco Sugerido:</span>
+                        <span class="font-15 font-tabular font-bold text-success" id="displayTroco">R$ 0,00</span>
                     </div>
                 </div>
 
@@ -918,7 +925,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 </div>
 
                 <!-- Botão Principal de Conclusão -->
-                <button type="button" id="btnFinalizarVenda" class="btn btn-enterprise btn-primary w-100 py-2 font-13 font-semibold mt-1" onclick="processarFinalizacaoVenda()" <?php echo !$caixaAberto ? 'disabled' : ''; ?>>
+                <button type="button" id="btnFinalizarVenda" class="btn btn-enterprise btn-primary w-100 py-2.5 font-14 font-semibold mt-1.5" onclick="processarFinalizacaoVenda()" <?php echo !$caixaAberto ? 'disabled' : ''; ?>>
                     Concluir Venda <span class="pdv-shortcut-tag">F4</span>
                 </button>
             </div>
@@ -1375,18 +1382,18 @@ function renderizarCarrinho() {
 
         html += `
             <div class="pdv-cart-item">
-                <div style="flex: 1; padding-right: 6px; min-width: 0;">
+                <div style="flex: 1; padding-right: 8px; min-width: 0;">
                     <div class="pdv-cart-item-title" title="${it.descricao}">${it.descricao}</div>
                     <div class="pdv-cart-item-desc font-tabular">R$ ${it.preco_unitario.toFixed(2).replace('.', ',')} un</div>
                 </div>
                 <div class="pdv-cart-controls">
                     <button type="button" class="pdv-qty-btn" onclick="alterarQuantidadeItem(${it.produto_id}, -1)">-</button>
-                    <span class="font-tabular font-semibold px-1 font-12">${it.quantidade}</span>
+                    <span class="font-tabular font-bold px-1.5 font-13" style="min-width: 24px; text-align: center;">${it.quantidade}</span>
                     <button type="button" class="pdv-qty-btn" onclick="alterarQuantidadeItem(${it.produto_id}, 1)">+</button>
-                    <span class="font-tabular font-semibold font-13 text-primary ms-2" style="min-width: 60px; text-align: right;">
+                    <span class="font-tabular font-bold font-14 text-primary ms-2" style="min-width: 72px; text-align: right;">
                         R$ ${subtotal.toFixed(2).replace('.', ',')}
                     </span>
-                    <button type="button" class="btn btn-link text-danger p-0 ms-1" onclick="removerItemCarrinho(${it.produto_id})" title="Remover">✕</button>
+                    <button type="button" class="btn btn-link text-danger p-0 ms-1 font-14" onclick="removerItemCarrinho(${it.produto_id})" title="Remover">✕</button>
                 </div>
             </div>
         `;

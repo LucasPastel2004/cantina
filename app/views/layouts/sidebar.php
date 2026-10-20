@@ -100,37 +100,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
         </button>
 
         <?php if ($isAdmin): ?>
-        <!-- 4. Cardápio & Preços: Ícone Único com Redirecionamento Direto -->
-        <a href="<?php echo $baseUrl; ?>/admin/produtos" 
-           class="dock-btn <?php echo $isProdutosActive ? 'active is-current' : ''; ?>" 
-           id="btnDirectProdutos"
-           title="Cardápio & Preços" 
-           aria-label="Cardápio & Preços">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-                <line x1="6" y1="1" x2="6" y2="4"></line>
-                <line x1="10" y1="1" x2="10" y2="4"></line>
-                <line x1="14" y1="1" x2="14" y2="4"></line>
-            </svg>
-        </a>
-
-        <!-- 5. Categoria: Administração -->
-        <button type="button" 
-                class="dock-btn <?php echo $isAdminActive ? 'is-current' : ''; ?>" 
-                id="btnCategoryAdmin"
-                data-category="admin" 
-                onclick="toggleCategoryFlyout('admin')" 
-                title="Administração" 
-                aria-label="Administração"
-                aria-expanded="false">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-            </svg>
-        </button>
-
-        <!-- 6. Categoria: Relatórios -->
+        <!-- 4. Categoria: Relatórios (Posição elevada para o menu não cortar no rodapé) -->
         <button type="button" 
                 class="dock-btn <?php echo $isRelatoriosActive ? 'is-current' : ''; ?>" 
                 id="btnCategoryRelatorios"
@@ -147,6 +117,36 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
                 <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
         </button>
+
+        <!-- 5. Categoria: Administração -->
+        <button type="button" 
+                class="dock-btn <?php echo $isAdminActive ? 'is-current' : ''; ?>" 
+                id="btnCategoryAdmin"
+                data-category="admin" 
+                onclick="toggleCategoryFlyout('admin')" 
+                title="Administração" 
+                aria-label="Administração"
+                aria-expanded="false">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+        </button>
+
+        <!-- 6. Cardápio & Preços: Ícone Único com Redirecionamento Direto (Sem Flyout) -->
+        <a href="<?php echo $baseUrl; ?>/admin/produtos" 
+           class="dock-btn <?php echo $isProdutosActive ? 'active is-current' : ''; ?>" 
+           id="btnDirectProdutos"
+           title="Cardápio & Preços" 
+           aria-label="Cardápio & Preços">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                <line x1="6" y1="1" x2="6" y2="4"></line>
+                <line x1="10" y1="1" x2="10" y2="4"></line>
+                <line x1="14" y1="1" x2="14" y2="4"></line>
+            </svg>
+        </a>
         <?php endif; ?>
     </nav>
 

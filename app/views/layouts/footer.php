@@ -30,6 +30,6 @@ $anoAtual = date('Y');
     <script src="<?php echo $baseUrl; ?>/assets/js/bootstrap.bundle.min.js"></script>
 
     <!-- Scripts do Sistema e Utilitários Vanilla JS -->
-    <script src="<?php echo $baseUrl; ?>/assets/js/app.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/app.js?v=<?php echo $assetVersion ?? '6.2.2'; ?>"></script>
 </body>
 </html>
