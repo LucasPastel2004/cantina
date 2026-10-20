@@ -333,7 +333,11 @@ $isCaixa = ($regime === 'caixa');
     <div style="display: flex; align-items: center; gap: 8px;">
         <!-- Controles de Zoom para Conferência -->
         <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes antes de imprimir ou salvar">
-            <span style="font-size: 11px; color: #cbd5e1; margin-right: 2px;">Zoom:</span>
+            <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+            </span>
             <button type="button" class="btn-zoom" id="btnZoomOut" title="Diminuir Zoom (Ctrl -)" onclick="alterarZoom(-0.15)">−</button>
             <button type="button" class="btn-zoom-val" id="btnZoomReset" title="Clique para redefinir para 100% (Ctrl 0)" onclick="resetarZoom()">100%</button>
             <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
