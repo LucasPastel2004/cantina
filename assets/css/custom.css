@@ -1068,40 +1068,37 @@ textarea.form-control {
   transform: scale(0.96);
 }
 
-/* Indicador de Seção Atual (Ponto Azul Nobre na Lateral) */
-.dock-btn.is-current:not(.active):not(.flyout-open)::after {
-  content: '';
-  position: absolute;
-  left: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 18px;
-  border-radius: 2px;
-  background-color: #1d4ed8;
+/* Indicador de Seção Atual (Apenas realce sutil no ícone, sem barrinha solta na lateral) */
+.dock-btn.is-current:not(.active):not(.flyout-open):not(.flyout-pinned) {
+  color: #1d4ed8;
 }
 
-/* Estado Ativo / Menu em Suspensão Aberto (Destaque Suave no Azul Institucional) */
+.dock-btn.is-current:not(.active):not(.flyout-open):not(.flyout-pinned) svg {
+  color: #1d4ed8;
+  stroke: #1d4ed8;
+}
+
+/* Estado Ativo / Menu em Suspensão Aberto por Hover */
 .dock-btn.active,
-.dock-btn.flyout-open {
-  background-color: #eff6ff !important;
-  color: #1d4ed8 !important;
-  border-color: #bfdbfe !important;
-  box-shadow: 0 1px 3px rgba(29, 78, 216, 0.12) !important;
+.dock-btn.flyout-open:not(.flyout-pinned) {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
 }
 
 .dock-btn.active svg,
-.dock-btn.flyout-open svg {
+.dock-btn.flyout-open:not(.flyout-pinned) svg {
   color: #1d4ed8 !important;
   stroke: #1d4ed8 !important;
 }
 
-/* Estado Travado por Clique (Pinned) — Indicação Sutil de Fixo na Tela */
+/* Estado Travado por Clique (Pinned) — Adota a cor de fundo do site */
 .dock-btn.flyout-pinned {
-  background-color: #dbeafe !important;
-  color: #1d4ed8 !important;
-  border-color: #93c5fd !important;
-  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.2) !important;
+  background-color: var(--surface-bg, #edf2f7) !important;
+  color: #0f172a !important;
+  border-color: var(--border-default, #cbd5e1) !important;
+  box-shadow: none !important;
 }
 
 .dock-btn.flyout-pinned svg {
@@ -1110,8 +1107,8 @@ textarea.form-control {
 }
 
 .sidebar-flyout.flyout-pinned {
-  border-color: #bfdbfe;
-  box-shadow: 0 14px 30px -4px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  border-color: var(--border-default, #cbd5e1);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
 }
 
 /* Rodapé do Dock com Avatar e Logout (Fundo Claro Original #f8fafc) */

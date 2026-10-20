@@ -49,8 +49,10 @@ $assertCustom(str_contains($appJs, 'btn.addEventListener(\'mouseenter\''), "app.
 $assertCustom(str_contains($appJs, 'flyout.addEventListener(\'mouseenter\''), "app.js escuta mouseenter no corpo do flyout para mantê-lo aberto");
 $assertCustom(str_contains($appJs, 'flyout.addEventListener(\'mouseleave\''), "app.js escuta mouseleave no corpo do flyout");
 
-// 3. Verificação do CSS para estado travado (pinned)
+// 3. Verificação do CSS para estado travado (pinned) e ausência de linha bugada
 $assertCustom(str_contains($customCss, '.dock-btn.flyout-pinned'), "custom.css define estado travado .dock-btn.flyout-pinned");
+$assertCustom(str_contains($customCss, 'background-color: var(--surface-bg') && str_contains($customCss, '.dock-btn.flyout-pinned'), "custom.css adota a cor de fundo do site no botão pinned");
+$assertCustom(!str_contains($customCss, '.dock-btn.is-current:not(.active):not(.flyout-open)::after'), "Linha de destaque antiga ::after foi completamente removida do dock");
 $assertCustom(str_contains($customCss, '.sidebar-flyout.flyout-pinned'), "custom.css define elevação do menu travado .sidebar-flyout.flyout-pinned");
 
 echo "\n=======================================================\n";
