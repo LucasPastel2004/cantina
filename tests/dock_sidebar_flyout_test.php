@@ -69,7 +69,13 @@ $assertCustom(str_contains($htmlAdmin, '/financeiro/despesas') && str_contains($
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"') && str_contains($htmlAdmin, '/operacional/estornos'), "Flyout Financeiro contém opção de Estorno de Vendas");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"') && str_contains($htmlAdmin, '/operacional/caixa'), "Flyout Financeiro contém opção de Caixa do Turno");
 $assertCustom(str_contains($htmlAdmin, 'id="navSectionAdmin"') && str_contains($htmlAdmin, '/admin/turmas'), "Flyout Administração contém Turmas Escolares");
-$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/vendas-filtros'), "Flyout Relatórios contém Filtros de Vendas");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/vendas-filtros'), "Flyout Relatórios contém Vendas por Alimento");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/extrato-aluno'), "Flyout Relatórios contém Extrato do Aluno");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/fechamento-caixa'), "Flyout Relatórios contém Fechamento de Caixa");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/arrecadacao'), "Flyout Relatórios contém Arrecadação & Entradas");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/devedores'), "Flyout Relatórios contém Inadimplência & MED");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/estoque-filtros'), "Flyout Relatórios contém Movimentações de Estoque");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && !str_contains($htmlAdmin, '/relatorios/desconto-folha'), "Flyout Relatórios NÃO contém Desconto em Folha (descontinuado do sistema)");
 
 // 4. Renderização com perfil Operador (Sanitização e RBAC)
 $user = [

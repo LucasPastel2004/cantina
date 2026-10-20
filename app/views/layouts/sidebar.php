@@ -25,7 +25,7 @@ $isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'movimentacoes_es
 $isFinanceiroActive = in_array($activeMenu, ['caixa', 'estornos', 'despesas', 'dre', 'arrecadacao', 'contestacoes'], true);
 $isProdutosActive = ($activeMenu === 'produtos');
 $isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'calendario', 'configuracoes'], true);
-$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'vendas_filtros', 'relatorio_alimento', 'desconto_folha', 'devedores'], true);
+$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'devedores', 'movimentacoes_estoque'], true);
 ?>
 
 <!-- Backdrop para fechar menus em suspensão e mobile -->
@@ -372,15 +372,15 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'vendas_filtros', 're
                 </a>
             </li>
             <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/vendas-filtros" class="nav-link <?php echo ($activeMenu === 'vendas_filtros') ? 'active' : ''; ?>">
+                <a href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno" class="nav-link <?php echo ($activeMenu === 'extrato_aluno') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
-                    <span class="nav-label">Filtros de Vendas & Relatório</span>
+                    <span class="nav-label">Extrato do Aluno</span>
                 </a>
             </li>
             <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="nav-link <?php echo ($activeMenu === 'movimentacoes_estoque') ? 'active' : ''; ?>">
+                <a href="<?php echo $baseUrl; ?>/relatorios/vendas-filtros" class="nav-link <?php echo ($activeMenu === 'vendas_filtros') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
-                    <span class="nav-label">Movimentações de Estoque</span>
+                    <span class="nav-label">Vendas por Alimento</span>
                 </a>
             </li>
             <li class="flyout-item nav-item">
@@ -390,15 +390,33 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'vendas_filtros', 're
                 </a>
             </li>
             <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/desconto-folha" class="nav-link <?php echo ($activeMenu === 'desconto_folha') ? 'active' : ''; ?>">
+                <a href="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" class="nav-link <?php echo ($activeMenu === 'fechamento_caixa_relatorio') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
-                    <span class="nav-label">Desconto em Folha</span>
+                    <span class="nav-label">Fechamento de Caixa</span>
                 </a>
             </li>
             <li class="flyout-item nav-item">
                 <a href="<?php echo $baseUrl; ?>/relatorios/devedores" class="nav-link <?php echo ($activeMenu === 'devedores') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
-                    <span class="nav-label">Relatório de Devedores</span>
+                    <span class="nav-label">Inadimplência & MED</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/operacional/corte" class="nav-link <?php echo ($activeMenu === 'corte') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Corte do Turno</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="nav-link <?php echo ($activeMenu === 'movimentacoes_estoque') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Movimentações de Estoque</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/financeiro/dre" class="nav-link <?php echo ($activeMenu === 'dre') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">DRE Gerencial</span>
                 </a>
             </li>
         </ul>
