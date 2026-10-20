@@ -47,23 +47,66 @@ jobs:
       - name: Executar migrações do banco de dados na Hostnet
         run: |
           ssh -i ~/.ssh/hostnet_deploy -o IdentitiesOnly=yes -p ${{ secrets.HOSTNET_PORT }} \
-            ${{ secrets.HOSTNET_USER }}@${{ secrets.HOSTNET_HOST }} "bash -s -- '${{ secrets.HOSTNET_PATH }}'" << 'EOF'
-          TARGET_PATH="$1"
+            ${{ secrets.HOSTNET_USER }}@${{ secrets.HOSTNET_HOST }} "bash -s -- ${{ secrets.HOSTNET_PATH }}" << 'EOF'
+          RAW_PATH="$1"
           echo "======================================================"
-          echo "Buscando interpretador PHP 8.2+ na Hostnet..."
+          echo "Resolvendo caminho e interpretador PHP 8.2+ na Hostnet..."
           echo "======================================================"
+
+          # Normaliza aspas se vierem por escape do SSH
+          TARGET_PATH="${RAW_PATH%\'}"
+          TARGET_PATH="${TARGET_PATH#\'}"
+          TARGET_PATH="${TARGET_PATH%\"}"
+          TARGET_PATH="${TARGET_PATH#\"}"
+
+          # Expande til (~) para $HOME
+          if [[ "$TARGET_PATH" =~ ^~/(.*) ]]; then
+            TARGET_PATH="$HOME/${BASH_REMATCH[1]}"
+          elif [ "$TARGET_PATH" = "~" ]; then
+            TARGET_PATH="$HOME"
+          fi
+
+          # Se for caminho relativo, tenta resolver a partir de $HOME
+          if [[ "$TARGET_PATH" != /* ]]; then
+            if [ -d "$HOME/$TARGET_PATH" ]; then
+              TARGET_PATH="$HOME/$TARGET_PATH"
+            fi
+          fi
+
+          # Remove barra final se houver
+          TARGET_PATH="${TARGET_PATH%/}"
+
+          # Fallbacks caso o caminho precise de ajuste
+          if [ ! -f "$TARGET_PATH/database/runner.php" ]; then
+            if [ -f "$HOME/www/database/runner.php" ]; then
+              TARGET_PATH="$HOME/www"
+            elif [ -f "./database/runner.php" ]; then
+              TARGET_PATH="."
+            elif [ -f "$HOME/$RAW_PATH/database/runner.php" ]; then
+              TARGET_PATH="$HOME/$RAW_PATH"
+            fi
+          fi
+
+          echo "Caminho da aplicação na Hostnet: $TARGET_PATH"
+
+          if [ ! -f "$TARGET_PATH/database/runner.php" ]; then
+            echo "ERRO: Arquivo database/runner.php não encontrado em $TARGET_PATH"
+            echo "Diretório atual: $(pwd)"
+            ls -la
+            exit 1
+          fi
 
           PHP_BIN=""
           CANDIDATES=(
+            "/usr/bin/php8.4"
             "/usr/local/php84/bin/php"
+            "/usr/bin/php8.3"
             "/usr/local/php83/bin/php"
+            "/usr/bin/php8.2"
             "/usr/local/php82/bin/php"
             "/usr/local/php8.4/bin/php"
             "/usr/local/php8.3/bin/php"
             "/usr/local/php8.2/bin/php"
-            "/usr/bin/php8.4"
-            "/usr/bin/php8.3"
-            "/usr/bin/php8.2"
             "/usr/bin/php84"
             "/usr/bin/php83"
             "/usr/bin/php82"
