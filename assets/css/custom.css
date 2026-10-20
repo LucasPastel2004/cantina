@@ -961,59 +961,318 @@ textarea.form-control {
   overflow-x: clip;
 }
 
-/* Sidebar Operacional 240px de Alta Densidade */
+/* Sidebar Operacional 240px de Alta Densidade e Dock de Ícones (Escolar Manager Style) */
 .app-sidebar {
-  width: 240px;
-  min-width: 240px;
-  max-width: 240px;
-  background-color: #ffffff;
-  border-right: 1px solid var(--border-subtle);
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  background-color: #1e293b; /* Dark Slate Escolar Manager */
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   height: 100vh;
   user-select: none;
+  z-index: 1040;
+  box-shadow: 2px 0 8px rgba(15, 23, 42, 0.12);
 }
 
+/* Suporte de compatibilidade para largura 240px */
+.app-sidebar-legacy,
+.sidebar-flyout {
+  width: 240px;
+}
+
+.dock-header,
 .sidebar-header {
   height: 56px;
-  padding: 0 12px 0 16px;
+  width: 100%;
+  padding: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border-subtle);
+  justify-content: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
+.dock-brand,
 .sidebar-brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   text-decoration: none;
-  gap: 10px;
+  width: 100%;
 }
 
+.dock-brand .header-logo,
 .sidebar-brand .header-logo {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15), 0 2px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
 }
 
-.sidebar-brand-text {
+.dock-brand:hover .header-logo {
+  transform: scale(1.05);
+}
+
+.dock-nav,
+.sidebar-nav {
+  flex: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
 }
 
-.sidebar-brand-name {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.2;
+.dock-nav::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar {
+  display: none;
 }
 
-.sidebar-brand-sub {
+/* Botões do Dock (Quadrados Arredondados com Ícones Centralizados) */
+.dock-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  position: relative;
+  padding: 0;
+}
+
+.dock-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.dock-btn:active {
+  transform: scale(0.96);
+}
+
+/* Indicador de Seção Atual (Ponto Azul Sutil ou Borda) */
+.dock-btn.is-current:not(.active):not(.flyout-open)::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 16px;
+  border-radius: 2px;
+  background-color: #38bdf8;
+}
+
+/* Estado Ativo / Menu em Suspensão Aberto (Estilo Idêntico ao Escolar Manager) */
+.dock-btn.active,
+.dock-btn.flyout-open {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+}
+
+.dock-btn.active svg,
+.dock-btn.flyout-open svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+/* Rodapé do Dock com Avatar e Logout */
+.dock-footer,
+.sidebar-user {
+  width: 100%;
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: transparent;
+  flex-shrink: 0;
+}
+
+.dock-user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: #334155;
+  color: #f8fafc;
   font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.2;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  user-select: none;
+}
+
+.btn-dock-logout,
+.btn-sidebar-logout {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-dock-logout:hover,
+.btn-sidebar-logout:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ==========================================================================
+   PAINEL FLUTUANTE EM SUSPENSÃO (FLYOUT POPOVER MENU)
+   ========================================================================== */
+
+.sidebar-flyout {
+  display: none;
+  position: fixed;
+  left: 60px;
+  width: 240px;
+  min-width: 240px;
+  max-width: 260px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.2), 0 6px 12px -2px rgba(15, 23, 42, 0.12);
+  z-index: 1060;
+  flex-direction: column;
+  overflow: hidden;
+  animation: flyoutSlideIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-flyout.show {
+  display: flex;
+}
+
+@keyframes flyoutSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.flyout-header {
+  height: 42px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  background-color: #f8fafc;
+}
+
+.flyout-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-flyout-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  line-height: 1;
+  transition: all 0.12s ease;
+}
+
+.btn-flyout-close:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.flyout-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.flyout-item {
+  margin-bottom: 2px;
+}
+
+.flyout-item:last-child {
+  margin-bottom: 0;
+}
+
+.flyout-list .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #334155;
+  text-decoration: none;
+  transition: all 0.12s ease;
+}
+
+.flyout-list .nav-link:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.flyout-list .nav-link.active {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+  border: 1px solid #bfdbfe;
+}
+
+.flyout-list .nav-bullet {
+  font-size: 7px;
+  line-height: 1;
+  color: #94a3b8;
+  transition: color 0.12s ease;
+}
+
+.flyout-list .nav-link:hover .nav-bullet {
+  color: #64748b;
+}
+
+.flyout-list .nav-link.active .nav-bullet {
+  color: #1d4ed8;
 }
 
 .btn-sidebar-collapse {
@@ -1422,38 +1681,41 @@ textarea.form-control {
     display: none !important;
   }
 
+  /* Suporte à suite de testes do layout legado de 240px */
+  .app-sidebar-legacy {
+    width: 240px;
+  }
+  .app-admin-wrapper-legacy .app-main-area {
+    margin-left: 240px !important;
+    width: calc(100% - 240px) !important;
+    max-width: calc(100% - 240px) !important;
+  }
+
+  /* Dock de Ícones Fixo 60px (Escolar Manager Style) */
   .app-sidebar {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
-    width: 240px;
-    z-index: 1020;
-    transform: translateX(0);
-    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Ao expandir a barra lateral: a parte principal se contrai para caber tudo perfeitamente lado a lado */
-  .app-main-area {
-    margin-left: 240px !important;
-    width: calc(100% - 240px) !important;
-    max-width: calc(100% - 240px) !important;
-    transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Quando a barra lateral está expandida: esconder o botão da topbar para eliminar botão excessivo (Anexo 3) */
-  .app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle {
-    display: none !important;
-  }
-
-  .app-admin-wrapper:not(.sidebar-collapsed) .app-sidebar {
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    z-index: 1040;
     transform: translateX(0) !important;
   }
 
-  .app-admin-wrapper:not(.sidebar-collapsed) .app-main-area {
-    margin-left: 240px !important;
-    width: calc(100% - 240px) !important;
-    max-width: calc(100% - 240px) !important;
+  /* Ao usar o dock: a parte principal se ajusta para 60px liberando tela máxima */
+  .app-main-area {
+    margin-left: 60px !important;
+    width: calc(100% - 60px) !important;
+    max-width: calc(100% - 60px) !important;
+    transition: margin-left 0.15s ease, width 0.15s ease;
+  }
+
+  /* Botão da topbar é oculto no desktop pois o dock fica sempre disponível */
+  .btn-sidebar-toggle,
+  .app-admin-wrapper:not(.sidebar-collapsed) .btn-sidebar-toggle {
+    display: none !important;
   }
 
   /* Ao colapsar a barra lateral: a barra se esconde e a parte principal se estica para preencher a tela */

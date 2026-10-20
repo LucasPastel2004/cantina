@@ -28,7 +28,7 @@ $dataAtual = date('d/m/Y');
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
 
     <!-- Design System Corporativo Anti-Slop (Enterprise High-Density) -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=<?php echo $assetVersion ?? '6.1.1'; ?>">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=<?php echo $assetVersion ?? '6.2.0'; ?>">
 
     <!-- Favicon Oficial -->
     <link rel="icon" type="image/jpeg" href="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg">
@@ -37,7 +37,7 @@ $dataAtual = date('d/m/Y');
 
 <?php $isPdvActive = ($activeMenu ?? '') === 'pdv'; ?>
 <div class="app-admin-wrapper <?php echo $isPdvActive ? 'pdv-layout-locked' : ''; ?>">
-    <!-- Barra Lateral de Navegação (Sidebar 240px) -->
+    <!-- Barra Lateral de Navegação (Dock de Ícones com Menus em Suspensão) -->
     <?php require __DIR__ . '/sidebar.php'; ?>
 
     <!-- Área Principal de Conteúdo -->
@@ -45,7 +45,7 @@ $dataAtual = date('d/m/Y');
         <!-- Topbar Operacional de Alta Densidade (48px a 54px) -->
         <header class="app-topbar">
             <div class="d-flex align-items-center gap-3">
-                <button type="button" class="btn-sidebar-toggle" onclick="handleSidebarToggle()" aria-label="Alternar navegação" title="Travar barra lateral aberta">
+                <button type="button" class="btn-sidebar-toggle d-md-none" onclick="toggleSidebar()" aria-label="Alternar navegação" title="Alternar navegação">
                     <svg class="icon-toggle-bars" width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.75A.75.75 0 0 1 1.75 2h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 2.75Zm0 5A.75.75 0 0 1 1.75 7h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 7.75Zm0 5a.75.75 0 0 1 1.75 0h12.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1-.75-.75Z"/></svg>
                     <svg class="icon-toggle-arrow" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/></svg>
                 </button>
@@ -96,6 +96,6 @@ $dataAtual = date('d/m/Y');
 <script src="<?php echo $baseUrl; ?>/assets/js/bootstrap.bundle.min.js"></script>
 
 <!-- Utilitários e Scripts Vanilla JS -->
-<script src="<?php echo $baseUrl; ?>/assets/js/app.js?v=<?php echo $assetVersion ?? '6.1.0'; ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/app.js?v=<?php echo $assetVersion ?? '6.2.0'; ?>"></script>
 </body>
 </html>

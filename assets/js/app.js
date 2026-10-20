@@ -103,6 +103,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Inicialização e escuta do sistema corporativo de modais de confirmação
   inicializarConfirmacaoCorporativa();
+
+  // Fechar menus em suspensão do dock ao clicar fora
+  document.addEventListener('click', function (e) {
+    const isDockClick = e.target.closest('.dock-btn') || e.target.closest('.sidebar-flyout');
+    if (!isDockClick) {
+      fecharFlyouts();
+    }
+  });
+
+  // Fechar menus em suspensão com a tecla Escape
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      fecharFlyouts();
+    }
+  });
 });
 
 /**
@@ -207,6 +222,78 @@ function converterMoedaParaFloat(valor) {
   return parseInt(digits, 10) / 100;
 }
 
+
+/**
+ * Alterna abertura do Menu em Suspensão (Flyout Popover) de uma categoria do Dock
+ * @param {string} category Nome da categoria ('operacional', 'estoque', 'financeiro', 'admin', 'relatorios')
+ */
+function toggleCategoryFlyout(category) {
+  const flyoutIdMap = {
+    operacional: 'flyoutOperacional',
+    estoque: 'flyoutEstoque',
+    financeiro: 'flyoutFinanceiro',
+    admin: 'navSectionAdmin',
+    relatorios: 'flyoutRelatorios'
+  };
+
+  const targetFlyoutId = flyoutIdMap[category];
+  const targetFlyout = document.getElementById(targetFlyoutId);
+  const targetBtn = document.querySelector('.dock-btn[data-category="' + category + '"]');
+
+  if (!targetFlyout || !targetBtn) return;
+
+  const isAlreadyOpen = targetFlyout.classList.contains('show');
+
+  // Fecha todos os flyouts abertos previamente
+  fecharFlyouts();
+
+  if (isAlreadyOpen) {
+    return;
+  }
+
+  // Posiciona o flyout verticalmente em relação ao botão clicado
+  const rect = targetBtn.getBoundingClientRect();
+  const flyoutHeight = 320;
+  let topPos = rect.top - 6;
+
+  // Garante que o menu não transborde a parte inferior da tela
+  if (topPos + flyoutHeight > window.innerHeight) {
+    topPos = Math.max(10, window.innerHeight - flyoutHeight - 16);
+  }
+  if (topPos < 10) topPos = 10;
+
+  targetFlyout.style.top = topPos + 'px';
+  targetFlyout.classList.add('show');
+  targetBtn.classList.add('flyout-open');
+  targetBtn.setAttribute('aria-expanded', 'true');
+
+  // No mobile, exibe backdrop
+  if (window.innerWidth < 768) {
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (backdrop) backdrop.classList.add('show');
+  }
+}
+
+/**
+ * Fecha todos os Menus em Suspensão (Flyouts) abertos
+ */
+function fecharFlyouts() {
+  const flyouts = document.querySelectorAll('.sidebar-flyout');
+  flyouts.forEach(function (f) {
+    f.classList.remove('show');
+  });
+
+  const dockBtns = document.querySelectorAll('.dock-btn');
+  dockBtns.forEach(function (b) {
+    b.classList.remove('flyout-open');
+    b.setAttribute('aria-expanded', 'false');
+  });
+
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (backdrop && window.innerWidth < 768) {
+    backdrop.classList.remove('show');
+  }
+}
 
 /**
  * Alterna visibilidade da barra lateral (Sidebar) em dispositivos móveis

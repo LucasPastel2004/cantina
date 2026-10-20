@@ -139,6 +139,18 @@ class Fase6Test
         }
         $this->assert(true, "Operador de teste 'operador-maria' preparado com perfil 'operador'");
 
+        // Garante admin de teste
+        $adminExiste = $this->pdo->query("SELECT id FROM usuarios WHERE usuario = 'admin'")->fetchColumn();
+        $adminHash = password_hash('Admin@123', PASSWORD_BCRYPT);
+        if (!$adminExiste) {
+            $stmt = $this->pdo->prepare("INSERT INTO usuarios (usuario, nome, email, senha_hash, perfil, ativo) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute(['admin', 'Administrador Geral', 'admin@colegiomonteirolobato.com.br', $adminHash, 'administrador', 1]);
+        } else {
+            $stmt = $this->pdo->prepare("UPDATE usuarios SET senha_hash = ?, ativo = 1, deleted_at = NULL WHERE usuario = 'admin'");
+            $stmt->execute([$adminHash]);
+        }
+        $this->assert(true, "Administrador de teste 'admin' preparado com perfil 'administrador'");
+
         // Garante turma e responsável com senha ativa
         $respAtivo = $this->pdo->query("SELECT id FROM responsaveis WHERE cpf = '11122233344'")->fetchColumn();
         if (!$respAtivo) {
