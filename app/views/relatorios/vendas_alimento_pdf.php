@@ -67,7 +67,7 @@ if ($emitirAlim && $emitirAluno) {
     <style>
         @page {
             size: A4 portrait;
-            margin: 0;
+            margin: 12mm 14mm 14mm 14mm;
         }
         * {
             box-sizing: border-box !important;
@@ -222,6 +222,10 @@ if ($emitirAlim && $emitirAluno) {
 
         /* Impressão Direta (Física / Browser Print / Gotenberg PDF) */
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 12mm 14mm 14mm 14mm;
+            }
             .document-zoom-area {
                 zoom: 1 !important;
                 transform: none !important;
@@ -232,21 +236,68 @@ if ($emitirAlim && $emitirAluno) {
                 padding: 0 !important;
                 margin: 0 !important;
                 font-size: 8pt;
+                color: #000000 !important;
             }
             .no-print {
                 display: none !important;
             }
             .container {
-                width: 210mm !important;
-                max-width: 210mm !important;
-                min-height: 297mm !important;
-                margin: 0 auto !important;
-                padding: 10mm 14mm !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
                 box-shadow: none !important;
                 border: none !important;
                 border-radius: 0 !important;
                 background: #ffffff !important;
                 box-sizing: border-box !important;
+            }
+
+            /* Quebras de páginas limpas: previne fatiamento de linhas na divisão da folha A4 */
+            table.tabela-relatorio {
+                width: 100% !important;
+                table-layout: fixed !important;
+                border-collapse: separate !important;
+                border-spacing: 0 !important;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+                margin-top: 4px !important;
+                margin-bottom: 8px !important;
+                border: 1px solid #000000 !important;
+                border-bottom: none !important;
+                border-right: none !important;
+            }
+            table.tabela-relatorio thead {
+                display: table-header-group !important;
+            }
+            table.tabela-relatorio thead tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            table.tabela-relatorio tfoot {
+                display: table-footer-group !important;
+            }
+            table.tabela-relatorio tbody tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            table.tabela-relatorio th,
+            table.tabela-relatorio td {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                border-right: 1px solid #000000 !important;
+                border-bottom: 1px solid #000000 !important;
+            }
+            .school-header,
+            .resumo-alimentos-card,
+            .footer-assinaturas-box,
+            .row-total-dia,
+            .row-total-periodo,
+            .row-subtotal-turma {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
 
@@ -474,6 +525,9 @@ if ($emitirAlim && $emitirAluno) {
 
         <a href="<?php echo htmlspecialchars($baseUrl); ?>/relatorios/vendas-filtros" class="btn-back-action">
             &larr; Voltar aos Filtros
+        </a>
+        <a href="<?php echo htmlspecialchars($baseUrl); ?>/relatorios/vendas-filtros/pdf<?php echo !empty($_SERVER['QUERY_STRING']) ? '?' . htmlspecialchars($_SERVER['QUERY_STRING']) : ''; ?>" class="btn-action" style="background: #0284c7; color: #ffffff !important; border: 1px solid #0369a1;" title="Baixar arquivo PDF A4 oficial gerado pelo servidor">
+            📥 Baixar PDF
         </a>
         <button type="button" class="btn-print-action" onclick="window.print()">
             🖨 Imprimir Documento

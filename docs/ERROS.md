@@ -2099,3 +2099,21 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. Em `vendas_alimento_pdf.php`, ampliada a coluna `$wQtd` para 12% (11% quando colunas opcionais estiverem ativas), garantindo mais de 21.8mm de largura com folga tipográfica, recalibrando proporcionalmente as colunas de valores e descrição;
   3. Adicionadas as propriedades `white-space: nowrap; overflow: hidden;` ao cabeçalho `table.tabela-relatorio th`, garantindo blindagem estrita contra colisões celulares.
 - Como evitar no futuro: Ao implementar componentes de barra utilitária compartilhados, validar o contraste cromático (WCAG 2.2 AA) das variantes de fundo claro e escuro. Em tabelas com largura fixa para impressão A4, dimensionar colunas com base no número real de caracteres do cabeçalho mais longo em milímetros, assegurando contenção celular via CSS.
+
+---
+
+## 2026-10-20 - Fatiamento de linhas da tabela na divisão de páginas durante a impressão de relatórios (window.print)
+
+- Sintoma: Ao emitir o relatório de vendas ou arrecadação em tela e clicar em "Imprimir Documento" (ou pressionar `Ctrl + P`), a tabela era cortada horizontalmente no meio das linhas exatamente na divisão entre a página 1 e a página 2 na folha A4 impressa, enquanto o PDF gerado pelo servidor dividia as páginas de forma limpa.
+- Causa:
+  1. O CSS de impressão continha `@page { margin: 0; }` com `.container { padding: 10mm 14mm !important; min-height: 297mm !important; }`. Em mídias paginadas CSS, o `padding` de um container em bloco só se aplica no topo da primeira página e no fundo da última página. No fim da página 1 (297mm), havia margem zero, fazendo com que linhas de tabela sobre a linha de 297mm fossem fatiadas ao meio e continuassem no topo absoluto da página 2 (0mm);
+  2. A tabela utilizava `border-collapse: collapse !important`. No Chromium (Chrome/Edge), `border-collapse: collapse` impede o cálculo correto da fragmentação de blocos paginados, ignorando a diretiva `break-inside: avoid` nas tags `<tr>` (conhecido bug de layout do Chromium 814041);
+  3. Faltava repetição explícita do `thead` (`display: table-header-group`) com contenção atômica para o início de cada nova folha impressa.
+- Solução aplicada:
+  1. Configurado `@page { size: A4 portrait; margin: 12mm 14mm 14mm 14mm; }`, delegando as margens físicas de todas as folhas impressas (topo, fundo e laterais) diretamente para o motor de paginação do navegador;
+  2. No `@media print`, o `.container` teve seu `padding` zerado e `min-height: auto` liberado para fluir naturalmente pelas margens do `@page`;
+  3. No `@media print`, aplicada a regra `border-collapse: separate !important; border-spacing: 0 !important;` na tabela, forçando o Chromium a respeitar estritamente `page-break-inside: avoid !important; break-inside: avoid !important;` em todas as `<tr>` e `<td>`;
+  4. Garantido que `thead` repita o cabeçalho no topo de cada folha A4 seguinte;
+  5. Adicionado botão direto "📥 Baixar PDF" na barra superior para download imediato do arquivo PDF compilado pelo servidor.
+- Como evitar no futuro: Em folhas A4 que possam ultrapassar uma página e exijam suporte a `window.print()`, nunca definir `@page { margin: 0; }` em conjunto com containers de altura fixa ou padding. Utilizar margens explícitas no `@page` e `border-collapse: separate; border-spacing: 0;` na regra `@media print` para garantir que o Chromium não fatie linhas de tabela.
+

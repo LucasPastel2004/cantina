@@ -8,8 +8,8 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 * **Fase Atual:** Sustentação e Ajustes Pós-Deploy em Produção
 * **Status da Documentação:** Concluída [x] (100% Homologada)
-* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Blindagem Universal de Encoding UTF-8 + Ajuste Responsivo da Barra do PDV + Nova Aba de Entrada Manual de Estoque (sem NF-e) + Opção de Zoom com Ícone de Lupa em Alto Contraste em Relatórios de Impressão/PDF + Correção de Largura da Coluna Quantidade + Simetria Visual na Aba de Layout de Estoque Homologados e Publicados em Produção na Hostnet!
-* **Última Atualização:** 2026-10-20 08:50:00 (Padronização do tema escuro de alto contraste #1e293b para a barra de impressão em todas as views de relatório, garantindo visibilidade total do ícone SVG de lupa e controles de zoom; ampliação da coluna Quantidade para 12% com white-space: nowrap no relatório de vendas; testes automatizados 20/20 aprovados com 100% de sucesso).
+* **Status Geral do Projeto:** 24 de 24 Fases Concluídas + Auditoria de Segurança + Documentação Final + Deploy na Hostnet Ativo + Blindagem Universal de Encoding UTF-8 + Ajuste Responsivo da Barra do PDV + Nova Aba de Entrada Manual de Estoque (sem NF-e) + Opção de Zoom com Ícone de Lupa em Alto Contraste em Relatórios de Impressão/PDF + Correção de Largura da Coluna Quantidade + Paginação Limpa e Anti-Fatiamento de Tabelas na Impressão A4 Homologados e Publicados em Produção na Hostnet!
+* **Última Atualização:** 2026-10-20 09:10:00 (Implementação de margens físicas explícitas em @page, liberação de min-height e padding do container no @media print, border-collapse: separate com border-spacing: 0 para evitar fatiamento de linhas em navegadores Chromium/Edge, repetição limpa de thead e novo botão de download direto de PDF oficial; testes automatizados 14/14 aprovados com 100% de sucesso).
 
 
 
@@ -1797,6 +1797,9 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] **Correção da Coluna Quantidade:** Em `vendas_alimento_pdf.php`, ampliada a coluna `$wQtd` de 8% para 12% (~21.8mm úteis), eliminando qualquer colisão com a coluna "Valor Unitário".
 * [x] **Blindagem CSS:** Adicionados `white-space: nowrap; overflow: hidden;` ao cabeçalho `table.tabela-relatorio th`.
 * [x] **Testes Automatizados:** Suíte `tests/lupa_e_coluna_quantidade_test.php` criada com 20 asserções e suíte `tests/teste_todos_pdfs.php` (10 relatórios) aprovadas com 100% de sucesso.
+* [x] **Paginação Limpa e Anti-Fatiamento de Tabelas (window.print):** Em `vendas_alimento_pdf.php` e `arrecadacao_pdf.php`, configurado `@page { margin: 12mm 14mm 14mm 14mm; }`, liberado `min-height: auto` e `padding: 0` no `@media print`, aplicado `border-collapse: separate !important; border-spacing: 0 !important;` e `break-inside: avoid !important;` em `<tr>` e `<td>` para eliminar o fatiamento de linhas pelo Chromium.
+* [x] **Repetição de Cabeçalhos e Botão de Download PDF:** O `thead` agora se repete automaticamente no topo de cada folha A4 subsequente sem sobreposição, e a barra superior recebeu o botão direto "📥 Baixar PDF" para download imediato do PDF oficial compilado via Gotenberg.
+* [x] **Validação com Suíte Automatizada:** Suíte `tests/paginacao_impressao_tabelas_test.php` (14/14) e `tests/teste_todos_pdfs.php` (10/10) aprovadas com 100% de sucesso.
 
 ---
 

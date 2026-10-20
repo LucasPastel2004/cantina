@@ -30,7 +30,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <style>
         @page {
             size: A4 portrait;
-            margin: 0;
+            margin: 12mm 14mm 14mm 14mm;
         }
         * {
             box-sizing: border-box !important;
@@ -185,6 +185,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         /* Impressão Direta (Física / Browser Print / Gotenberg PDF) */
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 12mm 14mm 14mm 14mm;
+            }
             .document-zoom-area {
                 zoom: 1 !important;
                 transform: none !important;
@@ -195,21 +199,67 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 padding: 0 !important;
                 margin: 0 !important;
                 font-size: 8pt;
+                color: #000000 !important;
             }
             .no-print {
                 display: none !important;
             }
             .container {
-                width: 210mm !important;
-                max-width: 210mm !important;
-                min-height: 297mm !important;
-                margin: 0 auto !important;
-                padding: 10mm 14mm !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
                 box-shadow: none !important;
                 border: none !important;
                 border-radius: 0 !important;
                 background: #ffffff !important;
                 box-sizing: border-box !important;
+            }
+
+            /* Quebras de páginas limpas em tabelas oficiais */
+            table.table-doc-excel {
+                width: 100% !important;
+                table-layout: fixed !important;
+                border-collapse: separate !important;
+                border-spacing: 0 !important;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+                margin-top: 4px !important;
+                margin-bottom: 8px !important;
+                border: 1px solid #000000 !important;
+                border-bottom: none !important;
+                border-right: none !important;
+            }
+            table.table-doc-excel thead {
+                display: table-header-group !important;
+            }
+            table.table-doc-excel thead tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            table.table-doc-excel tfoot {
+                display: table-footer-group !important;
+            }
+            table.table-doc-excel tbody tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            table.table-doc-excel th,
+            table.table-doc-excel td {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                border-right: 1px solid #000000 !important;
+                border-bottom: 1px solid #000000 !important;
+            }
+            .school-header,
+            .resumo-cards-box,
+            .footer-assinaturas-box,
+            .row-dia-total,
+            .row-geral-total {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
 
@@ -372,6 +422,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" class="btn-back-action">
             ← Voltar aos Filtros
+        </a>
+        <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/pdf?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" class="btn-action" style="background: #0284c7; color: #ffffff !important; border: 1px solid #0369a1;" title="Baixar arquivo PDF A4 oficial gerado pelo servidor">
+            📥 Baixar PDF
         </a>
         <button type="button" class="btn-print-action" onclick="window.print()">
             🖨 Imprimir Documento
