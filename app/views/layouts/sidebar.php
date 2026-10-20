@@ -176,7 +176,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
          ========================================================================= -->
 
     <!-- Flyout 1: Operacional -->
-    <div class="sidebar-flyout" id="flyoutOperacional" role="menu" aria-label="Menu Operacional">
+    <div class="sidebar-flyout" id="flyoutOperacional" data-category="operacional" role="menu" aria-label="Menu Operacional">
         <div class="flyout-header">
             <span class="flyout-title">Operacional</span>
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>
@@ -222,7 +222,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
     </div>
 
     <!-- Flyout 2: Estoque -->
-    <div class="sidebar-flyout" id="flyoutEstoque" role="menu" aria-label="Menu Estoque">
+    <div class="sidebar-flyout" id="flyoutEstoque" data-category="estoque" role="menu" aria-label="Menu Estoque">
         <div class="flyout-header">
             <span class="flyout-title">Estoque</span>
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>
@@ -264,7 +264,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
     </div>
 
     <!-- Flyout 3: Financeiro -->
-    <div class="sidebar-flyout" id="flyoutFinanceiro" role="menu" aria-label="Menu Financeiro">
+    <div class="sidebar-flyout" id="flyoutFinanceiro" data-category="financeiro" role="menu" aria-label="Menu Financeiro">
         <div class="flyout-header">
             <span class="flyout-title">Financeiro</span>
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>
@@ -313,7 +313,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
 
     <?php if ($isAdmin): ?>
     <!-- Flyout 4: Administração -->
-    <div class="sidebar-flyout" id="navSectionAdmin" role="menu" aria-label="Menu Administração">
+    <div class="sidebar-flyout" id="navSectionAdmin" data-category="admin" role="menu" aria-label="Menu Administração">
         <div class="flyout-header">
             <span class="flyout-title">Administração</span>
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>
@@ -359,7 +359,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
     </div>
 
     <!-- Flyout 5: Relatórios -->
-    <div class="sidebar-flyout" id="flyoutRelatorios" role="menu" aria-label="Menu Relatórios">
+    <div class="sidebar-flyout" id="flyoutRelatorios" data-category="relatorios" role="menu" aria-label="Menu Relatórios">
         <div class="flyout-header">
             <span class="flyout-title">Relatórios</span>
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>

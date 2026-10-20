@@ -104,6 +104,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // Inicialização e escuta do sistema corporativo de modais de confirmação
   inicializarConfirmacaoCorporativa();
 
+  // Inicializa comportamento de hover e clique inteligente no dock de ícones
+  inicializarHoverDockSidebar();
+
   // Fechar menus em suspensão do dock ao clicar fora
   document.addEventListener('click', function (e) {
     const isDockClick = e.target.closest('.dock-btn') || e.target.closest('.sidebar-flyout');
@@ -224,17 +227,31 @@ function converterMoedaParaFloat(valor) {
 
 
 /**
- * Alterna abertura do Menu em Suspensão (Flyout Popover) de uma categoria do Dock
- * @param {string} category Nome da categoria ('operacional', 'estoque', 'financeiro', 'admin', 'relatorios')
+ * Gerenciador de Estado do Dock Sidebar e Menus em Suspensão (Flyout Popover)
+ * - Modo Hover (Passar o Mouse): abre suavemente e fecha sozinho se o mouse sair do ícone e do flyout
+ * - Modo Pinned (Clique no Ícone): trava o menu aberto na tela até novo clique, botão '✕' ou Escape
  */
-function toggleCategoryFlyout(category) {
-  const flyoutIdMap = {
-    operacional: 'flyoutOperacional',
-    estoque: 'flyoutEstoque',
-    financeiro: 'flyoutFinanceiro',
-    admin: 'navSectionAdmin',
-    relatorios: 'flyoutRelatorios'
-  };
+let currentFlyoutCategory = null;
+let isFlyoutPinned = false;
+let flyoutHoverCloseTimer = null;
+let flyoutHoverOpenTimer = null;
+
+const flyoutIdMap = {
+  operacional: 'flyoutOperacional',
+  estoque: 'flyoutEstoque',
+  financeiro: 'flyoutFinanceiro',
+  admin: 'navSectionAdmin',
+  relatorios: 'flyoutRelatorios'
+};
+
+/**
+ * Abre o Menu em Suspensão (Flyout) para uma categoria
+ * @param {string} category Nome da categoria ('operacional', 'estoque', etc.)
+ * @param {boolean} pinned Se deve travar o menu aberto (aberto por clique)
+ */
+function abrirFlyout(category, pinned) {
+  clearTimeout(flyoutHoverCloseTimer);
+  clearTimeout(flyoutHoverOpenTimer);
 
   const targetFlyoutId = flyoutIdMap[category];
   const targetFlyout = document.getElementById(targetFlyoutId);
@@ -242,18 +259,22 @@ function toggleCategoryFlyout(category) {
 
   if (!targetFlyout || !targetBtn) return;
 
-  const isAlreadyOpen = targetFlyout.classList.contains('show');
-
-  // Fecha todos os flyouts abertos previamente
-  fecharFlyouts();
-
-  if (isAlreadyOpen) {
+  // Se já está aberto com a mesma categoria:
+  if (currentFlyoutCategory === category && targetFlyout.classList.contains('show')) {
+    if (pinned) {
+      isFlyoutPinned = true;
+      targetFlyout.classList.add('flyout-pinned');
+      targetBtn.classList.add('flyout-pinned');
+    }
     return;
   }
 
-  // Posiciona o flyout verticalmente em relação ao botão clicado
+  // Fecha qualquer outro flyout previamente aberto
+  fecharFlyoutsSilencioso();
+
+  // Posiciona o flyout verticalmente em relação ao botão clicado/focado
   const rect = targetBtn.getBoundingClientRect();
-  
+
   // Mede dinamicamente a altura real do menu flutuante para nunca cortar itens na base da janela
   targetFlyout.style.visibility = 'hidden';
   targetFlyout.style.display = 'flex';
@@ -274,7 +295,18 @@ function toggleCategoryFlyout(category) {
   targetBtn.classList.add('flyout-open');
   targetBtn.setAttribute('aria-expanded', 'true');
 
-  // No mobile, exibe backdrop
+  currentFlyoutCategory = category;
+  isFlyoutPinned = !!pinned;
+
+  if (isFlyoutPinned) {
+    targetFlyout.classList.add('flyout-pinned');
+    targetBtn.classList.add('flyout-pinned');
+  } else {
+    targetFlyout.classList.remove('flyout-pinned');
+    targetBtn.classList.remove('flyout-pinned');
+  }
+
+  // No mobile (< 768px), exibe backdrop
   if (window.innerWidth < 768) {
     const backdrop = document.getElementById('sidebarBackdrop');
     if (backdrop) backdrop.classList.add('show');
@@ -282,24 +314,149 @@ function toggleCategoryFlyout(category) {
 }
 
 /**
- * Fecha todos os Menus em Suspensão (Flyouts) abertos
+ * Alterna abertura por CLIQUE do Menu em Suspensão (Trava na tela se abrir / Fecha se já travado)
+ * @param {string} category Nome da categoria ('operacional', 'estoque', 'financeiro', 'admin', 'relatorios')
+ */
+function toggleCategoryFlyout(category) {
+  clearTimeout(flyoutHoverCloseTimer);
+  clearTimeout(flyoutHoverOpenTimer);
+
+  const targetFlyoutId = flyoutIdMap[category];
+  const targetFlyout = document.getElementById(targetFlyoutId);
+
+  // Se já está aberto nesta categoria E está TRAVADO por clique (pinned):
+  if (currentFlyoutCategory === category && targetFlyout && targetFlyout.classList.contains('show') && isFlyoutPinned) {
+    fecharFlyouts();
+    return;
+  }
+
+  // Se estava aberto apenas por hover ou estava fechado, o clique trava o menu aberto na tela!
+  abrirFlyout(category, true);
+}
+
+/**
+ * Fecha todos os Menus em Suspensão (Flyouts) abertos e reseta estados
  */
 function fecharFlyouts() {
-  const flyouts = document.querySelectorAll('.sidebar-flyout');
-  flyouts.forEach(function (f) {
-    f.classList.remove('show');
-  });
+  clearTimeout(flyoutHoverCloseTimer);
+  clearTimeout(flyoutHoverOpenTimer);
 
-  const dockBtns = document.querySelectorAll('.dock-btn');
-  dockBtns.forEach(function (b) {
-    b.classList.remove('flyout-open');
-    b.setAttribute('aria-expanded', 'false');
-  });
+  fecharFlyoutsSilencioso();
+
+  currentFlyoutCategory = null;
+  isFlyoutPinned = false;
 
   const backdrop = document.getElementById('sidebarBackdrop');
   if (backdrop && window.innerWidth < 768) {
     backdrop.classList.remove('show');
   }
+}
+
+/**
+ * Remove classes visuais de todos os flyouts sem resetar variáveis de controle
+ */
+function fecharFlyoutsSilencioso() {
+  const flyouts = document.querySelectorAll('.sidebar-flyout');
+  flyouts.forEach(function (f) {
+    f.classList.remove('show', 'flyout-pinned');
+  });
+
+  const dockBtns = document.querySelectorAll('.dock-btn');
+  dockBtns.forEach(function (b) {
+    b.classList.remove('flyout-open', 'flyout-pinned');
+    b.setAttribute('aria-expanded', 'false');
+  });
+}
+
+/**
+ * Agenda fechamento suave com delay de 220ms após o mouse sair do ícone ou do flyout
+ */
+function agendarFechamentoFlyoutHover() {
+  clearTimeout(flyoutHoverCloseTimer);
+  clearTimeout(flyoutHoverOpenTimer);
+
+  // Se o menu foi travado por clique, ele NÃO fecha automaticamente com mouseleave
+  if (isFlyoutPinned) {
+    return;
+  }
+
+  flyoutHoverCloseTimer = setTimeout(function () {
+    if (!isFlyoutPinned) {
+      fecharFlyouts();
+    }
+  }, 220);
+}
+
+/**
+ * Cancela qualquer agendamento de fechamento do flyout
+ */
+function cancelarFechamentoFlyoutHover() {
+  clearTimeout(flyoutHoverCloseTimer);
+}
+
+/**
+ * Inicializa os Listeners de Hover e Clique para o Dock e Menus Flutuantes
+ */
+function inicializarHoverDockSidebar() {
+  const dockBtns = document.querySelectorAll('.dock-btn[data-category]');
+  dockBtns.forEach(function (btn) {
+    const cat = btn.getAttribute('data-category');
+    if (!cat) return;
+
+    // Hover ao entrar com o cursor no ícone
+    btn.addEventListener('mouseenter', function () {
+      if (window.innerWidth < 768) return;
+
+      // Se já está aberto nesta categoria e pinned, apenas cancela qualquer timer de saída
+      if (isFlyoutPinned && currentFlyoutCategory === cat) {
+        cancelarFechamentoFlyoutHover();
+        return;
+      }
+
+      // Se o usuário já travou OUTRA categoria na tela, não altera só passando o mouse
+      if (isFlyoutPinned && currentFlyoutCategory !== cat) {
+        return;
+      }
+
+      cancelarFechamentoFlyoutHover();
+      clearTimeout(flyoutHoverOpenTimer);
+
+      // Pequeno delay ergonômico (70ms) para passagem limpa
+      flyoutHoverOpenTimer = setTimeout(function () {
+        if (!isFlyoutPinned) {
+          abrirFlyout(cat, false);
+        }
+      }, 70);
+    });
+
+    // Hover ao sair do ícone
+    btn.addEventListener('mouseleave', function () {
+      if (window.innerWidth < 768) return;
+      clearTimeout(flyoutHoverOpenTimer);
+
+      if (!isFlyoutPinned) {
+        agendarFechamentoFlyoutHover();
+      }
+    });
+  });
+
+  // Hover no corpo de cada menu em suspensão
+  const flyouts = document.querySelectorAll('.sidebar-flyout');
+  flyouts.forEach(function (flyout) {
+    // Quando o mouse entra no menu, cancela o fechamento (o menu continua aberto enquanto o mouse estiver sobre ele!)
+    flyout.addEventListener('mouseenter', function () {
+      if (window.innerWidth < 768) return;
+      cancelarFechamentoFlyoutHover();
+    });
+
+    // Quando o mouse sai do menu, agenda o fechamento automático se não estiver travado por clique
+    flyout.addEventListener('mouseleave', function () {
+      if (window.innerWidth < 768) return;
+      if (!isFlyoutPinned) {
+        agendarFechamentoFlyoutHover();
+      }
+    });
+  });
 }
 
 /**

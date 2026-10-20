@@ -1096,6 +1096,24 @@ textarea.form-control {
   stroke: #1d4ed8 !important;
 }
 
+/* Estado Travado por Clique (Pinned) — Indicação Sutil de Fixo na Tela */
+.dock-btn.flyout-pinned {
+  background-color: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border-color: #93c5fd !important;
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.2) !important;
+}
+
+.dock-btn.flyout-pinned svg {
+  color: #1d4ed8 !important;
+  stroke: #1d4ed8 !important;
+}
+
+.sidebar-flyout.flyout-pinned {
+  border-color: #bfdbfe;
+  box-shadow: 0 14px 30px -4px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+}
+
 /* Rodapé do Dock com Avatar e Logout (Fundo Claro Original #f8fafc) */
 .dock-footer,
 .sidebar-user {
