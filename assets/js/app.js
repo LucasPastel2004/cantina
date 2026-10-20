@@ -291,6 +291,7 @@ function abrirFlyout(category, pinned) {
   if (topPos < 10) topPos = 10;
 
   targetFlyout.style.top = topPos + 'px';
+  targetFlyout.style.display = 'flex';
   targetFlyout.classList.add('show');
   targetBtn.classList.add('flyout-open');
   targetBtn.setAttribute('aria-expanded', 'true');
@@ -359,6 +360,7 @@ function fecharFlyoutsSilencioso() {
   const flyouts = document.querySelectorAll('.sidebar-flyout');
   flyouts.forEach(function (f) {
     f.classList.remove('show', 'flyout-pinned');
+    f.style.display = 'none';
   });
 
   const dockBtns = document.querySelectorAll('.dock-btn');

@@ -28,7 +28,7 @@ $dataAtual = date('d/m/Y');
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
 
     <!-- Design System Corporativo Anti-Slop (Enterprise High-Density) -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=<?php echo $assetVersion ?? '6.2.6'; ?>">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=<?php echo $assetVersion ?? '7.0.1'; ?>">
 
     <!-- Favicon Oficial -->
     <link rel="icon" type="image/jpeg" href="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg">
@@ -96,6 +96,6 @@ $dataAtual = date('d/m/Y');
 <script src="<?php echo $baseUrl; ?>/assets/js/bootstrap.bundle.min.js"></script>
 
 <!-- Utilitários e Scripts Vanilla JS -->
-<script src="<?php echo $baseUrl; ?>/assets/js/app.js?v=<?php echo $assetVersion ?? '6.2.6'; ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/app.js?v=<?php echo $assetVersion ?? '7.0.1'; ?>"></script>
 </body>
 </html>

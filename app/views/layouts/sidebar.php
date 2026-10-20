@@ -35,7 +35,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
 <div class="sidebar-edge-trigger" id="sidebarEdgeTrigger" style="display:none;" aria-hidden="true"></div>
 
 <!-- Dock de Navegação Principal (Barra Estreita de 60px) -->
-<aside class="app-sidebar app-sidebar-dock" id="appSidebar">
+<aside class="app-sidebar app-sidebar-dock" id="appSidebar" style="width: 60px; min-width: 60px; max-width: 60px;">
     <!-- Topo do Dock com Logotipo Oficial (Redireciona para a Visão Geral /admin) -->
     <div class="dock-header sidebar-header">
         <a href="<?php echo $baseUrl; ?>/admin" class="dock-brand sidebar-brand" title="Monteiro Lobato — Visão Geral da Cantina" aria-label="Visão Geral da Cantina">
@@ -50,7 +50,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
     </div>
 
     <!-- Lista Vertical de Ícones de Categoria -->
-    <nav class="dock-nav sidebar-nav" aria-label="Navegação Principal">
+    <nav class="dock-nav sidebar-nav" style="display: flex; flex-direction: column; align-items: center; width: 100%;" aria-label="Navegação Principal">
         <!-- 1. Categoria: Operacional -->
         <button type="button" 
                 class="dock-btn <?php echo $isOperacionalActive ? 'is-current' : ''; ?>" 
@@ -169,7 +169,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
          ========================================================================= -->
 
     <!-- Flyout 1: Operacional -->
-    <div class="sidebar-flyout" id="flyoutOperacional" data-category="operacional" role="menu" aria-label="Menu Operacional">
+    <div class="sidebar-flyout" id="flyoutOperacional" data-category="operacional" role="menu" aria-label="Menu Operacional" style="display: none;">
         <div class="flyout-header">
             <span class="flyout-title">Operacional</span>
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>
@@ -215,7 +215,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
     </div>
 
     <!-- Flyout 2: Estoque -->
-    <div class="sidebar-flyout" id="flyoutEstoque" data-category="estoque" role="menu" aria-label="Menu Estoque">
+    <div class="sidebar-flyout" id="flyoutEstoque" data-category="estoque" role="menu" aria-label="Menu Estoque" style="display: none;">
         <div class="flyout-header">
             <span class="flyout-title">Estoque</span>
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>
@@ -257,7 +257,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
     </div>
 
     <!-- Flyout 3: Financeiro -->
-    <div class="sidebar-flyout" id="flyoutFinanceiro" data-category="financeiro" role="menu" aria-label="Menu Financeiro">
+    <div class="sidebar-flyout" id="flyoutFinanceiro" data-category="financeiro" role="menu" aria-label="Menu Financeiro" style="display: none;">
         <div class="flyout-header">
             <span class="flyout-title">Financeiro</span>
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>
@@ -306,7 +306,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
 
     <?php if ($isAdmin): ?>
     <!-- Flyout 4: Administração -->
-    <div class="sidebar-flyout" id="navSectionAdmin" data-category="admin" role="menu" aria-label="Menu Administração">
+    <div class="sidebar-flyout" id="navSectionAdmin" data-category="admin" role="menu" aria-label="Menu Administração" style="display: none;">
         <div class="flyout-header">
             <span class="flyout-title">Administração</span>
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>
@@ -352,7 +352,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
     </div>
 
     <!-- Flyout 5: Relatórios -->
-    <div class="sidebar-flyout" id="flyoutRelatorios" data-category="relatorios" role="menu" aria-label="Menu Relatórios">
+    <div class="sidebar-flyout" id="flyoutRelatorios" data-category="relatorios" role="menu" aria-label="Menu Relatórios" style="display: none;">
         <div class="flyout-header">
             <span class="flyout-title">Relatórios</span>
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>

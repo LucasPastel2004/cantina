@@ -1181,7 +1181,7 @@ textarea.form-control {
 }
 
 .sidebar-flyout.show {
-  display: flex;
+  display: flex !important;
 }
 
 @keyframes flyoutSlideIn {

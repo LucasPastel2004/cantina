@@ -2126,4 +2126,20 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Solução aplicada: Atualizado o workflow `.github/workflows/deploy-hostnet.yml` com um script de resolução dinâmica de interpretador via `bash -s`. A rotina testa múltiplos binários e caminhos de instalação do PHP 8.2+ na Hostnet (incluindo `/usr/local/php84/bin/php`, `/usr/local/php83/bin/php`, `/usr/local/php82/bin/php`, caminhos cPanel/CloudLinux `/opt/alt/php8*` e `/opt/cpanel/ea-php8*`), validando `PHP_VERSION_ID >= 80200` via CLI antes de invocar o `database/runner.php`. Após a execução, o workflow exibe a tabela completa com o status das migrações (`--status`).
 - Como evitar no futuro: Em ambientes de hospedagem compartilhada, nunca confiar que o comando genérico `php` no SSH utilize a mesma versão do PHP configurada para o Apache/Web. Sempre implementar resolução defensiva que localize e utilize explicitamente o binário do PHP 8.2+ suportado pelo sistema.
 
+---
+
+## 2026-10-20 - Barra lateral e menus em suspensão desconfigurados em produção por retenção de cache HTTP de assets antigos (v=6.1.1)
+
+- Sintoma: Ao acessar o sistema em produção (`www.cantinawebmonteirolobato.com.br/admin`), a barra lateral aparecia com os botões de ícones espremidos em uma linha horizontal no topo e todos os menus suspensos (`Operacional`, `Estoque`, `Financeiro`, etc.) abertos e empilhados verticalmente no fluxo da página, quebrando o layout visual da área principal.
+- Causa:
+  1. A variável `$data['assetVersion']` injetada globalmente em `app/core/Controller.php` permaneceu fixada no valor legado `'6.1.1'`, fazendo com que as tags `<link rel="stylesheet" href=".../custom.css?v=6.1.1">` e `<script src=".../app.js?v=6.1.1">` fossem renderizadas com a mesma versão de semanas anteriores.
+  2. O navegador do cliente, tendo acessado a versão anterior, reutilizou a folha de estilo `custom.css?v=6.1.1` gravada no cache de disco local, a qual não possuía as definições da nova arquitetura de dock (`.sidebar-dock`, `.sidebar-flyout { display: none; position: fixed; }`, etc.). Sem essas regras, os elementos `<div>` dos flyouts assumiram o valor padrão de `display: block` e a lista de botões exibiu fluxo `inline-block`.
+- Solução aplicada:
+  1. Em `app/core/Controller.php`, incrementada a versão global de assets para `7.0.1` (`$data['assetVersion'] = '7.0.1'`), forçando a invalidação imediata de cache em todos os clientes e navegadores.
+  2. Atualizados todos os layouts (`admin.php`, `header.php`, `footer.php`, `portal.php`, `auth.php`, `home/index.php`) para utilizarem a versão `7.0.1`.
+  3. Aplicada blindagem defensiva em `app/views/layouts/sidebar.php` adicionando `style="width: 60px; min-width: 60px; max-width: 60px;"` na `<aside>` e `style="display: none;"` inline em todos os elementos `.sidebar-flyout`, garantindo que os painéis nunca sejam exibidos em fluxo mesmo sob falha ou lentidão de rede.
+  4. Em `assets/js/app.js`, garantida a sincronização explícita de `targetFlyout.style.display = 'flex'` ao abrir e `style.display = 'none'` ao fechar silenciosamente.
+- Como evitar no futuro: Sempre que qualquer modificação estrutural de layout for realizada em `assets/css/custom.css` ou `assets/js/app.js`, o valor de `$data['assetVersion']` em `app/core/Controller.php` DEVE ser obrigatoriamente incrementado, assegurando cache busting instantâneo em produção.
+
+
 
