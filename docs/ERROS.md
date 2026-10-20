@@ -2114,6 +2114,6 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   2. No `@media print`, o `.container` teve seu `padding` zerado e `min-height: auto` liberado para fluir naturalmente pelas margens do `@page`;
   3. No `@media print`, aplicada a regra `border-collapse: separate !important; border-spacing: 0 !important;` na tabela, forçando o Chromium a respeitar estritamente `page-break-inside: avoid !important; break-inside: avoid !important;` em todas as `<tr>` e `<td>`;
   4. Garantido que `thead` repita o cabeçalho no topo de cada folha A4 seguinte;
-  5. Adicionado botão direto "📥 Baixar PDF" na barra superior para download imediato do arquivo PDF compilado pelo servidor.
+  5. Padronizado o botão de ação principal como "🖨 Imprimir / Salvar PDF" acionando `window.print()`, permitindo ao operador tanto a impressão física quanto a geração de PDF diretamente pelo navegador ("Salvar como PDF"), sem dependência de microsserviços Docker (compatível com a hospedagem Hostnet).
 - Como evitar no futuro: Em folhas A4 que possam ultrapassar uma página e exijam suporte a `window.print()`, nunca definir `@page { margin: 0; }` em conjunto com containers de altura fixa ou padding. Utilizar margens explícitas no `@page` e `border-collapse: separate; border-spacing: 0;` na regra `@media print` para garantir que o Chromium não fatie linhas de tabela.
 

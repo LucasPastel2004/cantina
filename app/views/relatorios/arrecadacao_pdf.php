@@ -423,11 +423,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" class="btn-back-action">
             ← Voltar aos Filtros
         </a>
-        <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/pdf?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" class="btn-action" style="background: #0284c7; color: #ffffff !important; border: 1px solid #0369a1;" title="Baixar arquivo PDF A4 oficial gerado pelo servidor">
-            📥 Baixar PDF
-        </a>
-        <button type="button" class="btn-print-action" onclick="window.print()">
-            🖨 Imprimir Documento
+        <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
+            🖨 Imprimir / Salvar PDF
         </button>
         <button type="button" class="btn-close-action" onclick="window.close()">
             ✕ Fechar Janela

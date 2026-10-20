@@ -61,9 +61,10 @@ foreach ($views as $nome => $caminho) {
         strpos($conteudo, 'break-inside: avoid !important;') !== false
     );
 
-    // 6. Botão de Baixar PDF direto presente na barra
-    assertCheck("$nome possui botão direto para Baixar PDF oficial",
-        strpos($conteudo, 'Baixar PDF') !== false
+    // 6. Botão de Imprimir / Salvar PDF presente na barra
+    assertCheck("$nome possui botão direto para Imprimir / Salvar PDF via navegador",
+        strpos($conteudo, 'Imprimir / Salvar PDF') !== false &&
+        strpos($conteudo, 'window.print()') !== false
     );
 }
 

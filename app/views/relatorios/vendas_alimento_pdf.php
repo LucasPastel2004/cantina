@@ -526,11 +526,8 @@ if ($emitirAlim && $emitirAluno) {
         <a href="<?php echo htmlspecialchars($baseUrl); ?>/relatorios/vendas-filtros" class="btn-back-action">
             &larr; Voltar aos Filtros
         </a>
-        <a href="<?php echo htmlspecialchars($baseUrl); ?>/relatorios/vendas-filtros/pdf<?php echo !empty($_SERVER['QUERY_STRING']) ? '?' . htmlspecialchars($_SERVER['QUERY_STRING']) : ''; ?>" class="btn-action" style="background: #0284c7; color: #ffffff !important; border: 1px solid #0369a1;" title="Baixar arquivo PDF A4 oficial gerado pelo servidor">
-            📥 Baixar PDF
-        </a>
-        <button type="button" class="btn-print-action" onclick="window.print()">
-            🖨 Imprimir Documento
+        <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
+            🖨 Imprimir / Salvar PDF
         </button>
         <button type="button" class="btn-close-action" onclick="window.close()">
             ✕ Fechar
