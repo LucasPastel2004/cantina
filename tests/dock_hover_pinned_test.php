@@ -49,13 +49,18 @@ $assertCustom(str_contains($appJs, 'btn.addEventListener(\'mouseenter\''), "app.
 $assertCustom(str_contains($appJs, 'flyout.addEventListener(\'mouseenter\''), "app.js escuta mouseenter no corpo do flyout para mantê-lo aberto");
 $assertCustom(str_contains($appJs, 'flyout.addEventListener(\'mouseleave\''), "app.js escuta mouseleave no corpo do flyout");
 
-// 3. Verificação do CSS para estado travado (pinned), ausência de linha bugada e repouso neutro
+// 3. Verificação do CSS para estado travado (pinned), ausência de linha bugada, repouso neutro e hover azul universal
 $assertCustom(str_contains($customCss, '.dock-btn.flyout-pinned'), "custom.css define estado travado .dock-btn.flyout-pinned");
 $assertCustom(str_contains($customCss, 'background-color: var(--surface-bg') && str_contains($customCss, '.dock-btn.flyout-pinned'), "custom.css adota a cor de fundo do site no botão pinned");
 $assertCustom(!str_contains($customCss, '.dock-btn.is-current:not(.active):not(.flyout-open)::after'), "Linha de destaque antiga ::after foi completamente removida do dock");
 $assertCustom(!str_contains($customCss, '.dock-btn.is-current:not(.active):not(.flyout-open):not(.flyout-pinned)'), "Removida regra que forçava ícone para azul em repouso");
 $assertCustom(str_contains($customCss, 'color: #475569; /* Neutro uniforme para todos os ícones em repouso */'), "Todos os ícones do dock adotam cor neutra #475569 em repouso");
+$assertCustom(str_contains($customCss, '.dock-btn:hover svg') && str_contains($customCss, 'color: #1d4ed8 !important;'), "Todos os botões do dock (inclusive Cardápio) ficam com ícone azul no hover");
 $assertCustom(str_contains($customCss, '.sidebar-flyout.flyout-pinned'), "custom.css define elevação do menu travado .sidebar-flyout.flyout-pinned");
+
+// 4. Verificação do Rodapé do Dock (Apenas Botão de Logout, sem avatar AD)
+$assertCustom(!str_contains($sidebarContent, 'dock-user-avatar'), "Avatar com iniciais/foto foi removido do rodapé do dock");
+$assertCustom(str_contains($sidebarContent, 'btn-dock-logout') && str_contains($sidebarContent, '/logout'), "Botão de encerramento de sessão (Logout) mantido no rodapé do dock");
 
 echo "\n=======================================================\n";
 echo " RESULTADO: {$passou} / {$total} testes passaram!\n";

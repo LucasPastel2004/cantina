@@ -1066,13 +1066,13 @@ textarea.form-control {
 
 .dock-btn:hover {
   background-color: #f1f5f9;
-  color: #0f172a;
+  color: #1d4ed8;
   border-color: #e2e8f0;
 }
 
 .dock-btn:hover svg {
-  color: #0f172a;
-  stroke: #0f172a;
+  color: #1d4ed8 !important;
+  stroke: #1d4ed8 !important;
 }
 
 .dock-btn:active {
@@ -1112,42 +1112,29 @@ textarea.form-control {
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
 }
 
-/* Rodapé do Dock com Avatar e Logout (Fundo Claro Original #f8fafc) */
+/* Rodapé do Dock com Botão de Logout (Fundo Claro Original #f8fafc) */
 .dock-footer,
 .sidebar-user {
   width: 100%;
-  padding: 10px 0;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   border-top: 1px solid var(--border-subtle, #e2e8f0);
   background-color: #f8fafc;
   flex-shrink: 0;
 }
 
 .dock-user-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background-color: #eff6ff;
-  color: #1d4ed8;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #bfdbfe;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  user-select: none;
+  display: none !important;
 }
 
 .btn-dock-logout,
 .btn-sidebar-logout {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-sm, 6px);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md, 8px);
   border: 1px solid transparent;
   background: transparent;
   color: #64748b;
@@ -1163,6 +1150,12 @@ textarea.form-control {
   background-color: #fee2e2;
   color: #b91c1c;
   border-color: #fecaca;
+}
+
+.btn-dock-logout:hover svg,
+.btn-sidebar-logout:hover svg {
+  color: #b91c1c !important;
+  stroke: #b91c1c !important;
 }
 
 /* ==========================================================================

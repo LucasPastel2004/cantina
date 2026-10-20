@@ -150,18 +150,11 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
         <?php endif; ?>
     </nav>
 
-    <!-- Rodapé do Dock: Avatar do Usuário e Logout -->
+    <!-- Rodapé do Dock: Botão de Encerramento de Sessão (Logout) -->
     <div class="dock-footer sidebar-user">
-        <div class="dock-user-avatar" title="<?php echo htmlspecialchars($user['nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars(ucfirst($userRole), ENT_QUOTES, 'UTF-8'); ?>)">
-            <?php echo $isAdmin ? 'AD' : 'OP'; ?>
-        </div>
-        <div class="sidebar-user-info" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true">
-            <span class="sidebar-user-name"><?php echo htmlspecialchars($user['nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?></span>
-            <span class="sidebar-user-role"><?php echo htmlspecialchars(ucfirst($userRole), ENT_QUOTES, 'UTF-8'); ?></span>
-        </div>
         <form action="<?php echo $baseUrl; ?>/logout" method="POST" class="d-inline m-0">
             <?php if (!empty($csrf_field)) echo $csrf_field; ?>
-            <button type="submit" class="dock-btn btn-dock-logout btn-sidebar-logout" title="Encerrar Sessão" aria-label="Encerrar Sessão">
+            <button type="submit" class="dock-btn btn-dock-logout btn-sidebar-logout" title="Encerrar Sessão (<?php echo htmlspecialchars($user['nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?>)" aria-label="Encerrar Sessão">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                     <polyline points="16 17 21 12 16 7"></polyline>
