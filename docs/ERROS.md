@@ -2183,6 +2183,20 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Solução aplicada: Adicionado método `obterOperadorId()` dinâmico na suíte de testes que consulta o primeiro operador ativo disponível no banco (`SELECT id FROM usuarios WHERE perfil = 'operador' AND ativo = 1 AND deleted_at IS NULL LIMIT 1`), com fallback para administrador, garantindo resolução automática e execução 100% verde das 18 asserções.
 - Como evitar no futuro: Em suítes de testes automatizados, evitar IDs literais estáticos em tabelas relacionais com restrições de integridade referencial.
 
+---
+
+## 2026-10-21 - Fatiamento da letra R na palavra OPERADOR por títulos extensos roubando espaço de colunas adjacentes no Relatório de Estoque
+
+- Sintoma: No cabeçalho do Relatório de Movimentações de Estoque em folha A4 Retrato, a palavra "OPERADOR" quebrou verticalmente exibindo "OPERADO" na primeira linha e a letra isolada "R" na segunda linha.
+- Causa: A tabela continha cabeçalhos extensos como `DESCRIÇÃO DO PRODUTO` (21 caracteres) e `TIPO MOVIMENTAÇÃO` (18 caracteres) que demandavam percentuais elevados de largura (19% a 21% e 13% a 14%), comprimindo a coluna do `OPERADOR` para apenas 8.5% (~55px na folha A4 com 172mm úteis). Com 10px de padding, restavam ~45px, insuficientes para a palavra `OPERADOR` em negrito caixa alta (~52px), gerando o fatiamento silábico da última letra.
+- Solução aplicada:
+  1. Abreviados os cabeçalhos extensos de forma direta e corporativa: `DESCRIÇÃO DO PRODUTO` para `Produto`, `TIPO MOVIMENTAÇÃO` para `Tipo Mov.`, `DOC / JUSTIFICATIVA` para `Doc / Justif.` e `DATA / HORA` para `Data/Hora`.
+  2. Com o espaço economizado, a coluna do `OPERADOR` foi expandida para 10.5% no modo Retrato (+24% de largura útil), 9.5% em Paisagem e 13% em Categoria.
+  3. Adicionada classe `.th-nowrap` com `white-space: nowrap !important;` no CSS de `.table-estoque`, blindando o cabeçalho contra quebras de caracteres isolados em qualquer tela ou compilação Gotenberg.
+  4. Suíte automatizada `tests/estoque_coluna_entrada_largura_test.php` atualizada com 18 asserções aprovadas com 100%.
+- Como evitar no futuro: Em relatórios impressos A4 com mais de 7 colunas em modo Retrato, preferir rótulos de cabeçalho concisos e objetivos (ex: "Produto" em vez de "Descrição do Produto") e aplicar `white-space: nowrap !important;` em colunas que possuem palavras únicas como identificadores.
+
+
 
 
 
