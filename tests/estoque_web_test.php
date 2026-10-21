@@ -80,7 +80,7 @@ class EstoqueWebTest
         $controller = new EstoqueController();
 
         $this->assert(method_exists($controller, 'index'), "EstoqueController possui action 'index'");
-        $this->assert(method_exists($controller, 'movimentacoes'), "EstoqueController possui action 'movimentacoes'");
+        $this->assert(!method_exists($controller, 'movimentacoes'), "EstoqueController NÃO possui action 'movimentacoes' (removida conforme solicitação)");
         $this->assert(method_exists($controller, 'perdas'), "EstoqueController possui action 'perdas'");
         $this->assert(method_exists($controller, 'perdasSalvar'), "EstoqueController possui action 'perdasSalvar'");
         $this->assert(method_exists($controller, 'atualizarEstoqueMinimo'), "EstoqueController possui action 'atualizarEstoqueMinimo'");
@@ -171,13 +171,21 @@ class EstoqueWebTest
 
         $views = [
             'app/views/estoque/index.php' => ['Controle de Estoque & Saldos Físicos', 'Grade de Produtos & Inventário Físico', 'Total de Itens'],
-            'app/views/estoque/movimentacoes.php' => ['Extrato Cronológico de Movimentações', 'Tipo de Movimentação', 'Voltar ao Estoque'],
             'app/views/estoque/perdas.php' => ['Registro Operacional de Perdas & Descarte', 'Nova Baixa de Mercadoria', 'formPerda'],
             'app/views/estoque/importar_xml.php' => ['Upload da Nota Fiscal Eletrônica (NF-e)', 'arquivo_xml', 'storage/uploads/private/'],
             'app/views/estoque/conferir_xml.php' => ['Conferência de Entrada', 'fator_conversao', 'btnConfirmarEntrada'],
             'app/views/estoque/notas_fiscais.php' => ['Notas Fiscais de Entrada (NF-e)', 'Total de Notas', 'Nova Entrada via XML'],
             'app/views/estoque/nota_fiscal_detalhes.php' => ['Detalhamento da NF-e', 'Baixar XML Original', 'Voltar às Notas Fiscais']
         ];
+
+        $movimentacoesView = __DIR__ . '/../app/views/estoque/movimentacoes.php';
+        $this->assert(!file_exists($movimentacoesView), "Visão app/views/estoque/movimentacoes.php foi excluída com sucesso");
+
+        // Verifica que os 3 botões do cabeçalho de /estoque foram removidos
+        $indexEstoque = file_get_contents(__DIR__ . '/../app/views/estoque/index.php');
+        $this->assert(!str_contains($indexEstoque, 'Extrato de Movimentações'), "Botão 'Extrato de Movimentações' removido de app/views/estoque/index.php");
+        $this->assert(!str_contains($indexEstoque, 'href="<?php echo $baseUrl; ?>/estoque/perdas" class="btn btn-enterprise btn-primary'), "Botão '+ Lançar Perda' do cabeçalho removido de app/views/estoque/index.php");
+        $this->assert(!str_contains($indexEstoque, 'href="<?php echo $baseUrl; ?>/estoque/entrada" class="btn btn-enterprise btn-primary'), "Botão '+ Entrada de Estoque' do cabeçalho removido de app/views/estoque/index.php");
 
         foreach ($views as $caminhoRelativo => $palavrasChave) {
             $caminhoCompleto = __DIR__ . '/../' . $caminhoRelativo;

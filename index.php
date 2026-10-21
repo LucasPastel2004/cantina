@@ -306,9 +306,6 @@ $router->get('/operacional/caixa/fechamento/pdf/{id}', [\App\Controllers\CaixaCo
 $router->get('/estoque', [\App\Controllers\EstoqueController::class, 'index'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);
-$router->get('/estoque/movimentacoes', [\App\Controllers\EstoqueController::class, 'movimentacoes'], [
-    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
-]);
 $router->get('/estoque/perdas', [\App\Controllers\EstoqueController::class, 'perdas'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
 ]);

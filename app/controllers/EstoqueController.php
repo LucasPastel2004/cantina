@@ -70,54 +70,6 @@ class EstoqueController extends Controller
     }
 
     /**
-     * Extrato analítico e cronológico de movimentações de estoque
-     */
-    public function movimentacoes(): void
-    {
-        $produtoId = isset($_GET['produto_id']) ? (int)$_GET['produto_id'] : null;
-        $tipoMov   = isset($_GET['tipo']) ? trim($_GET['tipo']) : null;
-        $motivo    = isset($_GET['motivo']) ? trim($_GET['motivo']) : null;
-        $dataIni   = isset($_GET['data_inicio']) ? trim($_GET['data_inicio']) : null;
-        $dataFim   = isset($_GET['data_fim']) ? trim($_GET['data_fim']) : null;
-        $busca     = isset($_GET['busca']) ? trim($_GET['busca']) : '';
-
-        $filtros = [
-            'produto_id'        => $produtoId,
-            'tipo_movimentacao' => $tipoMov,
-            'motivo_perda'      => $motivo,
-            'data_inicio'       => $dataIni,
-            'data_fim'          => $dataFim,
-            'busca'             => $busca
-        ];
-
-        $paginaAtual    = max(1, (int)($_GET['pagina'] ?? 1));
-        $itensPorPagina = Configuracao::getItensPorPagina();
-        $totalMov       = Estoque::contarMovimentacoes($filtros);
-        $totalPaginas   = max(1, (int)ceil($totalMov / $itensPorPagina));
-        if ($paginaAtual > $totalPaginas) {
-            $paginaAtual = $totalPaginas;
-        }
-        $offset = ($paginaAtual - 1) * $itensPorPagina;
-
-        $movimentacoes = Estoque::listarMovimentacoes($filtros, $itensPorPagina, $offset);
-        $produtos      = Produto::listarTodos();
-
-        $this->render('estoque/movimentacoes', [
-            'movimentacoes'  => $movimentacoes,
-            'produtos'       => $produtos,
-            'filtros'        => $filtros,
-            'tiposMov'       => Estoque::TIPOS_MOVIMENTACAO,
-            'motivosPerda'   => Estoque::MOTIVOS_PERDA,
-            'paginaAtual'    => $paginaAtual,
-            'totalPaginas'   => $totalPaginas,
-            'totalRegistros' => $totalMov,
-            'itensPorPagina' => $itensPorPagina,
-            'activeMenu'     => 'estoque',
-            'title'          => 'Extrato de Movimentações de Estoque'
-        ], 'admin');
-    }
-
-    /**
      * Tela 6.3: Lançamento Manual de Perdas de Mercadorias (RN-15)
      */
     public function perdas(): void

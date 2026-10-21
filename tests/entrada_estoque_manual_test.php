@@ -203,8 +203,7 @@ class EntradaEstoqueManualTest
         $this->assert("Sidebar aponta para /estoque/entrada", str_contains($sidebar, '/estoque/entrada'));
 
         $indexEstoque = file_get_contents(__DIR__ . '/../app/views/estoque/index.php');
-        $this->assert("Tela de saldos /estoque possui botão 'Entrada de Estoque'", str_contains($indexEstoque, 'Entrada de Estoque'));
-        $this->assert("Botão na tela de saldos aponta para /estoque/entrada", str_contains($indexEstoque, '/estoque/entrada'));
+        $this->assert("Tela de saldos /estoque não possui botão 'Entrada de Estoque' no cabeçalho (removido conforme solicitação)", !str_contains($indexEstoque, 'Entrada de Estoque'));
     }
 }
 

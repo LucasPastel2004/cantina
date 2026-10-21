@@ -83,7 +83,7 @@ $baseUrl = $baseUrl ?? '';
                     </p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="<?php echo $baseUrl; ?>/estoque/movimentacoes" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center">
                         Ver Movimentações
                     </a>
                     <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-primary btn-sm">
