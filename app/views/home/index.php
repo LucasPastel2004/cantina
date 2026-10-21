@@ -18,7 +18,7 @@ $shortCsrf = substr($csrfToken ?? '', 0, 16) . '...';
     <!-- Bootstrap Compilado Localmente -->
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
     <!-- Design System Institucional e Anti-Slop Guidelines -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=<?php echo $assetVersion ?? '7.0.1'; ?>">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=<?php echo $assetVersion ?? '7.0.2'; ?>">
 </head>
 <body class="bg-surface d-flex flex-column min-vh-100">
     <!-- Barra Superior Institucional Compacta (56px) -->
