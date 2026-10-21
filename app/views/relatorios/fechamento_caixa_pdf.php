@@ -348,14 +348,14 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             align-items: center;
         }
 
-        /* Tabelas Analíticas Oficiais (Estética Excel com Bordas Nítidas) */
+        /* Tabelas Analíticas Oficiais (Estética Excel com Bordas Nítidas e Proteção Anti-Sobreposição) */
         table.table-report {
             width: 100% !important;
             table-layout: fixed !important;
             box-sizing: border-box !important;
             border-collapse: collapse !important;
             margin-bottom: 6px;
-            font-size: 8.5px;
+            font-size: 8px;
             border: 1px solid #000000 !important;
         }
         table.table-report th {
@@ -363,18 +363,28 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             color: #0f172a;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 8px;
-            letter-spacing: 0.02em;
-            padding: 3px 5px;
+            font-size: 7.5px;
+            letter-spacing: 0.01em;
+            padding: 3px 3px;
             border: 1px solid #000000 !important;
             text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: middle;
+            box-sizing: border-box !important;
         }
         table.table-report td {
             background-color: #ffffff !important;
-            padding: 3px 5px;
+            padding: 2.5px 3px;
             border: 1px solid #000000 !important;
             vertical-align: middle;
             color: #0f172a;
+            font-size: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-sizing: border-box !important;
         }
         .group-subtotal {
             background-color: #ffffff !important;
@@ -412,7 +422,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             border: 1px solid #000000;
             margin-top: 6px;
             padding: 6px 8px;
-            font-size: 8pt;
+            font-size: 8px;
             background-color: #ffffff;
         }
         .resumo-table {
@@ -421,15 +431,16 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         }
         .resumo-table th {
             border-bottom: 1px solid #000000;
-            padding: 3px 4px;
-            font-weight: bold;
-            font-size: 8.5px;
+            padding: 3px 6px;
+            font-weight: 700;
+            font-size: 8px;
             text-align: left;
+            text-transform: uppercase;
         }
         .resumo-table td {
             border: none;
-            padding: 2px 4px;
-            font-size: 8.5px;
+            padding: 2.5px 6px;
+            font-size: 8px;
         }
 
         /* Assinaturas */
@@ -465,13 +476,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
 
     <!-- Barra de Controle Superior Padronizada (#1e293b - Visível somente na tela) -->
     <div class="no-print-bar">
-        <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
-            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                Fechamento de Caixa &bull; Sessão #<?php echo $controleStr; ?> &bull; Turno: <?php echo htmlspecialchars($turnoNome); ?>
-            </div>
-            <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
-                Total de Páginas: 1
-            </div>
+        <div style="font-size: 12px; line-height: 1.35; font-weight: 600; white-space: nowrap; flex-shrink: 0;">
+            <div>Fechamento de Caixa &bull; Sessão #<?php echo $controleStr; ?> &bull; Turno: <?php echo htmlspecialchars($turnoNome); ?></div>
+            <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">Total de Páginas: 1</div>
         </div>
 
         <!-- Controles de Zoom para Conferência -->
@@ -554,17 +561,17 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             <table class="table-report">
                 <thead>
                     <tr>
-                        <th style="width: 8%;">Duplicata</th>
-                        <th style="width: 31%;">Aluno</th>
-                        <th style="width: 8%;">Referência</th>
-                        <th style="width: 8%;">Finalidade</th>
-                        <th style="width: 8%;">Vencto</th>
-                        <th style="width: 8%;" class="text-right">Vlr Nominal</th>
+                        <th style="width: 10%;">Duplicata</th>
+                        <th style="width: 25%;">Aluno / Titular</th>
+                        <th style="width: 7%;" class="text-center">Ref.</th>
+                        <th style="width: 10%;">Finalidade</th>
+                        <th style="width: 8%;" class="text-center">Vencto</th>
+                        <th style="width: 8%;" class="text-right">Nominal</th>
                         <th style="width: 5%;" class="text-right">Multa</th>
                         <th style="width: 5%;" class="text-right">Juros</th>
-                        <th style="width: 5%;" class="text-right">Desconto</th>
-                        <th style="width: 8%;" class="text-right">Vlr Recebido</th>
-                        <th style="width: 6%;" class="text-center">Tipo</th>
+                        <th style="width: 5%;" class="text-right">Desc.</th>
+                        <th style="width: 10%;" class="text-right">Recebido</th>
+                        <th style="width: 7%;" class="text-center">Tipo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -577,9 +584,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
                             <tr>
                                 <td class="font-tabular"><?php echo htmlspecialchars($dup['numero'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars($dup['aluno'] ?? ''); ?></td>
-                                <td class="font-tabular"><?php echo htmlspecialchars($dup['referencia'] ?? ''); ?></td>
+                                <td class="font-tabular text-center"><?php echo htmlspecialchars($dup['referencia'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars($dup['finalidade'] ?? 'CANTINA'); ?></td>
-                                <td class="font-tabular"><?php echo htmlspecialchars($dup['vencimento'] ?? ''); ?></td>
+                                <td class="font-tabular text-center"><?php echo htmlspecialchars($dup['vencimento'] ?? ''); ?></td>
                                 <td class="font-tabular text-right"><?php echo number_format((float)($dup['valor_nominal'] ?? 0), 2, ',', '.'); ?></td>
                                 <td class="font-tabular text-right">0,00</td>
                                 <td class="font-tabular text-right">0,00</td>
@@ -609,12 +616,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             <table class="table-report">
                 <thead>
                     <tr>
-                        <th style="width: 32%;">Alimento</th>
-                        <th style="width: 32%;">Aluno</th>
-                        <th style="width: 10%;" class="text-right">PrcUnitário</th>
-                        <th style="width: 6%;" class="text-center">Qtde</th>
-                        <th style="width: 11%;" class="text-right">Vlr Pago</th>
-                        <th style="width: 9%;" class="text-center">Tipo</th>
+                        <th style="width: 34%;">Alimento / Produto</th>
+                        <th style="width: 28%;">Aluno</th>
+                        <th style="width: 12%;" class="text-right">Prc. Unit.</th>
+                        <th style="width: 7%;" class="text-center">Qtd</th>
+                        <th style="width: 11%;" class="text-right">Vlr. Pago</th>
+                        <th style="width: 8%;" class="text-center">Tipo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -653,12 +660,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             <table class="table-report">
                 <thead>
                     <tr>
-                        <th style="width: 32%;">Alimento</th>
-                        <th style="width: 32%;">Pessoa / Cliente</th>
-                        <th style="width: 10%;" class="text-right">PrcUnitário</th>
-                        <th style="width: 6%;" class="text-center">Qtde</th>
-                        <th style="width: 11%;" class="text-right">Vlr Pago</th>
-                        <th style="width: 9%;" class="text-center">Tipo</th>
+                        <th style="width: 34%;">Alimento / Produto</th>
+                        <th style="width: 28%;">Pessoa / Cliente</th>
+                        <th style="width: 12%;" class="text-right">Prc. Unit.</th>
+                        <th style="width: 7%;" class="text-center">Qtd</th>
+                        <th style="width: 11%;" class="text-right">Vlr. Pago</th>
+                        <th style="width: 8%;" class="text-center">Tipo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -734,24 +741,44 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
                 <table class="resumo-table font-tabular">
                     <thead>
                         <tr>
-                            <th style="width: 25%;">(+) Fundo de Caixa <?php echo number_format((float)($fundo['total'] ?? 0), 2, ',', '.'); ?></th>
-                            <th style="width: 25%;">(+) Entradas <?php echo number_format((float)($entradas['total'] ?? 0), 2, ',', '.'); ?></th>
-                            <th style="width: 25%;">(-) Saídas <?php echo number_format((float)($saidas['total'] ?? 0), 2, ',', '.'); ?></th>
-                            <th style="width: 25%;">(=) Saldo de Caixa <?php echo number_format((float)($saldo['total'] ?? 0), 2, ',', '.'); ?></th>
+                            <th style="width: 25%;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>(+) Fundo Caixa</span>
+                                    <span class="font-tabular"><?php echo number_format((float)($fundo['total'] ?? 0), 2, ',', '.'); ?></span>
+                                </div>
+                            </th>
+                            <th style="width: 25%;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>(+) Entradas</span>
+                                    <span class="font-tabular"><?php echo number_format((float)($entradas['total'] ?? 0), 2, ',', '.'); ?></span>
+                                </div>
+                            </th>
+                            <th style="width: 25%;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>(-) Saídas</span>
+                                    <span class="font-tabular"><?php echo number_format((float)($saidas['total'] ?? 0), 2, ',', '.'); ?></span>
+                                </div>
+                            </th>
+                            <th style="width: 25%;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>(=) Saldo Caixa</span>
+                                    <span class="font-tabular"><?php echo number_format((float)($saldo['total'] ?? 0), 2, ',', '.'); ?></span>
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Em Dinheiro <?php echo number_format((float)($fundo['dinheiro'] ?? 0), 2, ',', '.'); ?></td>
-                            <td>Em Dinheiro <?php echo number_format((float)($entradas['dinheiro'] ?? 0), 2, ',', '.'); ?></td>
-                            <td>Em Dinheiro <?php echo number_format((float)($saidas['dinheiro'] ?? 0), 2, ',', '.'); ?></td>
-                            <td><strong>Em Dinheiro <?php echo number_format((float)($saldo['dinheiro'] ?? 0), 2, ',', '.'); ?></strong></td>
+                            <td><div style="display: flex; justify-content: space-between;"><span>Em Dinheiro:</span> <span class="font-tabular"><?php echo number_format((float)($fundo['dinheiro'] ?? 0), 2, ',', '.'); ?></span></div></td>
+                            <td><div style="display: flex; justify-content: space-between;"><span>Em Dinheiro:</span> <span class="font-tabular"><?php echo number_format((float)($entradas['dinheiro'] ?? 0), 2, ',', '.'); ?></span></div></td>
+                            <td><div style="display: flex; justify-content: space-between;"><span>Em Dinheiro:</span> <span class="font-tabular"><?php echo number_format((float)($saidas['dinheiro'] ?? 0), 2, ',', '.'); ?></span></div></td>
+                            <td><div style="display: flex; justify-content: space-between; font-weight: bold;"><span>Em Dinheiro:</span> <span class="font-tabular"><?php echo number_format((float)($saldo['dinheiro'] ?? 0), 2, ',', '.'); ?></span></div></td>
                         </tr>
                         <tr>
                             <td></td>
-                            <td>Em Pix <?php echo number_format((float)($entradas['pix'] ?? 0), 2, ',', '.'); ?></td>
-                            <td>Em Pix <?php echo number_format((float)($saidas['pix'] ?? 0), 2, ',', '.'); ?></td>
-                            <td><strong>Em Pix <?php echo number_format((float)($saldo['pix'] ?? 0), 2, ',', '.'); ?></strong></td>
+                            <td><div style="display: flex; justify-content: space-between;"><span>Em Pix:</span> <span class="font-tabular"><?php echo number_format((float)($entradas['pix'] ?? 0), 2, ',', '.'); ?></span></div></td>
+                            <td><div style="display: flex; justify-content: space-between;"><span>Em Pix:</span> <span class="font-tabular"><?php echo number_format((float)($saidas['pix'] ?? 0), 2, ',', '.'); ?></span></div></td>
+                            <td><div style="display: flex; justify-content: space-between; font-weight: bold;"><span>Em Pix:</span> <span class="font-tabular"><?php echo number_format((float)($saldo['pix'] ?? 0), 2, ',', '.'); ?></span></div></td>
                         </tr>
                     </tbody>
                 </table>
