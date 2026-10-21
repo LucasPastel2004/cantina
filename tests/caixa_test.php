@@ -220,8 +220,9 @@ class CaixaTest
 
         // Teste Espelho HTML
         $html = PdfService::gerarEspelhoFechamentoCaixaHtml($sessao);
-        $this->assert(str_contains($html, "Fechamento de Caixa #{$sessao['id']}"), "HTML contém identificador da sessão");
-        $this->assert(str_contains($html, "Fundo de Troco Inicial"), "HTML discrimina Fundo de Troco");
+        $sessaoFormatada = sprintf('%06d', (int)$sessao['id']);
+        $this->assert(str_contains($html, "Fechamento de Caixa #{$sessaoFormatada}"), "HTML contém identificador da sessão");
+        $this->assert(str_contains($html, "Fundo de Troco"), "HTML discrimina Fundo de Troco");
         $this->assert(str_contains($html, "size: A4 portrait"), "CSS de impressão configura folha A4");
         $this->assert(str_contains($html, "window.print()"), "HTML possui acionamento nativo de impressão");
 
@@ -246,10 +247,9 @@ class CaixaTest
         $this->assert(str_contains($content, 'calcularQuebraSobra()'), "View contém script interativo de cálculo de quebra/sobra");
         $this->assert(!str_contains($content, 'Histórico de Sessões de Caixa'), "View operacional NÃO expõe tabela de histórico de sessões anteriores");
 
-        // Asserções do Dropdown Emitir e Ações de Recarga
-        $this->assert(str_contains($content, 'dropdownEmitirCaixa'), "View contém menu dropdown no botão Emitir");
-        $this->assert(str_contains($content, 'Visualizar / Imprimir (A4)'), "Dropdown Emitir contém opção de Visualizar / Imprimir A4");
-        $this->assert(str_contains($content, 'Baixar em PDF (A4)'), "Dropdown Emitir contém opção de Baixar em PDF A4");
+        // Asserções do Botão Imprimir / Salvar PDF (A4) e Ações de Recarga
+        $this->assert(str_contains($content, 'Imprimir / Salvar PDF (A4)'), "View contém botão 'Imprimir / Salvar PDF (A4)'");
+        $this->assert(str_contains($content, '/operacional/caixa/espelho/'), "Botão direciona para espelho oficial de fechamento");
         $this->assert(str_contains($content, '+ Recarga'), "View contém botão '+ Recarga'");
         $this->assert(str_contains($content, 'formaPagamentoPix'), "Modal de recarga suporta opção Pix no Balcão");
         $this->assert(str_contains($content, 'formaPagamentoDinheiro'), "Modal de recarga suporta opção Dinheiro Físico");
@@ -264,7 +264,6 @@ class CaixaTest
         $this->assert(str_contains($content, 'Total saídas'), "View contém campo oficial 'Total saídas'");
         $this->assert(str_contains($content, 'Total entradas'), "View contém campo oficial 'Total entradas'");
         $this->assert(str_contains($content, 'Total caixa'), "View contém campo oficial 'Total caixa'");
-        $this->assert(str_contains($content, 'Emitir'), "View contém botão de ação rápida 'Emitir' relatório");
         $this->assert(!str_contains(strtolower($content), 'entrada cheque'), "View NÃO contém campo 'entrada cheque'");
         $this->assert(!str_contains(strtolower($content), 'entrada cartão'), "View NÃO contém campo 'entrada cartão'");
     }

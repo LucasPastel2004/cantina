@@ -38,6 +38,17 @@ class CaixasSimultaneosTest
     public function __construct()
     {
         $this->pdo = \App\Core\Model::getPdo();
+        $this->operadorId = $this->obterOperadorId();
+    }
+
+    private function obterOperadorId(): int
+    {
+        $stmt = $this->pdo->query("SELECT id FROM usuarios WHERE perfil = 'operador' AND ativo = 1 AND deleted_at IS NULL LIMIT 1");
+        $id = $stmt->fetchColumn();
+        if ($id) return (int)$id;
+
+        $stmtAdmin = $this->pdo->query("SELECT id FROM usuarios WHERE perfil = 'administrador' AND ativo = 1 AND deleted_at IS NULL LIMIT 1");
+        return (int)$stmtAdmin->fetchColumn();
     }
 
     private function assert(bool $condicao, string $descricao): void

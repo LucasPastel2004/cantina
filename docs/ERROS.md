@@ -2174,6 +2174,15 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Criado teste automatizado de homologação `tests/estoque_coluna_entrada_largura_test.php` com 15 asserções aprovadas com 100%, garantindo compilação física perfeita em PDF via Gotenberg e espelho HTML.
 - Como evitar no futuro: Em tabelas com `table-layout: fixed` e cabeçalhos em caixa alta (`text-transform: uppercase`), colunas que contêm títulos como "ENTRADA", "QUANTIDADE" ou "VALOR UNITÁRIO" devem ter no mínimo 8% a 10% de largura percentual ou pixels explícitos, acompanhados de `white-space: nowrap !important;` para impedir qualquer fatiamento silábico de palavras.
 
+---
+
+## 2026-10-21 - Falha de chave estrangeira ao executar caixas_simultaneos_test por operadorId fixado em 1
+
+- Sintoma: Erro `PDOException: SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row (fk_caixa_usuario)` ao executar a suíte `tests/caixas_simultaneos_test.php`.
+- Causa: A classe de teste inicializava `$this->operadorId = 1` fixo. Quando o usuário de ID 1 no banco de desenvolvimento foi resetado ou inativado, a constraint barrou a abertura da sessão.
+- Solução aplicada: Adicionado método `obterOperadorId()` dinâmico na suíte de testes que consulta o primeiro operador ativo disponível no banco (`SELECT id FROM usuarios WHERE perfil = 'operador' AND ativo = 1 AND deleted_at IS NULL LIMIT 1`), com fallback para administrador, garantindo resolução automática e execução 100% verde das 18 asserções.
+- Como evitar no futuro: Em suítes de testes automatizados, evitar IDs literais estáticos em tabelas relacionais com restrições de integridade referencial.
+
 
 
 
