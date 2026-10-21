@@ -683,6 +683,15 @@ $totalPaginas = count($paginas);
         .text-center { text-align: center !important; }
         .text-right  { text-align: right !important; }
 
+        /* Colunas de Quantidade Numérica com Blindagem Anti-Quebra */
+        .table-estoque th.col-qtd,
+        .table-estoque td.col-qtd {
+            white-space: nowrap !important;
+            text-align: right !important;
+            padding-left: 3px !important;
+            padding-right: 4px !important;
+        }
+
         .qtd-entrada {
             color: #15803d;
             font-weight: 700;
@@ -938,26 +947,26 @@ $totalPaginas = count($paginas);
                         <thead>
                             <tr>
                                 <?php if ($isPaisagem): ?>
-                                    <th style="width: 9%;" class="text-center">Data / Hora</th>
-                                    <th style="width: 8%;">C. Custo</th>
-                                    <th style="width: 10%;">Categoria</th>
+                                    <th style="width: 8.5%;" class="text-center">Data / Hora</th>
+                                    <th style="width: 7.5%;">C. Custo</th>
+                                    <th style="width: 9.5%;">Categoria</th>
                                     <th style="width: 7%;">Código</th>
-                                    <th style="width: 20%;">Descrição do Produto</th>
-                                    <th style="width: 13%;">Tipo Movimentação</th>
-                                    <th style="width: 5%;" class="text-right">Entrada</th>
-                                    <th style="width: 5%;" class="text-right">Saída</th>
-                                    <th style="width: 9%;">Operador</th>
-                                    <th style="width: 14%;">Doc / Justificativa</th>
+                                    <th style="width: 19%;">Descrição do Produto</th>
+                                    <th style="width: 12.5%;">Tipo Movimentação</th>
+                                    <th style="width: 7.5%;" class="text-right col-qtd">Entrada</th>
+                                    <th style="width: 7.5%;" class="text-right col-qtd">Saída</th>
+                                    <th style="width: 8%;">Operador</th>
+                                    <th style="width: 13%;">Doc / Justificativa</th>
                                 <?php else: ?>
-                                    <th style="width: 11%;" class="text-center">Data / Hora</th>
-                                    <th style="width: 11%;">Categoria</th>
-                                    <th style="width: 8%;">Código</th>
-                                    <th style="width: 21%;">Descrição do Produto</th>
-                                    <th style="width: 14%;">Tipo Movimentação</th>
-                                    <th style="width: 6%;" class="text-right">Entrada</th>
-                                    <th style="width: 6%;" class="text-right">Saída</th>
-                                    <th style="width: 9%;">Operador</th>
-                                    <th style="width: 14%;">Doc / Justificativa</th>
+                                    <th style="width: 10.5%;" class="text-center">Data / Hora</th>
+                                    <th style="width: 10%;">Categoria</th>
+                                    <th style="width: 7.5%;">Código</th>
+                                    <th style="width: 19%;">Descrição do Produto</th>
+                                    <th style="width: 13%;">Tipo Movimentação</th>
+                                    <th style="width: 8.5%;" class="text-right col-qtd">Entrada</th>
+                                    <th style="width: 8.5%;" class="text-right col-qtd">Saída</th>
+                                    <th style="width: 8.5%;">Operador</th>
+                                    <th style="width: 14.5%;">Doc / Justificativa</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>
@@ -975,10 +984,10 @@ $totalPaginas = count($paginas);
                                     <td class="font-tabular"><?php echo htmlspecialchars($m['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td><strong><?php echo htmlspecialchars($m['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
                                     <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                    <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
+                                    <td class="text-right font-tabular col-qtd <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
                                         <?php echo $m['qtd_entrada'] > 0 ? ('+' . $m['qtd_entrada']) : '—'; ?>
                                     </td>
-                                    <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
+                                    <td class="text-right font-tabular col-qtd <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
                                         <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
                                     </td>
                                     <td><small><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
@@ -1000,14 +1009,14 @@ $totalPaginas = count($paginas);
                     <table class="table-estoque">
                         <thead>
                             <tr>
-                                <th style="width: 12%;" class="text-center">Data / Hora</th>
-                                <th style="width: 9%;">Código</th>
-                                <th style="width: 23%;">Descrição do Produto</th>
-                                <th style="width: 16%;">Tipo Movimentação</th>
-                                <th style="width: 7%;" class="text-right">Entrada</th>
-                                <th style="width: 7%;" class="text-right">Saída</th>
-                                <th style="width: 11%;">Operador</th>
-                                <th style="width: 15%;">Doc / Observação</th>
+                                <th style="width: 11%;" class="text-center">Data / Hora</th>
+                                <th style="width: 8%;">Código</th>
+                                <th style="width: 22%;">Descrição do Produto</th>
+                                <th style="width: 15%;">Tipo Movimentação</th>
+                                <th style="width: 9%;" class="text-right col-qtd">Entrada</th>
+                                <th style="width: 9%;" class="text-right col-qtd">Saída</th>
+                                <th style="width: 10%;">Operador</th>
+                                <th style="width: 16%;">Doc / Observação</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1020,10 +1029,10 @@ $totalPaginas = count($paginas);
                                     <td class="font-tabular"><?php echo htmlspecialchars($m['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td><strong><?php echo htmlspecialchars($m['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
                                     <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                    <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
+                                    <td class="text-right font-tabular col-qtd <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
                                         <?php echo $m['qtd_entrada'] > 0 ? ('+' . $m['qtd_entrada']) : '—'; ?>
                                     </td>
-                                    <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
+                                    <td class="text-right font-tabular col-qtd <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
                                         <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
                                     </td>
                                     <td><small><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
@@ -1059,14 +1068,14 @@ $totalPaginas = count($paginas);
                         <table class="table-estoque">
                             <thead>
                                 <tr>
-                                    <th style="width: 12%;" class="text-center">Data / Hora</th>
-                                    <th style="width: 9%;">Código</th>
-                                    <th style="width: 23%;">Descrição do Produto</th>
-                                    <th style="width: 16%;">Tipo Movimentação</th>
-                                    <th style="width: 7%;" class="text-right">Entrada</th>
-                                    <th style="width: 7%;" class="text-right">Saída</th>
-                                    <th style="width: 11%;">Operador</th>
-                                    <th style="width: 15%;">Doc / Observação</th>
+                                    <th style="width: 11%;" class="text-center">Data / Hora</th>
+                                    <th style="width: 8%;">Código</th>
+                                    <th style="width: 22%;">Descrição do Produto</th>
+                                    <th style="width: 15%;">Tipo Movimentação</th>
+                                    <th style="width: 9%;" class="text-right col-qtd">Entrada</th>
+                                    <th style="width: 9%;" class="text-right col-qtd">Saída</th>
+                                    <th style="width: 10%;">Operador</th>
+                                    <th style="width: 16%;">Doc / Observação</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1079,10 +1088,10 @@ $totalPaginas = count($paginas);
                                         <td class="font-tabular"><?php echo htmlspecialchars($m['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td><strong><?php echo htmlspecialchars($m['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
                                         <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
+                                        <td class="text-right font-tabular col-qtd <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
                                             <?php echo $m['qtd_entrada'] > 0 ? ('+' . $m['qtd_entrada']) : '—'; ?>
                                         </td>
-                                        <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
+                                        <td class="text-right font-tabular col-qtd <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
                                             <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
                                         </td>
                                         <td><small><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
@@ -1120,8 +1129,8 @@ $totalPaginas = count($paginas);
                             <tr>
                                 <th style="width: 14%;" class="text-center">Data / Hora</th>
                                 <th style="width: 24%;">Tipo Movimentação</th>
-                                <th style="width: 10%;" class="text-right">Entrada</th>
-                                <th style="width: 10%;" class="text-right">Saída</th>
+                                <th style="width: 10%;" class="text-right col-qtd">Entrada</th>
+                                <th style="width: 10%;" class="text-right col-qtd">Saída</th>
                                 <th style="width: 14%;">Operador</th>
                                 <th style="width: 28%;">Doc / Justificativa / NF</th>
                             </tr>
@@ -1134,10 +1143,10 @@ $totalPaginas = count($paginas);
                                         <span style="color: #64748b;"><?php echo $m['hora_formatada']; ?></span>
                                     </td>
                                     <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                    <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
+                                    <td class="text-right font-tabular col-qtd <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
                                         <?php echo $m['qtd_entrada'] > 0 ? ('+' . $m['qtd_entrada']) : '—'; ?>
                                     </td>
-                                    <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
+                                    <td class="text-right font-tabular col-qtd <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
                                         <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
                                     </td>
                                     <td><small><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>
@@ -1175,8 +1184,8 @@ $totalPaginas = count($paginas);
                                 <tr>
                                     <th style="width: 14%;" class="text-center">Data / Hora</th>
                                     <th style="width: 24%;">Tipo Movimentação</th>
-                                    <th style="width: 10%;" class="text-right">Entrada</th>
-                                    <th style="width: 10%;" class="text-right">Saída</th>
+                                    <th style="width: 10%;" class="text-right col-qtd">Entrada</th>
+                                    <th style="width: 10%;" class="text-right col-qtd">Saída</th>
                                     <th style="width: 14%;">Operador</th>
                                     <th style="width: 28%;">Doc / Justificativa / NF</th>
                                 </tr>
@@ -1189,10 +1198,10 @@ $totalPaginas = count($paginas);
                                             <span style="color: #64748b;"><?php echo $m['hora_formatada']; ?></span>
                                         </td>
                                         <td><?php echo htmlspecialchars($m['tipo_label'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td class="text-right font-tabular <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
+                                        <td class="text-right font-tabular col-qtd <?php echo $m['qtd_entrada'] > 0 ? 'qtd-entrada' : 'text-muted'; ?>">
                                             <?php echo $m['qtd_entrada'] > 0 ? ('+' . $m['qtd_entrada']) : '—'; ?>
                                         </td>
-                                        <td class="text-right font-tabular <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
+                                        <td class="text-right font-tabular col-qtd <?php echo $m['qtd_saida'] > 0 ? 'qtd-saida' : 'text-muted'; ?>">
                                             <?php echo $m['qtd_saida'] > 0 ? ('-' . $m['qtd_saida']) : '—'; ?>
                                         </td>
                                         <td><small><?php echo htmlspecialchars($m['operador_nome'], ENT_QUOTES, 'UTF-8'); ?></small></td>

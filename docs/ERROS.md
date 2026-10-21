@@ -2162,6 +2162,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 - Solução aplicada: Criado o método auxiliar defensivo `obterOperadorTeste()` na classe de teste, que consulta no banco o primeiro usuário ativo disponível (`SELECT id FROM usuarios WHERE ativo = 1 AND deleted_at IS NULL ORDER BY id ASC LIMIT 1`) e injeta esse ID dinamicamente em todas as chamadas de teste.
 - Como evitar no futuro: Nunca fixar identificadores numéricos literais (como `1`) em suítes de testes automatizados de integração que dependem de chaves estrangeiras; sempre recuperar registros válidos diretamente do banco através de queries defensivas.
 
+---
+
+## 2026-10-21 - Quebra e corte vertical da palavra ENTRADA por insuficiência de largura no cabeçalho do Relatório de Estoque
+
+- Sintoma: Na visualização em tela, espelho de impressão A4 e PDFs oficiais gerados via Chromium/Gotenberg do Relatório de Movimentações de Estoque, o cabeçalho da coluna de quantidade de entrada exibia a palavra "ENTRADA" cortada verticalmente em duas partes: "ENTRA" na primeira linha e "DA" na segunda linha.
+- Causa: Em `app/views/relatorios/estoque_movimentacoes_pdf.php`, no modo Retrato (Portrait), a coluna foi configurada com apenas `width: 6%` e o CSS da tabela continha `word-break: break-word;` sem declaração de `white-space: nowrap;`. Em folha A4 com margens simétricas corporativas (172mm úteis), 6% representa ~39px; descontando 10px de padding lateral e bordas, restavam menos de 28px de espaço útil, insuficiente para acomodar os 7 caracteres em caixa alta com negrito da palavra "ENTRADA" (~45px), forçando o navegador e o motor Chromium a quebrar a palavra arbitrariamente no meio.
+- Solução aplicada:
+  1. Em `app/views/relatorios/estoque_movimentacoes_pdf.php`, a coluna de Entrada foi expandida de 6% para 8.5% no modo Retrato (+41% de área útil), de 5% para 7.5% no modo Paisagem (+50% de espaço) e de 7% para 9% nos agrupamentos por Categoria, com redistribuição proporcional das colunas vizinhas mantendo o total em estritos 100.0%.
+  2. Adicionada classe `.col-qtd` com `white-space: nowrap !important;`, `text-align: right !important;` e padding calibrado (`padding-left: 3px; padding-right: 4px;`) aplicada a todos os cabeçalhos `<th>` e células `<td>` de Entrada e Saída, blindando o layout contra quebras silábicas.
+  3. Criado teste automatizado de homologação `tests/estoque_coluna_entrada_largura_test.php` com 15 asserções aprovadas com 100%, garantindo compilação física perfeita em PDF via Gotenberg e espelho HTML.
+- Como evitar no futuro: Em tabelas com `table-layout: fixed` e cabeçalhos em caixa alta (`text-transform: uppercase`), colunas que contêm títulos como "ENTRADA", "QUANTIDADE" ou "VALOR UNITÁRIO" devem ter no mínimo 8% a 10% de largura percentual ou pixels explícitos, acompanhados de `white-space: nowrap !important;` para impedir qualquer fatiamento silábico de palavras.
+
+
 
 
 
