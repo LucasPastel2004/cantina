@@ -60,22 +60,33 @@ $assertCustom(str_contains($htmlAdmin, 'id="btnDirectProdutos"') && str_contains
 $assertCustom(str_contains($htmlAdmin, 'data-category="admin"'), "Dock contém botão da categoria Administração");
 $assertCustom(str_contains($htmlAdmin, 'data-category="relatorios"'), "Dock contém botão da categoria Relatórios");
 
-// Validação dos conteúdos dos Flyouts
+// Validação dos conteúdos dos Flyouts (Rigorosamente Desduplicados - 1 item por categoria)
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutOperacional"'), "Flyout Operacional presente");
 $assertCustom(str_contains($htmlAdmin, '/operacional/corte') && str_contains($htmlAdmin, '/operacional/pdv'), "Flyout Operacional contém Corte e PDV");
+$assertCustom(str_contains($htmlAdmin, '/operacional/caixa') && str_contains($htmlAdmin, '/operacional/estornos'), "Flyout Operacional contém Caixa do Turno e Estorno de Vendas");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutEstoque"'), "Flyout Estoque presente");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutEstoque"') && str_contains($htmlAdmin, '/relatorios/estoque-filtros'), "Flyout Estoque contém Movimentações");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"'), "Flyout Financeiro presente");
 $assertCustom(str_contains($htmlAdmin, '/financeiro/despesas') && str_contains($htmlAdmin, '/financeiro/dre'), "Flyout Financeiro contém Despesas e DRE");
-$assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"') && str_contains($htmlAdmin, '/operacional/estornos'), "Flyout Financeiro contém opção de Estorno de Vendas");
-$assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"') && str_contains($htmlAdmin, '/operacional/caixa'), "Flyout Financeiro contém opção de Caixa do Turno");
 $assertCustom(str_contains($htmlAdmin, 'id="navSectionAdmin"') && str_contains($htmlAdmin, '/admin/turmas'), "Flyout Administração contém Turmas Escolares");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/vendas-filtros'), "Flyout Relatórios contém Vendas por Alimento");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/extrato-aluno'), "Flyout Relatórios contém Extrato do Aluno");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/fechamento-caixa'), "Flyout Relatórios contém Fechamento de Caixa");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/arrecadacao'), "Flyout Relatórios contém Arrecadação & Entradas");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/devedores'), "Flyout Relatórios contém Inadimplência & MED");
-$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/estoque-filtros'), "Flyout Relatórios contém Movimentações de Estoque");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && !str_contains($htmlAdmin, '/relatorios/desconto-folha'), "Flyout Relatórios NÃO contém Desconto em Folha (descontinuado do sistema)");
+
+// Verificação explícita de ausência de duplicidade entre categorias
+$financeiroHtml = explode('id="flyoutFinanceiro"', $htmlAdmin)[1] ?? '';
+$financeiroCorpo = explode('</div>', $financeiroHtml)[0] ?? '';
+$relatoriosHtml = explode('id="flyoutRelatorios"', $htmlAdmin)[1] ?? '';
+$relatoriosCorpo = explode('</div>', $relatoriosHtml)[0] ?? '';
+
+$assertCustom(!str_contains($financeiroCorpo, '/operacional/caixa'), "Flyout Financeiro NÃO duplica Caixa do Turno");
+$assertCustom(!str_contains($financeiroCorpo, '/operacional/estornos'), "Flyout Financeiro NÃO duplica Estorno de Vendas");
+$assertCustom(!str_contains($relatoriosCorpo, '/operacional/corte'), "Flyout Relatórios NÃO duplica Corte do Turno");
+$assertCustom(!str_contains($relatoriosCorpo, '/relatorios/estoque-filtros'), "Flyout Relatórios NÃO duplica Movimentações de Estoque");
+$assertCustom(!str_contains($relatoriosCorpo, '/financeiro/dre'), "Flyout Relatórios NÃO duplica DRE Gerencial");
 
 // 4. Renderização com perfil Operador (Sanitização e RBAC)
 $user = [
