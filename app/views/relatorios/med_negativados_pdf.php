@@ -73,6 +73,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
             width: 200mm;
             max-width: calc(100% - 32px);
             margin: 0 auto 16px auto;
@@ -90,6 +91,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             padding: 2px 6px;
+            flex-shrink: 0;
+            margin: 0 4px;
         }
         .no-print .btn-zoom {
             background: transparent;
@@ -272,8 +275,13 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
 
     <!-- Barra de Controle Superior Padronizada (#1e293b - Visível apenas na tela) -->
     <div class="no-print-bar no-print">
-        <div style="font-size: 12px; font-weight: 600;">
-            Relatório de Devedores / MED • <?php echo $totalFamilias; ?> família(s) • Total de Páginas: 1
+        <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Relatório de Devedores / MED &bull; <?php echo $totalFamilias; ?> família(s)
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
+                Total de Páginas: 1
+            </div>
         </div>
 
         <!-- Controles de Zoom para Conferência -->

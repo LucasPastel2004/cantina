@@ -100,6 +100,7 @@ $isCaixa = ($regime === 'caixa');
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
             width: 280mm;
             max-width: calc(100% - 32px);
             margin: 0 auto 16px auto;
@@ -117,6 +118,8 @@ $isCaixa = ($regime === 'caixa');
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             padding: 2px 6px;
+            flex-shrink: 0;
+            margin: 0 4px;
         }
         .action-bar-top .btn-zoom {
             background: transparent;
@@ -340,13 +343,11 @@ $isCaixa = ($regime === 'caixa');
 
 <?php if (!$isPdf): ?>
 <div class="action-bar-top no-print">
-    <div>
-        <span style="font-weight: 700; font-size: 13px;">Cantina Web — Relatório Oficial DRE (<?php echo $isCaixa ? 'Regime de Caixa' : 'Regime de Competência'; ?>)</span>
-        <span style="color: #94a3b8; font-size: 11px; margin-left: 10px;">
-            Período: <?php echo date('d/m/Y', strtotime($dataInicio ?? date('Y-01-01'))); ?> a <?php echo date('d/m/Y', strtotime($dataFim ?? date('Y-m-d'))); ?> &bull; Formato A4 Paisagem
-        </span>
+    <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff; font-weight: 700; font-size: 12px;">Cantina Web — Relatório Oficial DRE (<?php echo $isCaixa ? 'Regime de Caixa' : 'Regime de Competência'; ?>)</div>
+        <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">Período: <?php echo date('d/m/Y', strtotime($dataInicio ?? date('Y-01-01'))); ?> a <?php echo date('d/m/Y', strtotime($dataFim ?? date('Y-m-d'))); ?> &bull; Formato A4 Paisagem</div>
     </div>
-    <div style="display: flex; align-items: center; gap: 8px;">
+    <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
         <!-- Controles de Zoom para Conferência -->
         <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes antes de imprimir ou salvar">
             <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">

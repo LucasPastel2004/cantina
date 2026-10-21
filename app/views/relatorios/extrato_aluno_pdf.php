@@ -83,6 +83,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                gap: 16px;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
                 position: sticky;
                 top: 10px;
@@ -96,6 +97,8 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
                 border: 1px solid rgba(255, 255, 255, 0.2);
                 border-radius: 4px;
                 padding: 2px 6px;
+                flex-shrink: 0;
+                margin: 0 4px;
             }
             .top-actions-bar .btn-zoom {
                 background: transparent;
@@ -451,8 +454,13 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
 
 <!-- Barra Superior de Controle Padronizada (#1e293b - Visível apenas na tela) -->
 <div class="top-actions-bar no-print-bar no-print">
-    <div style="font-size: 12px; font-weight: 600;">
-        Extrato de Consumo • <?php echo htmlspecialchars($aluno['nome'] ?? 'Aluno'); ?> • Total de Páginas: 1
+    <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            Extrato de Consumo &bull; <?php echo htmlspecialchars($aluno['nome'] ?? 'Aluno'); ?>
+        </div>
+        <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
+            Total de Páginas: 1
+        </div>
     </div>
 
     <!-- Controles de Zoom para Conferência -->

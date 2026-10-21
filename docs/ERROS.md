@@ -2196,6 +2196,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Suíte automatizada `tests/estoque_coluna_entrada_largura_test.php` atualizada com 18 asserções aprovadas com 100%.
 - Como evitar no futuro: Em relatórios impressos A4 com mais de 7 colunas em modo Retrato, preferir rótulos de cabeçalho concisos e objetivos (ex: "Produto" em vez de "Descrição do Produto") e aplicar `white-space: nowrap !important;` em colunas que possuem palavras únicas como identificadores.
 
+---
+
+## 2026-10-21 - Quebra desordenada de 'Total de Páginas' e colisão com a lupa de zoom na barra superior de relatórios
+
+- Sintoma: Na barra superior escura de visualização e controle de impressão de relatórios (especialmente em orientação Retrato com zoom do navegador em 120%), o texto informativo do relatório tentava ocupar uma única linha e acabava quebrando feio no meio da frase ("• Total de" na primeira linha e "Páginas: 3" na segunda), ocupando largura excessiva e deixando a caixa de zoom da lupa colada no texto e nos botões de ação.
+- Causa: Todo o texto informativo ficava dentro de um único elemento `<div>` contínuo sem quebra semântica, forçando o motor de renderização a quebrar o texto arbitrariamente quando a largura da folha A4 Retrato (200mm) reduzia o espaço horizontal útil.
+- Solução aplicada:
+  1. O bloco de informações foi estruturado nativamente em duas linhas: Linha 1 para título e orientação/subtítulo com `text-overflow: ellipsis; white-space: nowrap;` e Linha 2 dedicada exclusivamente para "Total de Páginas: X" (ou período) em tipografia menor (11px) com cor cinza suave (`#cbd5e1`).
+  2. Adicionados `gap: 16px;` no container flex da barra `.no-print-bar` e `flex-shrink: 0; margin: 0 4px;` no `.zoom-controls`, garantindo respiro e margem de segurança dedicada para a lupa de zoom.
+  3. Padrão replicado universalmente em todos os relatórios do sistema que possuem a barra de impressão e zoom.
+- Como evitar no futuro: Em barras de controle responsivas com botões fixos e controles de zoom, separar metadados secundários (como contagem de páginas ou período) em uma segunda linha dedicada, nunca permitindo que textos descritivos longos compitam horizontalmente com controles interativos.
+
+
 
 
 

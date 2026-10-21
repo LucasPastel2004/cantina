@@ -465,8 +465,13 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
 
     <!-- Barra de Controle Superior Padronizada (#1e293b - Visível somente na tela) -->
     <div class="no-print-bar">
-        <div style="font-size: 12px; font-weight: 600;">
-            Fechamento de Caixa • Sessão #<?php echo $controleStr; ?> • Turno: <?php echo htmlspecialchars($turnoNome); ?> • Orientação: Retrato (Portrait) • Total de Páginas: 1
+        <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Fechamento de Caixa &bull; Sessão #<?php echo $controleStr; ?> &bull; Turno: <?php echo htmlspecialchars($turnoNome); ?>
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
+                Total de Páginas: 1
+            </div>
         </div>
 
         <!-- Controles de Zoom para Conferência -->

@@ -61,6 +61,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
             font-size: 11px;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -403,11 +404,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
 <?php if (!$isPdf): ?>
 <div class="no-print">
-    <div>
-        <span style="font-weight: 700; font-size: 12px; color: #ffffff;">Cantina Web — Relatório Oficial de Arrecadação</span>
-        <span style="color: #94a3b8; margin-left: 8px;">Período: <?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?></span>
+    <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">Cantina Web — Relatório Oficial de Arrecadação</div>
+        <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">Período: <?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?></div>
     </div>
-    <div style="display: flex; align-items: center; gap: 6px;">
+    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
         <!-- Controles de Zoom para Conferência -->
         <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes antes de imprimir ou salvar">
             <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">
