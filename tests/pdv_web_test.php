@@ -171,6 +171,9 @@ class PdvWebTest
         $this->assert(str_contains($viewContent, 'modalAbrirCaixa'), "Template inclui modal de Abertura de Caixa");
         $this->assert(str_contains($viewContent, 'modalPosVenda'), "Template inclui modal de Pós-Venda e Comprovante");
         $this->assert(str_contains($viewContent, 'modalPixBalcao'), "Template inclui modal de Pix Dinâmico no Balcão");
+        $this->assert(str_contains($viewContent, 'Venda Avulsa'), "Template contém opção de cliente 'Venda Avulsa'");
+        $this->assert(str_contains($viewContent, 'for="tipoAluno">Aluno</label>'), "Template contém opção de cliente 'Aluno'");
+        $this->assert(str_contains($viewContent, 'for="tipoColaborador">Colaborador</label>'), "Template contém opção de cliente 'Colaborador'");
     }
 }
 
