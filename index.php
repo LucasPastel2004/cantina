@@ -570,20 +570,6 @@ $router->get('/relatorios/estoque-movimentacoes/csv', [\App\Controllers\Relatori
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
 
-// 4.4.1. Relatório e Extrato de Baixas de Mercadorias (Perdas & Descarte — RN-15)
-$router->get('/relatorios/baixas-mercadorias', [\App\Controllers\RelatoriosController::class, 'baixasMercadorias'], [
-    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
-]);
-$router->get('/relatorios/baixas-mercadorias/imprimir', [\App\Controllers\RelatoriosController::class, 'baixasMercadoriasImprimir'], [
-    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
-]);
-$router->get('/relatorios/baixas-mercadorias/pdf', [\App\Controllers\RelatoriosController::class, 'baixasMercadoriasPdf'], [
-    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
-]);
-$router->get('/relatorios/baixas-mercadorias/csv', [\App\Controllers\RelatoriosController::class, 'baixasMercadoriasCsv'], [
-    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
-]);
-
 // 4.5. Relatório de Arrecadação Financeira & Fluxo de Entradas (Cash-In Real)
 $router->get('/relatorios/arrecadacao', [\App\Controllers\RelatoriosController::class, 'arrecadacao'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])

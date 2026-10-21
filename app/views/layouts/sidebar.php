@@ -21,10 +21,10 @@ $isAdmin = ($userRole === 'administrador');
 
 // Mapeamento de menus ativos para cada categoria do Dock (rigorosamente desduplicado - 1 item por categoria)
 $isOperacionalActive = in_array($activeMenu, ['corte', 'recebimento', 'tickets', 'pdv', 'caixa', 'estornos'], true);
-$isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'movimentacoes_estoque', 'entrada_estoque', 'importar_xml'], true);
+$isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'entrada_estoque', 'importar_xml'], true);
 $isFinanceiroActive = in_array($activeMenu, ['despesas', 'dre', 'contestacoes'], true);
 $isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'calendario', 'configuracoes'], true);
-$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'devedores', 'arrecadacao', 'baixas_mercadorias'], true);
+$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'devedores', 'arrecadacao', 'movimentacoes_estoque'], true);
 $isProdutosActive = ($activeMenu === 'produtos');
 ?>
 
@@ -234,18 +234,6 @@ $isProdutosActive = ($activeMenu === 'produtos');
                 </a>
             </li>
             <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/baixas-mercadorias" class="nav-link <?php echo ($activeMenu === 'baixas_mercadorias') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Relatório de Baixas</span>
-                </a>
-            </li>
-            <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="nav-link <?php echo ($activeMenu === 'movimentacoes_estoque') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Movimentações</span>
-                </a>
-            </li>
-            <li class="flyout-item nav-item">
                 <a href="<?php echo $baseUrl; ?>/estoque/entrada" class="nav-link <?php echo ($activeMenu === 'entrada_estoque') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Entrada de Estoque</span>
@@ -383,9 +371,9 @@ $isProdutosActive = ($activeMenu === 'produtos');
                 </a>
             </li>
             <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/baixas-mercadorias" class="nav-link <?php echo ($activeMenu === 'baixas_mercadorias') ? 'active' : ''; ?>">
+                <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="nav-link <?php echo ($activeMenu === 'movimentacoes_estoque') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
-                    <span class="nav-label">Baixas de Mercadorias</span>
+                    <span class="nav-label">Movimentações de Estoque</span>
                 </a>
             </li>
         </ul>

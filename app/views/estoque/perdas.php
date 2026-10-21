@@ -27,7 +27,7 @@ $motivosPerda = !empty($motivosPerda) ? $motivosPerda : \App\Models\Estoque::MOT
             <h1 class="h5 fw-bold text-slate-900 mb-0">Registro Operacional de Perdas & Descarte</h1>
         </div>
         <div class="d-flex gap-2">
-            <a href="<?php echo $baseUrl; ?>/relatorios/baixas-mercadorias" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Abrir Histórico e Relatório de Baixas de Mercadorias">
+            <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros?tipo_movimentacao=saida_perda" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Abrir Emissão de Relatório de Movimentações e Baixas">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
                     <path d="M4.5 10.5A.5.5 0 0 1 5 10h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 8h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5z"/>
