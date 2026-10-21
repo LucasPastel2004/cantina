@@ -1407,8 +1407,14 @@ function renderizarCarrinho() {
 }
 
 function trocarTipoCliente(tipo) {
+    if (tipo === 'avulso' || tipo === 'venda_avulsa' || tipo === 'avulsa') {
+        tipo = 'anonimo';
+    }
     clienteTipoAtual = tipo;
-    const rad = document.getElementById('tipo' + tipo.charAt(0).toUpperCase() + tipo.slice(1));
+    let rad = document.getElementById('tipo' + tipo.charAt(0).toUpperCase() + tipo.slice(1));
+    if (!rad && tipo === 'anonimo') {
+        rad = document.getElementById('tipoAnonimo') || document.getElementById('tipoAvulso');
+    }
     if (rad) rad.checked = true;
 
     document.getElementById('boxClienteAluno').classList.toggle('d-none', tipo !== 'aluno');
