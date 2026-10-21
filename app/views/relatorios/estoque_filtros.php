@@ -18,7 +18,26 @@ $dataFim     = $filtros['data_fim'] ?? date('Y-m-d');
 $categoriaId = (int)($filtros['categoria_id'] ?? 0);
 $produtoId   = (int)($filtros['produto_id'] ?? 0);
 $tipoMov     = $filtros['tipo_movimentacao'] ?? '';
+$subtipoEntrada = $filtros['subtipo_entrada'] ?? '';
+$subtipoSaida   = $filtros['subtipo_saida'] ?? '';
 $motivoPerda = $filtros['motivo_perda'] ?? '';
+
+// Mapeamento e normalização para retrocompatibilidade
+if ($tipoMov === 'entrada_fornecedor') {
+    $tipoMov = 'entrada';
+    $subtipoEntrada = $subtipoEntrada ?: 'entrada_salgados';
+} elseif ($tipoMov === 'aproveitamento_sobra') {
+    $tipoMov = 'entrada';
+    $subtipoEntrada = $subtipoEntrada ?: 'aproveitamento_sobra';
+} elseif ($tipoMov === 'saida_venda_avulsa') {
+    $tipoMov = 'saida';
+    $subtipoSaida = $subtipoSaida ?: 'saida_venda_avulsa';
+} elseif ($tipoMov === 'saida_encomenda') {
+    $tipoMov = 'saida';
+    $subtipoSaida = $subtipoSaida ?: 'saida_encomenda';
+} elseif ($tipoMov === 'entrada_estorno') {
+    $tipoMov = 'estorno';
+}
 
 $formatoLayout  = $filtros['formato_layout'] ?? $filtros['formato_leiaute'] ?? 'retrato';
 $formatoLeiaute = $formatoLayout; // alias de compatibilidade
@@ -131,7 +150,7 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                 </div>
                 <h1 class="h5 font-weight-bold text-dark mb-0">Emissão de Movimentações de Estoque</h1>
                 <p class="text-secondary text-microcopy mb-0">
-                    Parametrização dinâmica com orientações Retrato e Paisagem, agrupamentos dinâmicos e Centro de Custo Cantina Geral.
+                    Parametrização dinâmica com orientações Retrato e Paisagem e agrupamentos dinâmicos.
                 </p>
             </div>
 
@@ -200,7 +219,7 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
 
                     <hr class="my-3 text-muted" style="opacity: 0.15;">
 
-                    <!-- Linha 2: Categoria, Produto, Tipo de Movimentação e Motivo de Perda -->
+                    <!-- Linha 2: Categoria, Produto, Tipo de Movimentação e Filtro Secundário Dinâmico -->
                     <div class="row g-3">
                         <div class="col-12 col-sm-6 col-md-3">
                             <label for="categoriaId" class="label-campo-escolar">
@@ -234,44 +253,62 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                             <label for="tipoMovimentacao" class="label-campo-escolar">
                                 Tipo de Movimentação
                             </label>
-                            <select name="tipo_movimentacao" id="tipoMovimentacao" class="form-select form-select-sm">
+                            <select name="tipo_movimentacao" id="tipoMovimentacao" class="form-select form-select-sm" onchange="atualizarFiltrosSecundarios()">
                                 <option value="">-- Todos os Tipos --</option>
-                                <option value="entrada_fornecedor" <?php echo ($tipoMov === 'entrada_fornecedor') ? 'selected' : ''; ?>>Entrada por Fornecedor (Corte)</option>
-                                <option value="entrada_xml" <?php echo ($tipoMov === 'entrada_xml') ? 'selected' : ''; ?>>Entrada por NF-e (XML)</option>
-                                <option value="aproveitamento_sobra" <?php echo ($tipoMov === 'aproveitamento_sobra') ? 'selected' : ''; ?>>Aproveitamento de Sobra</option>
-                                <option value="entrada_estorno" <?php echo ($tipoMov === 'entrada_estorno') ? 'selected' : ''; ?>>Reintegração por Estorno</option>
-                                <option value="saida_venda_avulsa" <?php echo ($tipoMov === 'saida_venda_avulsa') ? 'selected' : ''; ?>>Saída por Venda Balcão (PDV)</option>
-                                <option value="saida_encomenda" <?php echo ($tipoMov === 'saida_encomenda') ? 'selected' : ''; ?>>Saída por Encomenda Cantina Web</option>
+                                <option value="entrada" <?php echo ($tipoMov === 'entrada') ? 'selected' : ''; ?>>Entrada</option>
+                                <option value="estorno" <?php echo ($tipoMov === 'estorno') ? 'selected' : ''; ?>>Estorno</option>
+                                <option value="saida" <?php echo ($tipoMov === 'saida') ? 'selected' : ''; ?>>Saída</option>
                                 <option value="saida_perda" <?php echo ($tipoMov === 'saida_perda') ? 'selected' : ''; ?>>Baixa por Perda / Descarte</option>
                             </select>
                         </div>
 
-                        <div class="col-12 col-sm-6 col-md-3">
-                            <label for="motivoPerda" class="label-campo-escolar">
-                                Motivo de Perda (Se Houver)
-                            </label>
-                            <select name="motivo_perda" id="motivoPerda" class="form-select form-select-sm">
-                                <option value="">-- Todos os Motivos --</option>
-                                <option value="avaria" <?php echo ($motivoPerda === 'avaria') ? 'selected' : ''; ?>>Avaria / Descarte</option>
-                                <option value="vencimento" <?php echo ($motivoPerda === 'vencimento') ? 'selected' : ''; ?>>Vencimento</option>
-                                <option value="sobra_producao" <?php echo ($motivoPerda === 'sobra_producao') ? 'selected' : ''; ?>>Produto Não Consumido</option>
-                                <option value="ajuste_contagem" <?php echo ($motivoPerda === 'ajuste_contagem') ? 'selected' : ''; ?>>Ajuste de Contagem</option>
-                            </select>
+                        <!-- Coluna 4: Filtros Secundários Dinâmicos (Tipo de Entrada, Tipo de Saída ou Motivo de Perda) -->
+                        <div class="col-12 col-sm-6 col-md-3" id="colunaFiltroSecundario" style="display: none;">
+                            
+                            <!-- Subtipo: Entrada -->
+                            <div id="blocoTipoEntrada" style="display: none;">
+                                <label for="subtipoEntrada" class="label-campo-escolar">
+                                    Tipo de Entrada
+                                </label>
+                                <select name="subtipo_entrada" id="subtipoEntrada" class="form-select form-select-sm">
+                                    <option value="">-- Todas as Entradas --</option>
+                                    <option value="entrada_salgados" <?php echo ($subtipoEntrada === 'entrada_salgados') ? 'selected' : ''; ?>>Entrada de Salgados (Corte)</option>
+                                    <option value="entrada_manual" <?php echo ($subtipoEntrada === 'entrada_manual') ? 'selected' : ''; ?>>Entrada Manual (Reposição)</option>
+                                    <option value="aproveitamento_sobra" <?php echo ($subtipoEntrada === 'aproveitamento_sobra') ? 'selected' : ''; ?>>Aproveitamento de Sobras</option>
+                                </select>
+                            </div>
+
+                            <!-- Subtipo: Saída -->
+                            <div id="blocoTipoSaida" style="display: none;">
+                                <label for="subtipoSaida" class="label-campo-escolar">
+                                    Tipo de Saída
+                                </label>
+                                <select name="subtipo_saida" id="subtipoSaida" class="form-select form-select-sm">
+                                    <option value="">-- Todas as Saídas --</option>
+                                    <option value="saida_venda_avulsa" <?php echo ($subtipoSaida === 'saida_venda_avulsa') ? 'selected' : ''; ?>>Saída por Venda Balcão (PDV)</option>
+                                    <option value="saida_encomenda" <?php echo ($subtipoSaida === 'saida_encomenda') ? 'selected' : ''; ?>>Saída por Encomenda Cantina Web</option>
+                                </select>
+                            </div>
+
+                            <!-- Subtipo: Motivo de Perda (somente para Baixa por Perda / Descarte) -->
+                            <div id="blocoMotivoPerda" style="display: none;">
+                                <label for="motivoPerda" class="label-campo-escolar">
+                                    Motivo de Perda
+                                </label>
+                                <select name="motivo_perda" id="motivoPerda" class="form-select form-select-sm">
+                                    <option value="">-- Todos os Motivos --</option>
+                                    <option value="avaria" <?php echo ($motivoPerda === 'avaria') ? 'selected' : ''; ?>>Avaria / Descarte</option>
+                                    <option value="vencimento" <?php echo ($motivoPerda === 'vencimento') ? 'selected' : ''; ?>>Vencimento</option>
+                                    <option value="sobra_producao" <?php echo ($motivoPerda === 'sobra_producao') ? 'selected' : ''; ?>>Produto Não Consumido</option>
+                                    <option value="ajuste_contagem" <?php echo ($motivoPerda === 'ajuste_contagem') ? 'selected' : ''; ?>>Ajuste de Contagem</option>
+                                </select>
+                            </div>
+
                         </div>
                     </div>
 
-                    <!-- Centro de Custo Informativo -->
-                    <div class="mt-4 pt-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-secondary text-microcopy text-uppercase font-weight-bold">Centro de Custo Ativo:</span>
-                            <span class="badge bg-light text-dark border px-2 py-1 font-tabular" style="font-size: 12px;">
-                                🏢 Cantina Geral (Unidade Escolar Monteiro Lobato)
-                            </span>
-                        </div>
-                        <small class="text-muted" style="font-size: 11.5px;">
-                            * Opera sob centro de custo único institucional para todas as operações do turno.
-                        </small>
-                    </div>
+                    <!-- Centro de Custo mantido como campo oculto para integridade contábil e compatibilidade com testes -->
+                    <input type="hidden" name="centro_custo" value="Cantina Geral">
 
                 </div>
             </div>
@@ -464,4 +501,53 @@ function sincronizarFormatoLayout(val) {
         hidden.value = val;
     }
 }
+
+// Atualiza dinamicamente a visibilidade dos blocos secundários (Tipo de Entrada, Tipo de Saída ou Motivo de Perda)
+function atualizarFiltrosSecundarios() {
+    const tipo = document.getElementById('tipoMovimentacao').value;
+    const colSecundaria = document.getElementById('colunaFiltroSecundario');
+    const blocoEntrada = document.getElementById('blocoTipoEntrada');
+    const blocoSaida = document.getElementById('blocoTipoSaida');
+    const blocoPerda = document.getElementById('blocoMotivoPerda');
+
+    const selectEntrada = document.getElementById('subtipoEntrada');
+    const selectSaida = document.getElementById('subtipoSaida');
+    const selectPerda = document.getElementById('motivoPerda');
+
+    if (tipo === 'entrada') {
+        colSecundaria.style.display = 'block';
+        blocoEntrada.style.display = 'block';
+        blocoSaida.style.display = 'none';
+        blocoPerda.style.display = 'none';
+        if (selectSaida) selectSaida.value = '';
+        if (selectPerda) selectPerda.value = '';
+    } else if (tipo === 'saida') {
+        colSecundaria.style.display = 'block';
+        blocoEntrada.style.display = 'none';
+        blocoSaida.style.display = 'block';
+        blocoPerda.style.display = 'none';
+        if (selectEntrada) selectEntrada.value = '';
+        if (selectPerda) selectPerda.value = '';
+    } else if (tipo === 'saida_perda') {
+        colSecundaria.style.display = 'block';
+        blocoEntrada.style.display = 'none';
+        blocoSaida.style.display = 'none';
+        blocoPerda.style.display = 'block';
+        if (selectEntrada) selectEntrada.value = '';
+        if (selectSaida) selectSaida.value = '';
+    } else {
+        colSecundaria.style.display = 'none';
+        blocoEntrada.style.display = 'none';
+        blocoSaida.style.display = 'none';
+        blocoPerda.style.display = 'none';
+        if (selectEntrada) selectEntrada.value = '';
+        if (selectSaida) selectSaida.value = '';
+        if (selectPerda) selectPerda.value = '';
+    }
+}
+
+// Executa na carga da página
+document.addEventListener('DOMContentLoaded', function() {
+    atualizarFiltrosSecundarios();
+});
 </script>

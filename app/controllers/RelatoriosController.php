@@ -1931,6 +1931,8 @@ class RelatoriosController extends Controller
         $categoriaId = (int)($_GET['categoria_id'] ?? 0);
         $produtoId   = (int)($_GET['produto_id'] ?? 0);
         $tipoMov     = trim($_GET['tipo_movimentacao'] ?? '');
+        $subtipoEntrada = trim($_GET['subtipo_entrada'] ?? '');
+        $subtipoSaida   = trim($_GET['subtipo_saida'] ?? '');
         $motivoPerda = trim($_GET['motivo_perda'] ?? '');
 
         $paramFormato      = $_GET['formato_layout'] ?? $_GET['formato_leiaute'] ?? '';
@@ -1950,6 +1952,8 @@ class RelatoriosController extends Controller
                 'categoria_id'         => $categoriaId,
                 'produto_id'           => $produtoId,
                 'tipo_movimentacao'    => $tipoMov,
+                'subtipo_entrada'      => $subtipoEntrada,
+                'subtipo_saida'        => $subtipoSaida,
                 'motivo_perda'         => $motivoPerda,
                 'formato_layout'       => $formatoLayout,
                 'formato_leiaute'      => $formatoLayout, // retrocompatibilidade
@@ -2129,7 +2133,26 @@ class RelatoriosController extends Controller
         $categoriaId = (int)($filtros['categoria_id'] ?? 0);
         $produtoId   = (int)($filtros['produto_id'] ?? 0);
         $tipoMov     = trim($filtros['tipo_movimentacao'] ?? '');
+        $subtipoEntrada = trim($filtros['subtipo_entrada'] ?? '');
+        $subtipoSaida   = trim($filtros['subtipo_saida'] ?? '');
         $motivoPerda = trim($filtros['motivo_perda'] ?? '');
+
+        // Normalização e retrocompatibilidade com links e requisições legadas
+        if ($tipoMov === 'entrada_fornecedor') {
+            $tipoMov = 'entrada';
+            $subtipoEntrada = $subtipoEntrada ?: 'entrada_salgados';
+        } elseif ($tipoMov === 'aproveitamento_sobra') {
+            $tipoMov = 'entrada';
+            $subtipoEntrada = $subtipoEntrada ?: 'aproveitamento_sobra';
+        } elseif ($tipoMov === 'saida_venda_avulsa') {
+            $tipoMov = 'saida';
+            $subtipoSaida = $subtipoSaida ?: 'saida_venda_avulsa';
+        } elseif ($tipoMov === 'saida_encomenda') {
+            $tipoMov = 'saida';
+            $subtipoSaida = $subtipoSaida ?: 'saida_encomenda';
+        } elseif ($tipoMov === 'entrada_estorno') {
+            $tipoMov = 'estorno';
+        }
 
         $pdo = \App\Core\Model::getPdo();
 
@@ -2169,6 +2192,9 @@ class RelatoriosController extends Controller
             'data_fim'    => $dataFim
         ];
 
+        // Regra de negócio: Exclui permanentemente movimentações originadas por NF-e (XML descontinuado)
+        $sql .= " AND em.tipo_movimentacao != 'entrada_xml'";
+
         if ($categoriaId > 0) {
             $sql .= " AND p.categoria_id = :categoria_id";
             $params['categoria_id'] = $categoriaId;
@@ -2179,14 +2205,32 @@ class RelatoriosController extends Controller
             $params['produto_id'] = $produtoId;
         }
 
-        if (!empty($tipoMov)) {
-            $sql .= " AND em.tipo_movimentacao = :tipo_mov";
-            $params['tipo_mov'] = $tipoMov;
-        }
-
-        if (!empty($motivoPerda)) {
-            $sql .= " AND em.motivo_perda = :motivo_perda";
-            $params['motivo_perda'] = $motivoPerda;
+        if ($tipoMov === 'entrada') {
+            if ($subtipoEntrada === 'entrada_salgados') {
+                $sql .= " AND em.tipo_movimentacao = 'entrada_fornecedor' AND p.tipo = 'salgado_diario'";
+            } elseif ($subtipoEntrada === 'entrada_manual') {
+                $sql .= " AND em.tipo_movimentacao = 'entrada_fornecedor' AND p.tipo != 'salgado_diario'";
+            } elseif ($subtipoEntrada === 'aproveitamento_sobra') {
+                $sql .= " AND em.tipo_movimentacao = 'aproveitamento_sobra'";
+            } else {
+                $sql .= " AND em.tipo_movimentacao IN ('entrada_fornecedor', 'aproveitamento_sobra')";
+            }
+        } elseif ($tipoMov === 'estorno') {
+            $sql .= " AND em.tipo_movimentacao = 'entrada_estorno'";
+        } elseif ($tipoMov === 'saida') {
+            if ($subtipoSaida === 'saida_venda_avulsa') {
+                $sql .= " AND em.tipo_movimentacao = 'saida_venda_avulsa'";
+            } elseif ($subtipoSaida === 'saida_encomenda') {
+                $sql .= " AND em.tipo_movimentacao = 'saida_encomenda'";
+            } else {
+                $sql .= " AND em.tipo_movimentacao IN ('saida_venda_avulsa', 'saida_encomenda')";
+            }
+        } elseif ($tipoMov === 'saida_perda') {
+            $sql .= " AND em.tipo_movimentacao = 'saida_perda'";
+            if (!empty($motivoPerda)) {
+                $sql .= " AND em.motivo_perda = :motivo_perda";
+                $params['motivo_perda'] = $motivoPerda;
+            }
         }
 
         // Ordenação inteligente conforme opções de agrupamento
@@ -2202,11 +2246,9 @@ class RelatoriosController extends Controller
         $stmt->execute($params);
         $linhas = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        $tiposEntrada = ['entrada_fornecedor', 'entrada_xml', 'aproveitamento_sobra', 'entrada_estorno'];
+        $tiposEntrada = ['entrada_fornecedor', 'aproveitamento_sobra', 'entrada_estorno'];
 
         $labelsTipo = [
-            'entrada_fornecedor'   => 'Entrada por Fornecedor (Corte)',
-            'entrada_xml'          => 'Entrada via NF-e (XML)',
             'aproveitamento_sobra' => 'Aproveitamento de Sobra',
             'entrada_estorno'      => 'Reintegração por Estorno',
             'saida_venda_avulsa'   => 'Saída Venda Balcão (PDV)',
@@ -2247,7 +2289,9 @@ class RelatoriosController extends Controller
 
             // Descrição e detalhamento do documento
             $docRef = '—';
-            if (!empty($row['numero_nota'])) {
+            if ($row['tipo_movimentacao'] === 'entrada_fornecedor') {
+                $docRef = ($row['produto_tipo'] === 'salgado_diario') ? 'Corte Salgados' : 'Entrada Manual';
+            } elseif (!empty($row['numero_nota'])) {
                 $docRef = 'NF ' . $row['numero_nota'];
             } elseif ($row['tipo_movimentacao'] === 'saida_encomenda') {
                 $docRef = 'Cantina Web';
@@ -2255,6 +2299,8 @@ class RelatoriosController extends Controller
                 $docRef = 'PDV Balcão';
             } elseif ($row['tipo_movimentacao'] === 'entrada_estorno') {
                 $docRef = 'Estorno';
+            } elseif ($row['tipo_movimentacao'] === 'saida_perda') {
+                $docRef = 'Baixa / Perda';
             }
 
             // Justificativa e motivo
@@ -2266,7 +2312,14 @@ class RelatoriosController extends Controller
                 $justCompleta = $row['razao_social_emitente'];
             }
 
-            $tipoLabel = $labelsTipo[$row['tipo_movimentacao']] ?? ucfirst(str_replace('_', ' ', $row['tipo_movimentacao']));
+            // Rótulo amigável com diferenciação entre salgados de corte e reposição manual
+            if ($row['tipo_movimentacao'] === 'entrada_fornecedor') {
+                $tipoLabel = ($row['produto_tipo'] === 'salgado_diario') 
+                    ? 'Entrada de Salgados (Corte)' 
+                    : 'Entrada Manual (Reposição)';
+            } else {
+                $tipoLabel = $labelsTipo[$row['tipo_movimentacao']] ?? ucfirst(str_replace('_', ' ', $row['tipo_movimentacao']));
+            }
 
             $movimentacoes[] = [
                 'id'                    => (int)$row['id'],
