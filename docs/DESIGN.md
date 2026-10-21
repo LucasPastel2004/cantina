@@ -67,7 +67,7 @@ A paleta prioriza bases neutras de alto contraste com um **único azul nobre ins
 * **Item Ativo / Flyout Aberto (`.dock-btn.active`, `.dock-btn.is-current`, `.dock-btn.flyout-open`):** Fundo no azul nobre institucional `#1d4ed8` com borda `#2563eb`, ícone em `#ffffff` e sombra de destaque `rgba(29, 78, 216, 0.4)`.
 * **Rodapé do Dock e Logout (`.dock-footer`, `.btn-dock-logout`):** `#0f172a` (mesma cor contínua da barra), perfeitamente integrado. Ícone discreto `#94a3b8` em repouso com transição suave em hover para fundo vermelho corporativo `#dc2626` e ícone `#ffffff`.
 * **Cabeçalhos dos Menus Flutuantes (`.flyout-header`):** `#0f172a` (mesma cor azul marinho da barra lateral) em todas as categorias (Operacional, Estoque, Financeiro, Administração e Relatórios). Título em branco puro (`#ffffff`) em caixa alta com tracking suave e botão de fechar (`.btn-flyout-close`) em tom neutro suave `#94a3b8` (hover `#ffffff`), criando uma extensão harmoniosa e elegante do dock.
-* **Topbar Superior (`.app-topbar`):** Permanece 100% branca `#ffffff` para evitar o efeito "moldura em L", mantendo a leitura limpa do título, turno e status do caixa.
+* **Topbar Superior (`.app-topbar`):** Adota a cor de fundo cinza contínua da página (`var(--surface-bg)`, `#edf2f7`), sem borda inferior ou sombra, eliminando o bloco branco transversal. Apresenta no canto esquerdo exclusivamente a identidade institucional ('Colégio Monteiro Lobato') e o título da tela ativa, removendo widgets redundantes de turno e caixa da barra e proporcionando uma visão limpa, ampla e focada nas rotinas operacionais e administrativas.
 * **Footer da Aplicação (`.app-admin-footer`):** Permanece branco `#ffffff` ou neutro suave `#f8fafc`.
 
 ### Cores Semânticas Funcionais (Uso Discreto e Pontual)

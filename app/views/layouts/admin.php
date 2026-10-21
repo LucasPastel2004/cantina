@@ -45,7 +45,7 @@ $dataAtual = date('d/m/Y');
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/bootstrap.min.css">
 
     <!-- Design System Corporativo Anti-Slop (Enterprise High-Density) -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=<?php echo $assetVersion ?? '7.0.5'; ?>">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/custom.css?v=<?php echo $assetVersion ?? '7.0.6'; ?>">
 
     <!-- Favicon Oficial -->
     <link rel="icon" type="image/jpeg" href="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg">
@@ -59,8 +59,8 @@ $dataAtual = date('d/m/Y');
 
     <!-- Área Principal de Conteúdo -->
     <div class="app-main-area">
-        <!-- Topbar Operacional de Alta Densidade (48px a 54px) -->
-        <header class="app-topbar">
+        <!-- Topbar Operacional (Fundo Cinza Contínuo / Apenas Nome do Colégio e Página) -->
+        <header class="app-topbar" data-turno="<?php echo htmlspecialchars($turnoAtivo, ENT_QUOTES, 'UTF-8'); ?>" data-status-caixa="<?php echo htmlspecialchars($statusCaixa, ENT_QUOTES, 'UTF-8'); ?>">
             <div class="d-flex align-items-center gap-3">
                 <button type="button" class="btn-sidebar-toggle d-md-none" onclick="toggleSidebar()" aria-label="Alternar navegação" title="Alternar navegação">
                     <svg class="icon-toggle-bars" width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.75A.75.75 0 0 1 1.75 2h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 2.75Zm0 5A.75.75 0 0 1 1.75 7h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 7.75Zm0 5a.75.75 0 0 1 1.75 0h12.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1-.75-.75Z"/></svg>
@@ -71,23 +71,7 @@ $dataAtual = date('d/m/Y');
                     <h1 class="topbar-page-heading mb-0"><?php echo htmlspecialchars($pageHeading ?? ($pageTitle ?? 'Painel Operacional'), ENT_QUOTES, 'UTF-8'); ?></h1>
                 </div>
             </div>
-
-            <!-- Indicadores Operacionais de Turno e Caixa -->
-            <div class="d-flex align-items-center gap-3">
-                <div class="topbar-chip">
-                    <span class="chip-label">Turno:</span>
-                    <span class="chip-value"><?php echo htmlspecialchars($turnoAtivo, ENT_QUOTES, 'UTF-8'); ?></span>
-                </div>
-                <div class="topbar-chip">
-                    <span class="chip-label">Caixa:</span>
-                    <span class="status-indicator status-<?php echo ($statusCaixa === 'Aberto') ? 'success' : 'danger'; ?>">
-                        <span class="bullet" aria-hidden="true">●</span> <?php echo htmlspecialchars($statusCaixa, ENT_QUOTES, 'UTF-8'); ?>
-                    </span>
-                </div>
-                <div class="topbar-date font-tabular d-none d-md-block">
-                    <?php echo $dataAtual; ?>
-                </div>
-            </div>
+            <span class="visually-hidden"><?php echo htmlspecialchars($turnoAtivo, ENT_QUOTES, 'UTF-8'); ?> - Caixa <?php echo htmlspecialchars($statusCaixa, ENT_QUOTES, 'UTF-8'); ?></span>
         </header>
 
         <!-- Área Dinâmica de Conteúdo da View -->
@@ -113,6 +97,6 @@ $dataAtual = date('d/m/Y');
 <script src="<?php echo $baseUrl; ?>/assets/js/bootstrap.bundle.min.js"></script>
 
 <!-- Utilitários e Scripts Vanilla JS -->
-<script src="<?php echo $baseUrl; ?>/assets/js/app.js?v=<?php echo $assetVersion ?? '7.0.5'; ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/app.js?v=<?php echo $assetVersion ?? '7.0.6'; ?>"></script>
 </body>
 </html>

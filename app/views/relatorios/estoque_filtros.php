@@ -254,7 +254,7 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                                 <option value="">-- Todos os Motivos --</option>
                                 <option value="avaria" <?php echo ($motivoPerda === 'avaria') ? 'selected' : ''; ?>>Avaria / Descarte</option>
                                 <option value="vencimento" <?php echo ($motivoPerda === 'vencimento') ? 'selected' : ''; ?>>Vencimento</option>
-                                <option value="sobra_producao" <?php echo ($motivoPerda === 'sobra_producao') ? 'selected' : ''; ?>>Sobra de Produção / Não Retirado</option>
+                                <option value="sobra_producao" <?php echo ($motivoPerda === 'sobra_producao') ? 'selected' : ''; ?>>Produto Não Consumido</option>
                                 <option value="ajuste_contagem" <?php echo ($motivoPerda === 'ajuste_contagem') ? 'selected' : ''; ?>>Ajuste de Contagem</option>
                             </select>
                         </div>

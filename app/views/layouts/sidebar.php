@@ -24,7 +24,7 @@ $isOperacionalActive = in_array($activeMenu, ['corte', 'recebimento', 'tickets',
 $isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'movimentacoes_estoque', 'entrada_estoque', 'importar_xml'], true);
 $isFinanceiroActive = in_array($activeMenu, ['despesas', 'dre', 'contestacoes'], true);
 $isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'calendario', 'configuracoes'], true);
-$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'devedores', 'arrecadacao'], true);
+$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'devedores', 'arrecadacao', 'baixas_mercadorias'], true);
 $isProdutosActive = ($activeMenu === 'produtos');
 ?>
 
@@ -234,6 +234,12 @@ $isProdutosActive = ($activeMenu === 'produtos');
                 </a>
             </li>
             <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/relatorios/baixas-mercadorias" class="nav-link <?php echo ($activeMenu === 'baixas_mercadorias') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Relatório de Baixas</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
                 <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="nav-link <?php echo ($activeMenu === 'movimentacoes_estoque') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Movimentações</span>
@@ -374,6 +380,12 @@ $isProdutosActive = ($activeMenu === 'produtos');
                 <a href="<?php echo $baseUrl; ?>/relatorios/devedores" class="nav-link <?php echo ($activeMenu === 'devedores') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Inadimplência & MED</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/relatorios/baixas-mercadorias" class="nav-link <?php echo ($activeMenu === 'baixas_mercadorias') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Baixas de Mercadorias</span>
                 </a>
             </li>
         </ul>

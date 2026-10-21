@@ -30,7 +30,7 @@ class Estoque extends Model
     public const MOTIVOS_PERDA = [
         self::MOTIVO_AVARIA          => 'Avaria / Descarte',
         self::MOTIVO_VENCIMENTO      => 'Vencimento',
-        self::MOTIVO_SOBRA_PRODUCAO  => 'Sobra de Produção / Não Retirado',
+        self::MOTIVO_SOBRA_PRODUCAO  => 'Produto Não Consumido',
         self::MOTIVO_AJUSTE_CONTAGEM => 'Ajuste de Contagem'
     ];
 
@@ -446,6 +446,16 @@ class Estoque extends Model
             $params['prod_id'] = (int)$filtros['produto_id'];
         }
 
+        if (!empty($filtros['categoria_id'])) {
+            $sql .= " AND p.categoria_id = :cat_id";
+            $params['cat_id'] = (int)$filtros['categoria_id'];
+        }
+
+        if (!empty($filtros['operador_id'])) {
+            $sql .= " AND em.operador_id = :op_id";
+            $params['op_id'] = (int)$filtros['operador_id'];
+        }
+
         if (!empty($filtros['tipo_movimentacao'])) {
             $sql .= " AND em.tipo_movimentacao = :tipo_mov";
             $params['tipo_mov'] = $filtros['tipo_movimentacao'];
@@ -507,6 +517,16 @@ class Estoque extends Model
         if (!empty($filtros['produto_id'])) {
             $sql .= " AND em.produto_id = :prod_id";
             $params['prod_id'] = (int)$filtros['produto_id'];
+        }
+
+        if (!empty($filtros['categoria_id'])) {
+            $sql .= " AND p.categoria_id = :cat_id";
+            $params['cat_id'] = (int)$filtros['categoria_id'];
+        }
+
+        if (!empty($filtros['operador_id'])) {
+            $sql .= " AND em.operador_id = :op_id";
+            $params['op_id'] = (int)$filtros['operador_id'];
         }
 
         if (!empty($filtros['tipo_movimentacao'])) {
