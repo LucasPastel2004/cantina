@@ -40,7 +40,7 @@ class AdminController extends Controller
         $this->render('admin/index', [
             'pageTitle'   => 'Painel da Cantina — Visão Geral',
             'pageHeading' => 'Painel da Cantina',
-            'activeMenu'  => 'corte',
+            'activeMenu'  => 'visao_geral',
             'usuario'     => $usuario,
             'user'        => $usuario
         ], 'admin');
