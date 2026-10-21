@@ -59,6 +59,7 @@ class EntradaEstoqueManualTest
 
         $this->testarColunaBancoDeDados();
         $this->testarModeloDarEntradaManual();
+        $this->testarModeloDarEntradaLoteManual();
         $this->testarValidacoesEntrada();
         $this->testarListagemEntradasESugestoes();
         $this->testarControllerERotas();
@@ -124,6 +125,57 @@ class EntradaEstoqueManualTest
         // Verifica registro em auditoria
         $audit = $this->pdo->query("SELECT * FROM logs_auditoria WHERE acao = 'entrada_estoque_manual' AND registro_id = {$prodId} ORDER BY id DESC LIMIT 1")->fetch(\PDO::FETCH_ASSOC);
         $this->assert("Auditoria técnica registrada em logs_auditoria", !empty($audit));
+    }
+
+    private function testarModeloDarEntradaLoteManual(): void
+    {
+        echo "\n2.1 Validando processamento atômico em lote (darEntradaLoteManual)...\n";
+
+        $produtos = Produto::listarTodos();
+        if (count($produtos) < 2) {
+            $this->assert("Existem ao menos 2 produtos para teste de lote", false);
+            return;
+        }
+
+        $p1 = $produtos[0];
+        $p2 = $produtos[1];
+
+        $saldoAntes1 = (int)$p1['estoque_atual'];
+        $saldoAntes2 = (int)$p2['estoque_atual'];
+
+        $userDb = $this->pdo->query("SELECT id FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1")->fetch(\PDO::FETCH_ASSOC);
+        $operadorIdReal = (int)($userDb['id'] ?? 1);
+
+        $fornecedorLote = 'Distribuidora Lote QA ' . date('His');
+        $docLote = 'NF-LOTE-' . rand(1000, 9999);
+        $obsLote = 'Lote multi-itens conferido';
+
+        $itensLote = [
+            ['produto_id' => (int)$p1['id'], 'quantidade' => 10, 'preco_custo' => 4.25],
+            ['produto_id' => (int)$p2['id'], 'quantidade' => 20, 'preco_custo' => 6.50],
+        ];
+
+        $res = Estoque::darEntradaLoteManual($itensLote, $fornecedorLote, $docLote, $obsLote, $operadorIdReal);
+
+        $this->assert("darEntradaLoteManual retornou array com resumo", is_array($res));
+        $this->assert("Total de produtos no lote confere (2)", ($res['total_produtos'] ?? 0) === 2);
+        $this->assert("Total de unidades no lote confere (30)", ($res['total_unidades'] ?? 0) === 30);
+
+        // Verifica saldos
+        $p1Depois = Produto::buscarPorId((int)$p1['id']);
+        $p2Depois = Produto::buscarPorId((int)$p2['id']);
+
+        $this->assert("Produto 1 teve saldo incrementado (+10)", (int)$p1Depois['estoque_atual'] === ($saldoAntes1 + 10));
+        $this->assert("Produto 2 teve saldo incrementado (+20)", (int)$p2Depois['estoque_atual'] === ($saldoAntes2 + 20));
+
+        // Rejeição de lote vazio
+        $rejeitouVazio = false;
+        try {
+            Estoque::darEntradaLoteManual([], $fornecedorLote);
+        } catch (\DomainException $de) {
+            $rejeitouVazio = true;
+        }
+        $this->assert("darEntradaLoteManual rejeita array vazio de itens", $rejeitouVazio);
     }
 
     private function testarValidacoesEntrada(): void
@@ -195,8 +247,13 @@ class EntradaEstoqueManualTest
         $conteudoView = file_get_contents($viewEntrada);
         $this->assert("View de entrada possui formulário com action /estoque/entrada/salvar", str_contains($conteudoView, '/estoque/entrada/salvar'));
         $this->assert("View de entrada possui input name='fornecedor' com datalist", str_contains($conteudoView, 'name="fornecedor"') && str_contains($conteudoView, '<datalist'));
-        $this->assert("View de entrada possui input name='quantidade'", str_contains($conteudoView, 'name="quantidade"'));
-        $this->assert("View de entrada possui tabela de Últimas Entradas Registradas", str_contains($conteudoView, 'Últimas Entradas Registradas'));
+        $this->assert("View de entrada possui input hidden itens_json", str_contains($conteudoView, 'name="itens_json"'));
+        $this->assert("View de entrada possui botão no topo redirecionando para relatório de movimentações de estoque", str_contains($conteudoView, '/relatorios/estoque-filtros?tipo_movimentacao=entrada'));
+        $this->assert("Botão de relatório abre em nova aba (target='_blank')", str_contains($conteudoView, 'target="_blank"'));
+        $this->assert("View de entrada possui modal pop-up centralizado de adição", str_contains($conteudoView, 'id="modalAdicionarProduto"'));
+        $this->assert("View de entrada possui grade de itens do lote (Nutre/Escolar Manager)", str_contains($conteudoView, 'id="tabelaLoteItens"'));
+        $this->assert("View de entrada possui botão 'Gravar Entrada em Estoque'", str_contains($conteudoView, 'Gravar Entrada em Estoque'));
+        $this->assert("Tabela antiga de 'Últimas Entradas Registradas' foi removida conforme solicitação", !str_contains($conteudoView, 'Últimas Entradas Registradas'));
 
         $sidebar = file_get_contents(__DIR__ . '/../app/views/layouts/sidebar.php');
         $this->assert("Sidebar contém opção 'Entrada de Estoque'", str_contains($sidebar, 'Entrada de Estoque'));

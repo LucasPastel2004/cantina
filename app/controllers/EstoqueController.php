@@ -197,12 +197,14 @@ class EstoqueController extends Controller
     public function entrada(): void
     {
         $produtos         = Produto::listarTodos();
+        $categorias       = Categoria::listarTodas();
         $ultimasEntradas  = Estoque::listarEntradasRecentes(20);
         $fornecedores     = Estoque::listarFornecedoresSugestao();
         $produtoPreSel    = isset($_GET['produto_id']) ? (int)$_GET['produto_id'] : null;
 
         $this->render('estoque/entrada', [
             'produtos'        => $produtos,
+            'categorias'      => $categorias,
             'ultimasEntradas' => $ultimasEntradas,
             'fornecedores'    => $fornecedores,
             'produtoPreSel'   => $produtoPreSel,
@@ -212,7 +214,7 @@ class EstoqueController extends Controller
     }
 
     /**
-     * Processa a gravação da entrada manual de estoque
+     * Processa a gravação da entrada manual de estoque (suporta lote ou item individual)
      */
     public function entradaSalvar(): void
     {
@@ -220,27 +222,38 @@ class EstoqueController extends Controller
             return;
         }
 
-        $produtoId   = (int)($_POST['produto_id'] ?? 0);
-        $quantidade  = (int)($_POST['quantidade'] ?? 0);
-        $fornecedor  = trim($_POST['fornecedor'] ?? '');
-        $precoCusto  = !empty($_POST['preco_custo']) ? (float)str_replace(['.', ','], ['', '.'], $_POST['preco_custo']) : null;
-        $observacoes = trim($_POST['observacoes'] ?? '');
+        $fornecedor       = trim($_POST['fornecedor'] ?? '');
+        $numeroDocumento  = trim($_POST['numero_documento'] ?? '');
+        $observacoes      = trim($_POST['observacoes'] ?? '');
+        $itensJson        = $_POST['itens_json'] ?? '';
 
-        if ($produtoId <= 0) {
-            Session::setFlash('danger', 'Selecione o produto para dar entrada.');
-            $this->redirect('/estoque/entrada');
-            return;
-        }
-
-        if ($quantidade <= 0) {
-            Session::setFlash('danger', 'A quantidade da entrada deve ser maior que zero.');
-            $this->redirect('/estoque/entrada?produto_id=' . $produtoId);
-            return;
+        $itens = [];
+        if (!empty($itensJson)) {
+            $decoded = json_decode($itensJson, true);
+            if (is_array($decoded)) {
+                $itens = $decoded;
+            }
+        } elseif (!empty($_POST['itens']) && is_array($_POST['itens'])) {
+            $itens = $_POST['itens'];
+        } elseif (!empty($_POST['produto_id']) && !empty($_POST['quantidade'])) {
+            // Suporte retrocompatível a envio de formulário com produto único
+            $precoCusto = !empty($_POST['preco_custo']) ? (float)str_replace(['.', ','], ['', '.'], $_POST['preco_custo']) : null;
+            $itens[] = [
+                'produto_id'  => (int)$_POST['produto_id'],
+                'quantidade'  => (int)$_POST['quantidade'],
+                'preco_custo' => $precoCusto
+            ];
         }
 
         if (mb_strlen($fornecedor, 'UTF-8') < 2) {
             Session::setFlash('danger', 'Informe o nome do fornecedor (mínimo 2 caracteres).');
-            $this->redirect('/estoque/entrada?produto_id=' . $produtoId);
+            $this->redirect('/estoque/entrada');
+            return;
+        }
+
+        if (empty($itens)) {
+            Session::setFlash('danger', 'Nenhum produto foi adicionado à lista de entrada. Adicione ao menos um item antes de gravar.');
+            $this->redirect('/estoque/entrada');
             return;
         }
 
@@ -248,18 +261,16 @@ class EstoqueController extends Controller
         $operadorId = (int)($usuario['id'] ?? 1);
 
         try {
-            Estoque::darEntradaManual($produtoId, $quantidade, $fornecedor, $precoCusto, $observacoes, $operadorId);
+            $res = Estoque::darEntradaLoteManual($itens, $fornecedor, $numeroDocumento, $observacoes, $operadorId);
 
-            $produto = Produto::buscarPorId($produtoId);
-            $nomeProd = $produto['descricao'] ?? 'Produto';
-
-            Session::setFlash('success', "Entrada de {$quantidade} un de '{$nomeProd}' (Fornecedor: {$fornecedor}) registrada com sucesso no estoque!");
+            $msg = "Entrada em estoque registrada com sucesso! Foram adicionadas {$res['total_unidades']} unidades em {$res['total_produtos']} produto(s) (Fornecedor: {$fornecedor}).";
+            Session::setFlash('success', $msg);
             $this->redirect('/estoque/entrada');
         } catch (\DomainException $de) {
             Session::setFlash('danger', $de->getMessage());
-            $this->redirect('/estoque/entrada?produto_id=' . $produtoId);
+            $this->redirect('/estoque/entrada');
         } catch (\Throwable $e) {
-            Session::setFlash('danger', 'Erro inesperado ao registrar a entrada: ' . $e->getMessage());
+            Session::setFlash('danger', 'Erro inesperado ao registrar a entrada em lote: ' . $e->getMessage());
             $this->redirect('/estoque/entrada');
         }
     }

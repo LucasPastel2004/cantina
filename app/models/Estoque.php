@@ -596,6 +596,171 @@ class Estoque extends Model
     }
 
     /**
+     * Registra entrada manual de mercadorias no estoque em lote (sem NF-e)
+     * Executa todas as inserções e atualizações em uma única transação atômica.
+     * 
+     * @param array  $itens            Lista de itens: [['produto_id' => int, 'quantidade' => int, 'preco_custo' => ?float], ...]
+     * @param string $fornecedor       Nome do fornecedor / distribuidor
+     * @param string|null $numeroDocumento Nº do documento, recibo ou NF
+     * @param string|null $observacoes Observações gerais da movimentação
+     * @param int    $operadorId       ID do usuário operador logado
+     * @return array Resumo da operação: ['total_produtos' => int, 'total_unidades' => int, 'valor_total' => float, 'produtos' => array]
+     */
+    public static function darEntradaLoteManual(
+        array $itens,
+        string $fornecedor,
+        ?string $numeroDocumento = null,
+        ?string $observacoes = null,
+        int $operadorId = 1
+    ): array {
+        $fornecedorLimpo = trim($fornecedor);
+        if (mb_strlen($fornecedorLimpo, 'UTF-8') < 2) {
+            throw new \DomainException('O nome do fornecedor é obrigatório (mínimo 2 caracteres).');
+        }
+
+        if (empty($itens)) {
+            throw new \DomainException('Nenhum item informado para entrada no estoque.');
+        }
+
+        // Garante que o operadorId seja válido referencialmente
+        if ($operadorId <= 0) {
+            $userPadrao = self::fetchOne("SELECT id FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1");
+            $operadorId = (int)($userPadrao['id'] ?? 1);
+        } else {
+            $existeUser = self::fetchOne("SELECT id FROM usuarios WHERE id = :id", ['id' => $operadorId]);
+            if (!$existeUser) {
+                $userPadrao = self::fetchOne("SELECT id FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1");
+                $operadorId = (int)($userPadrao['id'] ?? $operadorId);
+            }
+        }
+
+        $pdo = self::getConnection();
+        $pdo->beginTransaction();
+
+        try {
+            $now = date('Y-m-d H:i:s');
+            $totalUnidades = 0;
+            $totalValor = 0.0;
+            $produtosGravados = [];
+
+            // Monta justificativa padrão com documento e observações
+            $partesJustificativa = ["Entrada manual em lote - Fornecedor: {$fornecedorLimpo}"];
+            if (!empty($numeroDocumento)) {
+                $partesJustificativa[] = "Doc/NF: " . trim($numeroDocumento);
+            }
+            if (!empty($observacoes)) {
+                $partesJustificativa[] = trim($observacoes);
+            }
+            $justificativaBase = implode(' — ', $partesJustificativa);
+
+            foreach ($itens as $item) {
+                $produtoId  = (int)($item['produto_id'] ?? 0);
+                $quantidade = (int)($item['quantidade'] ?? 0);
+                $precoCusto = isset($item['preco_custo']) && $item['preco_custo'] !== null && $item['preco_custo'] !== '' ? (float)$item['preco_custo'] : null;
+
+                if ($produtoId <= 0) {
+                    continue;
+                }
+
+                if ($quantidade <= 0) {
+                    throw new \DomainException("A quantidade para cada produto na entrada deve ser maior que zero.");
+                }
+
+                // 1. Bloqueia e localiza o produto
+                $sqlProd = "SELECT id, codigo_interno, descricao, estoque_atual, preco_custo 
+                            FROM produtos 
+                            WHERE id = :id AND deleted_at IS NULL 
+                            FOR UPDATE";
+                $produto = self::fetchOne($sqlProd, ['id' => $produtoId]);
+
+                if (!$produto) {
+                    throw new \DomainException("Produto ID #{$produtoId} não encontrado ou inativo.");
+                }
+
+                // 2. Incrementa o saldo físico (e atualiza preco_custo se informado e > 0)
+                if ($precoCusto !== null && $precoCusto > 0) {
+                    $sqlUpd = "UPDATE produtos 
+                               SET estoque_atual = estoque_atual + :qtd,
+                                   preco_custo = :preco_custo,
+                                   updated_at = :upd,
+                                   updated_by = :user
+                               WHERE id = :prod_id";
+                    self::execute($sqlUpd, [
+                        'qtd'         => $quantidade,
+                        'preco_custo' => $precoCusto,
+                        'upd'         => $now,
+                        'user'        => $operadorId,
+                        'prod_id'     => $produtoId
+                    ]);
+                } else {
+                    $sqlUpd = "UPDATE produtos 
+                               SET estoque_atual = estoque_atual + :qtd,
+                                   updated_at = :upd,
+                                   updated_by = :user
+                               WHERE id = :prod_id";
+                    self::execute($sqlUpd, [
+                        'qtd'     => $quantidade,
+                        'upd'     => $now,
+                        'user'    => $operadorId,
+                        'prod_id' => $produtoId
+                    ]);
+                }
+
+                // 3. Registra em estoque_movimentacoes
+                $sqlMov = "INSERT INTO estoque_movimentacoes (
+                               produto_id, tipo_movimentacao, quantidade, fornecedor,
+                               operador_id, justificativa, created_at
+                           ) VALUES (
+                               :produto_id, 'entrada_fornecedor', :quantidade, :fornecedor,
+                               :operador_id, :justificativa, :created_at
+                           )";
+                self::execute($sqlMov, [
+                    'produto_id'    => $produtoId,
+                    'quantidade'    => $quantidade,
+                    'fornecedor'    => $fornecedorLimpo,
+                    'operador_id'   => $operadorId,
+                    'justificativa' => $justificativaBase,
+                    'created_at'    => $now
+                ]);
+
+                $totalUnidades += $quantidade;
+                if ($precoCusto !== null && $precoCusto > 0) {
+                    $totalValor += ($quantidade * $precoCusto);
+                }
+                $produtosGravados[] = $produto['descricao'];
+
+                // 4. Trilha de auditoria técnica
+                Auditoria::registrar(
+                    $operadorId,
+                    'entrada_estoque_manual',
+                    'produtos',
+                    $produtoId,
+                    "Entrada manual em lote de {$quantidade} un de '{$produto['descricao']}' (Fornecedor: {$fornecedorLimpo}). Justificativa: {$justificativaBase}",
+                    $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'
+                );
+            }
+
+            if (empty($produtosGravados)) {
+                throw new \DomainException("Nenhum item válido foi processado para entrada no estoque.");
+            }
+
+            $pdo->commit();
+
+            return [
+                'total_produtos' => count($produtosGravados),
+                'total_unidades' => $totalUnidades,
+                'valor_total'    => $totalValor,
+                'produtos'       => $produtosGravados
+            ];
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
      * Processa atomicamente a entrada manual de mercadorias no estoque físico
      * 
      * @param int $produtoId ID do produto cadastrado
