@@ -60,6 +60,15 @@ A paleta prioriza bases neutras de alto contraste com um **único azul nobre ins
   * Linha de Acento / Foco Acessível: `#2563eb`
   * Superfície de Destaque Sutil: `#eff6ff` (Azul 50 suave)
 
+### Dock de Navegação Lateral (Opção A — Azul Marinho Corporativo Monolítico)
+* **Corpo do Dock (`.app-sidebar`, `.dock-nav`):** `#0f172a` (Slate 900 / Dark Navy profundo) — coluna vertical contínua de 100vh com elegância corporativa, eliminando a fadiga visual de turnos operacionais.
+* **Cabeçalho do Logo (`.dock-header`):** `#0f172a` (mesma cor contínua da barra), eliminando recortes ou quebras visuais. O logotipo oficial do Colégio Monteiro Lobato repousa sobre um micro-aro circular protetor branco com relevo (`box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.35)` e fundo `#ffffff`), mantendo 100% da fidelidade e nitidez das cores originais da instituição.
+* **Ícones em Repouso (`.dock-btn`):** `#94a3b8` (Slate 400 claro), garantindo contraste WCAG AA sobre a base marinho. Hover em `#1e293b` com ícone em `#ffffff`.
+* **Item Ativo / Flyout Aberto (`.dock-btn.active`, `.dock-btn.is-current`, `.dock-btn.flyout-open`):** Fundo no azul nobre institucional `#1d4ed8` com borda `#2563eb`, ícone em `#ffffff` e sombra de destaque `rgba(29, 78, 216, 0.4)`.
+* **Rodapé do Dock e Logout (`.dock-footer`, `.btn-dock-logout`):** `#0f172a` (mesma cor contínua da barra), perfeitamente integrado. Ícone discreto `#94a3b8` em repouso com transição suave em hover para fundo vermelho corporativo `#dc2626` e ícone `#ffffff`.
+* **Topbar Superior (`.app-topbar`):** Permanece 100% branca `#ffffff` para evitar o efeito "moldura em L", mantendo a leitura limpa do título, turno e status do caixa.
+* **Footer da Aplicação (`.app-admin-footer`):** Permanece branco `#ffffff` ou neutro suave `#f8fafc`.
+
 ### Cores Semânticas Funcionais (Uso Discreto e Pontual)
 As cores semânticas são utilizadas **apenas** quando há informação crítica ou de segurança alimentar, nunca como decoração:
 * **Sucesso (Entradas, confirmações):**

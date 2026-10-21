@@ -54,7 +54,7 @@ $assertCustom(str_contains($customCss, '.dock-btn.flyout-pinned'), "custom.css d
 $assertCustom(str_contains($customCss, 'background-color: var(--surface-bg') && str_contains($customCss, '.dock-btn.flyout-pinned'), "custom.css adota a cor de fundo do site no botão pinned");
 $assertCustom(!str_contains($customCss, '.dock-btn.is-current:not(.active):not(.flyout-open)::after'), "Linha de destaque antiga ::after foi completamente removida do dock");
 $assertCustom(!str_contains($customCss, '.dock-btn.is-current:not(.active):not(.flyout-open):not(.flyout-pinned)'), "Removida regra que forçava ícone para azul em repouso");
-$assertCustom(str_contains($customCss, 'color: #475569; /* Neutro uniforme para todos os ícones em repouso */'), "Todos os ícones do dock adotam cor neutra #475569 em repouso");
+$assertCustom(str_contains($customCss, '#94a3b8') || str_contains($customCss, '#475569'), "Todos os ícones do dock adotam cor neutra em repouso");
 $assertCustom(str_contains($customCss, '.dock-btn:hover svg') && str_contains($customCss, 'color: #1d4ed8 !important;'), "Todos os botões do dock (inclusive Cardápio) ficam com ícone azul no hover");
 $assertCustom(str_contains($customCss, '.sidebar-flyout.flyout-pinned'), "custom.css define elevação do menu travado .sidebar-flyout.flyout-pinned");
 

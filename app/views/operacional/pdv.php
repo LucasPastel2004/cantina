@@ -790,19 +790,19 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 </button>
             </div>
 
-            <!-- Identificação do Cliente (Anônimo / Aluno / Colaborador) -->
+            <!-- Identificação do Cliente (Venda Avulsa / Aluno / Colaborador) -->
             <div class="px-2 py-1 bg-light border-bottom" style="flex-shrink: 0;">
                 <div class="d-flex align-items-center justify-content-between">
                     <span class="font-10 text-uppercase text-secondary font-semibold">Cliente</span>
                     <div class="btn-group btn-group-sm" role="group">
                         <input type="radio" class="btn-check" name="clienteTipo" id="tipoAnonimo" value="anonimo" checked onchange="trocarTipoCliente('anonimo')">
-                        <label class="btn btn-outline-primary py-0 px-2 font-11" for="tipoAnonimo">Anônimo</label>
+                        <label class="btn btn-outline-primary py-0 px-2 font-11 text-nowrap" for="tipoAnonimo">Venda Avulsa</label>
 
                         <input type="radio" class="btn-check" name="clienteTipo" id="tipoAluno" value="aluno" onchange="trocarTipoCliente('aluno')">
-                        <label class="btn btn-outline-primary py-0 px-2 font-11" for="tipoAluno">Aluno</label>
+                        <label class="btn btn-outline-primary py-0 px-2 font-11 text-nowrap" for="tipoAluno">Aluno</label>
 
                         <input type="radio" class="btn-check" name="clienteTipo" id="tipoColaborador" value="colaborador" onchange="trocarTipoCliente('colaborador')">
-                        <label class="btn btn-outline-primary py-0 px-2 font-11" for="tipoColaborador">Colaborador</label>
+                        <label class="btn btn-outline-primary py-0 px-2 font-11 text-nowrap" for="tipoColaborador">Colaborador</label>
                     </div>
                 </div>
 

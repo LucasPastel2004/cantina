@@ -961,19 +961,19 @@ textarea.form-control {
   overflow-x: clip;
 }
 
-/* Sidebar Operacional 240px de Alta Densidade e Dock de Ícones (Cores Claras Originais) */
+/* Sidebar Operacional 240px de Alta Densidade e Dock de Ícones (Opção A: Azul Marinho Corporativo #0f172a) */
 .app-sidebar {
   width: 60px;
   min-width: 60px;
   max-width: 60px;
-  background-color: #ffffff !important; /* Branco Puro Original da Cantina */
-  border-right: 1px solid var(--border-subtle, #e2e8f0) !important;
+  background-color: #0f172a !important; /* Azul Marinho Corporativo Profundo */
+  border-right: 1px solid #1e293b !important;
   display: flex;
   flex-direction: column;
   height: 100vh;
   user-select: none;
   z-index: 1040;
-  box-shadow: 1px 0 3px rgba(15, 23, 42, 0.04);
+  box-shadow: 2px 0 8px rgba(15, 23, 42, 0.12);
 }
 
 /* Suporte de compatibilidade para largura 240px */
@@ -990,8 +990,8 @@ textarea.form-control {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
-  background-color: #ffffff;
+  border-bottom: 1px solid #1e293b;
+  background-color: #0f172a !important; /* Mesma cor azul marinho contínua da barra */
   flex-shrink: 0;
 }
 
@@ -1006,16 +1006,22 @@ textarea.form-control {
 
 .dock-brand .header-logo,
 .sidebar-brand .header-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: transform 0.15s ease;
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  margin-right: 0 !important;
+  background-color: #ffffff !important;
+  padding: 1.5px !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .dock-brand:hover .header-logo {
-  transform: scale(1.05);
+  transform: scale(1.06);
+  box-shadow: 0 0 0 2px #38bdf8, 0 3px 8px rgba(0, 0, 0, 0.45) !important;
 }
 
 .dock-nav,
@@ -1030,7 +1036,7 @@ textarea.form-control {
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;
-  background-color: #ffffff;
+  background-color: #0f172a;
 }
 
 .dock-nav::-webkit-scrollbar,
@@ -1038,7 +1044,7 @@ textarea.form-control {
   display: none;
 }
 
-/* Botões do Dock (Quadrados Arredondados com Ícones Centralizados em Cores Claras) */
+/* Botões do Dock (Quadrados Arredondados com Ícones Centralizados sobre Azul Marinho) */
 .dock-btn {
   width: 44px;
   height: 44px;
@@ -1050,7 +1056,7 @@ textarea.form-control {
   justify-content: center;
   background: transparent;
   border: 1px solid transparent;
-  color: #475569; /* Neutro uniforme para todos os ícones em repouso */
+  color: #94a3b8; /* Neutro claro com excelente legibilidade e descanso visual */
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
@@ -1059,70 +1065,73 @@ textarea.form-control {
 }
 
 .dock-btn svg {
-  color: #475569;
-  stroke: #475569;
+  color: #94a3b8;
+  stroke: #94a3b8;
   transition: color 0.12s ease, stroke 0.12s ease;
 }
 
 .dock-btn:hover {
-  background-color: #f1f5f9;
-  color: #1d4ed8;
-  border-color: #e2e8f0;
+  background-color: #1e293b;
+  color: #ffffff;
+  border-color: #334155;
 }
 
 .dock-btn:hover svg {
-  color: #1d4ed8 !important;
-  stroke: #1d4ed8 !important;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .dock-btn:active {
   transform: scale(0.96);
 }
 
-/* Estado Ativo / Menu em Suspensão Aberto por Hover */
+/* Estado Ativo / Atual / Menu em Suspensão Aberto — Azul Nobre Institucional */
 .dock-btn.active,
+.dock-btn.is-current,
 .dock-btn.flyout-open:not(.flyout-pinned) {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  background-color: #1d4ed8 !important; /* Azul Nobre Institucional da Cantina */
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.4) !important;
 }
 
 .dock-btn.active svg,
+.dock-btn.is-current svg,
 .dock-btn.flyout-open:not(.flyout-pinned) svg {
-  color: #1d4ed8 !important;
-  stroke: #1d4ed8 !important;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
-/* Estado Travado por Clique (Pinned) — Adota a cor de fundo do site */
+/* Estado Travado por Clique (Pinned) */
 .dock-btn.flyout-pinned {
-  background-color: var(--surface-bg, #edf2f7) !important;
-  color: #0f172a !important;
-  border-color: var(--border-default, #cbd5e1) !important;
-  box-shadow: none !important;
+  background-color: #1e40af !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.5) !important;
 }
 
 .dock-btn.flyout-pinned svg {
-  color: #1d4ed8 !important;
-  stroke: #1d4ed8 !important;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .sidebar-flyout.flyout-pinned {
   border-color: var(--border-default, #cbd5e1);
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
 }
 
-/* Rodapé do Dock com Botão de Logout (Fundo Claro Original #f8fafc) */
-.dock-footer,
-.sidebar-user {
+/* Rodapé do Dock com Botão de Logout (Mesma cor azul marinho contínua da barra #0f172a) */
+.app-sidebar .dock-footer,
+.app-sidebar .sidebar-user,
+.dock-footer {
   width: 100%;
   padding: 8px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-top: 1px solid var(--border-subtle, #e2e8f0);
-  background-color: #f8fafc;
+  border-top: 1px solid #1e293b !important;
+  background-color: #0f172a !important; /* Mesma cor contínua da barra */
   flex-shrink: 0;
 }
 
@@ -1130,32 +1139,44 @@ textarea.form-control {
   display: none !important;
 }
 
-.btn-dock-logout,
-.btn-sidebar-logout {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md, 8px);
-  border: 1px solid transparent;
-  background: transparent;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
+.app-sidebar .btn-dock-logout,
+.app-sidebar .btn-sidebar-logout,
+.btn-dock-logout {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: var(--radius-md, 8px) !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
 }
 
-.btn-dock-logout:hover,
-.btn-sidebar-logout:hover {
-  background-color: #fee2e2;
-  color: #b91c1c;
-  border-color: #fecaca;
+.app-sidebar .btn-dock-logout svg,
+.app-sidebar .btn-sidebar-logout svg,
+.btn-dock-logout svg {
+  color: #94a3b8 !important;
+  stroke: #94a3b8 !important;
+  transition: color 0.12s ease, stroke 0.12s ease !important;
 }
 
-.btn-dock-logout:hover svg,
-.btn-sidebar-logout:hover svg {
-  color: #b91c1c !important;
-  stroke: #b91c1c !important;
+.app-sidebar .btn-dock-logout:hover,
+.app-sidebar .btn-sidebar-logout:hover,
+.btn-dock-logout:hover {
+  background-color: #dc2626 !important; /* Vermelho Corporativo Apenas no Hover */
+  color: #ffffff !important;
+  border-color: #b91c1c !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4) !important;
+}
+
+.app-sidebar .btn-dock-logout:hover svg,
+.app-sidebar .btn-sidebar-logout:hover svg,
+.btn-dock-logout:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 /* ==========================================================================
@@ -1473,7 +1494,7 @@ textarea.form-control {
   text-overflow: ellipsis;
 }
 
-.sidebar-user {
+.app-sidebar-legacy .sidebar-user {
   padding: 10px 14px;
   border-top: 1px solid var(--border-subtle);
   background-color: #f8fafc;
@@ -1482,26 +1503,26 @@ textarea.form-control {
   justify-content: space-between;
 }
 
-.sidebar-user-info {
+.app-sidebar-legacy .sidebar-user-info {
   display: flex;
   flex-direction: column;
   min-width: 0;
   margin-right: 8px;
 }
 
-.sidebar-user-name {
+.app-sidebar-legacy .sidebar-user-name {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.25;
 }
 
-.sidebar-user-role {
+.app-sidebar-legacy .sidebar-user-role {
   font-size: 11px;
   color: var(--text-muted);
 }
 
-.btn-sidebar-logout {
+.app-sidebar-legacy .btn-sidebar-logout {
   width: 28px;
   height: 28px;
   border: 1px solid transparent;
@@ -1515,7 +1536,7 @@ textarea.form-control {
   transition: all 0.12s ease;
 }
 
-.btn-sidebar-logout:hover {
+.app-sidebar-legacy .btn-sidebar-logout:hover {
   background-color: #fee2e2;
   color: var(--action-danger);
   border-color: #fecaca;

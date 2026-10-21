@@ -37,9 +37,9 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
 <!-- Dock de Navegação Principal (Barra Estreita de 60px) -->
 <aside class="app-sidebar app-sidebar-dock" id="appSidebar" style="width: 60px; min-width: 60px; max-width: 60px;">
     <!-- Topo do Dock com Logotipo Oficial (Redireciona para a Visão Geral /admin) -->
-    <div class="dock-header sidebar-header">
+    <div class="dock-header sidebar-header" style="background-color: #0f172a;">
         <a href="<?php echo $baseUrl; ?>/admin" class="dock-brand sidebar-brand" title="Monteiro Lobato — Visão Geral da Cantina" aria-label="Visão Geral da Cantina">
-            <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" width="36" height="36" class="header-logo" style="width: 36px; height: 36px; max-width: 36px; max-height: 36px; border-radius: 50%; object-fit: cover;">
+            <img src="<?php echo $baseUrl; ?>/assets/img/logo-colegio.jpg" alt="Logo Colégio Monteiro Lobato" width="36" height="36" class="header-logo" style="width: 36px; height: 36px; max-width: 36px; max-height: 36px; border-radius: 50%; object-fit: cover; background-color: #ffffff; padding: 1.5px; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.35);">
             <div class="sidebar-brand-text d-none" aria-hidden="true">
                 <span class="sidebar-brand-name">Monteiro Lobato</span>
                 <span class="sidebar-brand-sub">Painel da Cantina</span>
@@ -151,7 +151,7 @@ $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'ven
     </nav>
 
     <!-- Rodapé do Dock: Botão de Encerramento de Sessão (Logout) -->
-    <div class="dock-footer sidebar-user">
+    <div class="dock-footer sidebar-user" style="background-color: #0f172a;">
         <form action="<?php echo $baseUrl; ?>/logout" method="POST" class="d-inline m-0">
             <?php if (!empty($csrf_field)) echo $csrf_field; ?>
             <button type="submit" class="dock-btn btn-dock-logout btn-sidebar-logout" title="Encerrar Sessão (<?php echo htmlspecialchars($user['nome'] ?? 'Operador', ENT_QUOTES, 'UTF-8'); ?>)" aria-label="Encerrar Sessão">
