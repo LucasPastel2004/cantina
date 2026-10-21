@@ -177,7 +177,7 @@ class PdvFormasPagamentoTest
         echo "\n--- [4] Regras da Aba Colaborador (Dinheiro e Pix Balcão, avulso_colaborador) ---\n";
 
         $sessaoId = $this->obterOuCriarSessaoCaixa();
-        $operadorId = 1;
+        $operadorId = $this->obterOperadorTeste();
         $produto = $this->obterProdutoTeste();
         $colaborador = $this->obterColaboradorTeste();
 
@@ -214,7 +214,7 @@ class PdvFormasPagamentoTest
         echo "\n--- [5] Regras da Aba Aluno (Pagamento com Saldo da Carteira Familiar) ---\n";
 
         $sessaoId = $this->obterOuCriarSessaoCaixa();
-        $operadorId = 1;
+        $operadorId = $this->obterOperadorTeste();
         $produto = $this->obterProdutoTeste();
         $aluno = $this->obterAlunoTesteComSaldo(50.0);
 
