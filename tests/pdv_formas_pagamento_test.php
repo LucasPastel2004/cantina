@@ -99,7 +99,7 @@ class PdvFormasPagamentoTest
 
         // Obter ou criar sessão de caixa ativa
         $sessaoId = $this->obterOuCriarSessaoCaixa();
-        $operadorId = 1;
+        $operadorId = $this->obterOperadorTeste();
         $produto = $this->obterProdutoTeste();
 
         $itens = [
@@ -128,10 +128,10 @@ class PdvFormasPagamentoTest
 
     private function testarVendaAnonimo(): void
     {
-        echo "\n--- [3] Regras da Aba Anônimo (Dinheiro e Pix Balcão) ---\n";
+        echo "\n--- [3] Regras da Aba Venda Avulsa (Dinheiro e Pix Balcão) ---\n";
 
         $sessaoId = $this->obterOuCriarSessaoCaixa();
-        $operadorId = 1;
+        $operadorId = $this->obterOperadorTeste();
         $produto = $this->obterProdutoTeste();
 
         $itens = [
@@ -340,13 +340,23 @@ class PdvFormasPagamentoTest
         return (float)$stmt->fetchColumn();
     }
 
+    private function obterOperadorTeste(): int
+    {
+        $id = $this->pdo->query("SELECT id FROM usuarios WHERE status = 'ativo' AND deleted_at IS NULL ORDER BY id ASC LIMIT 1")->fetchColumn();
+        if (!$id) {
+            $id = $this->pdo->query("SELECT id FROM usuarios LIMIT 1")->fetchColumn();
+        }
+        return (int)$id;
+    }
+
     private function obterOuCriarSessaoCaixa(): int
     {
         $sessaoAberta = SessaoCaixa::obterSessaoAberta('matutino') ?? SessaoCaixa::obterSessaoAberta('vespertino');
         if ($sessaoAberta) {
             return (int)$sessaoAberta['id'];
         }
-        return SessaoCaixa::abrir(1, 'matutino', 100.0, 'Sessão aberta para teste automatizado');
+        $operadorId = $this->obterOperadorTeste();
+        return SessaoCaixa::abrir($operadorId, 'matutino', 100.0, 'Sessão aberta para teste automatizado');
     }
 
     private function obterProdutoTeste(): array
