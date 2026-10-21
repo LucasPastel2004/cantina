@@ -2153,5 +2153,15 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Em `app/views/admin/index.php`, sincronizados os cartões da faixa rápida (stat-strip) com as variáveis dinâmicas de turno e caixa.
 - Como evitar no futuro: Variáveis de estado global de negócio (como status de caixa e turno ativo) exibidas em layouts mestres compartilhados devem ser resolvidas centralmente no `Controller` base a partir da fonte de dados real (banco de dados), nunca possuindo fallbacks otimistas (como `'Aberto'`) que mascarem o real estado do sistema.
 
+---
+
+## 2026-10-21 - Falha de chave estrangeira ao abrir sessão de caixa em suíte de testes do PDV por ID de operador estático
+
+- Sintoma: Erro `PDOException: SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row (fk_caixa_usuario)` ao executar `tests/pdv_formas_pagamento_test.php`.
+- Causa: O método `obterOuCriarSessaoCaixa()` utilizava o valor literal `1` como `$operadorId` (`SessaoCaixa::abrir(1, ...)`). Quando o usuário com ID 1 foi alterado ou redefinido no banco de desenvolvimento, a constraint de chave estrangeira com a tabela `usuarios` barrou a inserção.
+- Solução aplicada: Criado o método auxiliar defensivo `obterOperadorTeste()` na classe de teste, que consulta no banco o primeiro usuário ativo disponível (`SELECT id FROM usuarios WHERE ativo = 1 AND deleted_at IS NULL ORDER BY id ASC LIMIT 1`) e injeta esse ID dinamicamente em todas as chamadas de teste.
+- Como evitar no futuro: Nunca fixar identificadores numéricos literais (como `1`) em suítes de testes automatizados de integração que dependem de chaves estrangeiras; sempre recuperar registros válidos diretamente do banco através de queries defensivas.
+
+
 
 
