@@ -71,9 +71,59 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
             font-size: 11px;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        .no-print .zoom-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 2px 6px;
+            flex-shrink: 0;
+            margin: 0 4px;
+        }
+        .no-print .btn-zoom {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: all 0.15s ease;
+        }
+        .no-print .btn-zoom:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #93c5fd;
+        }
+        .no-print .btn-zoom-val {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-variant-numeric: tabular-nums;
+            min-width: 44px;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+        .no-print .btn-zoom-val:hover {
+            background: rgba(255, 255, 255, 0.2);
+            text-decoration: underline;
         }
         .no-print button, .no-print a {
             cursor: pointer;
@@ -93,15 +143,6 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         .btn-print-action:hover {
             background: #1e40af;
         }
-        .btn-back-action {
-            background: #ffffff;
-            color: #0f172a !important;
-            border: 1px solid #cbd5e1;
-            margin-right: 6px;
-        }
-        .btn-back-action:hover {
-            background: #f1f5f9;
-        }
         .btn-close-action {
             background: #ffffff;
             color: #0f172a !important;
@@ -110,6 +151,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         }
         .btn-close-action:hover {
             background: #f1f5f9;
+        }
+
+        .document-zoom-area {
+            zoom: var(--doc-zoom, 1);
+            transform-origin: top center;
+            transition: zoom 0.1s ease-out;
         }
 
         /* Visualização de Folha A4 em Tela */
@@ -268,15 +315,39 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
     <!-- Barra Superior de Controle para Navegador -->
     <div class="no-print">
-        <div>
-            <a href="<?php echo $baseUrl; ?>/relatorios/baixas-mercadorias" class="btn-back-action">← Voltar ao Filtro</a>
-            <span style="color: #94a3b8;">Visualização Oficial A4 (Anti-Clipping)</span>
+        <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Relatório de Baixas de Mercadorias &bull; Período: <?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
+                Total de Páginas: 1
+            </div>
         </div>
-        <div>
-            <button onclick="window.print()" class="btn-print-action">Imprimir / Salvar PDF</button>
-            <button onclick="window.close()" class="btn-close-action">Fechar</button>
+
+        <!-- Controles de Zoom para Conferência -->
+        <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes e números antes de imprimir ou salvar">
+            <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+            </span>
+            <button type="button" class="btn-zoom" id="btnZoomOut" title="Diminuir Zoom (Ctrl -)" onclick="alterarZoom(-0.15)">−</button>
+            <button type="button" class="btn-zoom-val" id="btnZoomReset" title="Clique para redefinir para 100% (Ctrl 0)" onclick="resetarZoom()">100%</button>
+            <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+            <button onclick="window.print()" class="btn-print-action">
+                🖨 Imprimir Documento
+            </button>
+            <button onclick="fecharJanela()" class="btn-close-action">
+                ✕ Fechar
+            </button>
         </div>
     </div>
+
+    <!-- ÁREA ESCALÁVEL COM ZOOM PARA CONFERÊNCIA -->
+    <div id="document-zoom-area" class="document-zoom-area">
 
     <!-- Folha Física A4 -->
     <div class="page-sheet">
@@ -397,6 +468,106 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         </footer>
 
     </div>
+    </div>
 
+    <script>
+        let currentZoom = 1.0;
+        const minZoom = 0.5;
+        const maxZoom = 2.0;
+
+        function aplicarZoom(novoZoom) {
+            currentZoom = Math.min(Math.max(novoZoom, minZoom), maxZoom);
+            currentZoom = Math.round(currentZoom * 100) / 100;
+
+            const zoomArea = document.getElementById('document-zoom-area');
+            if (zoomArea) {
+                zoomArea.style.setProperty('--doc-zoom', currentZoom);
+                zoomArea.style.zoom = currentZoom;
+            }
+
+            const resetBtn = document.getElementById('btnZoomReset');
+            if (resetBtn) {
+                resetBtn.textContent = Math.round(currentZoom * 100) + '%';
+            }
+
+            try {
+                localStorage.setItem('cantina_report_zoom', currentZoom);
+            } catch(e) {}
+        }
+
+        function alterarZoom(delta) {
+            aplicarZoom(currentZoom + delta);
+        }
+
+        function resetarZoom() {
+            aplicarZoom(1.0);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const savedZoom = localStorage.getItem('cantina_report_zoom');
+                if (savedZoom) {
+                    const z = parseFloat(savedZoom);
+                    if (!isNaN(z) && z >= minZoom && z <= maxZoom) {
+                        aplicarZoom(z);
+                    }
+                }
+            } catch(e) {}
+        });
+
+        // Atalhos de Teclado (Ctrl + / Ctrl - / Ctrl 0)
+        window.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
+                e.preventDefault();
+                alterarZoom(0.15);
+            } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
+                e.preventDefault();
+                alterarZoom(-0.15);
+            } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+                e.preventDefault();
+                resetarZoom();
+            }
+        });
+
+        // Atalho Ctrl + Roda do Mouse
+        window.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    alterarZoom(0.1);
+                } else {
+                    alterarZoom(-0.1);
+                }
+            }
+        }, { passive: false });
+
+        window.addEventListener('beforeprint', function() {
+            const zoomArea = document.getElementById('document-zoom-area');
+            if (zoomArea) {
+                zoomArea.style.zoom = 1;
+            }
+        });
+        window.addEventListener('afterprint', function() {
+            const zoomArea = document.getElementById('document-zoom-area');
+            if (zoomArea) {
+                zoomArea.style.zoom = currentZoom;
+            }
+        });
+
+        function fecharJanela() {
+            window.close();
+            setTimeout(function() {
+                if (!window.closed) {
+                    if (window.opener) {
+                        window.close();
+                    } else if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        window.location.href = '<?php echo $baseUrl; ?>/relatorios';
+                    }
+                }
+            }, 150);
+        }
+    </script>
 </body>
 </html>

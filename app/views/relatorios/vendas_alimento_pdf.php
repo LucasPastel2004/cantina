@@ -98,6 +98,7 @@ if ($emitirAlim && $emitirAluno) {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
             font-size: 11px;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -507,10 +508,11 @@ if ($emitirAlim && $emitirAluno) {
 
 <!-- Barra de Controle de Impressão (Apenas na Visualização em Tela) -->
 <div class="no-print">
-    <div style="display: flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 600;">
-        <span>Relatório de Emissão de Vendas &bull; Período: <?php echo htmlspecialchars($periodoOficial); ?></span>
+    <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Relatório de Emissão de Vendas</div>
+        <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">Período: <?php echo htmlspecialchars($periodoOficial); ?></div>
     </div>
-    <div style="display: flex; align-items: center; gap: 6px;">
+    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
         <!-- Controles de Zoom para Conferência -->
         <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes antes de imprimir ou salvar">
             <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">
@@ -523,11 +525,8 @@ if ($emitirAlim && $emitirAluno) {
             <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
         </div>
 
-        <a href="<?php echo htmlspecialchars($baseUrl); ?>/relatorios/vendas-filtros" class="btn-back-action">
-            &larr; Voltar aos Filtros
-        </a>
         <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
-            🖨 Imprimir / Salvar PDF
+            🖨 Imprimir Documento
         </button>
         <button type="button" class="btn-close-action" onclick="window.close()">
             ✕ Fechar

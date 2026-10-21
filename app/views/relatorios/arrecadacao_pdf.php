@@ -420,14 +420,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
         </div>
 
-        <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" class="btn-back-action">
-            ← Voltar aos Filtros
-        </a>
         <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
-            🖨 Imprimir / Salvar PDF
+            🖨 Imprimir Documento
         </button>
         <button type="button" class="btn-close-action" onclick="window.close()">
-            ✕ Fechar Janela
+            ✕ Fechar
         </button>
     </div>
 </div>

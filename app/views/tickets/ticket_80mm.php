@@ -43,66 +43,102 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
             width: 100%;
         }
 
-        /* Barra de Controle no Topo (Visível apenas na tela) */
-        .no-print {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: #ffffff;
-            padding: 10px 24px;
-            border-bottom: 1px solid #cbd5e1;
+        /* Barra de Controle Superior Padronizada (#1e293b) */
+        .no-print-bar {
+            background-color: #1e293b;
+            color: #ffffff;
+            padding: 8px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            width: 100%;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-            font-size: 9pt;
+            width: 200mm;
+            max-width: calc(100% - 32px);
+            margin: 10px auto 16px auto;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 10px;
+            z-index: 1000;
         }
-        .no-print-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #0f172a;
-        }
-        .no-print-status-dot {
-            color: #2563eb;
-            font-size: 14px;
-        }
-        .btn-print {
-            padding: 6px 14px;
-            font-weight: bold;
-            background: #1d4ed8;
-            color: #ffffff;
-            border: 1px solid #1e40af;
-            cursor: pointer;
-            border-radius: 4px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 9pt;
-        }
-        .btn-print:hover {
-            background: #1e40af;
-        }
-        .btn-action-neutral {
-            padding: 6px 12px;
-            background: #ffffff;
-            color: #334155;
-            border: 1px solid #cbd5e1;
-            cursor: pointer;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 9pt;
+        .no-print-bar .zoom-controls {
             display: inline-flex;
             align-items: center;
             gap: 4px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 2px 6px;
         }
-        .btn-action-neutral:hover {
-            background: #f8fafc;
-            border-color: #94a3b8;
+        .no-print-bar .btn-zoom {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: all 0.15s ease;
+        }
+        .no-print-bar .btn-zoom:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #93c5fd;
+        }
+        .no-print-bar .btn-zoom-val {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-variant-numeric: tabular-nums;
+            min-width: 44px;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+        .no-print-bar .btn-zoom-val:hover {
+            background: rgba(255, 255, 255, 0.2);
+            text-decoration: underline;
+        }
+        .no-print-bar .btn-action {
+            background: #ffffff;
+            color: #0f172a;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease-in-out;
+        }
+        .no-print-bar .btn-action:hover {
+            background: #f1f5f9;
+            color: #1d4ed8;
+        }
+        .no-print-bar .btn-primary {
+            background: #1d4ed8;
+            color: #ffffff;
+            border: 1px solid #1e40af;
+        }
+        .no-print-bar .btn-primary:hover {
+            background: #1e40af;
+            color: #ffffff;
+        }
+        .document-zoom-area {
+            zoom: var(--doc-zoom, 1);
+            transform-origin: top center;
+            transition: zoom 0.1s ease-out;
         }
 
         /* Bobina Contínua 80mm */
@@ -231,8 +267,12 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
 
         /* Configurações Estritas de Impressão (@media print) */
         @media print {
-            .no-print {
+            .no-print-bar, .no-print {
                 display: none !important;
+            }
+            .document-zoom-area {
+                zoom: 1 !important;
+                transform: none !important;
             }
             body {
                 background-color: #ffffff !important;
@@ -260,45 +300,43 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
 </head>
 <body>
 
-<div class="no-print">
-    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 8px;">
-        <div class="no-print-info">
-            <span class="no-print-status-dot">●</span>
-            <strong>Bobina Térmica (80mm)</strong> &bull; 
-            <span><?php echo $totalTickets; ?> ticket(s)</span> &bull; 
-            <span style="color: #64748b;"><?php echo htmlspecialchars($dataConsumoFmt); ?> (<?php echo htmlspecialchars($turnoFmt); ?>)</span>
-        </div>
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <button onclick="window.print()" class="btn-print" title="Disparar impressão em impressora térmica de bobina 80mm">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-                </svg>
-                Imprimir na Bobina (80mm)
-            </button>
-
-            <?php
-                $queryA4 = $_GET;
-                $queryA4['formato'] = 'a4';
-                $urlA4 = '?' . http_build_query($queryA4);
-            ?>
-            <a href="<?php echo htmlspecialchars($urlA4); ?>" class="btn-action-neutral" title="Alternar para visualização em grade de 8 fichas por Folha A4">
-                Alternar para Folha A4
-            </a>
-
-            <button onclick="window.close()" class="btn-action-neutral" title="Fechar visualização">
-                Fechar
-            </button>
-        </div>
+<!-- Barra de Controle Superior Padronizada (#1e293b) -->
+<div class="no-print-bar">
+    <div style="font-size: 12px; font-weight: 600;">
+        Bobina Térmica (80mm) • <?php echo $totalTickets; ?> ticket(s) • <?php echo htmlspecialchars($dataConsumoFmt); ?> (<?php echo htmlspecialchars($turnoFmt); ?>)
     </div>
-    <div style="width: 100%; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 6px 12px; border-radius: 4px; font-size: 8pt; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-        <span><strong>💡 Nota de Impressão:</strong> Esta visualização contínua de 80mm é formatada exclusivamente para <strong>impressoras térmicas de cupom (rolo estreito de 80mm)</strong>. Se você estiver usando uma impressora de escritório comum (como a Kyocera ou impressora laser A4) ou quiser salvar em PDF para imprimir em folha comum, utilize a <strong>Folha A4</strong> para preencher a página inteira com 8 fichas organizadas.</span>
-        <a href="<?php echo htmlspecialchars($urlA4); ?>" style="background: #1d4ed8; color: #fff; padding: 4px 10px; border-radius: 3px; text-decoration: none; font-weight: bold; white-space: nowrap; font-size: 8pt;">
-            Usar Folha A4 &rarr;
+
+    <!-- Controles de Zoom para Conferência -->
+    <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes e números antes de imprimir ou salvar">
+        <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+        </span>
+        <button type="button" class="btn-zoom" id="btnZoomOut" title="Diminuir Zoom (Ctrl -)" onclick="alterarZoom(-0.15)">−</button>
+        <button type="button" class="btn-zoom-val" id="btnZoomReset" title="Clique para redefinir para 100% (Ctrl 0)" onclick="resetarZoom()">100%</button>
+        <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+        <?php
+            $queryA4 = $_GET;
+            $queryA4['formato'] = 'a4';
+            $urlA4 = '?' . http_build_query($queryA4);
+        ?>
+        <a href="<?php echo htmlspecialchars($urlA4); ?>" class="btn-action" title="Alternar para visualização em grade de 8 fichas por Folha A4">
+            Alternar para Folha A4
         </a>
+        <button type="button" class="btn-action btn-primary" onclick="window.print()" title="Imprimir na Bobina 80mm (Ctrl + P)">
+            🖨 Imprimir na Bobina (80mm)
+        </button>
+        <button type="button" class="btn-action" onclick="fecharJanela()" title="Fechar Visualização">
+            ✕ Fechar
+        </button>
     </div>
 </div>
 
+<div id="document-zoom-area" class="document-zoom-area">
 <div class="receipt-roll">
 <?php foreach ($tickets as $index => $t): ?>
     <?php
@@ -362,6 +400,103 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
     </div>
 <?php endforeach; ?>
 </div>
+</div>
 
+<script>
+// =====================================================================
+// CONTROLE DE ZOOM PARA CONFERÊNCIA VISUAL DE IMPRESSÃO / SALVAR EM PDF
+// =====================================================================
+let currentZoom = 1.0;
+const minZoom = 0.5;
+const maxZoom = 2.5;
+
+function aplicarZoom(novoZoom) {
+    currentZoom = Math.min(Math.max(novoZoom, minZoom), maxZoom);
+    currentZoom = Math.round(currentZoom * 100) / 100;
+    
+    const zoomArea = document.getElementById('document-zoom-area');
+    const zoomValueBtn = document.getElementById('btnZoomReset');
+    
+    if (zoomArea) {
+        zoomArea.style.zoom = currentZoom;
+        zoomArea.style.setProperty('--doc-zoom', currentZoom);
+    }
+    
+    if (zoomValueBtn) {
+        zoomValueBtn.textContent = Math.round(currentZoom * 100) + '%';
+    }
+
+    try {
+        localStorage.setItem('cantina_report_zoom', currentZoom);
+    } catch(e) {}
+}
+
+function alterarZoom(delta) {
+    aplicarZoom(currentZoom + delta);
+}
+
+function resetarZoom() {
+    aplicarZoom(1.0);
+}
+
+// Restaura zoom preferido da sessão ao carregar
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const savedZoom = localStorage.getItem('cantina_report_zoom');
+        if (savedZoom) {
+            const z = parseFloat(savedZoom);
+            if (!isNaN(z) && z >= minZoom && z <= maxZoom) {
+                aplicarZoom(z);
+            }
+        }
+    } catch(e) {}
+});
+
+// Atalhos de Teclado (Ctrl + / Ctrl - / Ctrl 0)
+window.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
+        e.preventDefault();
+        alterarZoom(0.15);
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
+        e.preventDefault();
+        alterarZoom(-0.15);
+    } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        resetarZoom();
+    } else if (e.key === 'Escape') {
+        fecharJanela();
+    }
+});
+
+// Atalho Ctrl + Roda do Mouse
+window.addEventListener('wheel', function(e) {
+    if (e.ctrlKey) {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+            alterarZoom(0.1);
+        } else {
+            alterarZoom(-0.1);
+        }
+    }
+}, { passive: false });
+
+// Proteção de Impressão: força 100% mandatória antes de abrir diálogo de impressão
+window.addEventListener('beforeprint', function() {
+    const zoomArea = document.getElementById('document-zoom-area');
+    if (zoomArea) {
+        zoomArea.style.zoom = 1;
+    }
+});
+window.addEventListener('afterprint', function() {
+    const zoomArea = document.getElementById('document-zoom-area');
+    if (zoomArea) {
+        zoomArea.style.zoom = currentZoom;
+    }
+});
+
+function fecharJanela() {
+    window.close();
+}
+</script>
 </body>
 </html>

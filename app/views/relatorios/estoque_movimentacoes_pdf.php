@@ -415,6 +415,7 @@ $totalPaginas = count($paginas);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
             width: <?php echo $isPaisagem ? '280mm' : '200mm'; ?>;
             max-width: calc(100% - 32px);
             margin: 0 auto 16px auto;
@@ -432,6 +433,8 @@ $totalPaginas = count($paginas);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             padding: 2px 6px;
+            flex-shrink: 0;
+            margin: 0 4px;
         }
         .no-print-bar .btn-zoom {
             background: transparent;
@@ -843,8 +846,13 @@ $totalPaginas = count($paginas);
 
     <!-- Barra de Controle Superior (visível somente na tela) -->
     <div class="no-print-bar">
-        <div style="font-size: 12px; font-weight: 600;">
-            Relatório de Estoque • Orientação: <?php echo $isPaisagem ? 'Paisagem (Landscape)' : 'Retrato (Portrait)'; ?> • Total de Páginas: <?php echo $totalPaginas; ?>
+        <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Relatório de Estoque &bull; Orientação: <?php echo $isPaisagem ? 'Paisagem (Landscape)' : 'Retrato (Portrait)'; ?>
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
+                Total de Páginas: <?php echo $totalPaginas; ?>
+            </div>
         </div>
 
         <!-- Controles de Zoom para Conferência -->
@@ -859,7 +867,7 @@ $totalPaginas = count($paginas);
             <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
         </div>
 
-        <div style="display: flex; gap: 8px;">
+        <div style="display: flex; gap: 8px; flex-shrink: 0;">
             <button type="button" class="btn-action btn-primary" onclick="window.print()">
                 🖨 Imprimir Documento
             </button>

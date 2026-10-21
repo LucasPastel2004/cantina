@@ -70,59 +70,119 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
         @media screen {
             body {
                 background-color: #cbd5e1;
-                padding: 20px 10px;
+                padding: 20px 10px 40px 10px;
             }
-            .top-actions-bar {
-                max-width: 210mm;
-                margin: 0 auto 14px auto;
-                background: #ffffff;
-                border: 1px solid #94a3b8;
+            .top-actions-bar, .no-print-bar {
+                width: 200mm;
+                max-width: calc(100% - 32px);
+                margin: 0 auto 16px auto;
+                background-color: #1e293b;
+                color: #ffffff;
                 border-radius: 6px;
-                padding: 10px 16px;
+                padding: 8px 16px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                position: sticky;
+                top: 10px;
+                z-index: 1000;
+            }
+            .top-actions-bar .zoom-controls {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 4px;
+                padding: 2px 6px;
+            }
+            .top-actions-bar .btn-zoom {
+                background: transparent;
+                color: #ffffff;
+                border: none;
+                width: 24px;
+                height: 24px;
+                font-size: 16px;
+                font-weight: 700;
+                cursor: pointer;
+                border-radius: 3px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+                transition: all 0.15s ease;
+            }
+            .top-actions-bar .btn-zoom:hover {
+                background: rgba(255, 255, 255, 0.2);
+                color: #93c5fd;
+            }
+            .top-actions-bar .btn-zoom-val {
+                background: transparent;
+                color: #ffffff;
+                border: none;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-variant-numeric: tabular-nums;
+                min-width: 44px;
+                text-align: center;
+                transition: all 0.15s ease;
+            }
+            .top-actions-bar .btn-zoom-val:hover {
+                background: rgba(255, 255, 255, 0.2);
+                text-decoration: underline;
             }
             .top-actions-bar .btn-action {
                 font-family: inherit;
                 font-size: 12px;
                 font-weight: 600;
-                padding: 6px 14px;
+                padding: 5px 12px;
                 border-radius: 4px;
                 cursor: pointer;
                 text-decoration: none;
                 display: inline-flex;
                 align-items: center;
-                gap: 6px;
+                gap: 5px;
+                border: none;
+                transition: all 0.15s ease-in-out;
             }
             .btn-action-primary {
                 background: #1d4ed8;
-                color: #ffffff;
-                border: 1px solid #1e40af;
+                color: #ffffff !important;
+                border: 1px solid #1e40af !important;
             }
             .btn-action-primary:hover {
                 background: #1e40af;
             }
             .btn-action-secondary {
                 background: #ffffff;
-                color: #1e293b;
-                border: 1px solid #cbd5e1;
+                color: #0f172a !important;
             }
             .btn-action-secondary:hover {
-                background: #f8fafc;
+                background: #f1f5f9;
+                color: #1d4ed8 !important;
             }
             .doc-page {
-                width: 210mm;
+                width: 200mm;
                 max-width: calc(100% - 24px);
-                min-height: 297mm;
+                min-height: 280mm;
                 background: #ffffff;
                 padding: 10mm 14mm;
                 margin: 0 auto;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
                 box-sizing: border-box;
+                border-radius: 2px;
                 position: relative;
             }
+        }
+
+        .document-zoom-area {
+            zoom: var(--doc-zoom, 1);
+            transform-origin: top center;
+            transition: zoom 0.1s ease-out;
         }
 
         @media print {
@@ -389,24 +449,36 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
 </head>
 <body>
 
-<!-- Barra Superior de Controle na Visualização de Tela -->
-<div class="top-actions-bar no-print">
-    <div style="font-size: 12px; font-weight: 600; color: #0f172a;">
-        <span>Documento Oficial A4</span> &bull; 
-        <span class="text-muted">Extrato de Consumo: <strong><?php echo htmlspecialchars($aluno['nome'] ?? 'Aluno'); ?></strong></span>
+<!-- Barra Superior de Controle Padronizada (#1e293b - Visível apenas na tela) -->
+<div class="top-actions-bar no-print-bar no-print">
+    <div style="font-size: 12px; font-weight: 600;">
+        Extrato de Consumo • <?php echo htmlspecialchars($aluno['nome'] ?? 'Aluno'); ?> • Total de Páginas: 1
     </div>
+
+    <!-- Controles de Zoom para Conferência -->
+    <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes e números antes de imprimir ou salvar">
+        <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+        </span>
+        <button type="button" class="btn-zoom" id="btnZoomOut" title="Diminuir Zoom (Ctrl -)" onclick="alterarZoom(-0.15)">−</button>
+        <button type="button" class="btn-zoom-val" id="btnZoomReset" title="Clique para redefinir para 100% (Ctrl 0)" onclick="resetarZoom()">100%</button>
+        <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
+    </div>
+
     <div style="display: flex; gap: 8px;">
-        <a href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno?aluno_id=<?php echo (int)($aluno['id'] ?? 0); ?>&data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" class="btn-action btn-action-secondary">
-            &larr; Voltar aos Filtros
-        </a>
-        <button onclick="window.print()" class="btn-action btn-action-primary">
-            &#128438; Imprimir Documento
+        <button type="button" onclick="window.print()" class="btn-action btn-action-primary">
+            🖨 Imprimir Documento
         </button>
-        <button onclick="fecharJanela()" class="btn-action btn-action-secondary">
-            &#10005; Fechar Janela
+        <button type="button" onclick="fecharJanela()" class="btn-action btn-action-secondary">
+            ✕ Fechar
         </button>
     </div>
 </div>
+
+<!-- ÁREA ESCALÁVEL COM ZOOM PARA CONFERÊNCIA -->
+<div id="document-zoom-area" class="document-zoom-area">
 
 <!-- Folha Física A4 -->
 <div class="doc-page">
@@ -584,21 +656,104 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
     </div>
 
 </div>
+</div>
 
 <script>
-function fecharJanela() {
-    window.close();
-    setTimeout(function() {
-        if (!window.closed) {
-            if (window.history.length > 1) {
-                window.history.back();
+    let currentZoom = 1.0;
+    const minZoom = 0.5;
+    const maxZoom = 2.0;
+
+    function aplicarZoom(novoZoom) {
+        currentZoom = Math.min(Math.max(novoZoom, minZoom), maxZoom);
+        currentZoom = Math.round(currentZoom * 100) / 100;
+
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.setProperty('--doc-zoom', currentZoom);
+            zoomArea.style.zoom = currentZoom;
+        }
+
+        const resetBtn = document.getElementById('btnZoomReset');
+        if (resetBtn) {
+            resetBtn.textContent = Math.round(currentZoom * 100) + '%';
+        }
+
+        try {
+            localStorage.setItem('cantina_report_zoom', currentZoom);
+        } catch(e) {}
+    }
+
+    function alterarZoom(delta) {
+        aplicarZoom(currentZoom + delta);
+    }
+
+    function resetarZoom() {
+        aplicarZoom(1.0);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const savedZoom = localStorage.getItem('cantina_report_zoom');
+            if (savedZoom) {
+                const z = parseFloat(savedZoom);
+                if (!isNaN(z) && z >= minZoom && z <= maxZoom) {
+                    aplicarZoom(z);
+                }
+            }
+        } catch(e) {}
+    });
+
+    window.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
+            e.preventDefault();
+            alterarZoom(0.15);
+        } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
+            e.preventDefault();
+            alterarZoom(-0.15);
+        } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+            e.preventDefault();
+            resetarZoom();
+        }
+    });
+
+    window.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                alterarZoom(0.1);
             } else {
-                window.location.href = '<?php echo $baseUrl; ?>/relatorios/extrato-aluno';
+                alterarZoom(-0.1);
             }
         }
-    }, 150);
-}
-</script>
+    }, { passive: false });
 
+    window.addEventListener('beforeprint', function() {
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.zoom = 1;
+        }
+    });
+    window.addEventListener('afterprint', function() {
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.zoom = currentZoom;
+        }
+    });
+
+    function fecharJanela() {
+        window.close();
+        setTimeout(function() {
+            if (!window.closed) {
+                if (window.opener) {
+                    window.close();
+                } else if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = '<?php echo $baseUrl; ?>/relatorios/extrato-aluno';
+                }
+            }
+        }, 150);
+    }
+</script>
 </body>
 </html>

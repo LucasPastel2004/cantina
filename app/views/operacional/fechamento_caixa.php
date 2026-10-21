@@ -219,7 +219,11 @@ function confirmarFechamento(event) {
         textoCancelar: 'Voltar à Conferência'
     }).then(function(confirmado) {
         if (confirmado && form) {
+            form.target = '_blank';
             form.submit();
+            setTimeout(function() {
+                window.location.href = '<?php echo $baseUrl; ?>/operacional/caixa';
+            }, 1000);
         }
     });
     return false;

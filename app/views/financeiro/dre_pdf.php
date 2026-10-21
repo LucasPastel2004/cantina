@@ -91,26 +91,30 @@ $isCaixa = ($regime === 'caixa');
         }
 
         /* ==========================================================================
-           3. Barra Superior de Controle (Apenas em Tela)
+           3. Barra Superior de Controle Padronizada (#1e293b - Apenas em Tela)
            ========================================================================== */
         .action-bar-top {
-            background: #0f172a;
+            background-color: #1e293b;
             color: #ffffff;
             padding: 8px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            width: 280mm;
+            max-width: calc(100% - 32px);
+            margin: 0 auto 16px auto;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             position: sticky;
-            top: 0;
+            top: 10px;
             z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         .action-bar-top .zoom-controls {
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             padding: 2px 6px;
         }
@@ -118,9 +122,9 @@ $isCaixa = ($regime === 'caixa');
             background: transparent;
             color: #ffffff;
             border: none;
-            width: 22px;
-            height: 22px;
-            font-size: 15px;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             border-radius: 3px;
@@ -131,7 +135,7 @@ $isCaixa = ($regime === 'caixa');
             transition: all 0.15s ease;
         }
         .action-bar-top .btn-zoom:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.2);
             color: #93c5fd;
         }
         .action-bar-top .btn-zoom-val {
@@ -141,32 +145,44 @@ $isCaixa = ($regime === 'caixa');
             font-size: 11px;
             font-weight: 700;
             cursor: pointer;
-            padding: 2px 5px;
+            padding: 2px 6px;
             border-radius: 3px;
-            min-width: 40px;
-            text-align: center;
             font-variant-numeric: tabular-nums;
+            min-width: 44px;
+            text-align: center;
+            transition: all 0.15s ease;
         }
         .action-bar-top .btn-zoom-val:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.2);
             text-decoration: underline;
         }
         .action-bar-top .btn-action-nav {
             background: #ffffff;
             color: #0f172a;
-            border: 1px solid #cbd5e1;
+            border: none;
             border-radius: 4px;
             padding: 5px 12px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
+            transition: all 0.15s ease-in-out;
         }
         .action-bar-top .btn-action-nav:hover {
             background: #f1f5f9;
+            color: #1d4ed8;
+        }
+        .action-bar-top .btn-primary {
+            background: #1d4ed8;
+            color: #ffffff;
+            border: 1px solid #1e40af;
+        }
+        .action-bar-top .btn-primary:hover {
+            background: #1e40af;
+            color: #ffffff;
         }
 
         .document-zoom-area {
@@ -343,15 +359,14 @@ $isCaixa = ($regime === 'caixa');
             <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
         </div>
 
-        <a href="<?php echo $baseUrl; ?>/financeiro/dre?data_inicio=<?php echo $dataInicio ?? ''; ?>&data_fim=<?php echo $dataFim ?? ''; ?>&regime=<?php echo $regime; ?>" class="btn-action-nav">
-            ← Voltar ao Painel
-        </a>
-        <button type="button" class="btn-action-nav" onclick="window.print()">
-            🖨 Imprimir Documento
-        </button>
-        <button type="button" class="btn-action-nav" onclick="fecharJanela()">
-            ✕ Fechar Janela
-        </button>
+        <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-action-nav btn-primary" onclick="window.print()">
+                🖨 Imprimir Documento
+            </button>
+            <button type="button" class="btn-action-nav" onclick="fecharJanela()">
+                ✕ Fechar
+            </button>
+        </div>
     </div>
 </div>
 <?php endif; ?>

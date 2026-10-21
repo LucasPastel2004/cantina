@@ -54,29 +54,119 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
         @media screen {
             body {
                 background-color: #cbd5e1;
-                padding: 20px 10px;
+                padding: 20px 10px 40px 10px;
             }
             .container {
-                width: 210mm;
+                width: 200mm;
                 max-width: calc(100% - 24px);
-                min-height: 297mm;
+                min-height: 280mm;
                 margin: 0 auto;
                 background: #ffffff;
                 padding: 10mm 14mm;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
                 box-sizing: border-box;
+                border-radius: 2px;
                 position: relative;
             }
-            .no-print {
-                margin-bottom: 15px;
-                background: #f8fafc;
-                padding: 8px 12px;
-                border: 1px solid #cbd5e1;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-radius: 4px;
-            }
+        }
+
+        /* Barra de Controle Superior Padronizada (#1e293b) */
+        .no-print-bar, .no-print {
+            background-color: #1e293b;
+            color: #ffffff;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 200mm;
+            max-width: calc(100% - 32px);
+            margin: 0 auto 16px auto;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 10px;
+            z-index: 1000;
+        }
+        .no-print .zoom-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 2px 6px;
+        }
+        .no-print .btn-zoom {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: all 0.15s ease;
+        }
+        .no-print .btn-zoom:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #93c5fd;
+        }
+        .no-print .btn-zoom-val {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-variant-numeric: tabular-nums;
+            min-width: 44px;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+        .no-print .btn-zoom-val:hover {
+            background: rgba(255, 255, 255, 0.2);
+            text-decoration: underline;
+        }
+        .no-print .btn-action {
+            background: #ffffff;
+            color: #0f172a;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease-in-out;
+        }
+        .no-print .btn-action:hover {
+            background: #f1f5f9;
+            color: #1d4ed8;
+        }
+        .no-print .btn-primary {
+            background: #1d4ed8;
+            color: #ffffff;
+            border: 1px solid #1e40af;
+        }
+        .no-print .btn-primary:hover {
+            background: #1e40af;
+            color: #ffffff;
+        }
+
+        .document-zoom-area {
+            zoom: var(--doc-zoom, 1);
+            transform-origin: top center;
+            transition: zoom 0.1s ease-out;
         }
 
         @media print {
@@ -86,8 +176,12 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
                 padding: 0 !important;
                 background: #ffffff !important;
             }
-            .no-print {
+            .no-print-bar, .no-print {
                 display: none !important;
+            }
+            .document-zoom-area {
+                zoom: 1 !important;
+                transform: none !important;
             }
             .container {
                 width: 210mm !important;
@@ -205,18 +299,38 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="no-print">
-        <span><strong>Demonstrativo Individual para RH</strong> — <?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador'); ?></span>
-        <div>
-            <button onclick="window.print()" style="padding: 5px 12px; font-weight: bold; background: #1d4ed8; color: #fff; border: 1px solid #1e40af; cursor: pointer; border-radius: 3px;">
-                Imprimir Documento
+
+    <!-- Barra de Controle Superior Padronizada (#1e293b - Visível apenas na tela) -->
+    <div class="no-print-bar no-print">
+        <div style="font-size: 12px; font-weight: 600;">
+            Demonstrativo Individual RH • <?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador'); ?> • Competência: <?php echo htmlspecialchars($competencia); ?> • Total de Páginas: 1
+        </div>
+
+        <!-- Controles de Zoom para Conferência -->
+        <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes e números antes de imprimir ou salvar">
+            <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+            </span>
+            <button type="button" class="btn-zoom" id="btnZoomOut" title="Diminuir Zoom (Ctrl -)" onclick="alterarZoom(-0.15)">−</button>
+            <button type="button" class="btn-zoom-val" id="btnZoomReset" title="Clique para redefinir para 100% (Ctrl 0)" onclick="resetarZoom()">100%</button>
+            <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-action btn-primary" onclick="window.print()">
+                🖨 Imprimir Documento
             </button>
-            <button onclick="window.close()" style="padding: 5px 10px; background: #fff; border: 1px solid #cbd5e1; cursor: pointer; border-radius: 3px; margin-left: 6px;">
-                Fechar
+            <button type="button" class="btn-action" onclick="fecharJanela()">
+                ✕ Fechar
             </button>
         </div>
     </div>
+
+    <!-- ÁREA ESCALÁVEL COM ZOOM PARA CONFERÊNCIA -->
+    <div id="document-zoom-area" class="document-zoom-area">
+        <div class="container">
 
     <div class="print-header">
         <div class="header-left">
@@ -314,5 +428,104 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
         </div>
     </div>
 </div>
+</div>
+
+<script>
+    let currentZoom = 1.0;
+    const minZoom = 0.5;
+    const maxZoom = 2.0;
+
+    function aplicarZoom(novoZoom) {
+        currentZoom = Math.min(Math.max(novoZoom, minZoom), maxZoom);
+        currentZoom = Math.round(currentZoom * 100) / 100;
+
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.setProperty('--doc-zoom', currentZoom);
+            zoomArea.style.zoom = currentZoom;
+        }
+
+        const resetBtn = document.getElementById('btnZoomReset');
+        if (resetBtn) {
+            resetBtn.textContent = Math.round(currentZoom * 100) + '%';
+        }
+
+        try {
+            localStorage.setItem('cantina_report_zoom', currentZoom);
+        } catch(e) {}
+    }
+
+    function alterarZoom(delta) {
+        aplicarZoom(currentZoom + delta);
+    }
+
+    function resetarZoom() {
+        aplicarZoom(1.0);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const savedZoom = localStorage.getItem('cantina_report_zoom');
+            if (savedZoom) {
+                const z = parseFloat(savedZoom);
+                if (!isNaN(z) && z >= minZoom && z <= maxZoom) {
+                    aplicarZoom(z);
+                }
+            }
+        } catch(e) {}
+    });
+
+    window.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
+            e.preventDefault();
+            alterarZoom(0.15);
+        } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
+            e.preventDefault();
+            alterarZoom(-0.15);
+        } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+            e.preventDefault();
+            resetarZoom();
+        }
+    });
+
+    window.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                alterarZoom(0.1);
+            } else {
+                alterarZoom(-0.1);
+            }
+        }
+    }, { passive: false });
+
+    window.addEventListener('beforeprint', function() {
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.zoom = 1;
+        }
+    });
+    window.addEventListener('afterprint', function() {
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.zoom = currentZoom;
+        }
+    });
+
+    function fecharJanela() {
+        window.close();
+        setTimeout(function() {
+            if (!window.closed) {
+                if (window.opener) {
+                    window.close();
+                } else if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = '<?php echo $baseUrl; ?>/relatorios/desconto-folha';
+                }
+            }
+        }, 150);
+    }
+</script>
 </body>
 </html>

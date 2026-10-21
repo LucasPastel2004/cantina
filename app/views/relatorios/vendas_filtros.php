@@ -72,7 +72,7 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
 <div class="container-fluid px-2 pb-5" style="max-width: 1400px; margin: 0 auto;">
 
     <!-- Formulário Oficial de Filtros -->
-    <form action="<?php echo $baseUrl; ?>/relatorios/vendas-filtros/imprimir" method="GET" id="formFiltrosVendas">
+    <form action="<?php echo $baseUrl; ?>/relatorios/vendas-filtros/imprimir" method="GET" target="_blank" id="formFiltrosVendas">
 
         <!-- Cabeçalho Executivo e Barra de Ações -->
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3 pb-2 border-bottom">
