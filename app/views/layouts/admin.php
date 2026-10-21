@@ -12,8 +12,25 @@ $baseUrl = $baseUrl ?? '';
 $title = !empty($pageTitle) 
     ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') . ' — Painel da Cantina' 
     : 'Painel da Cantina — Colégio Monteiro Lobato';
+if (!isset($turnoAtivo) || !isset($statusCaixa)) {
+    try {
+        if (class_exists(\App\Models\SessaoCaixa::class)) {
+            $sessaoAbertaLayout = \App\Models\SessaoCaixa::obterQualquerSessaoAberta();
+            if (!isset($statusCaixa)) {
+                $statusCaixa = $sessaoAbertaLayout ? 'Aberto' : 'Fechado';
+            }
+            if (!isset($turnoAtivo)) {
+                $turnoLayout = $sessaoAbertaLayout ? $sessaoAbertaLayout['turno'] : \App\Models\SessaoCaixa::inferirTurnoAtual();
+                $turnoAtivo = ucfirst($turnoLayout);
+            }
+        }
+    } catch (\Throwable $e) {
+        $statusCaixa = $statusCaixa ?? 'Fechado';
+        $turnoAtivo = $turnoAtivo ?? 'Matutino';
+    }
+}
 $turnoAtivo = $turnoAtivo ?? 'Matutino';
-$statusCaixa = $statusCaixa ?? 'Aberto';
+$statusCaixa = $statusCaixa ?? 'Fechado';
 $dataAtual = date('d/m/Y');
 ?>
 <!DOCTYPE html>

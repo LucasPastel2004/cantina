@@ -29,10 +29,14 @@ $usuario = $usuario ?? [];
 
 <!-- Faixa de Métricas Rápidas (Stat-Strip) -->
 <?php
+$turnoLabel = strtoupper($turnoAtivo ?? 'Matutino');
+$horarioCorte = (($turnoAtivo ?? 'Matutino') === 'Vespertino') ? '13:30' : '08:00';
+$horarioCaixa = (($turnoAtivo ?? 'Matutino') === 'Vespertino') ? 'Fechamento 16:00' : 'Fechamento 11:00';
+
 $stats = [
-    ['label' => 'TURNO ATUAL', 'value' => 'Matutino', 'tabular' => false],
-    ['label' => 'CORTE MATUTINO', 'value' => '08:00', 'tabular' => true],
-    ['label' => 'CAIXA MATUTINO', 'value' => 'Fechamento 11:00', 'tabular' => false],
+    ['label' => 'TURNO ATUAL', 'value' => $turnoAtivo ?? 'Matutino', 'tabular' => false],
+    ['label' => 'CORTE ' . $turnoLabel, 'value' => $horarioCorte, 'tabular' => true],
+    ['label' => 'CAIXA ' . $turnoLabel, 'value' => ($statusCaixa === 'Aberto' ? 'Aberto' : $horarioCaixa), 'tabular' => false],
     ['label' => 'PERMISSÃO', 'value' => ucfirst($usuario['role'] ?? 'operador'), 'tabular' => false],
 ];
 require __DIR__ . '/../partials/stat_strip.php';

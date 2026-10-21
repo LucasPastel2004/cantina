@@ -2141,5 +2141,17 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Em `assets/js/app.js`, garantida a sincronização explícita de `targetFlyout.style.display = 'flex'` ao abrir e `style.display = 'none'` ao fechar silenciosamente.
 - Como evitar no futuro: Sempre que qualquer modificação estrutural de layout for realizada em `assets/css/custom.css` ou `assets/js/app.js`, o valor de `$data['assetVersion']` em `app/core/Controller.php` DEVE ser obrigatoriamente incrementado, assegurando cache busting instantâneo em produção.
 
+---
+
+## 2026-10-21 - Indicador de status do caixa exibido como Aberto na topbar de páginas administrativas com o caixa fechado
+
+- Sintoma: Na topbar do painel administrativo (ex: `/admin`), o indicador de status do caixa exibia "Caixa: • Aberto" em verde, mesmo com o caixa fechado. Ao acessar a tela de Caixa do Turno (`/operacional/caixa`), o indicador mudava para "Caixa: • Fechado" em vermelho, mas ao retornar para a tela inicial ou navegar para outra rota, voltava a exibir "Aberto".
+- Causa: O layout mestre `app/views/layouts/admin.php` continha a atribuição de contingência `$statusCaixa = $statusCaixa ?? 'Aberto';`. Como a variável `$statusCaixa` só era enviada pelos controllers dedicados `CaixaController` e `PdvController`, todas as demais páginas do painel administrativo não injetavam a variável na view e caíam no valor estático `'Aberto'`.
+- Solução aplicada:
+  1. No método `Controller::render()` em `app/core/Controller.php`, foi implementada injeção automática de `$data['statusCaixa']` e `$data['turnoAtivo']` consultando `SessaoCaixa::obterQualquerSessaoAberta()`. Se houver sessão aberta no MySQL, define como `'Aberto'`; se não houver nenhuma sessão aberta, define como `'Fechado'` (e o turno inferido pelo relógio da escola).
+  2. No layout `app/views/layouts/admin.php`, substituído o fallback estático `'Aberto'` pela checagem dinâmica com contingência padrão `'Fechado'`.
+  3. Em `app/views/admin/index.php`, sincronizados os cartões da faixa rápida (stat-strip) com as variáveis dinâmicas de turno e caixa.
+- Como evitar no futuro: Variáveis de estado global de negócio (como status de caixa e turno ativo) exibidas em layouts mestres compartilhados devem ser resolvidas centralmente no `Controller` base a partir da fonte de dados real (banco de dados), nunca possuindo fallbacks otimistas (como `'Aberto'`) que mascarem o real estado do sistema.
+
 
 

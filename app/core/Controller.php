@@ -48,6 +48,29 @@ abstract class Controller
             $data['user'] = Auth::user();
         }
 
+        // Indicadores operacionais globais (Turno e Status do Caixa)
+        if (!isset($data['statusCaixa']) || !isset($data['turnoAtivo'])) {
+            try {
+                if (class_exists(\App\Models\SessaoCaixa::class)) {
+                    $sessaoAbertaGlobal = \App\Models\SessaoCaixa::obterQualquerSessaoAberta();
+                    if (!isset($data['statusCaixa'])) {
+                        $data['statusCaixa'] = $sessaoAbertaGlobal ? 'Aberto' : 'Fechado';
+                    }
+                    if (!isset($data['turnoAtivo'])) {
+                        $turnoNome = $sessaoAbertaGlobal ? $sessaoAbertaGlobal['turno'] : \App\Models\SessaoCaixa::inferirTurnoAtual();
+                        $data['turnoAtivo'] = ucfirst($turnoNome);
+                    }
+                }
+            } catch (\Throwable $e) {
+                if (!isset($data['statusCaixa'])) {
+                    $data['statusCaixa'] = 'Fechado';
+                }
+                if (!isset($data['turnoAtivo'])) {
+                    $data['turnoAtivo'] = 'Matutino';
+                }
+            }
+        }
+
         // Sanitização universal preventiva contra mojibake em todas as views
         $data = Sanitizer::repararUtf8($data);
 
