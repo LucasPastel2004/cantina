@@ -281,7 +281,7 @@ class PdvFormasPagamentoTest
         echo "\n--- [6] Estorno de Venda Realizada em Saldo (Devolução na Carteira) ---\n";
 
         $sessaoId = $this->obterOuCriarSessaoCaixa();
-        $operadorId = 1;
+        $operadorId = $this->obterOperadorTeste();
         $produto = $this->obterProdutoTeste();
         $aluno = $this->obterAlunoTesteComSaldo(50.0);
 
@@ -342,7 +342,7 @@ class PdvFormasPagamentoTest
 
     private function obterOperadorTeste(): int
     {
-        $id = $this->pdo->query("SELECT id FROM usuarios WHERE status = 'ativo' AND deleted_at IS NULL ORDER BY id ASC LIMIT 1")->fetchColumn();
+        $id = $this->pdo->query("SELECT id FROM usuarios WHERE ativo = 1 AND deleted_at IS NULL ORDER BY id ASC LIMIT 1")->fetchColumn();
         if (!$id) {
             $id = $this->pdo->query("SELECT id FROM usuarios LIMIT 1")->fetchColumn();
         }
