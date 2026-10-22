@@ -74,29 +74,24 @@ $produtoPreSel = $produtoPreSel ?? null;
             </div>
 
             <div class="row g-3">
-                <!-- Fornecedor com Autocomplete (Datalist) e Carregamento Rápido -->
+                <!-- Fornecedor com Autocomplete (Datalist) -->
                 <div class="col-12 col-md-5">
                     <label for="inputFornecedor" class="form-label small fw-semibold text-muted mb-1">Fornecedor / Distribuidor: *</label>
-                    <div class="input-group input-group-sm">
-                        <input type="text" 
-                               name="fornecedor" 
-                               id="inputFornecedor" 
-                               class="form-control form-control-sm" 
-                               list="listaFornecedores" 
-                               required 
-                               autocomplete="off"
-                               placeholder="Digite ou selecione o fornecedor..."
-                               onkeydown="if(event.key === 'Enter'){ event.preventDefault(); carregarProdutosFornecedor(); }">
-                        <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="carregarProdutosFornecedor()" title="Carregar produtos deste fornecedor">
-                            Carregar
-                        </button>
-                    </div>
+                    <input type="text" 
+                           name="fornecedor" 
+                           id="inputFornecedor" 
+                           class="form-control form-control-sm" 
+                           list="listaFornecedores" 
+                           required 
+                           autocomplete="off"
+                           placeholder="Digite ou selecione o fornecedor..."
+                           onkeydown="if(event.key === 'Enter'){ event.preventDefault(); carregarProdutosFornecedor(); }">
                     <datalist id="listaFornecedores">
                         <?php foreach ($fornecedores as $forn): ?>
                             <option value="<?php echo htmlspecialchars($forn, ENT_QUOTES, 'UTF-8'); ?>"></option>
                         <?php endforeach; ?>
                     </datalist>
-                    <div class="form-text" style="font-size: 11px;">Digite ou selecione o fornecedor e clique em <strong>Carregar</strong> para listar os produtos dele.</div>
+                    <div class="form-text" style="font-size: 11px;">Digite ou selecione o fornecedor e clique em <strong>Carregar Produtos</strong> no topo para listar os itens.</div>
                 </div>
 
                 <!-- Data da Movimentação -->
@@ -213,9 +208,8 @@ $produtoPreSel = $produtoPreSel ?? null;
         <!-- Bloco 3: Grade de Itens do Lote de Entrada (O Lançamento em Lote) -->
         <div class="card-enterprise w-100 mb-4">
             <div class="card-enterprise-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div class="d-flex align-items-center gap-2">
+                <div>
                     <span class="card-enterprise-title">3. Itens do Lançamento de Entrada (Lote Atual)</span>
-                    <span class="badge bg-primary text-white rounded-pill px-2 py-1 font-tabular" id="badgeTotalItensLote" style="font-size: 11px;">0 itens</span>
                 </div>
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="limparListaLote()" id="btnLimparLista" disabled>
@@ -741,7 +735,7 @@ function renderizarTabelaLote() {
 
     if (loteItens.length === 0) {
         corpo.innerHTML = '<tr id="linhaVaziaLote"><td colspan="9" class="text-center py-4 text-muted"><em>Nenhum produto adicionado ao lote. Selecione os produtos no catálogo acima para montar a entrega.</em></td></tr>';
-        badgeTotal.textContent = '0 itens';
+        if (badgeTotal) badgeTotal.textContent = '0 itens';
         resumoQtd.textContent = '0';
         resumoVolume.textContent = '0 un';
         resumoValor.textContent = 'R$ 0,00';
@@ -779,7 +773,7 @@ function renderizarTabelaLote() {
         corpo.appendChild(tr);
     });
 
-    badgeTotal.textContent = loteItens.length + (loteItens.length === 1 ? ' item' : ' itens');
+    if (badgeTotal) badgeTotal.textContent = loteItens.length + (loteItens.length === 1 ? ' item' : ' itens');
     resumoQtd.textContent = loteItens.length;
     resumoVolume.textContent = totalVolume + ' un';
     resumoValor.textContent = formatarMoeda(totalValor);
