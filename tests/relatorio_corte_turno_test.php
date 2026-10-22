@@ -110,8 +110,9 @@ class RelatorioCorteTurnoTest
         $this->assert(str_contains($htmlRelatorioCorte, '/operacional/corte'), 'Link de retorno aponta para /operacional/corte');
         $this->assert(str_contains($htmlRelatorioCorte, 'id="btnImprimirCorteA4"'), 'Botão de impressão oficial id btnImprimirCorteA4 presente');
         $this->assert(str_contains($htmlRelatorioCorte, 'Imprimir / Salvar PDF (A4)'), 'Botão "Imprimir / Salvar PDF (A4)" devidamente integrado na tela de relatórios');
-        $this->assert(str_contains($htmlRelatorioCorte, 'Total de Peças Encomendadas'), 'Métrica consolidada de Total de Peças presente');
-        $this->assert(str_contains($htmlRelatorioCorte, 'Demandas de Produção por Salgado'), 'Seção analítica de demandas de produção presente');
+        $this->assert(!str_contains($htmlRelatorioCorte, 'Total de Peças Encomendadas'), 'Stat-strip redundante removido da tela de filtros do relatório');
+        $this->assert(!str_contains($htmlRelatorioCorte, 'Demandas de Produção por Salgado'), 'Tabela duplicada removida da tela de filtros do relatório');
+        $this->assert(!str_contains($htmlRelatorioCorte, 'textoWhatsArea'), 'Card de WhatsApp removido da tela de filtros do relatório');
 
         // 5. Teste da emissão impressa A4 (/relatorios/corte/imprimir)
         echo "\n--- 5. Execução do Espelho A4 (/relatorios/corte/imprimir) ---\n";

@@ -877,7 +877,7 @@ class RelatoriosController extends Controller
     }
 
     /**
-     * Relatório de Corte do Turno (Consolidação de Salgados e Produção para Fornecedores)
+     * Relatório de Corte do Turno (Painel de Parâmetros e Emissão Oficial A4 para Fornecedores)
      */
     public function corte(): void
     {
@@ -891,29 +891,15 @@ class RelatoriosController extends Controller
             $turnoConsumo = Pedido::TURNO_MATUTINO;
         }
 
-        $dadosCorte = Pedido::consolidarCorte($dataConsumo, $turnoConsumo);
-        $textoWhatsApp = Pedido::obterTextoWhatsAppCorte(
-            $dataConsumo,
-            $turnoConsumo,
-            $dadosCorte['itens'] ?? []
-        );
+        $statusCorte = Pedido::obterStatusCorte($dataConsumo, $turnoConsumo);
 
         $this->render('relatorios/corte', [
-            'pageTitle'         => 'Relatório Consolidado de Corte do Turno',
-            'activeMenu'        => 'corte_relatorio',
-            'user'              => Auth::user(),
-            'dataConsumo'       => $dataConsumo,
-            'turnoConsumo'      => $turnoConsumo,
-            'dadosCorte'        => $dadosCorte,
-            'itens'             => $dadosCorte['itens'] ?? [],
-            'totalPecas'        => (int)($dadosCorte['total_pecas'] ?? 0),
-            'totalSalgados'     => (int)($dadosCorte['total_salgados'] ?? 0),
-            'totalPedidos'      => (int)($dadosCorte['total_pedidos'] ?? 0),
-            'totalAlunos'       => (int)($dadosCorte['total_alunos'] ?? 0),
-            'totalValor'        => (float)($dadosCorte['total_valor_estimado'] ?? 0.0),
-            'statusCorte'       => $dadosCorte['status_corte'] ?? [],
-            'statusRecebimento' => $dadosCorte['status_recebimento'] ?? null,
-            'textoWhatsApp'     => $textoWhatsApp
+            'pageTitle'    => 'Relatório Consolidado de Corte do Turno',
+            'activeMenu'   => 'corte_relatorio',
+            'user'         => Auth::user(),
+            'dataConsumo'  => $dataConsumo,
+            'turnoConsumo' => $turnoConsumo,
+            'statusCorte'  => $statusCorte
         ], 'admin');
     }
 
