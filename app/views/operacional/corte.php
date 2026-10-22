@@ -45,15 +45,15 @@ $corteAberto = $statusCorte['pode_alterar'] ?? false;
         </p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <a href="<?php echo $baseUrl; ?>/operacional/corte/imprimir?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
-           class="btn btn-enterprise btn-primary" 
-           target="_blank" 
-           title="Visualizar relatório timbrado oficial para impressão ou salvar em PDF">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" class="me-1" style="vertical-align: -2px;">
-                <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+        <a href="<?php echo $baseUrl; ?>/relatorios/corte?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 
+           id="btnRelatorioCorteTurno"
+           class="btn btn-enterprise btn-primary d-inline-flex align-items-center gap-1.5" 
+           title="Acessar relatório consolidado de corte do turno na Central de Relatórios">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                <path d="M4.5 10.5A.5.5 0 0 1 5 10h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 8h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5z"/>
             </svg>
-            Imprimir / Salvar PDF (A4)
+            Relatório Corte do Turno
         </a>
 
         <a href="<?php echo $baseUrl; ?>/operacional/recebimento?data=<?php echo urlencode($dataConsumo); ?>&turno=<?php echo urlencode($turnoConsumo); ?>" 

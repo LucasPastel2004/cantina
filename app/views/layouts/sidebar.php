@@ -24,7 +24,7 @@ $isOperacionalActive = in_array($activeMenu, ['corte', 'recebimento', 'tickets',
 $isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'entrada_estoque', 'importar_xml'], true);
 $isFinanceiroActive = in_array($activeMenu, ['despesas', 'dre', 'contestacoes'], true);
 $isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'calendario', 'configuracoes'], true);
-$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'devedores', 'arrecadacao', 'movimentacoes_estoque'], true);
+$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'devedores', 'arrecadacao', 'movimentacoes_estoque', 'corte_relatorio'], true);
 $isProdutosActive = ($activeMenu === 'produtos');
 ?>
 
@@ -366,6 +366,12 @@ $isProdutosActive = ($activeMenu === 'produtos');
                 <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="nav-link <?php echo ($activeMenu === 'movimentacoes_estoque') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Movimentações de Estoque</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/relatorios/corte" class="nav-link <?php echo ($activeMenu === 'corte_relatorio') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Corte do Turno</span>
                 </a>
             </li>
         </ul>

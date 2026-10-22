@@ -194,10 +194,10 @@ $baseUrl = $baseUrl ?? '';
                     </p>
                 </div>
                 <div class="d-flex gap-2 pt-3 border-top mt-auto">
-                    <a href="<?php echo $baseUrl; ?>/operacional/corte" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
-                        Painel de Corte
+                    <a href="<?php echo $baseUrl; ?>/relatorios/corte" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
+                        Acessar Relatório
                     </a>
-                    <a href="<?php echo $baseUrl; ?>/operacional/corte/imprimir?data=<?php echo date('Y-m-d'); ?>&turno=matutino" class="btn btn-enterprise btn-primary btn-sm text-center fw-medium" target="_blank" title="Imprimir ou Salvar em PDF">
+                    <a href="<?php echo $baseUrl; ?>/relatorios/corte/imprimir?data=<?php echo date('Y-m-d'); ?>&turno=matutino" class="btn btn-enterprise btn-secondary btn-sm text-center fw-medium" target="_blank" title="Imprimir ou Salvar em PDF">
                         Imprimir / PDF
                     </a>
                 </div>

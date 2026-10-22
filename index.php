@@ -510,6 +510,17 @@ $router->get('/relatorios/devedores/imprimir', [\App\Controllers\RelatoriosContr
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 
+// 4.x. Relatório Consolidado de Corte do Turno para Fornecedores
+$router->get('/relatorios/corte', [\App\Controllers\RelatoriosController::class, 'corte'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/relatorios/corte/pdf', [\App\Controllers\RelatoriosController::class, 'cortePdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+$router->get('/relatorios/corte/imprimir', [\App\Controllers\RelatoriosController::class, 'corteImprimir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])
+]);
+
 // 4.2. Extrato Analítico do Aluno (Operador de Balcão e Administrador — FSD Tela 8.5 & Seção 8)
 $router->get('/operacional/extrato-aluno', [\App\Controllers\RelatoriosController::class, 'extratoAluno'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_OPERADOR, \App\Core\RBAC::ROLE_ADMINISTRADOR])

@@ -16,6 +16,7 @@ use App\Models\Colaborador;
 use App\Models\Configuracao;
 use App\Models\Categoria;
 use App\Models\Responsavel;
+use App\Models\Pedido;
 use App\Models\SessaoCaixa;
 use App\Models\TransacaoCarteira;
 use App\Services\PdfService;
@@ -870,6 +871,93 @@ class RelatoriosController extends Controller
                 'operador'        => $usuario['nome'] ?? 'Administração'
             ]
         ]);
+        if (!defined('CANTINA_TEST_MODE')) {
+            exit;
+        }
+    }
+
+    /**
+     * Relatório de Corte do Turno (Consolidação de Salgados e Produção para Fornecedores)
+     */
+    public function corte(): void
+    {
+        $hoje = date('Y-m-d');
+        $dataConsumo = (isset($_GET['data']) && is_string($_GET['data']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['data'])) 
+            ? $_GET['data'] 
+            : $hoje;
+
+        $turnoConsumo = (isset($_GET['turno']) && is_string($_GET['turno'])) ? trim($_GET['turno']) : Pedido::TURNO_MATUTINO;
+        if (!in_array($turnoConsumo, [Pedido::TURNO_MATUTINO, Pedido::TURNO_VESPERTINO], true)) {
+            $turnoConsumo = Pedido::TURNO_MATUTINO;
+        }
+
+        $dadosCorte = Pedido::consolidarCorte($dataConsumo, $turnoConsumo);
+        $textoWhatsApp = Pedido::obterTextoWhatsAppCorte(
+            $dataConsumo,
+            $turnoConsumo,
+            $dadosCorte['itens'] ?? []
+        );
+
+        $this->render('relatorios/corte', [
+            'pageTitle'         => 'Relatório Consolidado de Corte do Turno',
+            'activeMenu'        => 'corte_relatorio',
+            'user'              => Auth::user(),
+            'dataConsumo'       => $dataConsumo,
+            'turnoConsumo'      => $turnoConsumo,
+            'dadosCorte'        => $dadosCorte,
+            'itens'             => $dadosCorte['itens'] ?? [],
+            'totalPecas'        => (int)($dadosCorte['total_pecas'] ?? 0),
+            'totalSalgados'     => (int)($dadosCorte['total_salgados'] ?? 0),
+            'totalPedidos'      => (int)($dadosCorte['total_pedidos'] ?? 0),
+            'totalAlunos'       => (int)($dadosCorte['total_alunos'] ?? 0),
+            'totalValor'        => (float)($dadosCorte['total_valor_estimado'] ?? 0.0),
+            'statusCorte'       => $dadosCorte['status_corte'] ?? [],
+            'statusRecebimento' => $dadosCorte['status_recebimento'] ?? null,
+            'textoWhatsApp'     => $textoWhatsApp
+        ], 'admin');
+    }
+
+    /**
+     * Redireciona endpoint de PDF para a visualização unificada oficial de impressão e PDF (/relatorios/corte/pdf)
+     */
+    public function cortePdf(): void
+    {
+        $hoje = date('Y-m-d');
+        $dataConsumo = (isset($_GET['data']) && is_string($_GET['data']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['data'])) 
+            ? $_GET['data'] 
+            : $hoje;
+
+        $turnoConsumo = (isset($_GET['turno']) && is_string($_GET['turno'])) ? trim($_GET['turno']) : Pedido::TURNO_MATUTINO;
+        if (!in_array($turnoConsumo, [Pedido::TURNO_MATUTINO, Pedido::TURNO_VESPERTINO], true)) {
+            $turnoConsumo = Pedido::TURNO_MATUTINO;
+        }
+
+        $this->redirect('/relatorios/corte/imprimir?data=' . urlencode($dataConsumo) . '&turno=' . urlencode($turnoConsumo));
+    }
+
+    /**
+     * Visualização limpa para impressão A4 no navegador (/relatorios/corte/imprimir)
+     */
+    public function corteImprimir(): void
+    {
+        $hoje = date('Y-m-d');
+        $dataConsumo = (isset($_GET['data']) && is_string($_GET['data']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['data'])) 
+            ? $_GET['data'] 
+            : $hoje;
+
+        $turnoConsumo = (isset($_GET['turno']) && is_string($_GET['turno'])) ? trim($_GET['turno']) : Pedido::TURNO_MATUTINO;
+        if (!in_array($turnoConsumo, [Pedido::TURNO_MATUTINO, Pedido::TURNO_VESPERTINO], true)) {
+            $turnoConsumo = Pedido::TURNO_MATUTINO;
+        }
+
+        $dadosCorte = Pedido::consolidarCorte($dataConsumo, $turnoConsumo);
+        $html = PdfService::gerarHtmlRelatorioCorte($dadosCorte);
+
+        if (!headers_sent()) {
+            header('Content-Type: text/html; charset=UTF-8');
+        }
+
+        echo $html;
         if (!defined('CANTINA_TEST_MODE')) {
             exit;
         }
