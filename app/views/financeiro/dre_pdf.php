@@ -281,23 +281,32 @@ $isCaixa = ($regime === 'caixa');
         }
 
         .col-desc {
-            width: 15.5%;
+            width: 15.1%;
             text-align: left !important;
             padding: 3px 5px !important;
             word-break: break-word;
         }
         .col-mes {
-            width: 6.4%;
+            width: 6.35%;
             text-align: right !important;
             padding: 3px 3px !important;
             white-space: nowrap !important;
         }
         .col-total {
-            width: 7.7%;
-            text-align: right !important;
+            width: 8.7%;
             font-weight: 700 !important;
-            padding: 3px 4px !important;
+        }
+        th.col-total {
+            text-align: center !important;
+            white-space: normal !important;
+            line-height: 1.15 !important;
+            font-size: 7.0pt !important;
+            padding: 2px 2px !important;
+        }
+        td.col-total {
+            text-align: right !important;
             white-space: nowrap !important;
+            padding: 3px 4px !important;
         }
 
         .row-secao {
@@ -407,7 +416,7 @@ $isCaixa = ($regime === 'caixa');
                 <?php for ($m = 1; $m <= 12; $m++): ?>
                     <th class="col-mes font-tabular"><?php echo $mesesAbrev[$m]; ?>/<?php echo substr((string)$anoAtual, 2); ?></th>
                 <?php endfor; ?>
-                <th class="col-total font-tabular">TOTAL DO PERÍODO</th>
+                <th class="col-total font-tabular">TOTAL DO<br>PERÍODO</th>
             </tr>
         </thead>
         <tbody>
