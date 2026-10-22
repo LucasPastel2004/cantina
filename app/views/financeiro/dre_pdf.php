@@ -247,7 +247,7 @@ $isCaixa = ($regime === 'caixa');
             width: 100% !important;
             border-collapse: collapse !important;
             table-layout: fixed !important;
-            font-size: 7.8pt;
+            font-size: 7.4pt;
             border: 1px solid #000000 !important;
             margin-top: 4px;
         }
@@ -255,16 +255,15 @@ $isCaixa = ($regime === 'caixa');
         table.table-dre-doc th,
         table.table-dre-doc td {
             border: 1px solid #000000 !important;
-            padding: 3.5px 6px !important;
+            padding: 3px 4px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
-            word-break: break-word;
         }
 
         table.table-dre-doc thead th {
             font-weight: 700 !important;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.2pt;
             text-transform: uppercase;
         }
 
@@ -282,17 +281,23 @@ $isCaixa = ($regime === 'caixa');
         }
 
         .col-desc {
-            width: 22%;
+            width: 15.5%;
             text-align: left !important;
+            padding: 3px 5px !important;
+            word-break: break-word;
         }
         .col-mes {
-            width: 6%;
+            width: 6.4%;
             text-align: right !important;
+            padding: 3px 3px !important;
+            white-space: nowrap !important;
         }
         .col-total {
-            width: 8%;
+            width: 7.7%;
             text-align: right !important;
             font-weight: 700 !important;
+            padding: 3px 4px !important;
+            white-space: nowrap !important;
         }
 
         .row-secao {
