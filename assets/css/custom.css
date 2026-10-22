@@ -1659,7 +1659,7 @@ textarea.form-control {
 
 .app-admin-footer {
   border-top: 1px solid var(--border-subtle);
-  background-color: #ffffff;
+  background-color: var(--surface-bg);
   padding: 12px 32px;
 }
 
@@ -1994,8 +1994,9 @@ textarea.form-control {
   border-bottom-color: var(--primary-blue);
 }
 
-.portal-footer {
-  background-color: #ffffff;
+.portal-footer,
+.app-footer {
+  background-color: var(--surface-bg);
   border-top: 1px solid var(--border-subtle);
 }
 
