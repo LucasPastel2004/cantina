@@ -563,7 +563,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                     } else if (window.history.length > 1) {
                         window.history.back();
                     } else {
-                        window.location.href = '<?php echo $baseUrl; ?>/relatorios';
+                        window.location.href = '<?php echo $baseUrl; ?>/relatorios/baixas-mercadorias';
                     }
                 }
             }, 150);
