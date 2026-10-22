@@ -315,7 +315,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
 .pdv-prod-price {
     font-size: 13px;
     font-weight: 700;
-    color: #1d4ed8;
+    color: #0f172a;
 }
 
 .pdv-prod-stock {
@@ -620,19 +620,19 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
         </div>
         <div class="stat-strip-item">
             <span class="stat-strip-label">Dinheiro</span>
-            <span class="stat-strip-value font-tabular text-success">
+            <span class="stat-strip-value font-tabular">
                 R$ <?php echo number_format((float)$metricas['total_dinheiro'], 2, ',', '.'); ?>
             </span>
         </div>
         <div class="stat-strip-item">
             <span class="stat-strip-label">Pix</span>
-            <span class="stat-strip-value font-tabular text-primary">
+            <span class="stat-strip-value font-tabular">
                 R$ <?php echo number_format((float)$metricas['total_pix'], 2, ',', '.'); ?>
             </span>
         </div>
         <div class="stat-strip-item">
             <span class="stat-strip-label">Saldo</span>
-            <span class="stat-strip-value font-tabular text-info">
+            <span class="stat-strip-value font-tabular">
                 R$ <?php echo number_format((float)($metricas['total_saldo'] ?? 0), 2, ',', '.'); ?>
             </span>
         </div>
@@ -819,7 +819,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                             <button type="button" class="btn btn-link text-danger p-0 font-12" onclick="limparSelecaoAluno()" title="Trocar Aluno">✕</button>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top font-11">
-                            <span>Saldo: <strong class="font-tabular font-bold text-success" id="alunoSelSaldo">R$ 0,00</strong></span>
+                            <span>Saldo: <strong class="font-tabular font-bold text-dark" id="alunoSelSaldo">R$ 0,00</strong></span>
                             <span id="alunoSelAlergias" class="font-10 text-truncate" style="max-width: 55%;"></span>
                         </div>
                     </div>
@@ -867,7 +867,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             <div class="pdv-cart-footer">
                 <div class="pdv-total-row">
                     <span class="pdv-total-label">Total a Pagar</span>
-                    <span class="pdv-total-val font-tabular text-primary" id="cartTotalDisplay">R$ 0,00</span>
+                    <span class="pdv-total-val font-tabular" id="cartTotalDisplay">R$ 0,00</span>
                 </div>
 
                 <!-- Botões de Forma de Pagamento -->
@@ -900,7 +900,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     </div>
                     <div class="d-flex align-items-center justify-content-between px-2.5 py-1.5 rounded bg-light border">
                         <span class="font-12 font-semibold text-secondary">Troco Sugerido:</span>
-                        <span class="font-15 font-tabular font-bold text-success" id="displayTroco">R$ 0,00</span>
+                        <span class="font-15 font-tabular font-bold text-dark" id="displayTroco">R$ 0,00</span>
                     </div>
                 </div>
 
@@ -908,8 +908,8 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                 <div id="payDetailsSaldo" class="mb-2 d-none">
                     <div class="px-2 py-1 rounded bg-light border">
                         <div class="d-flex justify-content-between align-items-center font-11">
-                            <span class="text-secondary">Debitar: <strong class="font-tabular font-bold text-primary" id="displaySaldoDebito">R$ 0,00</strong></span>
-                            <span><span id="lblSaldoRestante">Restante:</span> <strong class="font-tabular font-bold text-success" id="displaySaldoRestante">R$ 0,00</strong></span>
+                            <span class="text-secondary">Debitar: <strong class="font-tabular font-bold text-dark" id="displaySaldoDebito">R$ 0,00</strong></span>
+                            <span><span id="lblSaldoRestante">Restante:</span> <strong class="font-tabular font-bold text-dark" id="displaySaldoRestante">R$ 0,00</strong></span>
                         </div>
                     </div>
                     <!-- Manter elemento de saldo disponível para compatibilidade com JS -->
@@ -1024,7 +1024,7 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
             
             <div id="posVendaTrocoBox" class="p-2 bg-light border rounded mb-3 d-none">
                 <div class="font-11 text-secondary">Troco a Devolver:</div>
-                <div class="font-20 font-bold text-success font-tabular" id="posVendaTroco">R$ 0,00</div>
+                <div class="font-20 font-bold text-dark font-tabular" id="posVendaTroco">R$ 0,00</div>
             </div>
 
             <div class="d-flex flex-column gap-2">
@@ -1308,7 +1308,7 @@ function renderizarCarrinho() {
                     <button type="button" class="pdv-qty-btn" onclick="alterarQuantidadeItem(${it.produto_id}, -1)">-</button>
                     <span class="font-tabular font-bold px-1.5 font-13" style="min-width: 24px; text-align: center;">${it.quantidade}</span>
                     <button type="button" class="pdv-qty-btn" onclick="alterarQuantidadeItem(${it.produto_id}, 1)">+</button>
-                    <span class="font-tabular font-bold font-14 text-primary ms-2" style="min-width: 72px; text-align: right;">
+                    <span class="font-tabular font-bold font-14 text-dark ms-2" style="min-width: 72px; text-align: right;">
                         R$ ${subtotal.toFixed(2).replace('.', ',')}
                     </span>
                     <button type="button" class="btn btn-link text-danger p-0 ms-1 font-14" onclick="removerItemCarrinho(${it.produto_id})" title="Remover">✕</button>
@@ -1397,7 +1397,7 @@ function atualizarDemonstrativoSaldo() {
             if (lblRest) lblRest.innerText = 'Faltam:';
             if (alertInsuf) alertInsuf.classList.remove('d-none');
         } else {
-            dispRest.className = 'font-13 font-tabular font-bold text-success';
+            dispRest.className = 'font-13 font-tabular font-bold text-dark';
             if (lblRest) lblRest.innerText = 'Saldo Restante:';
             if (alertInsuf) alertInsuf.classList.add('d-none');
         }
@@ -1423,7 +1423,7 @@ function calcularTroco() {
     if (recValor >= total && total > 0) {
         const troco = recValor - total;
         displayTroco.innerText = `R$ ${troco.toFixed(2).replace('.', ',')}`;
-        displayTroco.className = 'font-14 font-tabular font-bold text-success';
+        displayTroco.className = 'font-14 font-tabular font-bold text-dark';
     } else if (recValor > 0 && recValor < total) {
         const falta = total - recValor;
         displayTroco.innerText = `Falta R$ ${falta.toFixed(2).replace('.', ',')}`;
