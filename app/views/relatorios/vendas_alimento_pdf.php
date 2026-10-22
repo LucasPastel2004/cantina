@@ -526,7 +526,7 @@ if ($emitirAlim && $emitirAluno) {
         </div>
 
         <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
-            🖨 Imprimir Documento
+            🖨 Imprimir / Salvar PDF
         </button>
         <button type="button" class="btn-close-action" onclick="window.close()">
             ✕ Fechar

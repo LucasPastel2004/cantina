@@ -297,7 +297,8 @@ class ArrecadacaoDreRegimesTest
         $relCtrl->arrecadacao();
         $htmlArrec = ob_get_clean();
         $this->assert(str_contains($htmlArrec, 'Arrecadação Financeira & Fluxo de Entradas'), "RelatoriosController::arrecadacao renderiza view principal");
-        $this->assert(str_contains($htmlArrec, 'Total Arrecadado (Cash-In Real)'), "View de Arrecadação exibe stat-item de Cash-In");
+        $this->assert(str_contains($htmlArrec, 'Imprimir / Salvar PDF (A4)'), "View de Arrecadação exibe botão de emissão direta no formulário de período");
+        $this->assert(!str_contains($htmlArrec, 'stat-strip-item'), "View de Arrecadação removeu cartões de métricas do rodapé conforme solicitado");
         $this->assert(!str_contains($htmlArrec, 'Arrecadação por Canal de Pagamento'), "View de Arrecadação omite bloco de canais para manter tela limpa");
         $this->assert(!str_contains($htmlArrec, 'Controle de Custódia da Carteira'), "View de Arrecadação omite bloco de custódia para manter tela limpa");
         $this->assert(!str_contains($htmlArrec, 'Detalhamento Diário de Entradas e Consumo'), "View de Arrecadação omite listagem diária longa para manter tela limpa");
@@ -309,6 +310,8 @@ class ArrecadacaoDreRegimesTest
         $relCtrl->arrecadacaoImprimir();
         $htmlArrecImp = ob_get_clean();
         $this->assert(str_contains($htmlArrecImp, 'DEMONSTRATIVO DE ARRECADAÇÃO FINANCEIRA'), "RelatoriosController::arrecadacaoImprimir renderiza espelho A4 oficial");
+        $this->assert(str_contains($htmlArrecImp, 'Síntese dos Indicadores Financeiros do Período'), "Relatório A4 oficial contém tabela própria de síntese dos indicadores");
+        $this->assert(str_contains($htmlArrecImp, 'Total Arrecadado (Cash-In Real)'), "Relatório A4 oficial exibe métrica de Total Arrecadado na tabela de síntese");
         $this->assert(str_contains($htmlArrecImp, 'Resumo por Canais de Entrada Financeira'), "Relatório A4 oficial preserva discriminação por canais");
         $this->assert(str_contains($htmlArrecImp, 'Detalhamento Cronológico Diário de Arrecadação e Consumo'), "Relatório A4 oficial preserva listagem diária detalhada");
     }

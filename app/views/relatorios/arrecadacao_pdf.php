@@ -422,7 +422,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         </div>
 
         <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
-            🖨 Imprimir Documento
+            🖨 Imprimir / Salvar PDF
         </button>
         <button type="button" class="btn-close-action" onclick="window.close()">
             ✕ Fechar
@@ -459,9 +459,97 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         <div><strong>Critério:</strong> Entradas Financeiras Reais (Cash-In) & Conciliação de Carteira</div>
     </div>
 
-    <!-- SEÇÃO 1: RESUMO POR CANAIS DE ARRECADAÇÃO -->
+    <!-- SEÇÃO 1: SÍNTESE DOS INDICADORES FINANCEIROS DO PERÍODO -->
     <div class="section-banner">
-        1. Resumo por Canais de Entrada Financeira (Cash-In Real)
+        1. Síntese dos Indicadores Financeiros do Período
+    </div>
+
+    <table class="table-doc-excel">
+        <thead>
+            <tr>
+                <th style="width: 30%; text-align: left;">Indicador Financeiro</th>
+                <th style="width: 40%; text-align: left;">Detalhamento / Discriminação</th>
+                <th style="width: 14%; text-align: right;">Movimentações</th>
+                <th style="width: 16%; text-align: right;">Total Consolidado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-start">
+                    <strong>Total Arrecadado (Cash-In Real)</strong>
+                </td>
+                <td class="text-start" style="font-size: 7.2pt; color: #334155;">
+                    Total de dinheiro novo que ingressou no caixa físico e na conta bancária no período
+                </td>
+                <td class="text-end font-tabular">
+                    <?php echo number_format((int)($dados['total_transacoes_arrecadacao'] ?? 0), 0, ',', '.'); ?> entradas
+                </td>
+                <td class="text-end font-tabular" style="font-size: 8.5pt;">
+                    <strong>R$ <?php echo number_format((float)($dados['total_arrecadado_bruto'] ?? 0), 2, ',', '.'); ?></strong>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-start">
+                    <strong>Recargas Pix Online (Portal da Família)</strong>
+                </td>
+                <td class="text-start" style="font-size: 7.2pt; color: #334155;">
+                    Recargas de carteira efetuadas pelas famílias via QR Code dinâmico no Portal
+                </td>
+                <td class="text-end font-tabular">
+                    <?php echo number_format((int)($dados['recargas_pix_qtd'] ?? 0), 0, ',', '.'); ?> recargas
+                </td>
+                <td class="text-end font-tabular">
+                    R$ <?php echo number_format((float)($dados['recargas_pix_total'] ?? 0), 2, ',', '.'); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-start">
+                    <strong>Recargas Balcão (Dinheiro Físico)</strong>
+                </td>
+                <td class="text-start" style="font-size: 7.2pt; color: #334155;">
+                    Inserções manuais de saldo na carteira familiar pagas em espécie diretamente na cantina
+                </td>
+                <td class="text-end font-tabular">
+                    <?php echo number_format((int)($dados['recargas_dinheiro_qtd'] ?? 0), 0, ',', '.'); ?> inserções
+                </td>
+                <td class="text-end font-tabular">
+                    R$ <?php echo number_format((float)($dados['recargas_dinheiro_total'] ?? 0), 2, ',', '.'); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-start">
+                    <strong>Vendas Presenciais Balcão</strong>
+                </td>
+                <td class="text-start" style="font-size: 7.2pt; color: #334155;">
+                    Vendas diretas no PDV (Dinheiro: R$ <?php echo number_format((float)($dados['vendas_dinheiro_total'] ?? 0), 2, ',', '.'); ?> | Pix: R$ <?php echo number_format((float)($dados['vendas_pix_total'] ?? 0), 2, ',', '.'); ?>)
+                </td>
+                <td class="text-end font-tabular">
+                    <?php echo number_format((int)(($dados['vendas_dinheiro_qtd'] ?? 0) + ($dados['vendas_pix_qtd'] ?? 0)), 0, ',', '.'); ?> vendas
+                </td>
+                <td class="text-end font-tabular">
+                    R$ <?php echo number_format((float)(($dados['vendas_dinheiro_total'] ?? 0) + ($dados['vendas_pix_total'] ?? 0)), 2, ',', '.'); ?>
+                </td>
+            </tr>
+            <tr style="background-color: #f8fafc !important;">
+                <td class="text-start">
+                    <strong>Consumo de Saldo (Lanches no Período)</strong>
+                </td>
+                <td class="text-start" style="font-size: 7.2pt; color: #334155;">
+                    Total de lanches entregues debitados de carteiras (Variação líquida: <strong><?php echo (($dados['variacao_carteira'] ?? 0) >= 0 ? '+' : '') . 'R$ ' . number_format((float)($dados['variacao_carteira'] ?? 0), 2, ',', '.'); ?></strong>)
+                </td>
+                <td class="text-end font-tabular" style="color: #64748b;">
+                    -
+                </td>
+                <td class="text-end font-tabular">
+                    R$ <?php echo number_format((float)($dados['total_consumo_saldo'] ?? 0), 2, ',', '.'); ?>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- SEÇÃO 2: RESUMO POR CANAIS DE ARRECADAÇÃO -->
+    <div class="section-banner">
+        2. Resumo por Canais de Entrada Financeira (Cash-In Real)
     </div>
 
     <table class="table-doc-excel">
@@ -513,9 +601,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         </tfoot>
     </table>
 
-    <!-- SEÇÃO 2: DEMONSTRATIVO DE CONTROLE DA CARTEIRA DIGITAL -->
+    <!-- SEÇÃO 3: DEMONSTRATIVO DE CONTROLE DA CARTEIRA DIGITAL -->
     <div class="section-banner">
-        2. Demonstrativo de Controle e Conciliação da Carteira Digital
+        3. Demonstrativo de Controle e Conciliação da Carteira Digital
     </div>
 
     <table class="table-doc-excel">
@@ -563,9 +651,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         </tfoot>
     </table>
 
-    <!-- SEÇÃO 3: DETALHAMENTO DIÁRIO -->
+    <!-- SEÇÃO 4: DETALHAMENTO DIÁRIO -->
     <div class="section-banner">
-        3. Detalhamento Cronológico Diário de Arrecadação e Consumo
+        4. Detalhamento Cronológico Diário de Arrecadação e Consumo
     </div>
 
     <table class="table-doc-excel">
