@@ -33,10 +33,6 @@ class EstoqueController extends Controller
         $statusPausa = (isset($_GET['status_pausa']) && $_GET['status_pausa'] !== '') ? trim($_GET['status_pausa']) : null;
         $apenasAlerta= isset($_GET['alerta']) && $_GET['alerta'] === '1';
         $busca       = isset($_GET['busca']) ? trim($_GET['busca']) : '';
-        $filtrar     = (bool)($this->input('filtrar', false) || isset($_GET['filtrar']));
-
-        // Determina se houve interação com os filtros para carga sob demanda
-        $jaFiltrado  = $filtrar || !empty($busca) || $categoriaId !== null || !empty($tipo) || $apenasAlerta || !empty($statusPausa) || isset($_GET['pagina']);
 
         $filtros = [
             'categoria_id' => $categoriaId,
@@ -48,21 +44,14 @@ class EstoqueController extends Controller
 
         $paginaAtual    = max(1, (int)($_GET['pagina'] ?? 1));
         $itensPorPagina = Configuracao::getItensPorPagina();
-
-        if ($jaFiltrado) {
-            $totalProdutos  = Estoque::contarSaldos($filtros);
-            $totalPaginas   = max(1, (int)ceil($totalProdutos / $itensPorPagina));
-            if ($paginaAtual > $totalPaginas) {
-                $paginaAtual = $totalPaginas;
-            }
-            $offset = ($paginaAtual - 1) * $itensPorPagina;
-            $produtos = Estoque::listarSaldos($filtros, $itensPorPagina, $offset);
-        } else {
-            $totalProdutos  = 0;
-            $totalPaginas   = 1;
-            $produtos       = [];
+        $totalProdutos  = Estoque::contarSaldos($filtros);
+        $totalPaginas   = max(1, (int)ceil($totalProdutos / $itensPorPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
         }
+        $offset = ($paginaAtual - 1) * $itensPorPagina;
 
+        $produtos   = Estoque::listarSaldos($filtros, $itensPorPagina, $offset);
         $metricas   = Estoque::obterMetricasGerais();
         $categorias = Categoria::listarTodas();
 
@@ -71,7 +60,6 @@ class EstoqueController extends Controller
             'metricas'       => $metricas,
             'categorias'     => $categorias,
             'filtros'        => $filtros,
-            'jaFiltrado'     => $jaFiltrado,
             'paginaAtual'    => $paginaAtual,
             'totalPaginas'   => $totalPaginas,
             'totalRegistros' => $totalProdutos,

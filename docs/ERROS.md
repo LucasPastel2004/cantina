@@ -2239,6 +2239,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Suíte de testes `tests/estorno_vendas_nutre_fluxo_test.php` expandida com asserções simulando POST em ambos os formatos (`selecionadas` e `selecionados`), homologando 44/44 testes aprovados com 100% de sucesso.
 - Como evitar no futuro: Em formulários que submetem listas dinâmicas via checkboxes com nomenclatura sujeita a gênero gramatical em português ("selecionados" vs "selecionadas"), suportar ambas as variações defensivamente no controller (`$lista = $_POST['itens_feminino'] ?? ($_POST['itens_masculino'] ?? [])`).
 
+---
+
+## 2026-10-22 - Tabela de estoque vazia por bloqueio artificial de carga sob demanda
+
+- Sintoma: Ao acessar o painel de Controle de Estoque & Saldos Físicos (`/estoque`) ou clicar em "Filtrar" sem alterar os campos, a tabela "Grade de Produtos & Inventário Físico" exibia "Exibindo 0 de 0 produtos" e "Não há nada para mostrar aqui", ocultando a listagem geral de produtos.
+- Causa: Havia sido inserida uma verificação artificial de flag `$jaFiltrado` em `EstoqueController` e na view `estoque/index.php`, condicionando a exibição de produtos a uma interação prévia com filtros e exigindo um parâmetro oculto `filtrar=1`, o que impedia a visualização da grade geral padrão de inventário.
+- Solução aplicada:
+  1. Removida a restrição `$jaFiltrado` em `app/controllers/EstoqueController.php`: a consulta `Estoque::listarSaldos` e a contagem `Estoque::contarSaldos` são sempre realizadas, retornando a lista geral completa por padrão.
+  2. Ajustada a view `app/views/estoque/index.php` para renderizar diretamente os produtos retornados e exibir "Não há nada para mostrar aqui" apenas quando um filtro específico realmente não localizar registros.
+  3. Criada suíte automatizada `tests/estoque_lista_geral_test.php` cobrindo carregamento padrão, clique em filtrar com opções padrão, filtros específicos e busca inexistente (13/13 testes aprovados).
+- Como evitar no futuro: Em telas operacionais de inventário e saldos físicos (diferente de telas analíticas pesadas com grandes volumes históricos), a grade mestre geral de itens deve estar sempre disponível por padrão, sem impor telas em branco ou bloqueios de pré-filtragem desnecessários.
+
+
 
 
 
