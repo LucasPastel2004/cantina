@@ -166,8 +166,10 @@ class PdvWebTest
         $viewContent = file_get_contents($viewPath);
         $this->assert(str_contains($viewContent, 'Cupom de Venda'), "Template contém painel de Cupom de Venda");
         $this->assert(str_contains($viewContent, 'pdv-grid'), "Template contém container .pdv-grid");
-        $this->assert(str_contains($viewContent, 'modalEstornoBalcao'), "Template inclui modal de Estorno de Balcão (F8)");
-        $this->assert(str_contains($viewContent, 'modalSobrasRecreio'), "Template inclui modal de Aproveitamento de Sobras (F9)");
+        $this->assert(str_contains($viewContent, '/operacional/estornos'), "Botão/atalho Estorno (F8) redireciona para '/operacional/estornos'");
+        $this->assert(str_contains($viewContent, '/estoque/perdas'), "Botão/atalho Sobras (F9) redireciona para '/estoque/perdas'");
+        $this->assert(!str_contains($viewContent, 'id="modalEstornoBalcao"'), "Modal legado de Estorno de Balcão removido da view");
+        $this->assert(!str_contains($viewContent, 'id="modalSobrasRecreio"'), "Modal legado de Aproveitamento de Sobras removido da view");
         $this->assert(str_contains($viewContent, 'modalAbrirCaixa'), "Template inclui modal de Abertura de Caixa");
         $this->assert(str_contains($viewContent, 'modalPosVenda'), "Template inclui modal de Pós-Venda e Comprovante");
         $this->assert(str_contains($viewContent, 'modalPixBalcao'), "Template inclui modal de Pix Dinâmico no Balcão");

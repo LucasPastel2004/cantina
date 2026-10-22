@@ -643,20 +643,15 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
                     <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=matutino" class="btn btn-enterprise <?php echo ($turnoAtual === 'matutino') ? 'btn-primary' : 'btn-outline-primary'; ?> text-nowrap" style="font-size: 10.5px; padding: 3px 6px;">Manhã</a>
                     <a href="<?php echo $baseUrl; ?>/operacional/pdv?turno=vespertino" class="btn btn-enterprise <?php echo ($turnoAtual === 'vespertino') ? 'btn-primary' : 'btn-outline-primary'; ?> text-nowrap" style="font-size: 10.5px; padding: 3px 6px;">Tarde</a>
                 </div>
-                <?php if (!$caixaAberto && !$sessaoOutroTurno): ?>
-                    <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1 text-nowrap" style="font-size: 11px;" onclick="abrirModal('modalAbrirCaixa')">
-                        Abrir Caixa
-                    </button>
-                <?php endif; ?>
                 <a href="<?php echo $baseUrl; ?>/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>" class="btn btn-enterprise btn-primary btn-sm px-2 py-1 text-nowrap" style="font-size: 11px;" title="Gestão e Fechamento de Caixa [F7]">
                     Caixa <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F7</span>
                 </a>
-                <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1 text-nowrap" style="font-size: 11px;" onclick="abrirModal('modalEstornoBalcao')" title="Estorno de Ticket [F8]">
+                <a href="<?php echo $baseUrl; ?>/operacional/estornos" class="btn btn-enterprise btn-primary btn-sm px-2 py-1 text-nowrap" style="font-size: 11px;" title="Estornos de Vendas e Tickets [F8]">
                     Estorno <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F8</span>
-                </button>
-                <button type="button" class="btn btn-enterprise btn-primary btn-sm px-2 py-1 text-nowrap" style="font-size: 11px;" onclick="abrirModalSobras()" title="Aproveitamento de Sobras do Recreio [F9]">
+                </a>
+                <a href="<?php echo $baseUrl; ?>/estoque/perdas" class="btn btn-enterprise btn-primary btn-sm px-2 py-1 text-nowrap" style="font-size: 11px;" title="Lançamento de Perdas e Sobras [F9]">
                     Sobras <span class="pdv-shortcut-tag" style="font-size: 9.5px; padding: 1px 3px;">F9</span>
-                </button>
+                </a>
             </div>
         </div>
     </div>
@@ -990,83 +985,6 @@ $csrfToken = \App\Core\Session::generateCsrfToken();
     </div>
 </div>
 
-<!-- Modal: Estorno de Balcão [F8] -->
-<div class="modal-backdrop-custom d-none" id="modalEstornoBalcao">
-    <div class="modal-card-custom" style="max-width: 480px;">
-        <div class="modal-header-custom">
-            <h2 class="modal-title-custom text-danger">Estorno Manual no Balcão [F8]</h2>
-            <button type="button" class="modal-close-custom" onclick="fecharModal('modalEstornoBalcao')">✕</button>
-        </div>
-        <form action="<?php echo $baseUrl; ?>/operacional/pdv/estorno" method="POST">
-            <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
-            <div class="modal-body-custom">
-                <p class="font-12 text-secondary mb-3">
-                    O estorno de balcão cancela o ticket do lanche e <strong>credita 100% do valor integral de volta na carteira digital da família no mesmo instante</strong>.
-                </p>
-                <div class="mb-3">
-                    <label class="form-label font-12 font-semibold">Código do Ticket de Papel</label>
-                    <input type="text" name="codigo_ticket" class="form-control form-control-sm font-monospace text-uppercase" placeholder="Ex: TCK-2026-..." required autofocus>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label font-12 font-semibold">Motivo do Estorno</label>
-                    <select name="motivo" class="form-select form-select-sm" required>
-                        <option value="">Selecione o motivo padronizado...</option>
-                        <option value="Falta de Ingrediente/Produto">Falta de Ingrediente/Produto</option>
-                        <option value="Recusa de Substituição">Recusa de Substituição</option>
-                        <option value="Avaria no Lanche">Avaria no Lanche / Alimento impróprio</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label font-12 font-semibold">Justificativa Operacional (mínimo 5 caracteres)</label>
-                    <textarea name="justificativa" class="form-control form-control-sm" rows="2" placeholder="Descreva brevemente o ocorrido para auditoria..." required></textarea>
-                </div>
-            </div>
-            <div class="modal-footer-custom">
-                <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="fecharModal('modalEstornoBalcao')">Voltar</button>
-                <button type="submit" class="btn btn-enterprise btn-danger btn-sm">Confirmar Estorno e Devolver Crédito</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal: Aproveitamento de Sobras do Recreio [F9] -->
-<div class="modal-backdrop-custom d-none" id="modalSobrasRecreio">
-    <div class="modal-card-custom" style="max-width: 620px;">
-        <div class="modal-header-custom">
-            <h2 class="modal-title-custom">Aproveitamento de Sobras de Alunos Ausentes [F9]</h2>
-            <button type="button" class="modal-close-custom" onclick="fecharModal('modalSobrasRecreio')">✕</button>
-        </div>
-        <form action="<?php echo $baseUrl; ?>/operacional/pdv/sobras/transferir" method="POST">
-            <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
-            <div class="modal-body-custom">
-                <p class="font-12 text-secondary mb-2">
-                    Lanches agendados cujos cupons não foram retirados no recreio permanecem cobrados da família. Ao término do intervalo, você pode transferi-los para o saldo avulso do PDV para comercialização.
-                </p>
-                <div class="table-responsive border rounded mb-2" style="max-height: 280px; overflow-y: auto;">
-                    <table class="table table-enterprise table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th style="width: 32px;"><input type="checkbox" id="chkMarcarTodasSobras" onchange="alternarTodasSobras(this)"></th>
-                                <th>Ticket</th>
-                                <th>Aluno / Turma</th>
-                                <th>Produto</th>
-                                <th class="text-end">Qtd</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaSobrasBody">
-                            <tr><td colspan="5" class="text-center py-3 text-muted">Carregando itens não retirados...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer-custom">
-                <button type="button" class="btn btn-enterprise btn-secondary btn-sm" onclick="fecharModal('modalSobrasRecreio')">Cancelar</button>
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm" id="btnConfirmarSobras" disabled>Transferir Selecionados para Venda Avulsa</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <!-- Modal: Pix Dinâmico no Balcão -->
 <div class="modal-backdrop-custom d-none" id="modalPixBalcao">
     <div class="modal-card-custom text-center" style="max-width: 400px;">
@@ -1227,10 +1145,10 @@ document.addEventListener('keydown', function(e) {
         window.location.href = `${baseUrl}/operacional/caixa?turno=<?php echo urlencode($turnoAtual); ?>`;
     } else if (e.key === 'F8') {
         e.preventDefault();
-        abrirModal('modalEstornoBalcao');
+        window.location.href = `${baseUrl}/operacional/estornos`;
     } else if (e.key === 'F9') {
         e.preventDefault();
-        abrirModalSobras();
+        window.location.href = `${baseUrl}/estoque/perdas`;
     } else if (e.key === 'Escape') {
         fecharTodosModais();
     }
@@ -1889,43 +1807,5 @@ function copiarPixBrcode() {
 function confirmarVendaPixAposPagamento() {
     fecharModal('modalPixBalcao');
     submeterVendaServidor(0.0);
-}
-
-function abrirModalSobras() {
-    fetch(`${baseUrl}/operacional/pdv/sobras`)
-        .then(res => res.json())
-        .then(data => {
-            const tbody = document.getElementById('tabelaSobrasBody');
-            if (!data.sucesso || !data.dados || data.dados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-muted">Não há lanches não retirados pendentes para este turno.</td></tr>';
-                document.getElementById('btnConfirmarSobras').disabled = true;
-            } else {
-                let html = '';
-                data.dados.forEach(s => {
-                    html += `
-                        <tr>
-                            <td><input type="checkbox" name="ticket_ids[]" value="${s.ticket_id}" class="chk-sobra" onchange="atualizarCheckSobras()"></td>
-                            <td><span class="code-tag">${s.codigo_ticket}</span></td>
-                            <td><strong>${s.aluno_nome}</strong> <span class="font-11 text-muted">(${s.nome_turma})</span></td>
-                            <td>${s.produto_descricao}</td>
-                            <td class="text-end font-tabular">${s.item_quantidade} un</td>
-                        </tr>
-                    `;
-                });
-                tbody.innerHTML = html;
-                atualizarCheckSobras();
-            }
-            abrirModal('modalSobrasRecreio');
-        });
-}
-
-function alternarTodasSobras(master) {
-    document.querySelectorAll('.chk-sobra').forEach(chk => chk.checked = master.checked);
-    atualizarCheckSobras();
-}
-
-function atualizarCheckSobras() {
-    const selecionados = document.querySelectorAll('.chk-sobra:checked').length;
-    document.getElementById('btnConfirmarSobras').disabled = (selecionados === 0);
 }
 </script>
