@@ -737,5 +737,109 @@ class TransacaoCarteira extends Model
 
         return self::fetchAll($sql, $params);
     }
+
+    /**
+     * Retorna a lista paginada e filtrada de histórico de eventos MED e quitações para relatórios
+     */
+    public static function listarHistoricoMedPaginado(array $filtros = [], int $pagina = 1, int $itensPorPagina = 20): array
+    {
+        $where = ["(tc.tipo_transacao = 'debito_contestacao_med' OR (tc.tipo_transacao = 'ajuste_manual' AND tc.referencia_id LIKE 'QUIT-%'))"];
+        $params = [];
+
+        if (!empty($filtros['tipo']) && $filtros['tipo'] !== 'todos') {
+            if ($filtros['tipo'] === 'estornos') {
+                $where[] = "tc.tipo_transacao = 'debito_contestacao_med'";
+            } elseif ($filtros['tipo'] === 'quitacoes') {
+                $where[] = "(tc.tipo_transacao = 'ajuste_manual' AND tc.referencia_id LIKE 'QUIT-%')";
+            }
+        }
+
+        if (!empty($filtros['data_inicio'])) {
+            $where[] = "DATE(tc.created_at) >= :data_inicio";
+            $params['data_inicio'] = $filtros['data_inicio'];
+        }
+        if (!empty($filtros['data_fim'])) {
+            $where[] = "DATE(tc.created_at) <= :data_fim";
+            $params['data_fim'] = $filtros['data_fim'];
+        }
+
+        if (!empty($filtros['busca'])) {
+            $termo = trim($filtros['busca']);
+            $digitsOnly = preg_replace('/\D/', '', $termo);
+            $like = '%' . $termo . '%';
+
+            $buscaClauses = [
+                "r.nome LIKE :b_nome",
+                "r.email LIKE :b_email",
+                "tc.descricao LIKE :b_desc",
+                "tc.referencia_id LIKE :b_ref"
+            ];
+            $params['b_nome'] = $like;
+            $params['b_email'] = $like;
+            $params['b_desc'] = $like;
+            $params['b_ref'] = $like;
+
+            if (strlen($digitsOnly) >= 3) {
+                $buscaClauses[] = "r.cpf LIKE :b_cpf";
+                $params['b_cpf'] = '%' . $digitsOnly . '%';
+            }
+
+            $where[] = '(' . implode(' OR ', $buscaClauses) . ')';
+        }
+
+        $whereSql = implode(' AND ', $where);
+
+        // Contagem Total
+        $countSql = "SELECT COUNT(*) AS total,
+                            COALESCE(SUM(CASE WHEN tc.tipo_transacao = 'debito_contestacao_med' THEN tc.valor ELSE 0 END), 0) AS total_estornos,
+                            COALESCE(SUM(CASE WHEN tc.tipo_transacao = 'ajuste_manual' AND tc.referencia_id LIKE 'QUIT-%' THEN tc.valor ELSE 0 END), 0) AS total_quitacoes
+                     FROM transacoes_carteira tc
+                     INNER JOIN responsaveis r ON r.id = tc.responsavel_id
+                     WHERE {$whereSql}";
+        
+        $totais = self::fetchOne($countSql, $params) ?: [
+            'total' => 0,
+            'total_estornos' => 0,
+            'total_quitacoes' => 0
+        ];
+
+        $total = (int)$totais['total'];
+        $itensPorPagina = max(5, min(100, $itensPorPagina));
+        $totalPaginas = max(1, (int)ceil($total / $itensPorPagina));
+        $pagina = max(1, min($pagina, $totalPaginas));
+        $offset = ($pagina - 1) * $itensPorPagina;
+
+        // Query principal com paginação
+        $sql = "SELECT tc.*, 
+                       tc.tipo_transacao AS tipo,
+                       tc.descricao AS motivo,
+                       tc.created_at AS data_hora,
+                       r.nome AS titular,
+                       r.nome AS responsavel_nome, 
+                       r.cpf AS responsavel_cpf, 
+                       r.whatsapp AS responsavel_whatsapp,
+                       r.email AS responsavel_email,
+                       r.saldo_atual AS responsavel_saldo_atual,
+                       r.bloqueado_med AS responsavel_bloqueado_med,
+                       u.nome AS operador_nome
+                FROM transacoes_carteira tc
+                INNER JOIN responsaveis r ON r.id = tc.responsavel_id
+                LEFT JOIN usuarios u ON u.id = tc.operador_id
+                WHERE {$whereSql}
+                ORDER BY tc.created_at DESC, tc.id DESC
+                LIMIT {$itensPorPagina} OFFSET {$offset}";
+
+        $itens = self::fetchAll($sql, $params);
+
+        return [
+            'itens'           => $itens,
+            'total'           => $total,
+            'pagina'          => $pagina,
+            'por_pagina'      => $itensPorPagina,
+            'total_paginas'   => $totalPaginas,
+            'total_estornos'  => (float)$totais['total_estornos'],
+            'total_quitacoes' => (float)$totais['total_quitacoes']
+        ];
+    }
 }
 

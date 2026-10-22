@@ -51,7 +51,7 @@ $outputHtml = ob_get_clean();
 
 echo "2. RelatoriosController::devedoresImprimir:\n";
 echo "   - Tamanho gerado: " . strlen($outputHtml) . " bytes\n";
-echo "   - Contem 'Relatório de Famílias': " . (str_contains($outputHtml, 'Relatório de Famílias') ? 'OK (SIM)' : 'FALHA') . "\n";
+echo "   - Contem 'Histórico de Eventos MED': " . (str_contains($outputHtml, 'Histórico de Eventos MED') ? 'OK (SIM)' : 'FALHA') . "\n";
 echo "   - Contem tabela Excel com 14mm: " . (str_contains($outputHtml, '14mm') ? 'OK (SIM)' : 'FALHA') . "\n";
 
 // 3. Teste AdminController::contestacoesPdf

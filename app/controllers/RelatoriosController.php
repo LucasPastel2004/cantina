@@ -741,72 +741,90 @@ class RelatoriosController extends Controller
     /**
      * Relatório de Devedores, Inadimplência e MED (FSD Tela 8.4)
      */
+    /**
+     * Relatório de Histórico de Eventos MED e Quitações (Auditoria Financeira)
+     */
     public function devedores(): void
     {
-        $status = trim((string)$this->input('status', 'todos'));
+        $tipo = trim((string)$this->input('tipo', 'todos'));
         $busca = trim((string)$this->input('busca', ''));
+        $dataInicio = trim((string)$this->input('data_inicio', ''));
+        $dataFim = trim((string)$this->input('data_fim', ''));
         $pagina = max(1, (int)$this->input('pagina', 1));
         $itensPorPagina = Configuracao::getItensPorPagina();
 
-        $dados = Responsavel::listarNegativadosMed([
-            'status' => $status,
-            'busca'  => $busca
-        ], $pagina, $itensPorPagina);
+        $filtros = [
+            'tipo'        => $tipo,
+            'busca'       => $busca,
+            'data_inicio' => $dataInicio,
+            'data_fim'    => $dataFim
+        ];
 
-        $totalDevedor = Responsavel::somarSaldoDevedorMed();
-        $totalDevedoresContagem = Responsavel::contarNegativadosMed();
+        $resultado = TransacaoCarteira::listarHistoricoMedPaginado($filtros, $pagina, $itensPorPagina);
 
         $this->render('relatorios/devedores', [
-            'pageTitle'              => 'Relatório de Inadimplência e Bloqueios MED',
-            'activeMenu'             => 'relatorios',
-            'user'                   => Auth::user(),
-            'status'                 => $status,
-            'busca'                  => $busca,
-            'pagina'                 => $pagina,
-            'paginaAtual'            => $pagina,
-            'totalPaginas'           => $dados['total_paginas'],
-            'totalRegistros'         => $dados['total'],
-            'itensPorPagina'         => $itensPorPagina,
-            'familias'               => $dados['itens'],
-            'totalDevedor'           => $totalDevedor,
-            'totalDevedoresContagem' => $totalDevedoresContagem
+            'pageTitle'           => 'Relatório de Histórico de Eventos MED & Quitações',
+            'activeMenu'          => 'devedores',
+            'user'                => Auth::user(),
+            'tipo'                => $tipo,
+            'busca'               => $busca,
+            'dataInicio'          => $dataInicio,
+            'dataFim'             => $dataFim,
+            'pagina'              => $resultado['pagina'],
+            'paginaAtual'         => $resultado['pagina'],
+            'totalPaginas'        => $resultado['total_paginas'],
+            'totalRegistros'      => $resultado['total'],
+            'itensPorPagina'      => $itensPorPagina,
+            'eventos'             => $resultado['itens'],
+            'totalEstornosValor'  => $resultado['total_estornos'],
+            'totalQuitacoesValor' => $resultado['total_quitacoes'],
+            'filtros'             => $filtros
         ], 'admin');
     }
 
     /**
-     * Emissão do Relatório A4 em PDF Timbrado de Devedores e Inadimplência MED (FSD Tela 8.4)
+     * Emissão do Relatório A4 em PDF Timbrado do Histórico de Eventos MED e Quitações
      */
     public function devedoresPdf(): void
     {
-        $status = trim((string)$this->input('status', 'todos'));
+        $tipo = trim((string)$this->input('tipo', 'todos'));
         $busca = trim((string)$this->input('busca', ''));
+        $dataInicio = trim((string)$this->input('data_inicio', ''));
+        $dataFim = trim((string)$this->input('data_fim', ''));
 
-        $filtros = [];
-        if (!empty($busca)) {
-            $filtros['busca'] = $busca;
-        }
-        if (!empty($status) && $status !== 'todos') {
-            $filtros['status'] = $status;
-        }
+        $filtros = [
+            'tipo'        => $tipo,
+            'busca'       => $busca,
+            'data_inicio' => $dataInicio,
+            'data_fim'    => $dataFim
+        ];
 
-        $dados = Responsavel::listarNegativadosMed($filtros, 1, 1000);
-        $totalDevedor = Responsavel::somarSaldoDevedorMed();
+        $resultado = TransacaoCarteira::listarHistoricoMedPaginado($filtros, 1, 1000);
         $usuario = Auth::user();
 
-        $pdfBinario = PdfService::gerarRelatorioNegativadosMedPdf([
-            'familias'       => $dados['itens'],
-            'total_devedor'  => $totalDevedor,
-            'total_familias' => $dados['total'],
-            'operador'       => $usuario['nome'] ?? 'Administração'
+        $html = PdfService::renderView('relatorios/med_historico_pdf', [
+            'dadosMed' => [
+                'eventos'         => $resultado['itens'],
+                'total_eventos'   => $resultado['total'],
+                'total_estornos'  => $resultado['total_estornos'],
+                'total_quitacoes' => $resultado['total_quitacoes'],
+                'filtros'         => $filtros,
+                'operador'        => $usuario['nome'] ?? 'Administração'
+            ]
         ]);
 
-        // Se Gotenberg não estiver disponível (ex: produção Hostnet), renderiza a visualização HTML oficial para impressão/PDF
+        $pdfBinario = PdfService::htmlToPdf($html, [
+            'preferCssPageSize' => 'true',
+            'printBackground'   => 'true'
+        ]);
+
+        // Se Gotenberg não responder, renderiza a visualização HTML oficial para impressão
         if (empty($pdfBinario) || strlen($pdfBinario) < 2000) {
             $this->devedoresImprimir();
             return;
         }
 
-        $nomeArquivo = 'relatorio_inadimplencia_med_' . date('Ymd_His') . '.pdf';
+        $nomeArquivo = 'relatorio_historico_med_' . date('Ymd_His') . '.pdf';
 
         if (!headers_sent()) {
             header('Content-Type: application/pdf');
@@ -823,31 +841,33 @@ class RelatoriosController extends Controller
     }
 
     /**
-     * Espelho HTML para visualização / impressão rápida em folha A4
+     * Espelho HTML para visualização / impressão rápida em folha A4 do Histórico MED
      */
     public function devedoresImprimir(): void
     {
-        $status = trim((string)$this->input('status', 'todos'));
+        $tipo = trim((string)$this->input('tipo', 'todos'));
         $busca = trim((string)$this->input('busca', ''));
+        $dataInicio = trim((string)$this->input('data_inicio', ''));
+        $dataFim = trim((string)$this->input('data_fim', ''));
 
-        $filtros = [];
-        if (!empty($busca)) {
-            $filtros['busca'] = $busca;
-        }
-        if (!empty($status) && $status !== 'todos') {
-            $filtros['status'] = $status;
-        }
+        $filtros = [
+            'tipo'        => $tipo,
+            'busca'       => $busca,
+            'data_inicio' => $dataInicio,
+            'data_fim'    => $dataFim
+        ];
 
-        $dados = Responsavel::listarNegativadosMed($filtros, 1, 1000);
-        $totalDevedor = Responsavel::somarSaldoDevedorMed();
+        $resultado = TransacaoCarteira::listarHistoricoMedPaginado($filtros, 1, 1000);
         $usuario = Auth::user();
 
-        echo PdfService::renderView('relatorios/med_negativados_pdf', [
+        echo PdfService::renderView('relatorios/med_historico_pdf', [
             'dadosMed' => [
-                'familias'       => $dados['itens'],
-                'total_devedor'  => $totalDevedor,
-                'total_familias' => $dados['total'],
-                'operador'       => $usuario['nome'] ?? 'Administração'
+                'eventos'         => $resultado['itens'],
+                'total_eventos'   => $resultado['total'],
+                'total_estornos'  => $resultado['total_estornos'],
+                'total_quitacoes' => $resultado['total_quitacoes'],
+                'filtros'         => $filtros,
+                'operador'        => $usuario['nome'] ?? 'Administração'
             ]
         ]);
         if (!defined('CANTINA_TEST_MODE')) {

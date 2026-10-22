@@ -54,6 +54,15 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
             </svg>
             Imprimir / Salvar PDF (A4)
         </a>
+        <a href="<?php echo $baseUrl; ?>/relatorios/devedores" 
+           id="btnHistoricoMedRelatorio"
+           class="btn btn-enterprise btn-secondary d-inline-flex align-items-center gap-1.5" 
+           title="Acessar relatório e auditoria completa de histórico de eventos e quitações MED">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.714a6.953 6.953 0 0 0-.439-.27l.493-.87a8.058 8.058 0 0 1 .507.311l-.561.829zm-7.69 0a6.953 6.953 0 0 1-.439-.27l.493-.87a8.058 8.058 0 0 0 .507.311l-.561.829zM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-1 0A7 7 0 1 0 1 8a7 7 0 0 0 14 0zm-8-5a.5.5 0 0 1 .5.5v4.25l2.75 1.65a.5.5 0 0 1-.515.857L7 8.5V3.5A.5.5 0 0 1 7.5 3z"/>
+            </svg>
+            Histórico de Eventos MED
+        </a>
         <button type="button" 
                 class="btn btn-enterprise btn-primary" 
                 data-bs-toggle="modal" 
@@ -318,96 +327,6 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
                 $itensPorPagina = (int)($paginacao['itens_por_pag'] ?? 20);
                 require __DIR__ . '/../partials/pagination.php'; 
             ?>
-        <?php endif; ?>
-    </div>
-</div>
-
-<!-- Seção Secundária: Histórico Recente de Ocorrências e Auditoria MED -->
-<div class="card-enterprise">
-    <div class="card-enterprise-header d-flex justify-content-between align-items-center p-3 border-bottom">
-        <div>
-            <h2 class="h6 font-weight-bold text-dark mb-0">Histórico de Eventos MED e Quitações</h2>
-            <span class="text-secondary text-microcopy">Trilha de auditoria das movimentações bancárias e baixas manuais</span>
-        </div>
-        <span class="badge bg-light text-secondary border font-tabular px-2 py-1">
-            Últimos registros
-        </span>
-    </div>
-
-    <div class="card-enterprise-body p-0">
-        <?php if (empty($historicoMed)): ?>
-            <div class="p-4 text-center">
-                <p class="text-secondary text-microcopy mb-0">Nenhum evento registrado no histórico.</p>
-            </div>
-        <?php else: ?>
-            <div class="table-responsive">
-                <table class="table-enterprise mb-0">
-                    <thead>
-                        <tr>
-                            <th class="cell-center" style="width: 140px;">Data/Hora</th>
-                            <th class="cell-left" style="width: 220px;">Titular / Família</th>
-                            <th class="cell-center" style="width: 150px;">Tipo de Operação</th>
-                            <th class="cell-right" style="width: 120px;">Valor</th>
-                            <th class="cell-right" style="width: 130px;">Saldo Pós-Operação</th>
-                            <th class="cell-left">Motivo / Protocolo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($historicoMed as $h): ?>
-                            <?php 
-                            $isDebito = ($h['tipo'] === 'debito_contestacao_med');
-                            $val = (float)$h['valor'];
-                            $saldoPos = (float)$h['saldo_resultante'];
-                            ?>
-                            <tr>
-                                <td class="cell-center font-tabular text-secondary" style="font-size: 11px;">
-                                    <?php echo date('d/m/Y H:i', strtotime($h['data_hora'])); ?>
-                                </td>
-
-                                <td class="cell-left">
-                                    <div class="font-weight-semibold text-dark" style="font-size: 12px;">
-                                        <?php echo htmlspecialchars($h['titular'] ?? 'Desconhecido', ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                    <div class="text-secondary" style="font-size: 11px;">
-                                        <?php echo htmlspecialchars($h['titular_email'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                </td>
-
-                                <td class="cell-center">
-                                    <?php if ($isDebito): ?>
-                                        <span class="badge bg-light text-secondary border font-tabular" style="font-size: 10px;">
-                                            Estorno MED BACEN
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="badge bg-light text-secondary border font-tabular" style="font-size: 10px;">
-                                            Quitação / Ajuste
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
-
-                                <td class="cell-right font-tabular font-weight-semibold text-dark">
-                                    <?php echo $isDebito ? '-' : '+'; ?> R$ <?php echo number_format($val, 2, ',', '.'); ?>
-                                </td>
-
-                                <td class="cell-right font-tabular font-weight-bold text-dark">
-                                    R$ <?php echo number_format($saldoPos, 2, ',', '.'); ?>
-                                </td>
-
-                                <td class="cell-left text-secondary" style="font-size: 11px;">
-                                    <div class="text-truncate" style="max-width: 320px;" title="<?php echo htmlspecialchars($h['motivo'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                        <?php echo htmlspecialchars($h['motivo'] ?? 'Sem justificativa informada', ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                    <?php if (!empty($h['referencia_id'])): ?>
-                                        <div class="text-microcopy text-muted font-tabular">
-                                            Ref: <code><?php echo htmlspecialchars($h['referencia_id'], ENT_QUOTES, 'UTF-8'); ?></code>
-                                        </div>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
         <?php endif; ?>
     </div>
 </div>

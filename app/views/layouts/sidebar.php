@@ -359,7 +359,7 @@ $isProdutosActive = ($activeMenu === 'produtos');
             <li class="flyout-item nav-item">
                 <a href="<?php echo $baseUrl; ?>/relatorios/devedores" class="nav-link <?php echo ($activeMenu === 'devedores') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
-                    <span class="nav-label">Inadimplência & MED</span>
+                    <span class="nav-label">Histórico MED & Quitações</span>
                 </a>
             </li>
             <li class="flyout-item nav-item">

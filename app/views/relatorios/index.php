@@ -159,22 +159,22 @@ $baseUrl = $baseUrl ?? '';
             </div>
         </div>
 
-        <!-- Relatório 5: Inadimplência e MED Pix -->
+        <!-- Relatório 5: Histórico de Eventos MED e Quitações -->
         <div class="col-12 col-md-6 col-lg-4">
             <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
                 <div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Contas a Receber</span>
+                        <span class="text-microcopy text-uppercase fw-semibold text-secondary">Auditoria & MED</span>
                         <span class="code-tag font-tabular">PDF A4 Timbrado</span>
                     </div>
-                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Inadimplência & Bloqueios MED</h2>
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Histórico de Eventos MED & Quitações</h2>
                     <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
-                        Relação nominal de famílias com saldo devedor na carteira ou suspensão preventiva decorrente de contestações bancárias do Mecanismo Especial de Devolução (MED).
+                        Trilha analítica de auditoria de estornos MED BACEN, débitos aplicados na carteira e quitações manuais com protocolo e espelho oficial para impressão.
                     </p>
                 </div>
                 <div class="d-flex gap-2 pt-3 border-top mt-auto">
                     <a href="<?php echo $baseUrl; ?>/relatorios/devedores" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
-                        Relação de Devedores
+                        Acessar Histórico
                     </a>
                 </div>
             </div>
