@@ -18,7 +18,7 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
             <h1 class="h5 fw-bold text-slate-900 mb-1">Controle de Estoque & Saldos Físicos</h1>
-            <p class="text-muted small mb-0">Gestão de saldos em tempo real, reservas de pedidos online e pontos de reposição.</p>
+            <p class="text-muted small mb-0">Gestão de saldos em tempo real, movimentações físicas e pontos de reposição.</p>
         </div>
     </div>
 
@@ -31,14 +31,6 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
         <div class="stat-strip-item">
             <span class="stat-strip-label">Unidades Físicas</span>
             <span class="stat-strip-value font-tabular"><?php echo number_format($metricas['total_unidades_fisicas'], 0, ',', '.'); ?> un</span>
-        </div>
-        <div class="stat-strip-item">
-            <span class="stat-strip-label">Reservas Online</span>
-            <span class="stat-strip-value font-tabular text-muted"><?php echo number_format($metricas['total_unidades_reservadas'], 0, ',', '.'); ?> un</span>
-        </div>
-        <div class="stat-strip-item">
-            <span class="stat-strip-label">Valor em Venda</span>
-            <span class="stat-strip-value font-tabular">R$ <?php echo number_format($metricas['valor_estoque_venda'], 2, ',', '.'); ?></span>
         </div>
         <div class="stat-strip-item">
             <span class="stat-strip-label">Entradas no Mês</span>
