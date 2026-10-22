@@ -223,6 +223,9 @@ class EntradaEstoqueManualTest
 
         $sugestoes = Estoque::listarFornecedoresSugestao();
         $this->assert("listarFornecedoresSugestao retorna lista de nomes de fornecedores", is_array($sugestoes) && count($sugestoes) > 0);
+
+        $mapa = Estoque::obterMapaProdutosFornecedores();
+        $this->assert("obterMapaProdutosFornecedores retorna array de mapeamento", is_array($mapa));
     }
 
     private function testarControllerERotas(): void
@@ -249,7 +252,8 @@ class EntradaEstoqueManualTest
         $this->assert("View de entrada possui input name='fornecedor' com datalist", str_contains($conteudoView, 'name="fornecedor"') && str_contains($conteudoView, '<datalist'));
         $this->assert("View de entrada possui input hidden itens_json", str_contains($conteudoView, 'name="itens_json"'));
         $this->assert("View de entrada possui botão no topo redirecionando para relatório de movimentações de estoque", str_contains($conteudoView, '/relatorios/estoque-filtros?tipo_movimentacao=entrada'));
-        $this->assert("Botão de relatório abre em nova aba (target='_blank')", str_contains($conteudoView, 'target="_blank"'));
+        $this->assert("Botão de relatório redireciona na mesma aba sem target='_blank'", !str_contains($conteudoView, 'relatorios/estoque-filtros?tipo_movimentacao=entrada" target="_blank"'));
+        $this->assert("View de entrada possui botão 'Carregar Produtos' no Bloco 1 de Dados Gerais", str_contains($conteudoView, 'id="btnCarregarFornTopo"'));
         $this->assert("View de entrada possui modal pop-up centralizado de adição", str_contains($conteudoView, 'id="modalAdicionarProduto"'));
         $this->assert("View de entrada possui grade de itens do lote (Nutre/Escolar Manager)", str_contains($conteudoView, 'id="tabelaLoteItens"'));
         $this->assert("View de entrada possui botão 'Gravar Entrada em Estoque'", str_contains($conteudoView, 'Gravar Entrada em Estoque'));

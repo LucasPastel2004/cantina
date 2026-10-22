@@ -916,6 +916,27 @@ class Estoque extends Model
     }
 
     /**
+     * Retorna os vínculos históricos entre fornecedores e produtos (em movimentações e NF-e)
+     */
+    public static function obterMapaProdutosFornecedores(): array
+    {
+        $sql = "SELECT DISTINCT LOWER(TRIM(forn)) AS fornecedor_norm, TRIM(forn) AS fornecedor_nome, produto_id
+                FROM (
+                    SELECT em.fornecedor AS forn, em.produto_id 
+                    FROM estoque_movimentacoes em 
+                    WHERE em.fornecedor IS NOT NULL AND TRIM(em.fornecedor) != ''
+                    UNION
+                    SELECT nf.razao_social_emitente AS forn, inf.produto_id 
+                    FROM itens_nota_fiscal_xml inf 
+                    INNER JOIN notas_fiscais_xml nf ON nf.id = inf.nota_fiscal_id 
+                    WHERE inf.produto_id IS NOT NULL AND nf.razao_social_emitente IS NOT NULL AND TRIM(nf.razao_social_emitente) != ''
+                ) AS mapa
+                WHERE forn IS NOT NULL";
+
+        return self::fetchAll($sql);
+    }
+
+    /**
      * Retorna a lista de nomes de fornecedores únicos para autocompletar / datalist
      */
     public static function listarFornecedoresSugestao(): array

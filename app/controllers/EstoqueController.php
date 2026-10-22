@@ -200,16 +200,18 @@ class EstoqueController extends Controller
         $categorias       = Categoria::listarTodas();
         $ultimasEntradas  = Estoque::listarEntradasRecentes(20);
         $fornecedores     = Estoque::listarFornecedoresSugestao();
+        $mapaFornecedores = Estoque::obterMapaProdutosFornecedores();
         $produtoPreSel    = isset($_GET['produto_id']) ? (int)$_GET['produto_id'] : null;
 
         $this->render('estoque/entrada', [
-            'produtos'        => $produtos,
-            'categorias'      => $categorias,
-            'ultimasEntradas' => $ultimasEntradas,
-            'fornecedores'    => $fornecedores,
-            'produtoPreSel'   => $produtoPreSel,
-            'activeMenu'      => 'entrada_estoque',
-            'title'           => 'Entrada de Estoque & Mercadorias'
+            'produtos'         => $produtos,
+            'categorias'       => $categorias,
+            'ultimasEntradas'  => $ultimasEntradas,
+            'fornecedores'     => $fornecedores,
+            'mapaFornecedores' => $mapaFornecedores,
+            'produtoPreSel'    => $produtoPreSel,
+            'activeMenu'       => 'entrada_estoque',
+            'title'            => 'Entrada de Estoque & Mercadorias'
         ], 'admin');
     }
 
