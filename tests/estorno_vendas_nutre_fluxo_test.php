@@ -157,26 +157,32 @@ $jsonDetalhes = ob_get_clean();
 $dataDetalhes = json_decode($jsonDetalhes, true);
 assertCustom($dataDetalhes !== null, "Endpoint detalhesAjax responde em JSON válido", $testsPassed, $testsFailed);
 
-// 6. Testar Texto do Modal de Confirmação (Alinhado à Perecibilidade e Vendas Retroativas)
+// 6. Testar Texto do Modal de Confirmação (Alinhado à Perda de Estoque e Vendas Retroativas)
 assertCustom(
-    str_contains($outputCarregado, 'Itens perecíveis (salgados) ou de datas anteriores já consumidos <u>não alteram o estoque físico atual</u>'),
-    "Texto do modal de confirmação esclarece que salgados perecíveis/datas anteriores não alteram o estoque atual",
+    str_contains($outputCarregado, 'Vendas de datas anteriores (salgados ou industrializados) <u>não retornam ao estoque físico</u> e são registradas automaticamente como <strong>perda de estoque</strong>'),
+    "Texto do modal de confirmação esclarece que vendas anteriores de salgados ou industrializados não retornam ao estoque e viram perda de estoque",
     $testsPassed,
     $testsFailed
 );
 
-// 7. Testar Regra de Negócio: Estorno de Venda Retroativa NÃO Reintegra Estoque Físico de Hoje
+// 7. Testar Regra de Negócio: Estorno de Venda Retroativa NÃO Reintegra Estoque Físico e LOGA COMO PERDA DE ESTOQUE
 $pdo = \App\Core\Model::getPdo();
 
-// Cria uma venda retroativa de teste (15 dias atrás com um salgado diário)
-$stmtProd = $pdo->query("SELECT id, estoque_atual FROM produtos WHERE tipo = 'salgado_diario' AND deleted_at IS NULL LIMIT 1");
-$prodTeste = $stmtProd->fetch(\PDO::FETCH_ASSOC);
+// Obtém um produto salgado diário e um produto industrializado
+$stmtProdSalgado = $pdo->query("SELECT id, estoque_atual FROM produtos WHERE tipo = 'salgado_diario' AND deleted_at IS NULL LIMIT 1");
+$prodSalgado = $stmtProdSalgado->fetch(\PDO::FETCH_ASSOC);
 
-if ($prodTeste) {
-    $prodIdTeste = (int)$prodTeste['id'];
-    $estoqueAntes = (int)$prodTeste['estoque_atual'];
+$stmtProdInd = $pdo->query("SELECT id, estoque_atual FROM produtos WHERE tipo = 'industrializado_continuo' AND deleted_at IS NULL LIMIT 1");
+$prodInd = $stmtProdInd->fetch(\PDO::FETCH_ASSOC);
 
-    // Inserir venda balcão retroativa de 15 dias atrás
+if ($prodSalgado && $prodInd) {
+    $salgadoId = (int)$prodSalgado['id'];
+    $salgadoEstoqueAntes = (int)$prodSalgado['estoque_atual'];
+
+    $indId = (int)$prodInd['id'];
+    $indEstoqueAntes = (int)$prodInd['estoque_atual'];
+
+    // Inserir venda balcão retroativa de 15 dias atrás contendo ambos
     $dataRetroativa = date('Y-m-d H:i:s', strtotime('-15 days'));
     $stmtVendaMock = $pdo->prepare("
         INSERT INTO vendas_balcao (
@@ -184,7 +190,7 @@ if ($prodTeste) {
             valor_total, status, created_at
         ) VALUES (
             1, :op_id, 'avulso_aluno', 1, 'dinheiro',
-            10.00, 'concluida', :created_at
+            15.00, 'concluida', :created_at
         )
     ");
     $stmtVendaMock->execute([
@@ -193,34 +199,63 @@ if ($prodTeste) {
     ]);
     $vendaIdMock = (int)$pdo->lastInsertId();
 
-    $stmtItemMock = $pdo->prepare("
-        INSERT INTO itens_venda_balcao (
-            venda_balcao_id, produto_id, quantidade, preco_unitario, subtotal
-        ) VALUES (
-            :venda_id, :prod_id, 2, 5.00, 10.00
-        )
-    ");
-    $stmtItemMock->execute([
-        'venda_id' => $vendaIdMock,
-        'prod_id'  => $prodIdTeste
-    ]);
+    // Item 1: 2 salgados
+    $pdo->prepare("INSERT INTO itens_venda_balcao (venda_balcao_id, produto_id, quantidade, preco_unitario, subtotal) VALUES (?, ?, 2, 5.00, 10.00)")
+        ->execute([$vendaIdMock, $salgadoId]);
+
+    // Item 2: 1 industrializado
+    $pdo->prepare("INSERT INTO itens_venda_balcao (venda_balcao_id, produto_id, quantidade, preco_unitario, subtotal) VALUES (?, ?, 1, 5.00, 5.00)")
+        ->execute([$vendaIdMock, $indId]);
 
     // Executar estorno da venda de 15 dias atrás
     VendaBalcao::estornarVenda($vendaIdMock, (int)$operador['id'], 'Estorno teste retroativo 15 dias');
 
-    // Verificar se o estoque físico foi preservado intacto (NÃO incrementado com salgados fantasmas)
-    $stmtChecaProd = $pdo->prepare("SELECT estoque_atual FROM produtos WHERE id = :id");
-    $stmtChecaProd->execute(['id' => $prodIdTeste]);
-    $estoqueDepois = (int)$stmtChecaProd->fetchColumn();
-
+    // 1. Verificar se o estoque físico de salgado diário permaneceu inalterado
+    $salgadoEstoqueDepois = (int)$pdo->query("SELECT estoque_atual FROM produtos WHERE id = {$salgadoId}")->fetchColumn();
     assertCustom(
-        $estoqueAntes === $estoqueDepois,
-        "Estoque físico de salgado diário permanece inalterado ({$estoqueAntes} un) após estorno de venda retroativa de 15 dias atrás",
+        $salgadoEstoqueAntes === $salgadoEstoqueDepois,
+        "Estoque físico de salgado diário permanece inalterado ({$salgadoEstoqueAntes} un) sem adição indevida",
         $testsPassed,
         $testsFailed
     );
 
+    // 2. Verificar se o estoque físico de industrializado contínuo permaneceu inalterado
+    $indEstoqueDepois = (int)$pdo->query("SELECT estoque_atual FROM produtos WHERE id = {$indId}")->fetchColumn();
+    assertCustom(
+        $indEstoqueAntes === $indEstoqueDepois,
+        "Estoque físico de produto industrializado permanece inalterado ({$indEstoqueAntes} un) após venda retroativa",
+        $testsPassed,
+        $testsFailed
+    );
+
+    // 3. Verificar se foram criados registros de perda de estoque em estoque_movimentacoes para ambos os itens
+    $stmtPerdas = $pdo->prepare("
+        SELECT produto_id, tipo_movimentacao, quantidade, motivo_perda, justificativa
+        FROM estoque_movimentacoes
+        WHERE tipo_movimentacao = 'saida_perda'
+          AND justificativa LIKE :busca
+        ORDER BY id DESC
+    ");
+    $stmtPerdas->execute(['busca' => "%Venda #{$vendaIdMock}%"]);
+    $perdasRegistradas = $stmtPerdas->fetchAll(\PDO::FETCH_ASSOC);
+
+    assertCustom(
+        count($perdasRegistradas) === 2,
+        "Exatamente 2 registros de perda de estoque gerados para os itens da venda retroativa",
+        $testsPassed,
+        $testsFailed
+    );
+
+    $motivoPerdaValido = true;
+    foreach ($perdasRegistradas as $p) {
+        if ($p['motivo_perda'] !== 'sobra_producao' || $p['tipo_movimentacao'] !== 'saida_perda') {
+            $motivoPerdaValido = false;
+        }
+    }
+    assertCustom($motivoPerdaValido, "Itens estornados foram devidamente logados com tipo 'saida_perda' e motivo 'sobra_producao'", $testsPassed, $testsFailed);
+
     // Limpeza da venda de teste
+    $pdo->exec("DELETE FROM estoque_movimentacoes WHERE justificativa LIKE '%Venda #{$vendaIdMock}%'");
     $pdo->exec("DELETE FROM itens_venda_balcao WHERE venda_balcao_id = {$vendaIdMock}");
     $pdo->exec("DELETE FROM vendas_balcao WHERE id = {$vendaIdMock}");
 }

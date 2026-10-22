@@ -374,7 +374,7 @@ $carregado = $carregado ?? false;
                             Você está prestes a estornar 1 venda(s) no total de R$ 0,00.
                         </p>
                         <div class="p-2 mb-2 rounded bg-light border text-microcopy text-secondary">
-                            <strong class="text-dark">Atenção:</strong> Saldos e limites serão estornados, tickets associados serão invalidados. Itens perecíveis (salgados) ou de datas anteriores já consumidos <u>não alteram o estoque físico atual</u>.
+                            <strong class="text-dark">Atenção:</strong> Saldos e limites serão estornados e tickets associados serão invalidados. Vendas de datas anteriores (salgados ou industrializados) <u>não retornam ao estoque físico</u> e são registradas automaticamente como <strong>perda de estoque</strong>.
                         </div>
                         <div class="small">
                             <strong>Motivo selecionado:</strong>

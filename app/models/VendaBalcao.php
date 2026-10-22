@@ -618,6 +618,30 @@ class VendaBalcao extends Model
                         'justificativa' => "Reintegração por estorno da Venda de Balcão #{$vendaId} (venda do mesmo dia): {$motivoLimpo}"
                     ]);
                 }
+            } else {
+                // Passou do dia da venda: não adiciona nada ao estoque físico atual e registra todos os itens (salgados ou industrializados) como perda de estoque
+                $stmtPerdaEstoque = $pdo->prepare("
+                    INSERT INTO estoque_movimentacoes (
+                        produto_id, tipo_movimentacao, quantidade, motivo_perda,
+                        nota_fiscal_id, operador_id, justificativa, created_at
+                    ) VALUES (
+                        :produto_id, 'saida_perda', :quantidade, 'sobra_producao',
+                        NULL, :operador_id, :justificativa, NOW()
+                    )
+                ");
+
+                $dataVendaFmt = date('d/m/Y', strtotime($venda['created_at']));
+                foreach ($itens as $item) {
+                    $prodId = (int)$item['produto_id'];
+                    $qtd = (int)$item['quantidade'];
+
+                    $stmtPerdaEstoque->execute([
+                        'produto_id'    => $prodId,
+                        'quantidade'    => $qtd,
+                        'operador_id'   => $operadorId,
+                        'justificativa' => "Perda por estorno de venda retroativa de {$dataVendaFmt} (Venda #{$vendaId}): item não reintegrado fisicamente ao estoque atual. Motivo: {$motivoLimpo}"
+                    ]);
+                }
             }
 
             // 4. Ajuste contábil da sessão de caixa (se a sessão ainda estiver aberta)

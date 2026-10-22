@@ -1764,6 +1764,24 @@ class Pedido extends Model
                         'op_id'   => $operadorId,
                         'just'    => "Reintegração por estorno do Pedido #{$pedido['codigo_pedido']} (não consumido hoje): {$motivoLimpo}"
                     ]);
+                } elseif ($pedido['data_consumo'] < date('Y-m-d') || $pedido['status'] === self::STATUS_ENTREGUE) {
+                    // Passou do dia do pedido ou já havia sido entregue: não adiciona ao estoque físico atual
+                    // e registra o item (salgado ou industrializado) como perda de estoque
+                    $stmtPerda = $pdo->prepare("
+                        INSERT INTO estoque_movimentacoes (
+                            produto_id, tipo_movimentacao, quantidade, motivo_perda,
+                            nota_fiscal_id, operador_id, justificativa, created_at
+                        ) VALUES (
+                            :prod_id, 'saida_perda', :qtd, 'sobra_producao',
+                            NULL, :op_id, :just, NOW()
+                        )
+                    ");
+                    $stmtPerda->execute([
+                        'prod_id' => $prodId,
+                        'qtd'     => $qtd,
+                        'op_id'   => $operadorId,
+                        'just'    => "Perda por estorno retroativo do Pedido #{$pedido['codigo_pedido']} (Consumo em " . date('d/m/Y', strtotime($pedido['data_consumo'])) . "): item não reintegrado fisicamente ao estoque atual. Motivo: {$motivoLimpo}"
+                    ]);
                 }
             }
 
