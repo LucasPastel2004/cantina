@@ -576,42 +576,48 @@ class VendaBalcao extends Model
             ]);
 
             // 3. Reintegração de estoque para cada item vendido
+            // Regra de Negócio: Vendas de datas anteriores já foram consumidas ou descartadas (perecíveis/salgados).
+            // Apenas vendas do próprio dia de hoje retornam fisicamente ao estoque atual para evitar estoques fantasmas.
             $itens = ItemVendaBalcao::listarPorVenda($vendaId);
+            $dataVenda = !empty($venda['created_at']) ? date('Y-m-d', strtotime($venda['created_at'])) : date('Y-m-d');
+            $ehVendaHoje = ($dataVenda === date('Y-m-d'));
 
-            $stmtEstoque = $pdo->prepare("
-                UPDATE produtos
-                SET estoque_atual = estoque_atual + :qtd,
-                    updated_at = NOW()
-                WHERE id = :produto_id
-            ");
+            if ($ehVendaHoje) {
+                $stmtEstoque = $pdo->prepare("
+                    UPDATE produtos
+                    SET estoque_atual = estoque_atual + :qtd,
+                        updated_at = NOW()
+                    WHERE id = :produto_id
+                ");
 
-            $stmtMovEstoque = $pdo->prepare("
-                INSERT INTO estoque_movimentacoes (
-                    produto_id, tipo_movimentacao, quantidade, motivo_perda,
-                    nota_fiscal_id, operador_id, justificativa, created_at
-                ) VALUES (
-                    :produto_id, 'entrada_estorno', :quantidade, NULL,
-                    NULL, :operador_id, :justificativa, NOW()
-                )
-            ");
+                $stmtMovEstoque = $pdo->prepare("
+                    INSERT INTO estoque_movimentacoes (
+                        produto_id, tipo_movimentacao, quantidade, motivo_perda,
+                        nota_fiscal_id, operador_id, justificativa, created_at
+                    ) VALUES (
+                        :produto_id, 'entrada_estorno', :quantidade, NULL,
+                        NULL, :operador_id, :justificativa, NOW()
+                    )
+                ");
 
-            foreach ($itens as $item) {
-                $prodId = (int)$item['produto_id'];
-                $qtd = (int)$item['quantidade'];
+                foreach ($itens as $item) {
+                    $prodId = (int)$item['produto_id'];
+                    $qtd = (int)$item['quantidade'];
 
-                // Devolve ao saldo físico
-                $stmtEstoque->execute([
-                    'qtd'        => $qtd,
-                    'produto_id' => $prodId
-                ]);
+                    // Devolve ao saldo físico do dia
+                    $stmtEstoque->execute([
+                        'qtd'        => $qtd,
+                        'produto_id' => $prodId
+                    ]);
 
-                // Registra movimentação de devolução por estorno
-                $stmtMovEstoque->execute([
-                    'produto_id'    => $prodId,
-                    'quantidade'    => $qtd,
-                    'operador_id'   => $operadorId,
-                    'justificativa' => "Reintegração por estorno da Venda de Balcão #{$vendaId}: {$motivoLimpo}"
-                ]);
+                    // Registra movimentação de devolução por estorno do mesmo dia
+                    $stmtMovEstoque->execute([
+                        'produto_id'    => $prodId,
+                        'quantidade'    => $qtd,
+                        'operador_id'   => $operadorId,
+                        'justificativa' => "Reintegração por estorno da Venda de Balcão #{$vendaId} (venda do mesmo dia): {$motivoLimpo}"
+                    ]);
+                }
             }
 
             // 4. Ajuste contábil da sessão de caixa (se a sessão ainda estiver aberta)
@@ -655,17 +661,20 @@ class VendaBalcao extends Model
                 ? "Colaborador: {$venda['colaborador_nome']}" 
                 : ($venda['aluno_nome'] ? "Aluno: {$venda['aluno_nome']}" : "Consumidor Avulso");
 
+            $complementoEstoque = $ehVendaHoje ? "Estoque reintegrado." : "Estorno financeiro retroativo (estoque físico mantido sem reintegração).";
+
             Auditoria::registrar(
                 $operadorId,
                 Auditoria::ACAO_ESTORNO_BALCAO,
                 'vendas_balcao',
                 $vendaId,
                 sprintf(
-                    "Estorno de venda balcão #%d (%s, Valor: R$ %s, Pagto: %s). Motivo: %s",
+                    "Estorno de venda balcão #%d (%s, Valor: R$ %s, Pagto: %s). %s Motivo: %s",
                     $vendaId,
                     $identificacaoPessoa,
                     number_format($valorTotal, 2, ',', '.'),
                     $venda['forma_pagamento'],
+                    $complementoEstoque,
                     $motivoLimpo
                 ),
                 $ipOrigem

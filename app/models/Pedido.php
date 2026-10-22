@@ -1701,7 +1701,10 @@ class Pedido extends Model
                 'pedido_id' => $pedidoId
             ]);
 
-            // 5. Reintegração de estoque
+            // 5. Tratamento de estoque
+            // Regra de Negócio: Pedidos de datas anteriores já foram consumidos/descartados.
+            // Um salgado ou lanche de 15 dias atrás não pode voltar ao estoque físico atual.
+            // Pedidos futuros liberam reserva; pedidos já consumidos ou de datas passadas mantêm o estoque físico intacto.
             $stmtItens = $pdo->prepare("
                 SELECT ip.*, prod.tipo, prod.descricao AS produto_descricao, prod.estoque_reservado
                 FROM itens_pedido ip
@@ -1711,12 +1714,15 @@ class Pedido extends Model
             $stmtItens->execute(['pedido_id' => $pedidoId]);
             $itens = $stmtItens->fetchAll(\PDO::FETCH_ASSOC);
 
+            $ehConsumoHoje = ($pedido['data_consumo'] === date('Y-m-d'));
+            $ehConsumoFuturo = ($pedido['data_consumo'] > date('Y-m-d'));
+
             foreach ($itens as $item) {
                 $prodId = (int)$item['produto_id'];
                 $qtd = (int)$item['quantidade'];
 
-                // Se era industrializado e tinha reserva, libera a reserva
-                if ($item['tipo'] === 'industrializado_continuo') {
+                // Se era industrializado e tinha reserva para hoje ou consumo futuro, libera a reserva
+                if ($item['tipo'] === 'industrializado_continuo' && ($ehConsumoHoje || $ehConsumoFuturo)) {
                     $stmtLiberaReserva = $pdo->prepare("
                         UPDATE produtos
                         SET estoque_reservado = GREATEST(0, estoque_reservado - :qtd),
@@ -1729,9 +1735,9 @@ class Pedido extends Model
                     ]);
                 }
 
-                // Se a remessa do dia já havia sido recebida do fornecedor ou o pedido já havia sido entregue,
-                // devolve ao estoque físico e registra movimentação
-                if ($pedido['status'] === self::STATUS_ENTREGUE || $pedido['data_consumo'] <= date('Y-m-d')) {
+                // Devolução ao estoque físico: APENAS no próprio dia de hoje E se o produto não foi entregue/consumido ainda
+                // Se a data já passou (ex: 15 dias atrás) ou já foi entregue ao aluno, NÃO reintegra fisicamente
+                if ($ehConsumoHoje && $pedido['status'] !== self::STATUS_ENTREGUE && $item['tipo'] === 'industrializado_continuo') {
                     $stmtDevolveFisico = $pdo->prepare("
                         UPDATE produtos
                         SET estoque_atual = estoque_atual + :qtd,
@@ -1756,22 +1762,27 @@ class Pedido extends Model
                         'prod_id' => $prodId,
                         'qtd'     => $qtd,
                         'op_id'   => $operadorId,
-                        'just'    => "Reintegração por estorno do Pedido #{$pedido['codigo_pedido']}: {$motivoLimpo}"
+                        'just'    => "Reintegração por estorno do Pedido #{$pedido['codigo_pedido']} (não consumido hoje): {$motivoLimpo}"
                     ]);
                 }
             }
 
             // 6. Trilha obrigatória de auditoria (logs_auditoria)
+            $obsEstoqueRetroativo = ($pedido['data_consumo'] < date('Y-m-d'))
+                ? " [Estorno financeiro retroativo: estoque físico mantido sem reintegração por decurso de prazo/consumo prévio]"
+                : "";
+
             Auditoria::registrar(
                 $operadorId,
                 Auditoria::ACAO_ESTORNO_BALCAO,
                 'pedidos',
                 $pedidoId,
                 sprintf(
-                    "Estorno operacional de pedido #%s (Aluno: %s, Valor: R$ %s). Motivo: %s",
+                    "Estorno operacional de pedido #%s (Aluno: %s, Valor: R$ %s).%s Motivo: %s",
                     $pedido['codigo_pedido'],
                     $pedido['aluno_nome'],
                     number_format($valorTotal, 2, ',', '.'),
+                    $obsEstoqueRetroativo,
                     $motivoLimpo
                 ),
                 $ipOrigem

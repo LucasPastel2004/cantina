@@ -179,7 +179,7 @@ class Fase19Test
         echo "\n--- Teste 4: Estorno Atômico de Venda Balcão em Dinheiro e Reintegração de Estoque ---\n";
 
         // Obter operador e produto para o teste
-        $operador = (new Usuario())->findByEmail('operador@cantina.local') ?? (new Usuario())->find(1);
+        $operador = Usuario::listarTodos()[0] ?? ((new Usuario())->findByEmail('operador@cantina.local') ?? (new Usuario())->find(1));
         $opId = (int)$operador['id'];
 
         // Cria ou obtém produto para o teste
@@ -268,7 +268,7 @@ class Fase19Test
             $colabId = (int)$colab['id'];
         }
 
-        $operador = (new Usuario())->findByEmail('operador@cantina.local') ?? (new Usuario())->find(1);
+        $operador = Usuario::listarTodos()[0] ?? ((new Usuario())->findByEmail('operador@cantina.local') ?? (new Usuario())->find(1));
         $opId = (int)$operador['id'];
 
         $sessaoAberta = SessaoCaixa::obterSessaoAberta('matutino');
@@ -374,7 +374,7 @@ class Fase19Test
         $this->assert(abs($saldoAntesEstorno - 32.00) < 0.01, "Saldo da carteira após o débito do pedido é R$ 32,00.");
 
         // Executar estorno do pedido
-        $operador = (new Usuario())->findByEmail('operador@cantina.local') ?? (new Usuario())->find(1);
+        $operador = Usuario::listarTodos()[0] ?? ((new Usuario())->findByEmail('operador@cantina.local') ?? (new Usuario())->find(1));
         $opId = (int)$operador['id'];
 
         $motivoPedido = "Cancelamento da encomenda a pedido do responsável";
@@ -412,7 +412,7 @@ class Fase19Test
     {
         echo "\n--- Teste 7: Travas de Segurança, Motivo Obrigatório e Duplicidade ---\n";
 
-        $operador = (new Usuario())->findByEmail('operador@cantina.local') ?? (new Usuario())->find(1);
+        $operador = Usuario::listarTodos()[0] ?? ((new Usuario())->findByEmail('operador@cantina.local') ?? (new Usuario())->find(1));
         $opId = (int)$operador['id'];
 
         $sessaoAberta = SessaoCaixa::obterSessaoAberta('matutino');

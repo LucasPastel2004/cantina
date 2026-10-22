@@ -16,6 +16,7 @@
  */
 
 define('CANTINA_SISTEMA', true);
+define('CANTINA_TEST_MODE', true);
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
@@ -35,6 +36,7 @@ require_once __DIR__ . '/../app/models/ItemPedido.php';
 require_once __DIR__ . '/../app/models/TransacaoCarteira.php';
 require_once __DIR__ . '/../app/models/Responsavel.php';
 require_once __DIR__ . '/../app/models/Produto.php';
+require_once __DIR__ . '/../app/models/Auditoria.php';
 require_once __DIR__ . '/../app/controllers/EstornoVendasController.php';
 
 use App\Core\Session;
@@ -154,6 +156,74 @@ $controller->detalhesAjax();
 $jsonDetalhes = ob_get_clean();
 $dataDetalhes = json_decode($jsonDetalhes, true);
 assertCustom($dataDetalhes !== null, "Endpoint detalhesAjax responde em JSON válido", $testsPassed, $testsFailed);
+
+// 6. Testar Texto do Modal de Confirmação (Alinhado à Perecibilidade e Vendas Retroativas)
+assertCustom(
+    str_contains($outputCarregado, 'Itens perecíveis (salgados) ou de datas anteriores já consumidos <u>não alteram o estoque físico atual</u>'),
+    "Texto do modal de confirmação esclarece que salgados perecíveis/datas anteriores não alteram o estoque atual",
+    $testsPassed,
+    $testsFailed
+);
+
+// 7. Testar Regra de Negócio: Estorno de Venda Retroativa NÃO Reintegra Estoque Físico de Hoje
+$pdo = \App\Core\Model::getPdo();
+
+// Cria uma venda retroativa de teste (15 dias atrás com um salgado diário)
+$stmtProd = $pdo->query("SELECT id, estoque_atual FROM produtos WHERE tipo = 'salgado_diario' AND deleted_at IS NULL LIMIT 1");
+$prodTeste = $stmtProd->fetch(\PDO::FETCH_ASSOC);
+
+if ($prodTeste) {
+    $prodIdTeste = (int)$prodTeste['id'];
+    $estoqueAntes = (int)$prodTeste['estoque_atual'];
+
+    // Inserir venda balcão retroativa de 15 dias atrás
+    $dataRetroativa = date('Y-m-d H:i:s', strtotime('-15 days'));
+    $stmtVendaMock = $pdo->prepare("
+        INSERT INTO vendas_balcao (
+            sessao_caixa_id, operador_id, tipo_venda, aluno_id, forma_pagamento,
+            valor_total, status, created_at
+        ) VALUES (
+            1, :op_id, 'avulso_aluno', 1, 'dinheiro',
+            10.00, 'concluida', :created_at
+        )
+    ");
+    $stmtVendaMock->execute([
+        'op_id'      => $operador['id'],
+        'created_at' => $dataRetroativa
+    ]);
+    $vendaIdMock = (int)$pdo->lastInsertId();
+
+    $stmtItemMock = $pdo->prepare("
+        INSERT INTO itens_venda_balcao (
+            venda_balcao_id, produto_id, quantidade, preco_unitario, subtotal
+        ) VALUES (
+            :venda_id, :prod_id, 2, 5.00, 10.00
+        )
+    ");
+    $stmtItemMock->execute([
+        'venda_id' => $vendaIdMock,
+        'prod_id'  => $prodIdTeste
+    ]);
+
+    // Executar estorno da venda de 15 dias atrás
+    VendaBalcao::estornarVenda($vendaIdMock, (int)$operador['id'], 'Estorno teste retroativo 15 dias');
+
+    // Verificar se o estoque físico foi preservado intacto (NÃO incrementado com salgados fantasmas)
+    $stmtChecaProd = $pdo->prepare("SELECT estoque_atual FROM produtos WHERE id = :id");
+    $stmtChecaProd->execute(['id' => $prodIdTeste]);
+    $estoqueDepois = (int)$stmtChecaProd->fetchColumn();
+
+    assertCustom(
+        $estoqueAntes === $estoqueDepois,
+        "Estoque físico de salgado diário permanece inalterado ({$estoqueAntes} un) após estorno de venda retroativa de 15 dias atrás",
+        $testsPassed,
+        $testsFailed
+    );
+
+    // Limpeza da venda de teste
+    $pdo->exec("DELETE FROM itens_venda_balcao WHERE venda_balcao_id = {$vendaIdMock}");
+    $pdo->exec("DELETE FROM vendas_balcao WHERE id = {$vendaIdMock}");
+}
 
 echo "\n============================================\n";
 echo "RESULTADO FINAL: {$testsPassed} testes aprovados, {$testsFailed} falhas.\n";
