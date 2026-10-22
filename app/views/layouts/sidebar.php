@@ -327,12 +327,6 @@ $isProdutosActive = ($activeMenu === 'produtos');
         </div>
         <ul class="flyout-list nav-list">
             <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios" class="nav-link <?php echo ($activeMenu === 'relatorios') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Central de Relatórios</span>
-                </a>
-            </li>
-            <li class="flyout-item nav-item">
                 <a href="<?php echo $baseUrl; ?>/relatorios/extrato-aluno" class="nav-link <?php echo ($activeMenu === 'extrato_aluno') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Extrato do Aluno</span>

@@ -153,16 +153,6 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
                     Parametrização dinâmica com orientações Retrato e Paisagem e agrupamentos dinâmicos.
                 </p>
             </div>
-
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-                <!-- Botão Voltar ao Hub -->
-                <a href="<?php echo $baseUrl; ?>/relatorios" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-                    </svg>
-                    <span>Hub de Relatórios</span>
-                </a>
-            </div>
         </div>
 
         <!-- Abas de Navegação Estilo Escolar Manager: Filtro e Layout -->
@@ -407,11 +397,7 @@ $quebraPagina   = $filtros['quebra_pagina'] ?? 'ocultar';
         </div>
 
         <!-- Rodapé com as Ações Oficiais de Emissão -->
-        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top flex-wrap gap-2">
-            <a href="<?php echo $baseUrl; ?>/relatorios" class="btn btn-enterprise btn-secondary btn-sm">
-                ← Voltar aos Relatórios
-            </a>
-
+        <div class="d-flex justify-content-end align-items-center mt-3 pt-3 border-top flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <!-- Imprimir / Salvar PDF (A4) -->
                 <button type="submit" formaction="<?php echo $baseUrl; ?>/relatorios/estoque-movimentacoes/imprimir" formtarget="_blank" class="btn btn-enterprise btn-secondary btn-sm px-3 d-inline-flex align-items-center gap-1.5" id="btnEmitirImprimir">

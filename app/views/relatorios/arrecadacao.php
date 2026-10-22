@@ -27,9 +27,6 @@ $canais = $dados['canais'] ?? [];
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <a href="<?php echo $baseUrl; ?>/relatorios" class="btn btn-sm btn-enterprise btn-secondary text-decoration-none py-1 px-2" title="Voltar ao Hub de Relatórios">
-                    ← Relatórios
-                </a>
                 <span class="text-secondary text-microcopy text-uppercase font-weight-bold">Módulo Financeiro & Fluxo de Caixa</span>
             </div>
             <h1 class="h4 font-weight-bold mb-0 text-dark">Arrecadação Financeira & Fluxo de Entradas</h1>
