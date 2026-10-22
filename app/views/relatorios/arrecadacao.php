@@ -19,7 +19,6 @@ $inicioMesAnterior = date('Y-m-d', strtotime('first day of previous month'));
 $fimMesAnterior = date('Y-m-d', strtotime('last day of previous month'));
 
 $canais = $dados['canais'] ?? [];
-$dias = $dados['dias'] ?? [];
 ?>
 
 <div class="container-fluid p-0">
@@ -288,103 +287,6 @@ $dias = $dados['dias'] ?? [];
             </div>
         </div>
 
-    </div>
-
-    <!-- Tabela Detalhada Cronológica: Arrecadação Dia a Dia -->
-    <div class="card card-enterprise mb-4" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-        <div class="card-enterprise-header d-flex justify-content-between align-items-center py-2.5 px-3 bg-light border-bottom">
-            <div>
-                <span class="fw-semibold text-dark text-microcopy text-uppercase">Detalhamento Diário de Entradas e Consumo</span>
-                <span class="text-muted text-microcopy d-block">Movimentações financeiras e consumo de saldo discriminados data a data</span>
-            </div>
-            <span class="code-tag font-tabular"><?php echo count($dias); ?> dias apurados</span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-enterprise table-hover mb-0">
-                <thead>
-                    <tr style="background: #f8fafc; font-size: 11px; text-transform: uppercase; color: #475569;">
-                        <th style="padding: 10px 14px;">Data</th>
-                        <th style="padding: 10px 14px;">Dia da Semana</th>
-                        <th class="text-end" style="padding: 10px 14px;">Recargas Pix (App)</th>
-                        <th class="text-end" style="padding: 10px 14px;">Recargas Dinheiro</th>
-                        <th class="text-end" style="padding: 10px 14px;">Vendas Dinheiro</th>
-                        <th class="text-end" style="padding: 10px 14px;">Vendas Pix</th>
-                        <th class="text-end" style="padding: 10px 14px; background: #f1f5f9; font-weight: 700;">Total Arrecadado (Dia)</th>
-                        <th class="text-end" style="padding: 10px 14px;">Consumo Saldo</th>
-                        <th class="text-end" style="padding: 10px 14px;">Variação Saldo</th>
-                    </tr>
-                </thead>
-                <tbody style="font-size: 12.5px;">
-                    <?php if (empty($dias)): ?>
-                    <tr>
-                        <td colspan="9" class="text-center py-4 text-muted">
-                            Não há movimentações para o período selecionado.
-                        </td>
-                    </tr>
-                    <?php else: ?>
-                        <?php foreach ($dias as $d): ?>
-                        <tr <?php echo ($d['total_arrecadado'] == 0 && $d['consumo_saldo'] == 0) ? 'class="text-muted"' : ''; ?>>
-                            <td style="padding: 10px 14px;" class="font-tabular fw-semibold text-dark">
-                                <?php echo htmlspecialchars($d['data_formatada'], ENT_QUOTES, 'UTF-8'); ?>
-                            </td>
-                            <td style="padding: 10px 14px;" class="text-secondary">
-                                <?php echo htmlspecialchars($d['dia_semana'], ENT_QUOTES, 'UTF-8'); ?>
-                            </td>
-                            <td style="padding: 10px 14px;" class="text-end font-tabular">
-                                <?php echo $d['recargas_pix'] > 0 ? 'R$ ' . number_format((float)$d['recargas_pix'], 2, ',', '.') : '&mdash;'; ?>
-                            </td>
-                            <td style="padding: 10px 14px;" class="text-end font-tabular">
-                                <?php echo $d['recargas_dinheiro'] > 0 ? 'R$ ' . number_format((float)$d['recargas_dinheiro'], 2, ',', '.') : '&mdash;'; ?>
-                            </td>
-                            <td style="padding: 10px 14px;" class="text-end font-tabular">
-                                <?php echo $d['vendas_dinheiro'] > 0 ? 'R$ ' . number_format((float)$d['vendas_dinheiro'], 2, ',', '.') : '&mdash;'; ?>
-                            </td>
-                            <td style="padding: 10px 14px;" class="text-end font-tabular">
-                                <?php echo $d['vendas_pix'] > 0 ? 'R$ ' . number_format((float)$d['vendas_pix'], 2, ',', '.') : '&mdash;'; ?>
-                            </td>
-                            <td style="padding: 10px 14px; background: #f8fafc;" class="text-end font-tabular fw-bold text-dark">
-                                R$ <?php echo number_format((float)$d['total_arrecadado'], 2, ',', '.'); ?>
-                            </td>
-                            <td style="padding: 10px 14px;" class="text-end font-tabular text-secondary">
-                                <?php echo $d['consumo_saldo'] > 0 ? 'R$ ' . number_format((float)$d['consumo_saldo'], 2, ',', '.') : '&mdash;'; ?>
-                            </td>
-                            <td style="padding: 10px 14px;" class="text-end font-tabular <?php echo $d['variacao_saldo'] < 0 ? 'text-danger' : 'text-success'; ?>">
-                                <?php echo ($d['variacao_saldo'] >= 0 ? '+' : '') . 'R$ ' . number_format((float)$d['variacao_saldo'], 2, ',', '.'); ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-                <tfoot style="background: #f8fafc; font-weight: 700; font-size: 12.5px; border-top: 2px solid #cbd5e1;">
-                    <tr>
-                        <td colspan="2" style="padding: 10px 14px;" class="text-uppercase text-dark">
-                            Total Geral do Período
-                        </td>
-                        <td style="padding: 10px 14px;" class="text-end font-tabular">
-                            R$ <?php echo number_format((float)$dados['recargas_pix_total'], 2, ',', '.'); ?>
-                        </td>
-                        <td style="padding: 10px 14px;" class="text-end font-tabular">
-                            R$ <?php echo number_format((float)$dados['recargas_dinheiro_total'], 2, ',', '.'); ?>
-                        </td>
-                        <td style="padding: 10px 14px;" class="text-end font-tabular">
-                            R$ <?php echo number_format((float)$dados['vendas_dinheiro_total'], 2, ',', '.'); ?>
-                        </td>
-                        <td style="padding: 10px 14px;" class="text-end font-tabular">
-                            R$ <?php echo number_format((float)$dados['vendas_pix_total'], 2, ',', '.'); ?>
-                        </td>
-                        <td style="padding: 10px 14px; background: #f1f5f9;" class="text-end font-tabular text-success" style="color: #15803d !important;">
-                            R$ <?php echo number_format((float)$dados['total_arrecadado_bruto'], 2, ',', '.'); ?>
-                        </td>
-                        <td style="padding: 10px 14px;" class="text-end font-tabular text-secondary">
-                            R$ <?php echo number_format((float)$dados['total_consumo_saldo'], 2, ',', '.'); ?>
-                        </td>
-                        <td style="padding: 10px 14px;" class="text-end font-tabular <?php echo $dados['variacao_carteira'] < 0 ? 'text-danger' : 'text-success'; ?>">
-                            <?php echo ($dados['variacao_carteira'] >= 0 ? '+' : '') . 'R$ ' . number_format((float)$dados['variacao_carteira'], 2, ',', '.'); ?>
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
     </div>
 
 </div>

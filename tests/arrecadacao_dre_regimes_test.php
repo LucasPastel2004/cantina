@@ -298,7 +298,9 @@ class ArrecadacaoDreRegimesTest
         $htmlArrec = ob_get_clean();
         $this->assert(str_contains($htmlArrec, 'Arrecadação Financeira & Fluxo de Entradas'), "RelatoriosController::arrecadacao renderiza view principal");
         $this->assert(str_contains($htmlArrec, 'Total Arrecadado (Cash-In Real)'), "View de Arrecadação exibe stat-item de Cash-In");
-        $this->assert(str_contains($htmlArrec, 'Detalhamento Diário de Entradas e Consumo'), "View de Arrecadação exibe tabela diária");
+        $this->assert(str_contains($htmlArrec, 'Arrecadação por Canal de Pagamento'), "View de Arrecadação exibe bloco de canais");
+        $this->assert(str_contains($htmlArrec, 'Controle de Custódia da Carteira'), "View de Arrecadação exibe bloco de custódia");
+        $this->assert(!str_contains($htmlArrec, 'Detalhamento Diário de Entradas e Consumo'), "View de Arrecadação omite listagem diária longa para manter tela limpa");
         $this->assert(preg_match('#href="[^"]*/relatorios/arrecadacao"[^>]*class="nav-link\s+active"#', $htmlArrec) === 1, "Sidebar marca Arrecadação & Entradas como menu ativo");
         $this->assert(preg_match('#href="[^"]*/relatorios"[^>]*class="nav-link\s+active"#', $htmlArrec) === 0, "Sidebar NÃO marca Relatórios Gerenciais como ativo quando na tela de Arrecadação");
 
@@ -307,6 +309,7 @@ class ArrecadacaoDreRegimesTest
         $relCtrl->arrecadacaoImprimir();
         $htmlArrecImp = ob_get_clean();
         $this->assert(str_contains($htmlArrecImp, 'DEMONSTRATIVO DE ARRECADAÇÃO FINANCEIRA'), "RelatoriosController::arrecadacaoImprimir renderiza espelho A4 oficial");
+        $this->assert(str_contains($htmlArrecImp, 'Detalhamento Cronológico Diário de Arrecadação e Consumo'), "Relatório A4 oficial preserva listagem diária detalhada");
     }
 }
 
