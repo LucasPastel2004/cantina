@@ -26,10 +26,13 @@ class Fase24Test
     private \PDO $pdo;
     private int $totalAssercoes = 0;
     private int $assercoesSucesso = 0;
+    private ?int $adminId = null;
 
     public function __construct()
     {
         $this->pdo = Database::getInstance();
+        $admin = $this->pdo->query("SELECT id FROM usuarios WHERE perfil = 'administrador' LIMIT 1")->fetch();
+        $this->adminId = $admin ? (int)$admin['id'] : null;
     }
 
     public function executarTodos(): void
@@ -117,7 +120,7 @@ class Fase24Test
             'observacoes'          => 'Despesa criada em teste automatizado.',
         ];
 
-        $id = $model->criar($dados, 1);
+        $id = $model->criar($dados, $this->adminId);
         $this->assert($id > 0, "Despesa criada com sucesso retornando ID {$id}.");
 
         // 2. Buscar por ID
@@ -129,7 +132,7 @@ class Fase24Test
         // 3. Atualizar
         $dados['descricao'] = 'Conta de Luz Provisória Alterada';
         $dados['valor'] = 175.50;
-        $atualizado = $model->atualizar($id, $dados, 1);
+        $atualizado = $model->atualizar($id, $dados, $this->adminId);
         $this->assert($atualizado === true, "Despesa #{$id} atualizada com sucesso.");
 
         $despesaAtt = $model->buscarPorId($id);
@@ -137,7 +140,7 @@ class Fase24Test
         $this->assert((float)$despesaAtt['valor'] === 175.50, "Valor atualizado refletido no banco.");
 
         // 4. Soft Delete
-        $excluido = $model->excluir($id, 1);
+        $excluido = $model->excluir($id, $this->adminId);
         $this->assert($excluido === true, "Despesa #{$id} excluída logicamente com sucesso.");
 
         $despesaExcluida = $model->buscarPorId($id);
@@ -229,11 +232,11 @@ class Fase24Test
             'competencia_mes_ano'  => '2026-10',
             'data_vencimento'      => '2026-10-30',
             'status'               => \App\Models\DespesaOperacional::STATUS_PENDENTE,
-        ], 1);
+        ], $this->adminId);
 
         $this->assert($id > 0, "Despesa pendente criada com ID {$id}.");
 
-        $sucesso = $model->marcarComoPaga($id, '2026-10-20', 'Pix', 1);
+        $sucesso = $model->marcarComoPaga($id, '2026-10-20', 'Pix', $this->adminId);
         $this->assert($sucesso === true, "Despesa #{$id} marcada como paga.");
 
         $d = $model->buscarPorId($id);
@@ -326,12 +329,13 @@ class Fase24Test
 
         // Simula sessão de administrador
         \App\Core\Session::start();
-        \App\Core\Session::set('_auth_user_id', 1);
+        \App\Core\Session::set('_auth_user_id', $this->adminId);
         \App\Core\Session::set('_auth_role', \App\Core\RBAC::ROLE_ADMINISTRADOR);
 
         $controller = new \App\Controllers\DespesasController();
 
         $_GET['competencia'] = '2026-09';
+        $_GET['filtrar'] = '1';
         ob_start();
         $controller->index();
         $html = ob_get_clean();
@@ -347,7 +351,7 @@ class Fase24Test
         echo "\n[9] Testando DreController (Index, Gráficos JSON e CSV)...\n";
 
         \App\Core\Session::start();
-        \App\Core\Session::set('_auth_user_id', 1);
+        \App\Core\Session::set('_auth_user_id', $this->adminId);
         \App\Core\Session::set('_auth_role', \App\Core\RBAC::ROLE_ADMINISTRADOR);
 
         $controller = new \App\Controllers\DreController();

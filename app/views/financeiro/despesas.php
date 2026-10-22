@@ -82,9 +82,10 @@ $baseUrl = $baseUrl ?? '';
     <div class="card card-enterprise mb-4" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
         <div class="card-body p-3">
             <form action="<?php echo $baseUrl; ?>/financeiro/despesas" method="GET" class="row g-2 align-items-end">
+                <input type="hidden" name="filtrar" value="1">
                 <div class="col-12 col-md-3">
                     <label class="form-label text-microcopy text-uppercase font-weight-bold text-secondary mb-1">Competência (Mês/Ano)</label>
-                    <select name="competencia" class="form-select form-select-sm font-tabular" onchange="this.form.submit()">
+                    <select name="competencia" class="form-select form-select-sm font-tabular">
                         <option value="todas" <?php echo ($competenciaAtual === 'todas') ? 'selected' : ''; ?>>Todas as Competências</option>
                         <?php foreach ($competenciasDisponiveis as $comp): ?>
                             <option value="<?php echo htmlspecialchars($comp, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($competenciaAtual === $comp) ? 'selected' : ''; ?>>
@@ -96,7 +97,7 @@ $baseUrl = $baseUrl ?? '';
 
                 <div class="col-12 col-md-3">
                     <label class="form-label text-microcopy text-uppercase font-weight-bold text-secondary mb-1">Categoria de Custo</label>
-                    <select name="categoria" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <select name="categoria" class="form-select form-select-sm">
                         <option value="">Todas as Categorias</option>
                         <?php foreach ($categorias as $keyCat => $nomeCat): ?>
                             <option value="<?php echo htmlspecialchars($keyCat, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($filtros['categoria'] === $keyCat) ? 'selected' : ''; ?>>
@@ -108,7 +109,7 @@ $baseUrl = $baseUrl ?? '';
 
                 <div class="col-12 col-md-2">
                     <label class="form-label text-microcopy text-uppercase font-weight-bold text-secondary mb-1">Situação</label>
-                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <select name="status" class="form-select form-select-sm">
                         <option value="">Todos os Status</option>
                         <?php foreach ($statusList as $kStatus => $lblStatus): ?>
                             <option value="<?php echo htmlspecialchars($kStatus, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($filtros['status'] === $kStatus) ? 'selected' : ''; ?>>
@@ -127,7 +128,7 @@ $baseUrl = $baseUrl ?? '';
                     <button type="submit" class="btn btn-enterprise btn-secondary btn-sm flex-fill" title="Filtrar">
                         <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
                     </button>
-                    <?php if (!empty($filtros['categoria']) || !empty($filtros['status']) || !empty($filtros['busca']) || $competenciaAtual !== date('Y-m')): ?>
+                    <?php if (!empty($jaFiltrado)): ?>
                         <a href="<?php echo $baseUrl; ?>/financeiro/despesas" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
                             ✕
                         </a>
@@ -154,12 +155,22 @@ $baseUrl = $baseUrl ?? '';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($despesas)): ?>
+                    <?php if (empty($jaFiltrado)): ?>
                         <tr>
                             <td colspan="8" class="py-5 text-center text-muted">
                                 <div class="empty-state-container text-center py-4">
                                     <svg width="32" height="32" viewBox="0 0 16 16" fill="#94a3b8" class="mb-2"><path d="M14 3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h12zM2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2z"/><path d="M2 5.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/></svg>
                                     <p class="mb-1 text-secondary font-weight-bold">Não há nada para mostrar aqui</p>
+                                    <span class="text-microcopy text-muted">Configure os filtros acima e clique no botão com a lupa para exibir as despesas operacionais.</span>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php elseif (empty($despesas)): ?>
+                        <tr>
+                            <td colspan="8" class="py-5 text-center text-muted">
+                                <div class="empty-state-container text-center py-4">
+                                    <svg width="32" height="32" viewBox="0 0 16 16" fill="#94a3b8" class="mb-2"><path d="M14 3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h12zM2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2z"/><path d="M2 5.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/></svg>
+                                    <p class="mb-1 text-secondary font-weight-bold">Nenhuma despesa localizada</p>
                                     <span class="text-microcopy text-muted">Nenhuma despesa operacional localizada para os filtros selecionados.</span>
                                 </div>
                             </td>
@@ -240,7 +251,7 @@ $baseUrl = $baseUrl ?? '';
         </div>
 
         <!-- Paginação -->
-        <?php if ($totalPaginas > 1): ?>
+        <?php if (!empty($jaFiltrado) && $totalPaginas > 1): ?>
             <div class="p-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <span class="text-secondary text-microcopy font-tabular">
                     Exibindo <?php echo count($despesas); ?> de <?php echo $totalRegistros; ?> despesas registradas
@@ -249,7 +260,7 @@ $baseUrl = $baseUrl ?? '';
                     <ul class="pagination pagination-sm m-0">
                         <?php for ($p = 1; $p <= $totalPaginas; $p++): ?>
                             <li class="page-item <?php echo ($p === $paginaAtual) ? 'active' : ''; ?>">
-                                <a class="page-link font-tabular" href="<?php echo $baseUrl; ?>/financeiro/despesas?competencia=<?php echo urlencode($competenciaAtual); ?>&categoria=<?php echo urlencode($filtros['categoria']); ?>&status=<?php echo urlencode($filtros['status']); ?>&busca=<?php echo urlencode($filtros['busca']); ?>&pagina=<?php echo $p; ?>">
+                                <a class="page-link font-tabular" href="<?php echo $baseUrl; ?>/financeiro/despesas?filtrar=1&competencia=<?php echo urlencode($competenciaAtual); ?>&categoria=<?php echo urlencode($filtros['categoria']); ?>&status=<?php echo urlencode($filtros['status']); ?>&busca=<?php echo urlencode($filtros['busca']); ?>&pagina=<?php echo $p; ?>">
                                     <?php echo $p; ?>
                                 </a>
                             </li>

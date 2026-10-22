@@ -40,9 +40,13 @@ class DespesasController extends Controller
         $categoria = isset($_GET['categoria']) && is_string($_GET['categoria']) ? trim($_GET['categoria']) : '';
         $status = isset($_GET['status']) && is_string($_GET['status']) ? trim($_GET['status']) : '';
         $busca = isset($_GET['busca']) && is_string($_GET['busca']) ? trim($_GET['busca']) : '';
+        $filtrar = (bool)($this->input('filtrar', false) || isset($_GET['filtrar']));
         $pagina = isset($_GET['pagina']) ? max(1, (int)$_GET['pagina']) : 1;
         $limite = 20;
         $offset = ($pagina - 1) * $limite;
+
+        // Determina se houve interação com os filtros para carga sob demanda
+        $jaFiltrado = $filtrar || !empty($categoria) || !empty($status) || !empty($busca) || isset($_GET['pagina']);
 
         $filtros = [
             'competencia' => $competencia !== 'todas' ? $competencia : '',
@@ -51,9 +55,15 @@ class DespesasController extends Controller
             'busca'       => $busca,
         ];
 
-        $despesas = $this->model->listar($filtros, $limite, $offset);
-        $totalRegistros = $this->model->contar($filtros);
-        $totalPaginas = max(1, (int)ceil($totalRegistros / $limite));
+        if ($jaFiltrado) {
+            $despesas = $this->model->listar($filtros, $limite, $offset);
+            $totalRegistros = $this->model->contar($filtros);
+            $totalPaginas = max(1, (int)ceil($totalRegistros / $limite));
+        } else {
+            $despesas = [];
+            $totalRegistros = 0;
+            $totalPaginas = 1;
+        }
 
         $resumoCompetencia = $this->model->obterResumoCompetencia($competencia !== 'todas' ? $competencia : $mesAtual);
         $competenciasDisponiveis = $this->model->obterCompetenciasDisponiveis();
@@ -61,6 +71,7 @@ class DespesasController extends Controller
         $this->render('financeiro/despesas', [
             'title'                   => 'Despesas Operacionais — Colégio Monteiro Lobato',
             'activeMenu'              => 'despesas',
+            'jaFiltrado'              => $jaFiltrado,
             'despesas'                => $despesas,
             'totalRegistros'          => $totalRegistros,
             'paginaAtual'             => $pagina,
@@ -97,7 +108,7 @@ class DespesasController extends Controller
         }
 
         $competencia = $_POST['competencia_mes_ano'] ?? date('Y-m');
-        $this->redirect('/financeiro/despesas?competencia=' . urlencode($competencia));
+        $this->redirect('/financeiro/despesas?filtrar=1&competencia=' . urlencode($competencia));
     }
 
     /**
@@ -147,7 +158,7 @@ class DespesasController extends Controller
         }
 
         $competencia = $_POST['competencia_mes_ano'] ?? date('Y-m');
-        $this->redirect('/financeiro/despesas?competencia=' . urlencode($competencia));
+        $this->redirect('/financeiro/despesas?filtrar=1&competencia=' . urlencode($competencia));
     }
 
     /**
@@ -178,7 +189,7 @@ class DespesasController extends Controller
             Session::setFlash('danger', 'Não foi possível liquidar a despesa.');
         }
 
-        $this->redirect('/financeiro/despesas?competencia=' . urlencode($competencia));
+        $this->redirect('/financeiro/despesas?filtrar=1&competencia=' . urlencode($competencia));
     }
 
     /**
@@ -207,7 +218,7 @@ class DespesasController extends Controller
             Session::setFlash('danger', 'Não foi possível remover a despesa.');
         }
 
-        $this->redirect('/financeiro/despesas?competencia=' . urlencode($competencia));
+        $this->redirect('/financeiro/despesas?filtrar=1&competencia=' . urlencode($competencia));
     }
 
     /**
