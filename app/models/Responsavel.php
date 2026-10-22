@@ -539,10 +539,10 @@ class Responsavel extends Model
             $badgeClass = 'badge bg-light text-secondary border';
             if ($isBloqueado) {
                 $badge = 'Bloqueado MED';
-                $badgeClass = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+                $badgeClass = 'badge bg-light text-secondary border';
             } elseif ($isNegativo) {
                 $badge = 'Saldo Devedor';
-                $badgeClass = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+                $badgeClass = 'badge bg-light text-secondary border';
             }
 
             $sugestoes[] = [

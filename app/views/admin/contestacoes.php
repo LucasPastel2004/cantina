@@ -70,10 +70,10 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
         <div class="card-enterprise h-100 p-3">
             <div class="text-secondary text-microcopy font-weight-semibold text-uppercase mb-1">Famílias Bloqueadas</div>
             <div class="d-flex align-items-baseline justify-content-between">
-                <span class="h4 font-weight-bold mb-0 font-tabular <?php echo ($totalNegativados > 0) ? 'text-danger' : 'text-dark'; ?>">
+                <span class="h4 font-weight-bold mb-0 font-tabular text-dark">
                     <?php echo number_format($totalNegativados, 0, ',', '.'); ?>
                 </span>
-                <span class="badge <?php echo ($totalNegativados > 0) ? 'bg-danger-subtle text-danger' : 'bg-light text-secondary'; ?> border px-2 py-1" style="font-size: 11px;">
+                <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 11px;">
                     MED Ativo
                 </span>
             </div>
@@ -85,7 +85,7 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
         <div class="card-enterprise h-100 p-3">
             <div class="text-secondary text-microcopy font-weight-semibold text-uppercase mb-1">Saldo Devedor Total</div>
             <div class="d-flex align-items-baseline justify-content-between">
-                <span class="h4 font-weight-bold mb-0 font-tabular <?php echo ($saldoDevedorTotal > 0) ? 'text-danger' : 'text-dark'; ?>">
+                <span class="h4 font-weight-bold mb-0 font-tabular text-dark">
                     R$ <?php echo number_format($saldoDevedorTotal, 2, ',', '.'); ?>
                 </span>
                 <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 11px;">
@@ -115,10 +115,10 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
         <div class="card-enterprise h-100 p-3">
             <div class="text-secondary text-microcopy font-weight-semibold text-uppercase mb-1">Contas Regularizadas</div>
             <div class="d-flex align-items-baseline justify-content-between">
-                <span class="h4 font-weight-bold mb-0 font-tabular text-success">
+                <span class="h4 font-weight-bold mb-0 font-tabular text-dark">
                     <?php echo number_format($contasRegularizadas, 0, ',', '.'); ?>
                 </span>
-                <span class="badge bg-success-subtle text-success border px-2 py-1" style="font-size: 11px;">
+                <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 11px;">
                     Quitadas
                 </span>
             </div>
@@ -193,7 +193,7 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
         <?php if (empty($negativados)): ?>
             <div class="p-4 text-center">
                 <div class="mb-2 text-secondary">
-                    <svg width="40" height="40" viewBox="0 0 16 16" fill="currentColor" class="text-success opacity-75">
+                    <svg width="40" height="40" viewBox="0 0 16 16" fill="currentColor" class="text-secondary opacity-75">
                         <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
                     </svg>
                 </div>
@@ -254,17 +254,17 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
                                     <?php endif; ?>
                                 </td>
 
-                                <td class="cell-right font-tabular font-weight-bold <?php echo ($saldo < 0) ? 'text-danger' : 'text-success'; ?>">
+                                <td class="cell-right font-tabular font-weight-bold text-dark">
                                     R$ <?php echo number_format($saldo, 2, ',', '.'); ?>
                                 </td>
 
                                 <td class="cell-center">
                                     <?php if ($isBloqueado): ?>
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 11px;">
+                                        <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 11px;">
                                             Bloqueado MED
                                         </span>
                                     <?php else: ?>
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1" style="font-size: 11px;">
+                                        <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 11px;">
                                             Saldo Negativo
                                         </span>
                                     <?php endif; ?>
@@ -375,21 +375,21 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
 
                                 <td class="cell-center">
                                     <?php if ($isDebito): ?>
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-tabular" style="font-size: 10px;">
+                                        <span class="badge bg-light text-secondary border font-tabular" style="font-size: 10px;">
                                             Estorno MED BACEN
                                         </span>
                                     <?php else: ?>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle font-tabular" style="font-size: 10px;">
+                                        <span class="badge bg-light text-secondary border font-tabular" style="font-size: 10px;">
                                             Quitação / Ajuste
                                         </span>
                                     <?php endif; ?>
                                 </td>
 
-                                <td class="cell-right font-tabular font-weight-semibold <?php echo $isDebito ? 'text-danger' : 'text-success'; ?>">
+                                <td class="cell-right font-tabular font-weight-semibold text-dark">
                                     <?php echo $isDebito ? '-' : '+'; ?> R$ <?php echo number_format($val, 2, ',', '.'); ?>
                                 </td>
 
-                                <td class="cell-right font-tabular <?php echo ($saldoPos < 0) ? 'text-danger font-weight-bold' : 'text-dark'; ?>">
+                                <td class="cell-right font-tabular font-weight-bold text-dark">
                                     R$ <?php echo number_format($saldoPos, 2, ',', '.'); ?>
                                 </td>
 
@@ -416,11 +416,11 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
 <div class="modal fade" id="modalContestacaoManual" tabindex="-1" aria-labelledby="modalContestacaoManualLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-danger text-white py-2 px-3">
-                <h5 class="modal-title h6 mb-0 font-weight-bold" id="modalContestacaoManualLabel">
+            <div class="modal-header py-2.5 px-3 border-bottom bg-light">
+                <h5 class="modal-title h6 mb-0 font-weight-bold text-dark" id="modalContestacaoManualLabel">
                     Lançar Contestação Bancária Manual (MED)
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <form action="<?php echo $baseUrl; ?>/admin/contestacoes/manual" method="POST" id="formContestacaoManual">
                 <?php echo $csrfField; ?>
@@ -485,7 +485,7 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
                     <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">
                         Cancelar
                     </button>
-                    <button type="submit" class="btn btn-enterprise btn-danger btn-sm">
+                    <button type="submit" class="btn btn-enterprise btn-primary btn-sm">
                         Executar Débito MED
                     </button>
                 </div>
@@ -498,11 +498,11 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
 <div class="modal fade" id="modalQuitacaoMed" tabindex="-1" aria-labelledby="modalQuitacaoMedLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-success text-white py-2 px-3">
-                <h5 class="modal-title h6 mb-0 font-weight-bold" id="modalQuitacaoMedLabel">
+            <div class="modal-header py-2.5 px-3 border-bottom bg-light">
+                <h5 class="modal-title h6 mb-0 font-weight-bold text-dark" id="modalQuitacaoMedLabel">
                     Quitação e Regularização de Saldo Devedor
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <form action="<?php echo $baseUrl; ?>/admin/contestacoes/quitar" method="POST" id="formQuitacaoMed">
                 <?php echo $csrfField; ?>
@@ -512,8 +512,8 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
                     <div class="p-2 mb-3 bg-light border rounded">
                         <div class="text-secondary text-microcopy font-weight-semibold text-uppercase">Titular Selecionado:</div>
                         <div class="font-weight-bold text-dark" id="quitacao_nome_titular">—</div>
-                        <div class="text-danger font-tabular mt-1" style="font-size: 12px;">
-                            Saldo devedor atual: <span id="quitacao_saldo_atual" class="font-weight-bold">R$ 0,00</span>
+                        <div class="text-secondary font-tabular mt-1" style="font-size: 12px;">
+                            Saldo devedor atual: <span id="quitacao_saldo_atual" class="font-weight-bold text-dark">R$ 0,00</span>
                         </div>
                     </div>
 
@@ -552,7 +552,7 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
                     <button type="button" class="btn btn-enterprise btn-secondary btn-sm" data-bs-dismiss="modal">
                         Cancelar
                     </button>
-                    <button type="submit" class="btn btn-enterprise btn-success btn-sm">
+                    <button type="submit" class="btn btn-enterprise btn-primary btn-sm">
                         Confirmar Quitação
                     </button>
                 </div>
@@ -565,11 +565,11 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
 <div class="modal fade" id="modalDesbloqueioMed" tabindex="-1" aria-labelledby="modalDesbloqueioMedLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white py-2 px-3">
-                <h5 class="modal-title h6 mb-0 font-weight-bold" id="modalDesbloqueioMedLabel">
+            <div class="modal-header py-2.5 px-3 border-bottom bg-light">
+                <h5 class="modal-title h6 mb-0 font-weight-bold text-dark" id="modalDesbloqueioMedLabel">
                     Desbloqueio Manual de Conta Familiar (MED)
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <form action="<?php echo $baseUrl; ?>/admin/contestacoes/desbloquear" method="POST" id="formDesbloqueioMed">
                 <?php echo $csrfField; ?>
@@ -679,7 +679,7 @@ window.abrirModalDesbloqueio = function (dados) {
         saldoFormatado = '-' + saldoFormatado;
         if (elSaldo) {
             elSaldo.textContent = saldoFormatado + ' (Saldo Devedor)';
-            elSaldo.className = 'font-weight-bold font-tabular text-danger';
+            elSaldo.className = 'font-weight-bold font-tabular text-dark';
         }
         if (elAviso) {
             elAviso.className = 'alert alert-warning py-2 px-3 text-microcopy mb-3';
@@ -688,7 +688,7 @@ window.abrirModalDesbloqueio = function (dados) {
     } else {
         if (elSaldo) {
             elSaldo.textContent = saldoFormatado + ' (Regular)';
-            elSaldo.className = 'font-weight-bold font-tabular text-success';
+            elSaldo.className = 'font-weight-bold font-tabular text-dark';
         }
         if (elAviso) {
             elAviso.className = 'alert alert-info py-2 px-3 text-microcopy mb-3';
@@ -848,7 +848,7 @@ window.abrirModalDesbloqueio = function (dados) {
                 var html = '';
                 lista.forEach(function(item, idx) {
                     var saldoNum = parseFloat(item.saldo) || 0;
-                    var saldoCor = saldoNum < 0 ? 'text-danger' : (saldoNum > 0 ? 'text-success' : 'text-secondary');
+                    var saldoCor = 'text-dark';
 
                     html += '<div class="sugestao-med-item px-3 py-2 border-bottom text-start" data-idx="' + idx + '" role="option" tabindex="0" style="cursor: pointer; background: #ffffff;">' +
                         '<div class="d-flex justify-content-between align-items-center mb-1">' +

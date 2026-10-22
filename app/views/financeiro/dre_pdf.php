@@ -281,32 +281,38 @@ $isCaixa = ($regime === 'caixa');
         }
 
         .col-desc {
-            width: 15.1%;
+            width: 14.8%;
             text-align: left !important;
             padding: 3px 5px !important;
+            font-size: 7.2pt;
             word-break: break-word;
         }
         .col-mes {
-            width: 6.35%;
+            width: 6.45%;
             text-align: right !important;
-            padding: 3px 3px !important;
+            padding: 3px 2px !important;
             white-space: nowrap !important;
+            font-size: 6.7pt !important;
+            letter-spacing: -0.01em;
         }
         .col-total {
-            width: 8.7%;
+            width: 7.8%;
             font-weight: 700 !important;
+            font-size: 6.8pt !important;
         }
         th.col-total {
             text-align: center !important;
             white-space: normal !important;
             line-height: 1.15 !important;
-            font-size: 7.0pt !important;
+            font-size: 6.8pt !important;
             padding: 2px 2px !important;
         }
         td.col-total {
             text-align: right !important;
             white-space: nowrap !important;
-            padding: 3px 4px !important;
+            padding: 3px 3px !important;
+            font-size: 6.8pt !important;
+            letter-spacing: -0.01em;
         }
 
         .row-secao {
@@ -318,10 +324,18 @@ $isCaixa = ($regime === 'caixa');
         .row-total-destaque td {
             font-weight: 700 !important;
         }
+        .row-total-destaque td.col-mes,
+        .row-total-destaque td.col-total {
+            font-size: 6.7pt !important;
+        }
         .row-resultado-final td {
             font-weight: 700 !important;
             border-top: 2px solid #000000 !important;
             border-bottom: 2px solid #000000 !important;
+        }
+        .row-resultado-final td.col-mes,
+        .row-resultado-final td.col-total {
+            font-size: 6.7pt !important;
         }
 
         /* ==========================================================================
