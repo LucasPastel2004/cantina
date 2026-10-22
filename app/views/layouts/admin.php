@@ -57,22 +57,13 @@ $dataAtual = date('d/m/Y');
     <!-- Barra Lateral de Navegação (Dock de Ícones com Menus em Suspensão) -->
     <?php require __DIR__ . '/sidebar.php'; ?>
 
-    <!-- Área Principal de Conteúdo -->
-    <div class="app-main-area">
-        <!-- Topbar Operacional (Fundo Cinza Contínuo / Apenas Nome do Colégio e Página) -->
-        <header class="app-topbar" data-turno="<?php echo htmlspecialchars($turnoAtivo, ENT_QUOTES, 'UTF-8'); ?>" data-status-caixa="<?php echo htmlspecialchars($statusCaixa, ENT_QUOTES, 'UTF-8'); ?>">
-            <div class="d-flex align-items-center gap-3">
-                <button type="button" class="btn-sidebar-toggle d-md-none" onclick="toggleSidebar()" aria-label="Alternar navegação" title="Alternar navegação">
-                    <svg class="icon-toggle-bars" width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.75A.75.75 0 0 1 1.75 2h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 2.75Zm0 5A.75.75 0 0 1 1.75 7h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 7.75Zm0 5a.75.75 0 0 1 1.75 0h12.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1-.75-.75Z"/></svg>
-                    <svg class="icon-toggle-arrow" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/></svg>
-                </button>
-                <div class="topbar-title-group">
-                    <span class="topbar-context-tag">Colégio Monteiro Lobato</span>
-                    <h1 class="topbar-page-heading mb-0"><?php echo htmlspecialchars($pageHeading ?? ($pageTitle ?? 'Painel Operacional'), ENT_QUOTES, 'UTF-8'); ?></h1>
-                </div>
-            </div>
-            <span class="visually-hidden"><?php echo htmlspecialchars($turnoAtivo, ENT_QUOTES, 'UTF-8'); ?> - Caixa <?php echo htmlspecialchars($statusCaixa, ENT_QUOTES, 'UTF-8'); ?></span>
-        </header>
+    <!-- Área Principal de Conteúdo (Sem Topbar Transversal - Visual Limpo e Amplo) -->
+    <div class="app-main-area" data-turno="<?php echo htmlspecialchars($turnoAtivo, ENT_QUOTES, 'UTF-8'); ?>" data-status-caixa="<?php echo htmlspecialchars($statusCaixa, ENT_QUOTES, 'UTF-8'); ?>">
+        <!-- Botão Discreto de Alternância da Navegação para Dispositivos Móveis (< 768px) -->
+        <button type="button" class="btn-sidebar-toggle d-md-none position-fixed top-0 start-0 m-2 z-3 shadow-sm bg-white border" onclick="toggleSidebar()" aria-label="Alternar navegação" title="Alternar navegação" style="width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;">
+            <svg class="icon-toggle-bars" width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.75A.75.75 0 0 1 1.75 2h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 2.75Zm0 5A.75.75 0 0 1 1.75 7h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 7.75Zm0 5a.75.75 0 0 1 1.75 0h12.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1-.75-.75Z"/></svg>
+            <svg class="icon-toggle-arrow" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/></svg>
+        </button>
 
         <!-- Área Dinâmica de Conteúdo da View -->
         <main class="app-page-content" id="mainContent">

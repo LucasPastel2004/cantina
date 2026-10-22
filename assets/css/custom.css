@@ -1564,17 +1564,7 @@ textarea.form-control {
 }
 
 .app-topbar {
-  height: 54px;
-  padding: 0 32px;
-  background-color: var(--surface-bg); /* Fundo cinza contínuo integrado à tela */
-  border-bottom: none;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  position: sticky;
-  top: 0;
-  z-index: 1010;
-  box-shadow: none;
+  display: none !important;
 }
 
 .btn-sidebar-toggle {
@@ -1679,18 +1669,13 @@ textarea.form-control {
     min-width: 0;
   }
   .app-admin-wrapper.pdv-layout-locked .app-topbar {
-    flex-shrink: 0;
-    height: 48px;
-    padding: 0 16px;
-    background-color: var(--surface-bg);
-    border-bottom: none;
-    box-shadow: none;
+    display: none !important;
   }
   .app-admin-wrapper.pdv-layout-locked .app-page-content {
     flex: 1;
     min-height: 0;
-    height: calc(100vh - 48px);
-    max-height: calc(100vh - 48px);
+    height: 100vh;
+    max-height: 100vh;
     overflow: hidden;
     padding: 8px 12px;
     display: flex;
