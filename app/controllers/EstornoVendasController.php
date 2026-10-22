@@ -52,16 +52,31 @@ class EstornoVendasController extends Controller
             'aluno_id'       => $alunoId,
             'colaborador_id' => $colaboradorId,
             'pessoa_id'      => $pessoaId,
+            'venda_avulsa'   => $vendaAvulsa,
         ];
 
         // Consulta vendas elegíveis para estorno se o usuário acionou Carregar
         $vendas = [];
         if ($carregado) {
             if ($vendaAvulsa === 'sim') {
+                // Venda avulsa de balcão: pessoas de fora da escola, anonimato ou compra de sobra de estoque
                 $vendas = VendaBalcao::listarParaEstorno($filtros);
             } else {
-                // Vendas agendadas online vinculadas a Alunos (Pedidos)
-                $vendas = Pedido::listarParaEstorno($filtros);
+                // Membros cadastrados da comunidade escolar: Alunos ou Colaboradores
+                if ($filtrarPor === 'colaborador') {
+                    $vendas = VendaBalcao::listarParaEstorno($filtros);
+                } else {
+                    // Alunos: busca encomendas online e vendas de balcão do aluno
+                    $pedidos = Pedido::listarParaEstorno($filtros);
+                    $vendasBalcao = VendaBalcao::listarParaEstorno($filtros);
+                    $vendas = array_merge($pedidos, $vendasBalcao);
+
+                    usort($vendas, function ($a, $b) {
+                        $dtA = ($a['data_venda'] ?? '') . ' ' . ($a['hora_venda'] ?? '');
+                        $dtB = ($b['data_venda'] ?? '') . ' ' . ($b['hora_venda'] ?? '');
+                        return strcmp($dtB, $dtA);
+                    });
+                }
             }
         }
 
@@ -230,13 +245,24 @@ class EstornoVendasController extends Controller
         $valorTotalEstornado = 0.0;
         $erros = [];
 
-        foreach ($selecionados as $vendaId) {
-            $id = (int)$vendaId;
+        $filtrarPor = trim($_POST['filtrar_por'] ?? 'aluno');
+
+        foreach ($selecionados as $vendaItem) {
+            $itemTipo = '';
+            if (is_string($vendaItem) && str_contains($vendaItem, '_')) {
+                [$prefixo, $idStr] = explode('_', $vendaItem, 2);
+                $id = (int)$idStr;
+                $itemTipo = ($prefixo === 'balcao') ? 'balcao' : 'pedido';
+            } else {
+                $id = (int)$vendaItem;
+                $itemTipo = ($tipoVenda === 'sim' || ($filtrarPor === 'colaborador')) ? 'balcao' : 'pedido';
+            }
+
             if ($id <= 0) continue;
 
             try {
-                if ($tipoVenda === 'sim') {
-                    // Estorno de Venda de Balcão
+                if ($itemTipo === 'balcao') {
+                    // Estorno de Venda de Balcão (avulsa, sobra de estoque ou colaborador)
                     $vendaEstornada = VendaBalcao::estornarVenda($id, $operadorId, $motivo, $ipOrigem);
                     $totalEstornados++;
                     $valorTotalEstornado += (float)$vendaEstornada['valor_total'];
@@ -247,6 +273,17 @@ class EstornoVendasController extends Controller
                     $valorTotalEstornado += (float)$pedidoEstornado['valor_total'];
                 }
             } catch (\Throwable $e) {
+                // Fallback defensivo: se falhar como pedido, tenta como balcão
+                if ($itemTipo === 'pedido') {
+                    try {
+                        $vendaEstornada = VendaBalcao::estornarVenda($id, $operadorId, $motivo, $ipOrigem);
+                        $totalEstornados++;
+                        $valorTotalEstornado += (float)$vendaEstornada['valor_total'];
+                        continue;
+                    } catch (\Throwable $e2) {
+                        // mantém erro original
+                    }
+                }
                 $erros[] = "Venda #{$id}: " . $e->getMessage();
             }
         }

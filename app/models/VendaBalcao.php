@@ -439,16 +439,28 @@ class VendaBalcao extends Model
         }
 
         $filtrarPor = $filtros['filtrar_por'] ?? '';
-        if ($filtrarPor === 'aluno' && !empty($filtros['aluno_id'])) {
-            $whereClauses[] = "vb.aluno_id = :aluno_id";
-            $params['aluno_id'] = (int)$filtros['aluno_id'];
-        } elseif ($filtrarPor === 'colaborador' && !empty($filtros['colaborador_id'])) {
-            $whereClauses[] = "vb.colaborador_id = :colaborador_id";
-            $params['colaborador_id'] = (int)$filtros['colaborador_id'];
-        } elseif ($filtrarPor === 'aluno') {
-            $whereClauses[] = "vb.aluno_id IS NOT NULL";
-        } elseif ($filtrarPor === 'colaborador') {
-            $whereClauses[] = "vb.colaborador_id IS NOT NULL";
+        $vendaAvulsa = $filtros['venda_avulsa'] ?? '';
+
+        if ($vendaAvulsa === 'sim') {
+            // Venda avulsa de balcão: pessoas de fora da escola, anonimato ou compra de sobra de estoque
+            $whereClauses[] = "(vb.aluno_id IS NULL AND vb.colaborador_id IS NULL)";
+        } else {
+            // Membros cadastrados da comunidade escolar: Alunos ou Colaboradores
+            if ($filtrarPor === 'colaborador') {
+                if (!empty($filtros['colaborador_id'])) {
+                    $whereClauses[] = "vb.colaborador_id = :colaborador_id";
+                    $params['colaborador_id'] = (int)$filtros['colaborador_id'];
+                } else {
+                    $whereClauses[] = "vb.colaborador_id IS NOT NULL";
+                }
+            } elseif ($filtrarPor === 'aluno') {
+                if (!empty($filtros['aluno_id'])) {
+                    $whereClauses[] = "vb.aluno_id = :aluno_id";
+                    $params['aluno_id'] = (int)$filtros['aluno_id'];
+                } else {
+                    $whereClauses[] = "vb.aluno_id IS NOT NULL";
+                }
+            }
         }
 
         $whereSql = implode(' AND ', $whereClauses);

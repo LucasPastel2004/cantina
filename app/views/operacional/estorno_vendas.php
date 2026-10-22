@@ -66,33 +66,50 @@ $carregado = $carregado ?? false;
                     </div>
                 </div>
 
-                <!-- Filtrar Por (Dropdown Aluno / Colaborador) -->
+                <!-- Filtrar Por (Dropdown Aluno / Colaborador - Membros da Comunidade Escolar) -->
                 <div class="col-12 col-sm-4 col-md-2" id="boxFiltrarPor">
                     <label for="selectFiltrarPor" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary mb-1">Filtrar por</label>
-                    <select class="form-select form-select-sm" name="filtrar_por" id="selectFiltrarPor">
+                    <select class="form-select form-select-sm" name="filtrar_por" id="selectFiltrarPor" <?php echo ($vendaAvulsa === 'sim') ? 'disabled' : ''; ?>>
                         <option value="aluno" <?php echo ($filtrarPor === 'aluno') ? 'selected' : ''; ?>>Aluno</option>
-                        <option value="colaborador" <?php echo ($filtrarPor === 'colaborador') ? 'selected' : ''; ?> <?php echo ($vendaAvulsa === 'nao') ? 'disabled' : ''; ?>>Colaborador</option>
+                        <option value="colaborador" <?php echo ($filtrarPor === 'colaborador') ? 'selected' : ''; ?>>Colaborador</option>
                     </select>
                 </div>
 
                 <!-- Aluno / Colaborador (Campo de Busca / Autocomplete sem rolagem) -->
                 <div class="col-12 col-sm-4 col-md-8" style="position: relative; z-index: 40;">
                     <label for="inputBuscaPessoa" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary mb-1" id="lblBuscaPessoa">
-                        <?php echo ($filtrarPor === 'colaborador' && $vendaAvulsa === 'sim') ? 'Colaborador' : 'Aluno'; ?>
+                        <?php 
+                        if ($vendaAvulsa === 'sim') {
+                            echo 'Consumidor';
+                        } elseif ($filtrarPor === 'colaborador') {
+                            echo 'Colaborador';
+                        } else {
+                            echo 'Aluno';
+                        }
+                        ?>
                     </label>
                     
                     <div class="search-input-wrapper position-relative" style="position: relative;">
                         <input type="text" id="inputBuscaPessoa" class="form-control form-control-sm pe-4" 
-                               placeholder="<?php echo ($filtrarPor === 'colaborador' && $vendaAvulsa === 'sim') ? 'Selecione ou digite o nome do colaborador...' : 'Selecione ou digite o nome do aluno...'; ?>" 
+                               placeholder="<?php 
+                               if ($vendaAvulsa === 'sim') {
+                                   echo 'Venda avulsa de balcão (externo, anônimo ou sobra de estoque)';
+                               } elseif ($filtrarPor === 'colaborador') {
+                                   echo 'Selecione ou digite o nome do colaborador...';
+                               } else {
+                                   echo 'Selecione ou digite o nome do aluno...';
+                               }
+                               ?>" 
                                autocomplete="off" 
-                               value="<?php echo htmlspecialchars($nomePessoaSelecionada, ENT_QUOTES, 'UTF-8'); ?>">
+                               value="<?php echo htmlspecialchars($nomePessoaSelecionada, ENT_QUOTES, 'UTF-8'); ?>"
+                               <?php echo ($vendaAvulsa === 'sim') ? 'disabled' : ''; ?>>
                         <input type="hidden" name="pessoa_id" id="hiddenPessoaId" value="<?php echo htmlspecialchars((string)($pessoaId ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
                         <input type="hidden" name="aluno_id" id="hiddenAlunoId" value="<?php echo htmlspecialchars((string)($alunoId ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
                         <input type="hidden" name="colaborador_id" id="hiddenColaboradorId" value="<?php echo htmlspecialchars((string)($colaboradorId ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
 
                         <!-- Botão Limpar Seleção -->
                         <button type="button" id="btnLimparPessoa" class="btn btn-sm btn-link text-secondary position-absolute" 
-                                style="right: 6px; top: 50%; transform: translateY(-50%); text-decoration: none; padding: 0; line-height: 1; font-size: 14px; <?php echo empty($nomePessoaSelecionada) ? 'display: none;' : ''; ?>" 
+                                style="right: 6px; top: 50%; transform: translateY(-50%); text-decoration: none; padding: 0; line-height: 1; font-size: 14px; <?php echo (empty($nomePessoaSelecionada) || $vendaAvulsa === 'sim') ? 'display: none;' : ''; ?>" 
                                 title="Limpar seleção">
                             ✕
                         </button>
@@ -245,7 +262,7 @@ $carregado = $carregado ?? false;
                         ?>
                             <tr id="linhaVenda_<?php echo $vId; ?>" class="linha-venda-clicavel" data-id="<?php echo $vId; ?>" data-tipo="<?php echo $tipoOrigem; ?>" style="cursor: pointer;">
                                 <td style="text-align: center;" onclick="event.stopPropagation();">
-                                    <input class="form-check-input check-venda" type="checkbox" name="selecionadas[]" value="<?php echo $vId; ?>" data-valor="<?php echo $valorVenda; ?>">
+                                    <input class="form-check-input check-venda" type="checkbox" name="selecionadas[]" value="<?php echo $tipoOrigem . '_' . $vId; ?>" data-valor="<?php echo $valorVenda; ?>">
                                 </td>
                                 <td class="font-tabular small"><?php echo $dataVenda; ?></td>
                                 <td class="font-tabular small"><?php echo $horaVenda; ?></td>
@@ -539,19 +556,18 @@ document.addEventListener('DOMContentLoaded', function() {
             inputBuscaPessoa.value = '';
             btnLimparPessoa.style.display = 'none';
 
-            if (this.value === 'nao') {
-                if (selectFiltrarPor) {
-                    selectFiltrarPor.value = 'aluno';
-                    const optColab = selectFiltrarPor.querySelector('option[value="colaborador"]');
-                    if (optColab) optColab.disabled = true;
+            if (this.value === 'sim') {
+                // Venda avulsa: pessoas de fora da escola, anonimato ou compra de sobra de estoque
+                if (selectFiltrarPor) selectFiltrarPor.disabled = true;
+                if (inputBuscaPessoa) {
+                    inputBuscaPessoa.disabled = true;
+                    inputBuscaPessoa.placeholder = 'Venda avulsa de balcão (externo, anônimo ou sobra de estoque)';
                 }
-                lblBuscaPessoa.textContent = 'Aluno';
-                inputBuscaPessoa.placeholder = 'Selecione ou digite o nome do aluno...';
+                if (lblBuscaPessoa) lblBuscaPessoa.textContent = 'Consumidor';
             } else {
-                if (selectFiltrarPor) {
-                    const optColab = selectFiltrarPor.querySelector('option[value="colaborador"]');
-                    if (optColab) optColab.disabled = false;
-                }
+                // Membros cadastrados da comunidade escolar (Alunos ou Colaboradores)
+                if (selectFiltrarPor) selectFiltrarPor.disabled = false;
+                if (inputBuscaPessoa) inputBuscaPessoa.disabled = false;
                 atualizarLabelBusca();
             }
         });
@@ -570,13 +586,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function atualizarLabelBusca() {
+        const isAvulsa = document.getElementById('vaSim') && document.getElementById('vaSim').checked;
+        if (isAvulsa) {
+            if (lblBuscaPessoa) lblBuscaPessoa.textContent = 'Consumidor';
+            if (inputBuscaPessoa) inputBuscaPessoa.placeholder = 'Venda avulsa de balcão (externo, anônimo ou sobra de estoque)';
+            return;
+        }
+
         const tipo = selectFiltrarPor ? selectFiltrarPor.value : 'aluno';
         if (tipo === 'colaborador') {
-            lblBuscaPessoa.textContent = 'Colaborador';
-            inputBuscaPessoa.placeholder = 'Selecione ou digite o nome do colaborador...';
+            if (lblBuscaPessoa) lblBuscaPessoa.textContent = 'Colaborador';
+            if (inputBuscaPessoa) inputBuscaPessoa.placeholder = 'Selecione ou digite o nome do colaborador...';
         } else {
-            lblBuscaPessoa.textContent = 'Aluno';
-            inputBuscaPessoa.placeholder = 'Selecione ou digite o nome do aluno...';
+            if (lblBuscaPessoa) lblBuscaPessoa.textContent = 'Aluno';
+            if (inputBuscaPessoa) inputBuscaPessoa.placeholder = 'Selecione ou digite o nome do aluno...';
         }
     }
 
@@ -611,7 +634,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function selecionarPessoa(item) {
         hiddenPessoaId.value = item.id;
-        const isColab = (selectFiltrarPor && selectFiltrarPor.value === 'colaborador' && document.getElementById('vaSim').checked);
+        const isColab = (selectFiltrarPor && selectFiltrarPor.value === 'colaborador');
         if (isColab) {
             hiddenColaboradorId.value = item.id;
             hiddenAlunoId.value = '';
@@ -658,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
             btnLimparPessoa.style.display = '';
 
             debounceTimer = setTimeout(function() {
-                const isColab = (selectFiltrarPor && selectFiltrarPor.value === 'colaborador' && document.getElementById('vaSim').checked);
+                const isColab = (selectFiltrarPor && selectFiltrarPor.value === 'colaborador');
                 const listaFonte = isColab ? listaColaboradores : listaAlunos;
 
                 // Filtra localmente

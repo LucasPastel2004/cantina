@@ -87,7 +87,10 @@ assertCustom(str_contains($outputInicial, 'name="data_fim"'), "Campo Período At
 assertCustom(str_contains($outputInicial, 'id="btnCarregar"'), "Botão 'Carregar' presente no painel de filtros", $testsPassed, $testsFailed);
 assertCustom(str_contains($outputInicial, 'Informações VENDAS'), "Botão da barra inferior 'Informações VENDAS' presente", $testsPassed, $testsFailed);
 
-// 3. Testar View no Estado Carregado (com carregar=1)
+assertCustom(str_contains($outputInicial, '<option value="colaborador" >Colaborador</option>') || str_contains($outputInicial, 'value="colaborador"'), "Opção Colaborador presente no select Filtrar por", $testsPassed, $testsFailed);
+assertCustom(!str_contains($outputInicial, '<option value="colaborador" disabled>'), "Opção Colaborador NÃO está desabilitada quando Venda Avulsa é Não", $testsPassed, $testsFailed);
+
+// 3. Testar View no Estado Carregado com Aluno (venda_avulsa = nao)
 $_GET = [
     'carregar'     => '1',
     'venda_avulsa' => 'nao',
@@ -107,6 +110,33 @@ assertCustom(str_contains($outputCarregado, 'id="selectMotivoEstorno"'), "Dropdo
 assertCustom(str_contains($outputCarregado, 'value="1-ESTORNO" selected'), "Opção '1-ESTORNO' selecionada por padrão", $testsPassed, $testsFailed);
 assertCustom(str_contains($outputCarregado, 'id="btnCancelarEstorno"'), "Botão 'Cancelar' presente na barra de estorno", $testsPassed, $testsFailed);
 assertCustom(str_contains($outputCarregado, 'id="btnGravarEstorno"'), "Botão 'Gravar' presente na barra de estorno", $testsPassed, $testsFailed);
+
+// 3.1. Testar View no Estado Carregado com Colaborador (venda_avulsa = nao)
+$_GET = [
+    'carregar'     => '1',
+    'venda_avulsa' => 'nao',
+    'filtrar_por'  => 'colaborador',
+    'data_inicio'  => date('Y-m-d', strtotime('-30 days')),
+    'data_fim'     => date('Y-m-d')
+];
+ob_start();
+$controller = new EstornoVendasController();
+$controller->index();
+$outputColab = ob_get_clean();
+assertCustom(str_contains($outputColab, 'id="painelAcoesEstorno"'), "Painel de Estorno visível ao carregar Colaborador", $testsPassed, $testsFailed);
+
+// 3.2. Testar View no Estado Carregado com Venda Avulsa (venda_avulsa = sim: externo / anônimo / sobra)
+$_GET = [
+    'carregar'     => '1',
+    'venda_avulsa' => 'sim',
+    'data_inicio'  => date('Y-m-d', strtotime('-30 days')),
+    'data_fim'     => date('Y-m-d')
+];
+ob_start();
+$controller = new EstornoVendasController();
+$controller->index();
+$outputAvulsa = ob_get_clean();
+assertCustom(str_contains($outputAvulsa, 'id="painelAcoesEstorno"'), "Painel de Estorno visível ao carregar Venda Avulsa", $testsPassed, $testsFailed);
 
 // 4. Testar Colunas da Tabela
 assertCustom(str_contains($outputCarregado, '<th style="width: 120px; font-weight: 600; font-size: 12px;" class="font-tabular">Data</th>'), "Coluna Data com formatação tabular presente", $testsPassed, $testsFailed);
