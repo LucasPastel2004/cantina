@@ -42,7 +42,8 @@ $filtros      = $filtros ?? ['busca' => '', 'turma_id' => 0, 'turno' => '', 'sta
 <div class="card-enterprise mb-4">
     <div class="card-enterprise-body p-3">
         <form action="<?php echo $baseUrl; ?>/admin/alunos" method="GET" class="row g-2 align-items-center">
-            <div class="col-12 col-md-4">
+            <input type="hidden" name="filtrar" value="1">
+            <div class="col-12 col-md-3">
                 <input type="text" name="busca" class="form-control form-control-sm" placeholder="Buscar por aluno, matrícula, responsável ou CPF..." value="<?php echo htmlspecialchars($filtros['busca'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
             </div>
             <div class="col-6 col-md-3">
@@ -69,13 +70,13 @@ $filtros      = $filtros ?? ['busca' => '', 'turma_id' => 0, 'turno' => '', 'sta
                     <option value="todos" <?php echo (($filtros['status'] ?? '') === 'todos') ? 'selected' : ''; ?>>Todos os Registros</option>
                 </select>
             </div>
-            <div class="col-6 col-md-1 d-flex gap-1">
-                <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100" title="Filtrar">
+            <div class="col-6 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-fill" title="Filtrar">
                     Filtrar
                 </button>
-                <?php if (!empty($filtros['busca']) || !empty($filtros['turma_id']) || !empty($filtros['turno']) || ($filtros['status'] ?? '') !== 'ativos'): ?>
+                <?php if (!empty($jaFiltrado)): ?>
                     <a href="<?php echo $baseUrl; ?>/admin/alunos" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
-                        ✕
+                        Limpar
                     </a>
                 <?php endif; ?>
             </div>
@@ -89,13 +90,18 @@ $filtros      = $filtros ?? ['busca' => '', 'turma_id' => 0, 'turno' => '', 'sta
         <h2 class="h6 font-weight-bold text-dark mb-0">Estudantes Matriculados</h2>
         <span class="text-microcopy text-muted font-tabular">
             Exibindo <?php echo count($alunos); ?> de <?php echo $totalRegistros ?? count($alunos); ?> aluno(s)
-            <?php if (!empty($totalPaginas) && $totalPaginas > 1): ?>
+            <?php if (!empty($jaFiltrado) && !empty($totalPaginas) && $totalPaginas > 1): ?>
                 (Pág. <?php echo $paginaAtual; ?> de <?php echo $totalPaginas; ?>)
             <?php endif; ?>
         </span>
     </div>
     <div class="card-enterprise-body p-0">
-        <?php if (empty($alunos)): ?>
+        <?php if (empty($jaFiltrado)): ?>
+            <div class="empty-state py-5 text-center">
+                <p class="empty-state-text text-muted mb-0 fst-italic" style="font-size: 13px;">Não há nada para mostrar aqui</p>
+                <small class="text-microcopy text-secondary">Utilize os filtros acima e clique em "Filtrar" para exibir os alunos matriculados.</small>
+            </div>
+        <?php elseif (empty($alunos)): ?>
             <div class="empty-state py-5 text-center">
                 <p class="empty-state-text text-muted mb-0">Não há nada para mostrar aqui</p>
                 <small class="text-microcopy text-secondary">Nenhum aluno localizado com os filtros selecionados ou nenhuma carga realizada.</small>

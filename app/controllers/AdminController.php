@@ -419,18 +419,27 @@ class AdminController extends Controller
     public function colaboradores(): void
     {
         $busca = (string)$this->input('busca', '');
+        $filtrar = (bool)($this->input('filtrar', false) || isset($_GET['filtrar']));
+        $jaFiltrado = $filtrar || !empty($busca) || isset($_GET['pagina']);
 
         $paginaAtual    = max(1, (int)$this->input('pagina', 1));
         $itensPorPagina = Configuracao::getItensPorPagina();
-        $totalColabs    = Colaborador::contarTodos(false, $busca);
-        $totalPaginas   = max(1, (int)ceil($totalColabs / $itensPorPagina));
-        if ($paginaAtual > $totalPaginas) {
-            $paginaAtual = $totalPaginas;
-        }
-        $offset = ($paginaAtual - 1) * $itensPorPagina;
 
-        $colaboradores = Colaborador::listarTodos(false, $busca, $itensPorPagina, $offset);
-        $usuario       = Auth::user();
+        if ($jaFiltrado) {
+            $totalColabs  = Colaborador::contarTodos(false, $busca);
+            $totalPaginas = max(1, (int)ceil($totalColabs / $itensPorPagina));
+            if ($paginaAtual > $totalPaginas) {
+                $paginaAtual = $totalPaginas;
+            }
+            $offset = ($paginaAtual - 1) * $itensPorPagina;
+            $colaboradores = Colaborador::listarTodos(false, $busca, $itensPorPagina, $offset);
+        } else {
+            $totalColabs  = 0;
+            $totalPaginas = 1;
+            $colaboradores = [];
+        }
+
+        $usuario = Auth::user();
 
         $this->render('admin/colaboradores', [
             'pageTitle'      => 'Colaboradores Escolares',
@@ -442,6 +451,7 @@ class AdminController extends Controller
             'totalPaginas'   => $totalPaginas,
             'totalRegistros' => $totalColabs,
             'itensPorPagina' => $itensPorPagina,
+            'jaFiltrado'     => $jaFiltrado,
             'usuario'        => $usuario,
             'user'           => $usuario
         ], 'admin');
@@ -501,7 +511,7 @@ class AdminController extends Controller
             Session::setFlash('success', "Colaborador [{$nome}] cadastrado com sucesso.");
         }
 
-        $this->redirect('/admin/colaboradores');
+        $this->redirect('/admin/colaboradores?filtrar=1');
     }
 
     /**
@@ -525,7 +535,7 @@ class AdminController extends Controller
             Session::setFlash('info', $msg);
         }
 
-        $this->redirect('/admin/colaboradores');
+        $this->redirect('/admin/colaboradores?filtrar=1');
     }
 
     /**
@@ -550,7 +560,7 @@ class AdminController extends Controller
 
         Colaborador::excluir($id, Auth::id());
         Session::setFlash('success', "Colaborador [{$colaborador['nome']}] removido com sucesso (histórico preservado).");
-        $this->redirect('/admin/colaboradores');
+        $this->redirect('/admin/colaboradores?filtrar=1');
     }
 
     // =========================================================================
@@ -564,17 +574,26 @@ class AdminController extends Controller
     {
         $turno = (string)$this->input('turno', '');
         $busca = (string)$this->input('busca', '');
+        $filtrar = (bool)($this->input('filtrar', false) || isset($_GET['filtrar']));
+        $jaFiltrado = $filtrar || !empty($busca) || !empty($turno) || isset($_GET['pagina']);
 
         $paginaAtual    = max(1, (int)$this->input('pagina', 1));
         $itensPorPagina = Configuracao::getItensPorPagina();
-        $totalTurmas    = Turma::contarTodas($turno, $busca);
-        $totalPaginas   = max(1, (int)ceil($totalTurmas / $itensPorPagina));
-        if ($paginaAtual > $totalPaginas) {
-            $paginaAtual = $totalPaginas;
-        }
-        $offset = ($paginaAtual - 1) * $itensPorPagina;
 
-        $turmas  = Turma::listarTodas($turno, $busca, $itensPorPagina, $offset);
+        if ($jaFiltrado) {
+            $totalTurmas  = Turma::contarTodas($turno, $busca);
+            $totalPaginas = max(1, (int)ceil($totalTurmas / $itensPorPagina));
+            if ($paginaAtual > $totalPaginas) {
+                $paginaAtual = $totalPaginas;
+            }
+            $offset = ($paginaAtual - 1) * $itensPorPagina;
+            $turmas = Turma::listarTodas($turno, $busca, $itensPorPagina, $offset);
+        } else {
+            $totalTurmas  = 0;
+            $totalPaginas = 1;
+            $turmas       = [];
+        }
+
         $usuario = Auth::user();
 
         $this->render('admin/turmas', [
@@ -588,6 +607,7 @@ class AdminController extends Controller
             'totalPaginas'   => $totalPaginas,
             'totalRegistros' => $totalTurmas,
             'itensPorPagina' => $itensPorPagina,
+            'jaFiltrado'     => $jaFiltrado,
             'usuario'        => $usuario,
             'user'           => $usuario
         ], 'admin');
@@ -633,7 +653,7 @@ class AdminController extends Controller
             Session::setFlash('success', "Turma [{$nomeTurma}] cadastrada com sucesso.");
         }
 
-        $this->redirect('/admin/turmas');
+        $this->redirect('/admin/turmas?filtrar=1');
     }
 
     /**
@@ -665,7 +685,7 @@ class AdminController extends Controller
 
         Turma::excluir($id, Auth::id());
         Session::setFlash('success', "Turma [{$turma['nome_turma']}] removida com sucesso (histórico preservado).");
-        $this->redirect('/admin/turmas');
+        $this->redirect('/admin/turmas?filtrar=1');
     }
 
     // =========================================================================
@@ -853,6 +873,10 @@ class AdminController extends Controller
         $turmaId  = (int)$this->input('turma_id', 0);
         $turno    = (string)$this->input('turno', '');
         $status   = (string)$this->input('status', 'ativos');
+        $filtrar  = (bool)($this->input('filtrar', false) || isset($_GET['filtrar']));
+
+        // Carga sob demanda: ativa ao clicar em 'Filtrar' ou ao interagir com filtros/paginação
+        $jaFiltrado = $filtrar || !empty($busca) || $turmaId > 0 || !empty($turno) || (isset($_GET['status']) && $_GET['status'] !== 'ativos') || isset($_GET['pagina']);
 
         $filtros = [
             'busca'    => $busca,
@@ -863,14 +887,21 @@ class AdminController extends Controller
 
         $paginaAtual    = max(1, (int)$this->input('pagina', 1));
         $itensPorPagina = Configuracao::getItensPorPagina();
-        $totalAlunos    = Aluno::contarTodos($filtros);
-        $totalPaginas   = max(1, (int)ceil($totalAlunos / $itensPorPagina));
-        if ($paginaAtual > $totalPaginas) {
-            $paginaAtual = $totalPaginas;
-        }
-        $offset = ($paginaAtual - 1) * $itensPorPagina;
 
-        $alunos       = Aluno::listarTodos($filtros, $itensPorPagina, $offset);
+        if ($jaFiltrado) {
+            $totalAlunos  = Aluno::contarTodos($filtros);
+            $totalPaginas = max(1, (int)ceil($totalAlunos / $itensPorPagina));
+            if ($paginaAtual > $totalPaginas) {
+                $paginaAtual = $totalPaginas;
+            }
+            $offset = ($paginaAtual - 1) * $itensPorPagina;
+            $alunos = Aluno::listarTodos($filtros, $itensPorPagina, $offset);
+        } else {
+            $totalAlunos  = 0;
+            $totalPaginas = 1;
+            $alunos       = [];
+        }
+
         $turmas       = Turma::listarTodas();
         $responsaveis = Responsavel::listarParaSelecao();
         $alergenos    = RestricaoAlimentar::listarTodas();
@@ -887,6 +918,7 @@ class AdminController extends Controller
             'responsaveis'   => $responsaveis,
             'alergenos'      => $alergenos,
             'filtros'        => $filtros,
+            'jaFiltrado'     => $jaFiltrado,
             'paginaAtual'    => $paginaAtual,
             'totalPaginas'   => $totalPaginas,
             'totalRegistros' => $totalAlunos,
@@ -946,7 +978,7 @@ class AdminController extends Controller
             Session::setFlash('success', "Aluno [{$nome}] cadastrado com sucesso.");
         }
 
-        $this->redirect('/admin/alunos');
+        $this->redirect('/admin/alunos?filtrar=1');
     }
 
     /**
@@ -971,7 +1003,7 @@ class AdminController extends Controller
 
         Aluno::inativar($id, Auth::id());
         Session::setFlash('success', "Aluno [{$aluno['nome']}] foi inativado. Novos agendamentos foram bloqueados.");
-        $this->redirect('/admin/alunos');
+        $this->redirect('/admin/alunos?filtrar=1');
     }
 
     /**
@@ -996,7 +1028,7 @@ class AdminController extends Controller
 
         Aluno::reativar($id, Auth::id());
         Session::setFlash('success', "Aluno [{$aluno['nome']}] reativado com sucesso.");
-        $this->redirect('/admin/alunos');
+        $this->redirect('/admin/alunos?filtrar=1');
     }
 
     // =========================================================================

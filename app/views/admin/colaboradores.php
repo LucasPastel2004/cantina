@@ -32,6 +32,7 @@ $csrfField = $csrf_field ?? '';
 <div class="card-enterprise mb-4">
     <div class="card-enterprise-body p-3">
         <form action="<?php echo $baseUrl; ?>/admin/colaboradores" method="GET" class="row g-2 align-items-end">
+            <input type="hidden" name="filtrar" value="1">
             <div class="col-12 col-sm-8 col-md-6">
                 <label for="busca" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">
                     Buscar por Nome, Matrícula ou Cargo
@@ -43,7 +44,7 @@ $csrfField = $csrf_field ?? '';
                 <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-grow-1">
                     Buscar
                 </button>
-                <?php if (!empty($busca)): ?>
+                <?php if (!empty($jaFiltrado)): ?>
                     <a href="<?php echo $baseUrl; ?>/admin/colaboradores" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Busca">
                         Limpar
                     </a>
@@ -56,9 +57,16 @@ $csrfField = $csrf_field ?? '';
 <!-- Tabela de Colaboradores -->
 <div class="card-enterprise">
     <div class="card-enterprise-body p-0">
-        <?php if (empty($colaboradores)): ?>
+        <?php if (empty($jaFiltrado)): ?>
             <?php 
-            $emptyMessage = 'Nenhum colaborador encontrado no momento.';
+            $emptyMessage = 'Não há nada para mostrar aqui';
+            $emptyDescription = 'Digite um termo no campo acima e clique em "Buscar" ou clique em "Buscar" para listar todos os colaboradores.';
+            require __DIR__ . '/../partials/empty_state.php'; 
+            ?>
+        <?php elseif (empty($colaboradores)): ?>
+            <?php 
+            $emptyMessage = 'Nenhum colaborador encontrado';
+            $emptyDescription = 'Nenhum colaborador localizado com os termos informados na busca.';
             require __DIR__ . '/../partials/empty_state.php'; 
             ?>
         <?php else: ?>

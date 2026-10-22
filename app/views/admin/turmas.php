@@ -33,6 +33,7 @@ $csrfField = $csrf_field ?? '';
 <div class="card-enterprise mb-4">
     <div class="card-enterprise-body p-3">
         <form action="<?php echo $baseUrl; ?>/admin/turmas" method="GET" class="row g-2 align-items-end">
+            <input type="hidden" name="filtrar" value="1">
             <div class="col-12 col-sm-6 col-md-5">
                 <label for="busca" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">
                     Buscar por Turma ou Série
@@ -54,7 +55,7 @@ $csrfField = $csrf_field ?? '';
                 <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-grow-1">
                     Filtrar
                 </button>
-                <?php if (!empty($busca) || !empty($turno)): ?>
+                <?php if (!empty($jaFiltrado)): ?>
                     <a href="<?php echo $baseUrl; ?>/admin/turmas" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
                         Limpar
                     </a>
@@ -67,9 +68,16 @@ $csrfField = $csrf_field ?? '';
 <!-- Tabela de Turmas -->
 <div class="card-enterprise">
     <div class="card-enterprise-body p-0">
-        <?php if (empty($turmas)): ?>
+        <?php if (empty($jaFiltrado)): ?>
             <?php 
-            $emptyMessage = 'Nenhuma turma cadastrada ou encontrada.';
+            $emptyMessage = 'Não há nada para mostrar aqui';
+            $emptyDescription = 'Utilize os filtros acima e clique em "Filtrar" para exibir as turmas escolares.';
+            require __DIR__ . '/../partials/empty_state.php'; 
+            ?>
+        <?php elseif (empty($turmas)): ?>
+            <?php 
+            $emptyMessage = 'Nenhuma turma cadastrada ou encontrada';
+            $emptyDescription = 'Nenhuma turma localizada com os filtros selecionados.';
             require __DIR__ . '/../partials/empty_state.php'; 
             ?>
         <?php else: ?>
