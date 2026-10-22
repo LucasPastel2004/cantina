@@ -34,7 +34,17 @@ $emissao = date('d/m/Y H:i');
 $operador = $dados['operador'] ?? ($operador ?? 'Atendimento Cantina');
 
 $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
-$periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', strtotime($dataFim));
+$periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' a ' . date('d/m/Y', strtotime($dataFim));
+
+$turmaNome = trim(($aluno['serie'] ?? '') . ' ' . ($aluno['nome_turma'] ?? ($aluno['turma_nome'] ?? '')));
+$turnoNome = ucfirst($aluno['turma_turno'] ?? ($aluno['turno'] ?? ''));
+$turmaDesc = $turmaNome . (!empty($turnoNome) ? ' (' . $turnoNome . ')' : '');
+if (empty(trim($turmaDesc))) {
+    $turmaDesc = 'Turma não informada';
+}
+$inicialAluno = strtoupper(mb_substr($aluno['nome'] ?? 'A', 0, 1, 'UTF-8'));
+$responsavelNome = $aluno['responsavel_nome'] ?? 'Não informado';
+$responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -52,7 +62,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             print-color-adjust: exact;
         }
         html, body {
-            font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Arial, Helvetica, sans-serif;
             color: #000000;
             margin: 0;
             padding: 0;
@@ -222,7 +232,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             page-break-inside: avoid;
             break-inside: avoid;
         }
-        .report-header, .student-info-box, .resumo-saldo-card, .signature-section {
+        .report-header, .student-banner, .stat-strip, .table-section-header, .resumo-saldo-card, .signature-section {
             page-break-inside: avoid;
             break-inside: avoid;
         }
@@ -231,7 +241,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
         .report-header {
             border-bottom: 2px solid #000000;
             padding-bottom: 6px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -264,7 +274,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             line-height: 1.2;
         }
         .report-subtitle {
-            font-size: 8.5pt;
+            font-size: 8pt;
             font-weight: 700;
             color: #334155;
             margin: 2px 0 0 0;
@@ -278,47 +288,171 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             padding-right: 2px;
         }
 
-        /* Bloco de Identificação do Aluno (Fiel ao Relatório Oficial) */
-        .student-info-box {
+        /* 1. Banner Completo de Identificação do Aluno (Fiel à Tela Web) */
+        .student-banner {
             background: #f8fafc;
             border: 1px solid #cbd5e1;
             border-radius: 4px;
             padding: 8px 12px;
-            margin-bottom: 12px;
-            display: grid;
-            grid-template-columns: 1fr 2fr 1.5fr 1.2fr;
-            gap: 8px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
         }
-        .info-group {
+        .student-banner-left {
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 12px;
         }
-        .info-label {
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14pt;
+            font-weight: 800;
+            color: #1d4ed8;
+            flex-shrink: 0;
+        }
+        .student-name-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 2px;
+        }
+        .student-name {
+            font-size: 9.5pt;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .code-tag {
+            display: inline-block;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            padding: 1px 6px;
             font-size: 7.5pt;
+            font-weight: 600;
+            color: #334155;
+            line-height: 1.3;
+        }
+        .student-sub-row {
+            font-size: 8pt;
+            color: #64748b;
+            line-height: 1.3;
+        }
+        .student-sub-row strong {
+            color: #0f172a;
+        }
+        .student-banner-right {
+            text-align: right;
+            flex-shrink: 0;
+            padding-left: 12px;
+        }
+        .wallet-label {
+            font-size: 7pt;
             font-weight: 700;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            margin-bottom: 2px;
+            letter-spacing: 0.03em;
+            margin-bottom: 1px;
         }
-        .info-value {
-            font-size: 9.5pt;
-            font-weight: 700;
-            color: #0f172a;
-        }
-        .info-value.balance {
+        .wallet-val {
+            font-size: 12pt;
+            font-weight: 800;
             color: #1d4ed8;
-            font-size: 11pt;
+            line-height: 1.1;
+        }
+        .wallet-sub {
+            font-size: 7pt;
+            color: #64748b;
+            margin-top: 1px;
         }
 
-        /* Tabela Oficial de Movimentações (Estética Excel com Laterais e Linhas Pretas entre Itens) */
+        /* 2. Stat-Strip: 4 Cartões de Resumo do Período */
+        .stat-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 6px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .stat-card-label {
+            font-size: 7pt;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 2px;
+        }
+        .stat-card-val {
+            font-size: 11pt;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.15;
+        }
+        .stat-card-sub {
+            font-size: 6.5pt;
+            color: #64748b;
+            margin-top: 2px;
+            line-height: 1.2;
+        }
+
+        /* 3. Cabeçalho da Seção Analítica de Movimentações */
+        .table-section-header {
+            background: #f8fafc;
+            border: 1px solid #000000;
+            border-bottom: none;
+            padding: 5px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-section-title {
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+        .table-section-period {
+            font-size: 7.5pt;
+            color: #475569;
+            margin-top: 1px;
+            line-height: 1.2;
+        }
+        .table-section-badge {
+            font-size: 7.5pt;
+            font-weight: 600;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 1px 6px;
+            border-radius: 3px;
+            color: #475569;
+        }
+
+        /* Tabela Oficial de Movimentações (Estética Excel com Linhas Pretas entre Itens) */
         .table-extrato {
             width: 100% !important;
             table-layout: fixed !important;
             border-collapse: collapse !important;
-            font-size: 8.5pt;
-            margin-bottom: 14px;
+            font-size: 8pt;
+            margin-bottom: 12px;
             border: 1px solid #000000 !important;
             box-sizing: border-box !important;
         }
@@ -326,10 +460,10 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             background-color: #ffffff !important;
             color: #0f172a;
             font-weight: 700;
-            font-size: 8pt;
-            padding: 5px 6px;
+            font-size: 7.5pt;
+            padding: 4px 6px;
             border: 1px solid #000000 !important;
-            text-transform: none;
+            text-transform: uppercase;
             letter-spacing: normal;
         }
         .table-extrato thead th:first-child,
@@ -347,27 +481,24 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
         }
         .table-extrato tbody td {
             padding: 4px 6px;
-            border: 1px solid #000000 !important; /* Linha preta entre os itens e divisórias estilo Excel */
+            border: 1px solid #000000 !important;
             vertical-align: middle;
             color: #0f172a;
             background-color: #ffffff !important;
             overflow-wrap: break-word;
             word-break: break-word;
         }
-        .table-extrato tbody tr:nth-child(even) {
-            background-color: #ffffff !important;
-        }
         .table-extrato tbody tr.row-initial {
-            background-color: #ffffff !important;
+            background-color: #f8fafc !important;
             font-weight: 700;
         }
         .table-extrato tbody tr.row-recarga {
-            background-color: #ffffff !important;
+            background-color: #f0fdf4 !important;
         }
         .table-extrato tfoot td {
-            padding: 6px;
+            padding: 5px 6px;
             font-weight: 800;
-            font-size: 9pt;
+            font-size: 8.5pt;
             border: 1.5px solid #000000 !important;
             background-color: #ffffff !important;
         }
@@ -381,48 +512,48 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             background: #ffffff;
             border: 1px solid #cbd5e1;
             border-radius: 4px;
-            padding: 16px;
-            margin-bottom: 16px;
+            padding: 14px;
+            margin-bottom: 14px;
         }
         .resumo-title {
-            font-size: 10pt;
+            font-size: 9.5pt;
             font-weight: 700;
             color: #0f172a;
             border-bottom: 1px solid #e2e8f0;
             padding-bottom: 6px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .resumo-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 14px;
         }
         .resumo-item {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 4px;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
         }
         .resumo-item-label {
-            font-size: 7.5pt;
+            font-size: 7pt;
             color: #64748b;
             text-transform: uppercase;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         .resumo-item-val {
-            font-size: 12pt;
+            font-size: 11pt;
             font-weight: 800;
             color: #0f172a;
         }
 
         .signature-section {
-            margin-top: 40px;
+            margin-top: 36px;
             display: flex;
             justify-content: space-around;
-            padding-top: 20px;
+            padding-top: 16px;
         }
         .signature-box {
             text-align: center;
@@ -439,7 +570,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
 
         /* Rodapé Oficial da Instituição */
         .report-footer {
-            margin-top: 24px;
+            margin-top: 20px;
             padding-top: 6px;
             border-top: 1px solid #cbd5e1;
             display: flex;
@@ -509,31 +640,60 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
         </div>
     </div>
 
-    <!-- Bloco de Identificação do Aluno (Conforme Relatório Extrato Consumo Aluno.pdf) -->
-    <div class="student-info-box">
-        <div class="info-group">
-            <span class="info-label">Matrícula:</span>
-            <span class="info-value font-tabular"><?php echo htmlspecialchars($aluno['matricula'] ?? '-'); ?></span>
+    <!-- 1. Banner de Identificação do Aluno (Fiel à Tela Web) -->
+    <div class="student-banner">
+        <div class="student-banner-left">
+            <div class="student-avatar font-tabular">
+                <?php echo htmlspecialchars($inicialAluno, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
+            <div>
+                <div class="student-name-row">
+                    <h2 class="student-name"><?php echo htmlspecialchars(mb_strtoupper($aluno['nome'] ?? 'ALUNO NÃO IDENTIFICADO', 'UTF-8')); ?></h2>
+                    <span class="code-tag font-tabular">Matrícula: <?php echo htmlspecialchars($aluno['matricula'] ?? '-'); ?></span>
+                    <span class="code-tag font-tabular"><?php echo htmlspecialchars($turmaDesc); ?></span>
+                </div>
+                <div class="student-sub-row">
+                    Responsável: <strong><?php echo htmlspecialchars($responsavelNome); ?></strong>
+                    <?php if (!empty($responsavelWhatsapp)): ?>
+                        &bull; WhatsApp: <span class="font-tabular"><?php echo htmlspecialchars($responsavelWhatsapp); ?></span>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
-        <div class="info-group">
-            <span class="info-label">Aluno(a):</span>
-            <span class="info-value"><?php echo htmlspecialchars(mb_strtoupper($aluno['nome'] ?? 'ALUNO NÃO IDENTIFICADO', 'UTF-8')); ?></span>
+
+        <div class="student-banner-right">
+            <div class="wallet-label">Saldo Atual da Carteira</div>
+            <div class="wallet-val font-tabular">R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?></div>
+            <div class="wallet-sub">Saldo integrado familiar</div>
         </div>
-        <div class="info-group">
-            <span class="info-label">Série / Turma:</span>
-            <span class="info-value">
-                <?php 
-                    $turmaDesc = trim(($aluno['serie'] ?? ($aluno['turma_nome'] ?? '')) . ' ' . ($aluno['nome_turma'] ?? ''));
-                    if (!empty($aluno['turma_turno'])) {
-                        $turmaDesc .= ' - ' . strtoupper(substr($aluno['turma_turno'], 0, 3));
-                    }
-                    echo htmlspecialchars(!empty(trim($turmaDesc)) ? trim($turmaDesc) : '-'); 
-                ?>
-            </span>
+    </div>
+
+    <!-- 2. Stat-Strip: 4 Cartões de Resumo do Período -->
+    <div class="stat-strip">
+        <div class="stat-card">
+            <div class="stat-card-label">Saldo Inicial</div>
+            <div class="stat-card-val font-tabular">R$ <?php echo number_format($saldoInicial, 2, ',', '.'); ?></div>
+            <div class="stat-card-sub font-tabular">
+                <?php echo $saldoApenasPeriodo ? 'Período isolado (R$ 0,00)' : 'Anterior a ' . date('d/m/Y', strtotime($dataInicio)); ?>
+            </div>
         </div>
-        <div class="info-group">
-            <span class="info-label">Saldo Atual:</span>
-            <span class="info-value balance font-tabular">R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?></span>
+
+        <div class="stat-card">
+            <div class="stat-card-label">Total Recarregado</div>
+            <div class="stat-card-val font-tabular" style="color: #16a34a;">R$ <?php echo number_format($totalRecargas, 2, ',', '.'); ?></div>
+            <div class="stat-card-sub font-tabular">Créditos aportados no período</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-label">Total Consumido</div>
+            <div class="stat-card-val font-tabular" style="color: #dc2626;">R$ <?php echo number_format($totalGasto, 2, ',', '.'); ?></div>
+            <div class="stat-card-sub font-tabular"><?php echo $totalLanches; ?> lanche(s) consumido(s)</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-label">Saldo Atual</div>
+            <div class="stat-card-val font-tabular" style="color: #1d4ed8;">R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?></div>
+            <div class="stat-card-sub font-tabular">Disponível na carteira</div>
         </div>
     </div>
 
@@ -578,15 +738,27 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
         </div>
 
     <?php else: ?>
-        <!-- Modo Analítico Completo: Tabela Oficial com Saldo Progressivo Linha a Linha -->
+        <!-- 3. Modo Analítico Completo: Tabela Oficial com Saldo Progressivo Linha a Linha -->
+        <div class="table-section-header">
+            <div>
+                <div class="table-section-title">Extrato Analítico de Consumo e Recargas</div>
+                <div class="table-section-period">
+                    Período: <strong class="font-tabular"><?php echo date('d/m/Y', strtotime($dataInicio)); ?></strong> a <strong class="font-tabular"><?php echo date('d/m/Y', strtotime($dataFim)); ?></strong>
+                </div>
+            </div>
+            <div class="table-section-badge font-tabular">
+                <?php echo count($linhas); ?> lançamento(s)
+            </div>
+        </div>
+
         <table class="table-extrato">
             <thead>
                 <tr>
-                    <th class="cell-left" style="width: 12%;">Data</th>
-                    <th class="cell-left" style="width: 33%;">Descrição</th>
+                    <th class="cell-left" style="width: 11%;">Data</th>
+                    <th class="cell-left" style="width: 36%;">Descrição</th>
                     <th class="cell-center" style="width: 6%;">Qtd.</th>
-                    <th class="cell-right" style="width: 12%;">V. Unitário</th>
-                    <th class="cell-right" style="width: 12%;">V. Total</th>
+                    <th class="cell-right" style="width: 11%;">V. Unitário</th>
+                    <th class="cell-right" style="width: 11%;">V. Total</th>
                     <th class="cell-center" style="width: 11%;">Forma Pgto.</th>
                     <th class="cell-right" style="width: 14%;">Saldo</th>
                 </tr>
@@ -594,13 +766,13 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             <tbody>
                 <!-- Linha Oficial de Saldo Inicial -->
                 <tr class="row-initial">
-                    <td class="cell-left"></td>
-                    <td class="cell-left">Saldo inicial</td>
-                    <td class="cell-center"></td>
-                    <td class="cell-right"></td>
-                    <td class="cell-right"></td>
-                    <td class="cell-center"></td>
-                    <td class="cell-right font-tabular"><?php echo number_format($saldoInicial, 2, ',', '.'); ?></td>
+                    <td class="cell-left font-tabular" style="color: #64748b;">-</td>
+                    <td class="cell-left"><strong>Saldo inicial</strong></td>
+                    <td class="cell-center" style="color: #64748b;">-</td>
+                    <td class="cell-right" style="color: #64748b;">-</td>
+                    <td class="cell-right" style="color: #64748b;">-</td>
+                    <td class="cell-center" style="color: #64748b;">-</td>
+                    <td class="cell-right font-tabular" style="font-weight: 700;">R$ <?php echo number_format($saldoInicial, 2, ',', '.'); ?></td>
                 </tr>
 
                 <?php if (empty($linhas)): ?>
@@ -615,7 +787,7 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
                             $isRecarga = ($l['tipo'] === 'recarga');
                             $rowClass = $isRecarga ? 'row-recarga' : '';
                         ?>
-                        <tr class="<?php echo $rowClass; ?>">
+                        <tr class="<?php echo $rowClass; ?>" <?php echo $isRecarga ? 'style="background-color: #f0fdf4 !important;"' : ''; ?>>
                             <td class="cell-left font-tabular"><?php echo htmlspecialchars($l['data_formatada'] ?? date('d/m/Y', strtotime($l['data']))); ?></td>
                             <td class="cell-left">
                                 <strong><?php echo htmlspecialchars($l['descricao'] ?? '-'); ?></strong>
@@ -626,20 +798,20 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
                             <td class="cell-right font-tabular">
                                 <?php 
                                     if (is_numeric($l['valor_unitario'])) {
-                                        echo number_format((float)$l['valor_unitario'], 2, ',', '.');
+                                        echo 'R$ ' . number_format((float)$l['valor_unitario'], 2, ',', '.');
                                     } else {
                                         echo htmlspecialchars((string)$l['valor_unitario']);
                                     }
                                 ?>
                             </td>
-                            <td class="cell-right font-tabular">
-                                <?php echo number_format((float)($l['valor_total'] ?? 0.0), 2, ',', '.'); ?>
+                            <td class="cell-right font-tabular <?php echo $isRecarga ? 'font-weight-bold' : ''; ?>" <?php echo $isRecarga ? 'style="color: #16a34a;"' : ''; ?>>
+                                R$ <?php echo number_format((float)($l['valor_total'] ?? 0.0), 2, ',', '.'); ?>
                             </td>
-                            <td class="cell-center font-tabular" style="font-size: 8pt;">
-                                <?php echo htmlspecialchars($l['forma_pagamento'] ?? 'Saldo'); ?>
+                            <td class="cell-center font-tabular" style="font-size: 7.5pt;">
+                                <span class="code-tag font-tabular" style="font-size: 7.5pt;"><?php echo htmlspecialchars($l['forma_pagamento'] ?? 'Saldo'); ?></span>
                             </td>
-                            <td class="cell-right font-tabular" style="font-weight: 600;">
-                                <?php echo number_format((float)($l['saldo'] ?? 0.0), 2, ',', '.'); ?>
+                            <td class="cell-right font-tabular" style="font-weight: 700; <?php echo ((float)($l['saldo'] ?? 0.0) < 0) ? 'color: #dc2626;' : ''; ?>">
+                                R$ <?php echo number_format((float)($l['saldo'] ?? 0.0), 2, ',', '.'); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -648,9 +820,9 @@ $periodoOficial = date('d/m/Y', strtotime($dataInicio)) . ' - ' . date('d/m/Y', 
             <tfoot>
                 <tr>
                     <td colspan="4" class="cell-left">Total gasto no período</td>
-                    <td class="cell-right font-tabular"><?php echo number_format($totalGasto, 2, ',', '.'); ?></td>
+                    <td class="cell-right font-tabular" style="color: #dc2626;">R$ <?php echo number_format($totalGasto, 2, ',', '.'); ?></td>
                     <td colspan="2" class="cell-right font-tabular" style="color: #1d4ed8;">
-                        Saldo Final: R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
+                        Saldo Atual: R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
                     </td>
                 </tr>
             </tfoot>
