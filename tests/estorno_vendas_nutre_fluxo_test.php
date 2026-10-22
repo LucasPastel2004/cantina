@@ -254,7 +254,7 @@ if ($prodSalgado && $prodInd) {
     }
     assertCustom($motivoPerdaValido, "Itens estornados foram devidamente logados com tipo 'saida_perda' e motivo 'sobra_producao'", $testsPassed, $testsFailed);
 
-    // 8. Testar Presença do Campo 'Produto consumido?' na View (Oculto por padrão, ativado apenas para vendas de hoje)
+    // 8. Testar Presença do Campo 'Produto consumido?' Exclusivamente no Modal de Confirmação (Oculto por padrão, ativado apenas para vendas de hoje)
     assertCustom(
         str_contains($outputCarregado, 'Produto consumido?'),
         "Campo 'Produto consumido?' presente na interface de estorno",
@@ -262,14 +262,14 @@ if ($prodSalgado && $prodInd) {
         $testsFailed
     );
     assertCustom(
-        str_contains($outputCarregado, 'id="boxProdutoConsumidoBarra" style="display: none !important;"'),
-        "Campo 'Produto consumido?' na barra de estorno inicia oculto para não aparecer em vendas anteriores",
+        !str_contains($outputCarregado, 'id="boxProdutoConsumidoBarra"'),
+        "Campo 'Produto consumido?' removido da barra superior de estorno (estilo limpo do Nutre)",
         $testsPassed,
         $testsFailed
     );
     assertCustom(
         str_contains($outputCarregado, 'id="boxProdutoConsumidoModal" style="display: none !important;"'),
-        "Campo 'Produto consumido?' no modal inicia oculto para não aparecer em vendas anteriores",
+        "Campo 'Produto consumido?' restrito ao modal e inicia oculto para não aparecer em vendas anteriores",
         $testsPassed,
         $testsFailed
     );

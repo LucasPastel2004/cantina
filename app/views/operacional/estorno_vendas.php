@@ -175,18 +175,6 @@ $carregado = $carregado ?? false;
             <input type="text" class="form-control form-control-sm d-none" id="inputMotivoOutro" placeholder="Especifique o motivo do estorno..." maxlength="200" value="<?php echo (!in_array($motivoFiltro, ['1-ESTORNO', '2-DESISTÊNCIA DO ALUNO', '3-FALTA DE PRODUTO', '4-ERRO DE LANÇAMENTO', '5-DUPLICIDADE', '6-OUTRO'])) ? htmlspecialchars($motivoFiltro, ENT_QUOTES, 'UTF-8') : ''; ?>">
         </div>
 
-        <!-- Campo Produto consumido? (Sim / Não) - Apenas exibido dinamicamente se houver venda de hoje selecionada -->
-        <div class="d-flex align-items-center gap-2" id="boxProdutoConsumidoBarra" style="display: none !important;">
-            <span class="text-secondary small font-weight-bold text-nowrap">Produto consumido?</span>
-            <div class="btn-group btn-group-sm" role="group" aria-label="Produto consumido">
-                <input type="radio" class="btn-check radio-consumido-barra" name="radio_produto_consumido" id="pcNao" value="nao" checked>
-                <label class="btn btn-enterprise btn-outline-secondary btn-sm px-2.5" for="pcNao" title="Não consumido: item de hoje retorna ao estoque físico">Não</label>
-
-                <input type="radio" class="btn-check radio-consumido-barra" name="radio_produto_consumido" id="pcSim" value="sim">
-                <label class="btn btn-enterprise btn-outline-secondary btn-sm px-2.5" for="pcSim" title="Já consumido: não retorna ao estoque e vira perda">Sim</label>
-            </div>
-        </div>
-
         <!-- Botões Cancelar e Gravar (Alinhados à direita junto com o Motivo, padrão Nutre) -->
         <div class="d-flex align-items-center gap-2 ms-auto">
             <a href="<?php echo $baseUrl; ?>/operacional/estornos" class="btn btn-enterprise btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" id="btnCancelarEstorno" title="Cancelar seleção e limpar tela">
@@ -445,14 +433,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputMotivoOutro = document.getElementById('inputMotivoOutro');
     const hiddenMotivoEstorno = document.getElementById('hiddenMotivoEstorno');
     const hiddenProdutoConsumido = document.getElementById('hiddenProdutoConsumido');
-    const radiosConsumidoBarra = document.querySelectorAll('.radio-consumido-barra');
     const radiosConsumidoModal = document.querySelectorAll('.radio-consumido-modal');
     const txtDicaConsumoModal = document.getElementById('txtDicaConsumoModal');
     const boxProdutoConsumidoModal = document.getElementById('boxProdutoConsumidoModal');
 
     function sincronizarProdutoConsumido(val) {
         if (hiddenProdutoConsumido) hiddenProdutoConsumido.value = val;
-        radiosConsumidoBarra.forEach(function(r) { r.checked = (r.value === val); });
         radiosConsumidoModal.forEach(function(r) { r.checked = (r.value === val); });
         if (txtDicaConsumoModal) {
             if (val === 'sim') {
@@ -462,12 +448,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-
-    radiosConsumidoBarra.forEach(function(r) {
-        r.addEventListener('change', function() {
-            if (this.checked) sincronizarProdutoConsumido(this.value);
-        });
-    });
 
     radiosConsumidoModal.forEach(function(r) {
         r.addEventListener('change', function() {
@@ -504,15 +484,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        const boxBarra = document.getElementById('boxProdutoConsumidoBarra');
         const boxModal = document.getElementById('boxProdutoConsumidoModal');
 
-        if (temVendaHojeSelecionada) {
-            if (boxBarra) boxBarra.style.setProperty('display', 'flex', 'important');
-            if (boxModal) boxModal.style.setProperty('display', 'block', 'important');
-        } else {
-            if (boxBarra) boxBarra.style.setProperty('display', 'none', 'important');
-            if (boxModal) boxModal.style.setProperty('display', 'none', 'important');
+        if (boxModal) {
+            if (temVendaHojeSelecionada) {
+                boxModal.style.setProperty('display', 'block', 'important');
+            } else {
+                boxModal.style.setProperty('display', 'none', 'important');
+            }
         }
     }
 
@@ -834,9 +813,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             hiddenMotivoEstorno.value = motivo;
 
-            // Sincroniza estado de produto consumido com o modal
+            // Sincroniza estado de produto consumido com o modal e atualiza visibilidade
             const valorConsumidoAtual = hiddenProdutoConsumido ? (hiddenProdutoConsumido.value || 'nao') : 'nao';
             sincronizarProdutoConsumido(valorConsumidoAtual);
+            atualizarVisibilidadeProdutoConsumido();
 
             // Abre modal corporativo de confirmação
             document.getElementById('txtConfirmarResumo').innerHTML = 
