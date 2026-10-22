@@ -225,7 +225,10 @@ class EstornoVendasController extends Controller
         $ipOrigem = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
         $tipoVenda = trim($_POST['tipo_venda'] ?? 'nao'); // 'sim' = avulsa, 'nao' = pedido
-        $selecionados = $_POST['selecionados'] ?? [];
+        $selecionados = $_POST['selecionadas'] ?? ($_POST['selecionados'] ?? []);
+        if (is_string($selecionados)) {
+            $selecionados = array_filter(array_map('trim', explode(',', $selecionados)));
+        }
         $motivo = trim($_POST['motivo_estorno'] ?? '');
 
         // Validações de entrada

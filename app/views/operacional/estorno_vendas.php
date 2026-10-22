@@ -845,6 +845,27 @@ document.addEventListener('DOMContentLoaded', function() {
         btnConfirmarEstornoFinal.addEventListener('click', function() {
             this.disabled = true;
             this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Gravando estorno...';
+
+            // Garante que todas as vendas marcadas estejam explicitamente sincronizadas
+            formGravar.querySelectorAll('.input-venda-backup').forEach(function(el) { el.remove(); });
+            checksVenda.forEach(function(ck) {
+                if (ck.checked) {
+                    const h1 = document.createElement('input');
+                    h1.type = 'hidden';
+                    h1.className = 'input-venda-backup';
+                    h1.name = 'selecionadas[]';
+                    h1.value = ck.value;
+                    formGravar.appendChild(h1);
+
+                    const h2 = document.createElement('input');
+                    h2.type = 'hidden';
+                    h2.className = 'input-venda-backup';
+                    h2.name = 'selecionados[]';
+                    h2.value = ck.value;
+                    formGravar.appendChild(h2);
+                }
+            });
+
             formGravar.submit();
         });
     }

@@ -385,6 +385,80 @@ assertCustom(
     $testsFailed
 );
 
+// 12. Testar Sucesso na Gravação do Estorno enviando 'selecionadas' (feminino, como enviado pelo checkbox HTML da view)
+$stmtVendaMockSub = $pdo->prepare("
+    INSERT INTO vendas_balcao (
+        sessao_caixa_id, operador_id, tipo_venda, aluno_id, forma_pagamento,
+        valor_total, status, created_at
+    ) VALUES (
+        1, :op_id, 'avulso_aluno', 1, 'dinheiro',
+        8.00, 'concluida', NOW()
+    )
+");
+$stmtVendaMockSub->execute(['op_id' => $operador['id']]);
+$vIdMockSub = (int)$pdo->lastInsertId();
+
+$_POST = [
+    'csrf_token'        => $tokenCsrf,
+    'venda_avulsa'      => 'nao',
+    'tipo_venda'        => 'nao',
+    'filtrar_por'       => 'aluno',
+    'selecionadas'      => ["balcao_{$vIdMockSub}"],
+    'motivo_estorno'    => '1-ESTORNO',
+    'produto_consumido' => 'sim'
+];
+
+ob_start();
+$controllerSub = new EstornoVendasController();
+$controllerSub->gravar();
+ob_get_clean();
+
+$flash = Session::getFlash('success');
+$flashStr = implode(' ', $flash);
+assertCustom(
+    !empty($flash) && str_contains($flashStr, 'Estorno concluído com sucesso'),
+    "Controller processa com sucesso o estorno quando enviado 'selecionadas[]' do formulário HTML",
+    $testsPassed,
+    $testsFailed
+);
+
+// 13. Testar Sucesso na Gravação do Estorno enviando 'selecionados' (masculino, compatibilidade total)
+$stmtVendaMockSub2 = $pdo->prepare("
+    INSERT INTO vendas_balcao (
+        sessao_caixa_id, operador_id, tipo_venda, aluno_id, forma_pagamento,
+        valor_total, status, created_at
+    ) VALUES (
+        1, :op_id, 'avulso_aluno', 1, 'dinheiro',
+        11.50, 'concluida', NOW()
+    )
+");
+$stmtVendaMockSub2->execute(['op_id' => $operador['id']]);
+$vIdMockSub2 = (int)$pdo->lastInsertId();
+
+$_POST = [
+    'csrf_token'        => $tokenCsrf,
+    'venda_avulsa'      => 'nao',
+    'tipo_venda'        => 'nao',
+    'filtrar_por'       => 'aluno',
+    'selecionados'      => ["balcao_{$vIdMockSub2}"],
+    'motivo_estorno'    => '2-DESISTÊNCIA DO ALUNO',
+    'produto_consumido' => 'sim'
+];
+
+ob_start();
+$controllerSub2 = new EstornoVendasController();
+$controllerSub2->gravar();
+ob_get_clean();
+
+$flash2 = Session::getFlash('success');
+$flash2Str = implode(' ', $flash2);
+assertCustom(
+    !empty($flash2) && str_contains($flash2Str, 'Estorno concluído com sucesso'),
+    "Controller processa com sucesso o estorno quando enviado 'selecionados[]' (compatibilidade total)",
+    $testsPassed,
+    $testsFailed
+);
+
 echo "\n============================================\n";
 echo "RESULTADO FINAL: {$testsPassed} testes aprovados, {$testsFailed} falhas.\n";
 

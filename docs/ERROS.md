@@ -2224,6 +2224,21 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Suíte automatizada `tests/estorno_vendas_nutre_fluxo_test.php` atualizada com asserção específica para blindagem do redirecionamento com 42/42 testes aprovados.
 - Como evitar no futuro: Em métodos utilitários de redirecionamento HTTP, nunca prefixar caminho base relativo quando o argumento recebido for uma URL absoluta com protocolo (`http://` ou `https://`).
 
+---
+
+## 2026-10-22 - Alerta de nenhuma venda selecionada por divergência entre 'selecionadas' e 'selecionados' no estorno
+
+- Sintoma: Mensagem de alerta `Atenção: Nenhuma venda foi selecionada para estorno.` ao marcar vendas na tabela e confirmar a gravação do estorno.
+- Causa:
+  1. Na view `app/views/operacional/estorno_vendas.php`, os checkboxes da tabela de vendas foram nomeados como `name="selecionadas[]"` (no feminino, referente a "vendas selecionadas").
+  2. No controller `app/controllers/EstornoVendasController.php`, o método `gravar()` buscava estritamente `$_POST['selecionados']` (no masculino).
+  3. Como a chave `$_POST['selecionados']` não existia no payload HTTP submetido, o array de itens a estornar ficava vazio (`[]`), acionando a validação defensiva que abortava a operação com o alerta em questão.
+- Solução aplicada:
+  1. No controller `EstornoVendasController.php`, a leitura dos itens foi tornada universal: `$selecionados = $_POST['selecionadas'] ?? ($_POST['selecionados'] ?? []);`, com normalização de string para array se necessário.
+  2. Na view `app/views/operacional/estorno_vendas.php`, o script de submissão do modal corporativo sincroniza preventivamente inputs hidden tanto para `selecionadas[]` quanto para `selecionados[]`, eliminando qualquer possibilidade de perda de seleção pelo navegador.
+  3. Suíte de testes `tests/estorno_vendas_nutre_fluxo_test.php` expandida com asserções simulando POST em ambos os formatos (`selecionadas` e `selecionados`), homologando 44/44 testes aprovados com 100% de sucesso.
+- Como evitar no futuro: Em formulários que submetem listas dinâmicas via checkboxes com nomenclatura sujeita a gênero gramatical em português ("selecionados" vs "selecionadas"), suportar ambas as variações defensivamente no controller (`$lista = $_POST['itens_feminino'] ?? ($_POST['itens_masculino'] ?? [])`).
+
 
 
 
