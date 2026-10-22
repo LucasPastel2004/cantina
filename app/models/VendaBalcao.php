@@ -524,7 +524,8 @@ class VendaBalcao extends Model
         int $vendaId,
         int $operadorId,
         string $motivo,
-        string $ipOrigem = '127.0.0.1'
+        string $ipOrigem = '127.0.0.1',
+        bool $produtoConsumido = false
     ): array {
         $motivoLimpo = trim($motivo);
         if (mb_strlen($motivoLimpo) < 5) {
@@ -575,14 +576,15 @@ class VendaBalcao extends Model
                 'id'          => $vendaId
             ]);
 
-            // 3. Reintegração de estoque para cada item vendido
-            // Regra de Negócio: Vendas de datas anteriores já foram consumidas ou descartadas (perecíveis/salgados).
-            // Apenas vendas do próprio dia de hoje retornam fisicamente ao estoque atual para evitar estoques fantasmas.
+            // 3. Reintegração ou Registro de Perda de Estoque
+            // Regra de Negócio:
+            // - Se for venda de HOJE e o produto NÃO foi consumido (cancelou antes de pegar em mãos): devolve ao estoque físico atual.
+            // - Se o produto já foi consumido HOJE ou a venda é de DATA ANTERIOR: NÃO devolve ao estoque físico e registra como perda de estoque.
             $itens = ItemVendaBalcao::listarPorVenda($vendaId);
             $dataVenda = !empty($venda['created_at']) ? date('Y-m-d', strtotime($venda['created_at'])) : date('Y-m-d');
             $ehVendaHoje = ($dataVenda === date('Y-m-d'));
 
-            if ($ehVendaHoje) {
+            if ($ehVendaHoje && !$produtoConsumido) {
                 $stmtEstoque = $pdo->prepare("
                     UPDATE produtos
                     SET estoque_atual = estoque_atual + :qtd,
@@ -615,11 +617,11 @@ class VendaBalcao extends Model
                         'produto_id'    => $prodId,
                         'quantidade'    => $qtd,
                         'operador_id'   => $operadorId,
-                        'justificativa' => "Reintegração por estorno da Venda de Balcão #{$vendaId} (venda do mesmo dia): {$motivoLimpo}"
+                        'justificativa' => "Reintegração por estorno da Venda de Balcão #{$vendaId} (venda de hoje não consumida): {$motivoLimpo}"
                     ]);
                 }
             } else {
-                // Passou do dia da venda: não adiciona nada ao estoque físico atual e registra todos os itens (salgados ou industrializados) como perda de estoque
+                // Passou do dia da venda OU produto já consumido hoje: não adiciona ao estoque físico atual e registra como perda de estoque
                 $stmtPerdaEstoque = $pdo->prepare("
                     INSERT INTO estoque_movimentacoes (
                         produto_id, tipo_movimentacao, quantidade, motivo_perda,
@@ -631,6 +633,10 @@ class VendaBalcao extends Model
                 ");
 
                 $dataVendaFmt = date('d/m/Y', strtotime($venda['created_at']));
+                $motivoPerdaTexto = ($ehVendaHoje && $produtoConsumido) 
+                    ? "produto consumido hoje antes do estorno" 
+                    : "item não reintegrado fisicamente por decurso de prazo/consumo";
+
                 foreach ($itens as $item) {
                     $prodId = (int)$item['produto_id'];
                     $qtd = (int)$item['quantidade'];
@@ -639,7 +645,7 @@ class VendaBalcao extends Model
                         'produto_id'    => $prodId,
                         'quantidade'    => $qtd,
                         'operador_id'   => $operadorId,
-                        'justificativa' => "Perda por estorno de venda retroativa de {$dataVendaFmt} (Venda #{$vendaId}): item não reintegrado fisicamente ao estoque atual. Motivo: {$motivoLimpo}"
+                        'justificativa' => "Perda por estorno da Venda #{$vendaId} ({$dataVendaFmt}): {$motivoPerdaTexto}. Motivo: {$motivoLimpo}"
                     ]);
                 }
             }
@@ -685,7 +691,11 @@ class VendaBalcao extends Model
                 ? "Colaborador: {$venda['colaborador_nome']}" 
                 : ($venda['aluno_nome'] ? "Aluno: {$venda['aluno_nome']}" : "Consumidor Avulso");
 
-            $complementoEstoque = $ehVendaHoje ? "Estoque reintegrado." : "Estorno financeiro retroativo (estoque físico mantido sem reintegração).";
+            $complementoEstoque = ($ehVendaHoje && !$produtoConsumido)
+                ? "Estoque físico reintegrado."
+                : ($ehVendaHoje && $produtoConsumido 
+                    ? "Produto consumido hoje: estoque físico não alterado (registrado como perda de estoque)." 
+                    : "Estorno retroativo: estoque físico não alterado (registrado como perda de estoque).");
 
             Auditoria::registrar(
                 $operadorId,

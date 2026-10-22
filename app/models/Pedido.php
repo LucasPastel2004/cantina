@@ -1616,7 +1616,8 @@ class Pedido extends Model
         int $pedidoId,
         int $operadorId,
         string $motivo,
-        string $ipOrigem = '127.0.0.1'
+        string $ipOrigem = '127.0.0.1',
+        bool $produtoConsumido = false
     ): array {
         $motivoLimpo = trim($motivo);
         if (mb_strlen($motivoLimpo) < 5) {
@@ -1735,9 +1736,8 @@ class Pedido extends Model
                     ]);
                 }
 
-                // Devolução ao estoque físico: APENAS no próprio dia de hoje E se o produto não foi entregue/consumido ainda
-                // Se a data já passou (ex: 15 dias atrás) ou já foi entregue ao aluno, NÃO reintegra fisicamente
-                if ($ehConsumoHoje && $pedido['status'] !== self::STATUS_ENTREGUE && $item['tipo'] === 'industrializado_continuo') {
+                // Devolução ao estoque físico: APENAS no próprio dia de hoje E se o produto NÃO foi consumido ainda (antes do aluno pegar)
+                if ($ehConsumoHoje && !$produtoConsumido && $pedido['status'] !== self::STATUS_ENTREGUE && $item['tipo'] === 'industrializado_continuo') {
                     $stmtDevolveFisico = $pdo->prepare("
                         UPDATE produtos
                         SET estoque_atual = estoque_atual + :qtd,
@@ -1764,9 +1764,9 @@ class Pedido extends Model
                         'op_id'   => $operadorId,
                         'just'    => "Reintegração por estorno do Pedido #{$pedido['codigo_pedido']} (não consumido hoje): {$motivoLimpo}"
                     ]);
-                } elseif ($pedido['data_consumo'] < date('Y-m-d') || $pedido['status'] === self::STATUS_ENTREGUE) {
-                    // Passou do dia do pedido ou já havia sido entregue: não adiciona ao estoque físico atual
-                    // e registra o item (salgado ou industrializado) como perda de estoque
+                } elseif ($pedido['data_consumo'] < date('Y-m-d') || $produtoConsumido || $pedido['status'] === self::STATUS_ENTREGUE) {
+                    // Passou do dia do pedido OU produto já consumido hoje: não adiciona ao estoque físico atual
+                    // e registra o item como perda de estoque
                     $stmtPerda = $pdo->prepare("
                         INSERT INTO estoque_movimentacoes (
                             produto_id, tipo_movimentacao, quantidade, motivo_perda,
@@ -1776,11 +1776,15 @@ class Pedido extends Model
                             NULL, :op_id, :just, NOW()
                         )
                     ");
+                    $motivoPerdaTexto = ($ehConsumoHoje && $produtoConsumido)
+                        ? "produto consumido hoje antes do estorno"
+                        : "item não reintegrado fisicamente por decurso de prazo/consumo";
+
                     $stmtPerda->execute([
                         'prod_id' => $prodId,
                         'qtd'     => $qtd,
                         'op_id'   => $operadorId,
-                        'just'    => "Perda por estorno retroativo do Pedido #{$pedido['codigo_pedido']} (Consumo em " . date('d/m/Y', strtotime($pedido['data_consumo'])) . "): item não reintegrado fisicamente ao estoque atual. Motivo: {$motivoLimpo}"
+                        'just'    => "Perda por estorno do Pedido #{$pedido['codigo_pedido']} (" . date('d/m/Y', strtotime($pedido['data_consumo'])) . "): {$motivoPerdaTexto}. Motivo: {$motivoLimpo}"
                     ]);
                 }
             }
@@ -1788,7 +1792,7 @@ class Pedido extends Model
             // 6. Trilha obrigatória de auditoria (logs_auditoria)
             $obsEstoqueRetroativo = ($pedido['data_consumo'] < date('Y-m-d'))
                 ? " [Estorno financeiro retroativo: estoque físico mantido sem reintegração por decurso de prazo/consumo prévio]"
-                : "";
+                : ($produtoConsumido ? " [Produto consumido hoje: estoque físico não alterado (registrado como perda de estoque)]" : " [Estoque físico reintegrado]");
 
             Auditoria::registrar(
                 $operadorId,

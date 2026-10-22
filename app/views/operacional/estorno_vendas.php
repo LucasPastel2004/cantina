@@ -160,7 +160,7 @@ $carregado = $carregado ?? false;
 <div class="card-enterprise mb-3 p-3 bg-white border" id="painelAcoesEstorno">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
         <!-- Campo Motivo do estorno (Dropdown estilo Nutre: 1-ESTORNO) -->
-        <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 520px;">
+        <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 480px;">
             <label for="selectMotivoEstorno" class="form-label text-secondary small font-weight-bold mb-0 text-nowrap">
                 Motivo do estorno: <span class="text-danger">*</span>
             </label>
@@ -175,8 +175,20 @@ $carregado = $carregado ?? false;
             <input type="text" class="form-control form-control-sm d-none" id="inputMotivoOutro" placeholder="Especifique o motivo do estorno..." maxlength="200" value="<?php echo (!in_array($motivoFiltro, ['1-ESTORNO', '2-DESISTÊNCIA DO ALUNO', '3-FALTA DE PRODUTO', '4-ERRO DE LANÇAMENTO', '5-DUPLICIDADE', '6-OUTRO'])) ? htmlspecialchars($motivoFiltro, ENT_QUOTES, 'UTF-8') : ''; ?>">
         </div>
 
+        <!-- Campo Produto consumido? (Sim / Não) -->
+        <div class="d-flex align-items-center gap-2" id="boxProdutoConsumidoBarra">
+            <span class="text-secondary small font-weight-bold text-nowrap">Produto consumido?</span>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Produto consumido">
+                <input type="radio" class="btn-check radio-consumido-barra" name="radio_produto_consumido" id="pcNao" value="nao" checked>
+                <label class="btn btn-enterprise btn-outline-secondary btn-sm px-2.5" for="pcNao" title="Não consumido: item de hoje retorna ao estoque físico">Não</label>
+
+                <input type="radio" class="btn-check radio-consumido-barra" name="radio_produto_consumido" id="pcSim" value="sim">
+                <label class="btn btn-enterprise btn-outline-secondary btn-sm px-2.5" for="pcSim" title="Já consumido: não retorna ao estoque e vira perda">Sim</label>
+            </div>
+        </div>
+
         <!-- Botões Cancelar e Gravar (Alinhados à direita junto com o Motivo, padrão Nutre) -->
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 ms-auto">
             <a href="<?php echo $baseUrl; ?>/operacional/estornos" class="btn btn-enterprise btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" id="btnCancelarEstorno" title="Cancelar seleção e limpar tela">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
@@ -206,6 +218,7 @@ $carregado = $carregado ?? false;
     <input type="hidden" name="data_inicio" value="<?php echo htmlspecialchars($dataInicio, ENT_QUOTES, 'UTF-8'); ?>">
     <input type="hidden" name="data_fim" value="<?php echo htmlspecialchars($dataFim, ENT_QUOTES, 'UTF-8'); ?>">
     <input type="hidden" name="motivo_estorno" id="hiddenMotivoEstorno" value="">
+    <input type="hidden" name="produto_consumido" id="hiddenProdutoConsumido" value="nao">
 
     <!-- Tabela de Vendas (Colunas do Nutre com botão Info Venda por linha) -->
     <div class="card-enterprise mb-3">
@@ -260,10 +273,17 @@ $carregado = $carregado ?? false;
                             $tipoOrigem = $v['tipo_origem'] ?? ($vendaAvulsa === 'sim' ? 'balcao' : 'pedido');
                             $nomePessoa = $v['pessoa_nome'] ?? ($v['aluno_nome'] ?? ($v['colaborador_nome'] ?? 'Consumidor Geral'));
                             $detalhePessoa = $v['pessoa_detalhe'] ?? '';
+                            $dataVendaIso = !empty($v['data_venda']) 
+                                ? $v['data_venda'] 
+                                : (!empty($v['data_consumo']) 
+                                    ? $v['data_consumo'] 
+                                    : (!empty($v['created_at']) 
+                                        ? date('Y-m-d', strtotime($v['created_at'])) 
+                                        : date('Y-m-d')));
                         ?>
-                            <tr id="linhaVenda_<?php echo $vId; ?>" class="linha-venda-clicavel" data-id="<?php echo $vId; ?>" data-tipo="<?php echo $tipoOrigem; ?>" style="cursor: pointer;">
+                            <tr id="linhaVenda_<?php echo $vId; ?>" class="linha-venda-clicavel" data-id="<?php echo $vId; ?>" data-tipo="<?php echo $tipoOrigem; ?>" data-data-iso="<?php echo $dataVendaIso; ?>" style="cursor: pointer;">
                                 <td style="text-align: center;" onclick="event.stopPropagation();">
-                                    <input class="form-check-input check-venda" type="checkbox" name="selecionadas[]" value="<?php echo $tipoOrigem . '_' . $vId; ?>" data-valor="<?php echo $valorVenda; ?>">
+                                    <input class="form-check-input check-venda" type="checkbox" name="selecionadas[]" value="<?php echo $tipoOrigem . '_' . $vId; ?>" data-valor="<?php echo $valorVenda; ?>" data-data-iso="<?php echo $dataVendaIso; ?>">
                                 </td>
                                 <td class="font-tabular small"><?php echo $dataVenda; ?></td>
                                 <td class="font-tabular small"><?php echo $horaVenda; ?></td>
@@ -380,6 +400,21 @@ $carregado = $carregado ?? false;
                             <strong>Motivo selecionado:</strong>
                             <div class="p-2 mt-1 rounded bg-light border text-dark font-weight-semibold font-tabular" id="txtConfirmarMotivo">1-ESTORNO</div>
                         </div>
+                        <div class="small mt-2" id="boxProdutoConsumidoModal">
+                            <strong>Produto consumido?</strong>
+                            <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Produto consumido modal">
+                                    <input type="radio" class="btn-check radio-consumido-modal" name="modal_produto_consumido" id="modPcNao" value="nao" checked>
+                                    <label class="btn btn-enterprise btn-outline-secondary btn-sm px-3" for="modPcNao">Não</label>
+
+                                    <input type="radio" class="btn-check radio-consumido-modal" name="modal_produto_consumido" id="modPcSim" value="sim">
+                                    <label class="btn btn-enterprise btn-outline-secondary btn-sm px-3" for="modPcSim">Sim</label>
+                                </div>
+                                <span class="text-microcopy text-secondary" id="txtDicaConsumoModal">
+                                    (Não consumido: itens de vendas de hoje retornam ao estoque)
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -409,6 +444,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectMotivoEstorno = document.getElementById('selectMotivoEstorno');
     const inputMotivoOutro = document.getElementById('inputMotivoOutro');
     const hiddenMotivoEstorno = document.getElementById('hiddenMotivoEstorno');
+    const hiddenProdutoConsumido = document.getElementById('hiddenProdutoConsumido');
+    const radiosConsumidoBarra = document.querySelectorAll('.radio-consumido-barra');
+    const radiosConsumidoModal = document.querySelectorAll('.radio-consumido-modal');
+    const txtDicaConsumoModal = document.getElementById('txtDicaConsumoModal');
+    const boxProdutoConsumidoModal = document.getElementById('boxProdutoConsumidoModal');
+
+    function sincronizarProdutoConsumido(val) {
+        if (hiddenProdutoConsumido) hiddenProdutoConsumido.value = val;
+        radiosConsumidoBarra.forEach(function(r) { r.checked = (r.value === val); });
+        radiosConsumidoModal.forEach(function(r) { r.checked = (r.value === val); });
+        if (txtDicaConsumoModal) {
+            if (val === 'sim') {
+                txtDicaConsumoModal.textContent = '(Já consumido: não retorna ao estoque físico e é registrado como perda de estoque)';
+            } else {
+                txtDicaConsumoModal.textContent = '(Não consumido: itens de vendas de hoje retornam ao estoque físico)';
+            }
+        }
+    }
+
+    radiosConsumidoBarra.forEach(function(r) {
+        r.addEventListener('change', function() {
+            if (this.checked) sincronizarProdutoConsumido(this.value);
+        });
+    });
+
+    radiosConsumidoModal.forEach(function(r) {
+        r.addEventListener('change', function() {
+            if (this.checked) sincronizarProdutoConsumido(this.value);
+        });
+    });
 
     // Filtros de Alternância
     const radiosVendaAvulsa = document.querySelectorAll('input[name="venda_avulsa"]');
@@ -744,6 +809,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             hiddenMotivoEstorno.value = motivo;
+
+            // Sincroniza estado de produto consumido com o modal
+            const valorConsumidoAtual = hiddenProdutoConsumido ? (hiddenProdutoConsumido.value || 'nao') : 'nao';
+            sincronizarProdutoConsumido(valorConsumidoAtual);
 
             // Abre modal corporativo de confirmação
             document.getElementById('txtConfirmarResumo').innerHTML = 

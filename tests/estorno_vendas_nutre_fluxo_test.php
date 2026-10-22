@@ -254,10 +254,105 @@ if ($prodSalgado && $prodInd) {
     }
     assertCustom($motivoPerdaValido, "Itens estornados foram devidamente logados com tipo 'saida_perda' e motivo 'sobra_producao'", $testsPassed, $testsFailed);
 
-    // Limpeza da venda de teste
-    $pdo->exec("DELETE FROM estoque_movimentacoes WHERE justificativa LIKE '%Venda #{$vendaIdMock}%'");
-    $pdo->exec("DELETE FROM itens_venda_balcao WHERE venda_balcao_id = {$vendaIdMock}");
-    $pdo->exec("DELETE FROM vendas_balcao WHERE id = {$vendaIdMock}");
+    // 8. Testar Presença do Campo 'Produto consumido?' na View (Barra e Modal)
+    assertCustom(
+        str_contains($outputCarregado, 'Produto consumido?'),
+        "Campo 'Produto consumido?' presente na interface de estorno",
+        $testsPassed,
+        $testsFailed
+    );
+    assertCustom(
+        str_contains($outputCarregado, 'name="radio_produto_consumido" id="pcSim"') && str_contains($outputCarregado, 'name="radio_produto_consumido" id="pcNao"'),
+        "Opções Sim e Não para 'Produto consumido?' presentes na barra de ações",
+        $testsPassed,
+        $testsFailed
+    );
+    assertCustom(
+        str_contains($outputCarregado, 'id="boxProdutoConsumidoModal"'),
+        "Controle de produto consumido presente no Modal de Confirmação",
+        $testsPassed,
+        $testsFailed
+    );
+
+    // 9. Testar Venda de HOJE com produtoConsumido = true (Já consumido no recreio: NÃO devolve ao estoque e vira perda)
+    $stmtSalgHoje = $pdo->query("SELECT id, estoque_atual FROM produtos WHERE tipo = 'salgado_diario' AND deleted_at IS NULL LIMIT 1");
+    $salgHoje = $stmtSalgHoje->fetch(\PDO::FETCH_ASSOC);
+    if ($salgHoje) {
+        $sId = (int)$salgHoje['id'];
+        $estAntesConsumido = (int)$salgHoje['estoque_atual'];
+
+        $stmtVendaHoje1 = $pdo->prepare("
+            INSERT INTO vendas_balcao (
+                sessao_caixa_id, operador_id, tipo_venda, aluno_id, forma_pagamento,
+                valor_total, status, created_at
+            ) VALUES (
+                1, :op_id, 'avulso_aluno', 1, 'dinheiro',
+                6.00, 'concluida', NOW()
+            )
+        ");
+        $stmtVendaHoje1->execute(['op_id' => $operador['id']]);
+        $vIdHoje1 = (int)$pdo->lastInsertId();
+
+        $pdo->prepare("INSERT INTO itens_venda_balcao (venda_balcao_id, produto_id, quantidade, preco_unitario, subtotal) VALUES (?, ?, 1, 6.00, 6.00)")
+            ->execute([$vIdHoje1, $sId]);
+
+        // Estornar indicando produtoConsumido = true (aluno já consumiu)
+        VendaBalcao::estornarVenda($vIdHoje1, (int)$operador['id'], 'Estorno lanche consumido', '127.0.0.1', true);
+
+        $estDepoisConsumido = (int)$pdo->query("SELECT estoque_atual FROM produtos WHERE id = {$sId}")->fetchColumn();
+        assertCustom(
+            $estAntesConsumido === $estDepoisConsumido,
+            "Venda de hoje com produto consumido = true NÃO incrementa o estoque físico (permaneceu {$estAntesConsumido} un)",
+            $testsPassed,
+            $testsFailed
+        );
+
+        $stmtPerdaHoje = $pdo->prepare("SELECT id FROM estoque_movimentacoes WHERE tipo_movimentacao = 'saida_perda' AND justificativa LIKE :j");
+        $stmtPerdaHoje->execute(['j' => "%Venda #{$vIdHoje1}%"]);
+        assertCustom(!empty($stmtPerdaHoje->fetch()), "Venda de hoje com produto consumido = true gera perda de estoque em estoque_movimentacoes", $testsPassed, $testsFailed);
+
+        $pdo->exec("DELETE FROM estoque_movimentacoes WHERE justificativa LIKE '%Venda #{$vIdHoje1}%'");
+        $pdo->exec("DELETE FROM itens_venda_balcao WHERE venda_balcao_id = {$vIdHoje1}");
+        $pdo->exec("DELETE FROM vendas_balcao WHERE id = {$vIdHoje1}");
+    }
+
+    // 10. Testar Venda de HOJE com produtoConsumido = false (Desistiu antes de pegar em mãos: REINTEGRA o estoque físico)
+    if ($salgHoje) {
+        $sId = (int)$salgHoje['id'];
+        $estAntesNaoConsumido = (int)$pdo->query("SELECT estoque_atual FROM produtos WHERE id = {$sId}")->fetchColumn();
+
+        $stmtVendaHoje2 = $pdo->prepare("
+            INSERT INTO vendas_balcao (
+                sessao_caixa_id, operador_id, tipo_venda, aluno_id, forma_pagamento,
+                valor_total, status, created_at
+            ) VALUES (
+                1, :op_id, 'avulso_aluno', 1, 'dinheiro',
+                6.00, 'concluida', NOW()
+            )
+        ");
+        $stmtVendaHoje2->execute(['op_id' => $operador['id']]);
+        $vIdHoje2 = (int)$pdo->lastInsertId();
+
+        $pdo->prepare("INSERT INTO itens_venda_balcao (venda_balcao_id, produto_id, quantidade, preco_unitario, subtotal) VALUES (?, ?, 2, 3.00, 6.00)")
+            ->execute([$vIdHoje2, $sId]);
+
+        // Estornar indicando produtoConsumido = false (não consumido, devolvido antes de pegar)
+        VendaBalcao::estornarVenda($vIdHoje2, (int)$operador['id'], 'Estorno antes de pegar salgado', '127.0.0.1', false);
+
+        $estDepoisNaoConsumido = (int)$pdo->query("SELECT estoque_atual FROM produtos WHERE id = {$sId}")->fetchColumn();
+        assertCustom(
+            $estDepoisNaoConsumido === ($estAntesNaoConsumido + 2),
+            "Venda de hoje com produto consumido = false REINTEGRA fisicamente o estoque (+2 un, total: {$estDepoisNaoConsumido})",
+            $testsPassed,
+            $testsFailed
+        );
+
+        // Reverte as 2 unidades do teste
+        $pdo->exec("UPDATE produtos SET estoque_atual = estoque_atual - 2 WHERE id = {$sId}");
+        $pdo->exec("DELETE FROM estoque_movimentacoes WHERE justificativa LIKE '%Venda de Balcão #{$vIdHoje2}%'");
+        $pdo->exec("DELETE FROM itens_venda_balcao WHERE venda_balcao_id = {$vIdHoje2}");
+        $pdo->exec("DELETE FROM vendas_balcao WHERE id = {$vIdHoje2}");
+    }
 }
 
 echo "\n============================================\n";

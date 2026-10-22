@@ -246,6 +246,7 @@ class EstornoVendasController extends Controller
         $erros = [];
 
         $filtrarPor = trim($_POST['filtrar_por'] ?? 'aluno');
+        $produtoConsumido = (isset($_POST['produto_consumido']) && $_POST['produto_consumido'] === 'sim');
 
         foreach ($selecionados as $vendaItem) {
             $itemTipo = '';
@@ -263,12 +264,12 @@ class EstornoVendasController extends Controller
             try {
                 if ($itemTipo === 'balcao') {
                     // Estorno de Venda de Balcão (avulsa, sobra de estoque ou colaborador)
-                    $vendaEstornada = VendaBalcao::estornarVenda($id, $operadorId, $motivo, $ipOrigem);
+                    $vendaEstornada = VendaBalcao::estornarVenda($id, $operadorId, $motivo, $ipOrigem, $produtoConsumido);
                     $totalEstornados++;
                     $valorTotalEstornado += (float)$vendaEstornada['valor_total'];
                 } else {
                     // Estorno de Pedido Online
-                    $pedidoEstornado = Pedido::estornarPedido($id, $operadorId, $motivo, $ipOrigem);
+                    $pedidoEstornado = Pedido::estornarPedido($id, $operadorId, $motivo, $ipOrigem, $produtoConsumido);
                     $totalEstornados++;
                     $valorTotalEstornado += (float)$pedidoEstornado['valor_total'];
                 }
@@ -276,7 +277,7 @@ class EstornoVendasController extends Controller
                 // Fallback defensivo: se falhar como pedido, tenta como balcão
                 if ($itemTipo === 'pedido') {
                     try {
-                        $vendaEstornada = VendaBalcao::estornarVenda($id, $operadorId, $motivo, $ipOrigem);
+                        $vendaEstornada = VendaBalcao::estornarVenda($id, $operadorId, $motivo, $ipOrigem, $produtoConsumido);
                         $totalEstornados++;
                         $valorTotalEstornado += (float)$vendaEstornada['valor_total'];
                         continue;
