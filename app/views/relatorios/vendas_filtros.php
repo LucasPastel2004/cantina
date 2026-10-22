@@ -74,7 +74,7 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
     <!-- Formulário Oficial de Filtros -->
     <form action="<?php echo $baseUrl; ?>/relatorios/vendas-filtros/imprimir" method="GET" target="_blank" id="formFiltrosVendas">
 
-        <!-- Cabeçalho Executivo e Barra de Ações -->
+        <!-- Cabeçalho Executivo -->
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3 pb-2 border-bottom">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-1">
@@ -85,45 +85,6 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
                 <p class="text-secondary text-microcopy mb-0">
                     Defina os parâmetros de emissão para visualização em tela de impressão A4 (com opção de salvar PDF) ou exportação CSV.
                 </p>
-            </div>
-
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-                <!-- Dropdown Emitir para compatibilidade e navegação rápida -->
-                <div class="dropdown d-none d-md-inline-block">
-                    <button class="btn btn-enterprise btn-primary btn-sm dropdown-toggle d-inline-flex align-items-center gap-1.5" type="button" id="dropdownEmitir" data-bs-toggle="dropdown" aria-expanded="false">
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                            <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-                        </svg>
-                        <span>Emitir</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border" aria-labelledby="dropdownEmitir" style="font-size: 13px;">
-                        <li>
-                            <button type="submit" formaction="<?php echo $baseUrl; ?>/relatorios/vendas-filtros/imprimir" formtarget="_blank" class="dropdown-item d-flex align-items-center gap-2 py-2">
-                                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" class="text-primary"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
-                                <div>
-                                    <span class="d-block fw-semibold">Imprimir / Salvar PDF (A4)</span>
-                                    <small class="text-muted" style="font-size: 11px;">Tela oficial de impressão e geração de PDF</small>
-                                </div>
-                            </button>
-                        </li>
-                        <li><hr class="dropdown-divider my-1"></li>
-                        <li>
-                            <button type="submit" formaction="<?php echo $baseUrl; ?>/relatorios/vendas-filtros/csv" class="dropdown-item d-flex align-items-center gap-2 py-2">
-                                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" class="text-success"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/><path d="M4 11.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5z"/></svg>
-                                <div>
-                                    <span class="d-block fw-semibold">Exportar Planilha (CSV)</span>
-                                    <small class="text-muted" style="font-size: 11px;">Compatível com Microsoft Excel</small>
-                                </div>
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Botão Voltar ao Hub -->
-                <a href="<?php echo $baseUrl; ?>/relatorios" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1">
-                    <span>Hub de Relatórios</span>
-                </a>
             </div>
         </div>
 

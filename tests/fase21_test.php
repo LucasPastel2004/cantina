@@ -126,6 +126,8 @@ class Fase21Test
         // Toggles com destaque azul corporativo e botões de emissão
         $this->assert(str_contains($content, "btn-toggle-blue"), "Toggles utilizam classe de destaque em azul corporativo (.btn-toggle-blue).");
         $this->assert(!str_contains($content, "tabelaVendasOficial"), "Lista de relatório inline removida da tela de filtros (emissão exclusiva em PDF/Impressão).");
+        $this->assert(!str_contains($content, 'id="dropdownEmitir"'), "Botão repetido/dropdown Emitir do topo devidamente removido.");
+        $this->assert(!str_contains($content, 'Hub de Relatórios'), "Botão Hub de Relatórios do topo devidamente removido.");
 
         // Toggles Oficiais Sim/Não conforme Filtros de vendas.pdf
         $toggles = [
