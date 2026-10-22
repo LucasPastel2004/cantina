@@ -58,10 +58,10 @@ $resCal = makeRequest($baseUrl . '/admin/calendario', 'GET', [], $cookieAdmin);
 $okCal = ($resCal['code'] === 200 && str_contains($resCal['body'], 'Calendário Escolar'));
 echo "1. GET /admin/calendario (200 OK): " . ($okCal ? "PASS" : "FAIL (code {$resCal['code']})") . "\n";
 
-// 3. Admin acessa /relatorios
+// 3. Admin acessa /relatorios (descontinuado: redireciona para /admin)
 $resRel = makeRequest($baseUrl . '/relatorios', 'GET', [], $cookieAdmin);
-$okRel = ($resRel['code'] === 200 && str_contains($resRel['body'], 'Relatórios Gerenciais'));
-echo "2. GET /relatorios (200 OK): " . ($okRel ? "PASS" : "FAIL (code {$resRel['code']})") . "\n";
+$okRel = ($resRel['code'] === 302 && str_contains($resRel['headers'], '/admin'));
+echo "2. GET /relatorios (302 Redirect /admin): " . ($okRel ? "PASS" : "FAIL (code {$resRel['code']})") . "\n";
 
 // 4. Login Responsável
 $loginPageResp = makeRequest($baseUrl . '/login', 'GET', [], $cookieResp);

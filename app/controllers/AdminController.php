@@ -1232,14 +1232,11 @@ class AdminController extends Controller
     }
 
     /**
-     * Central de Relatórios Gerenciais
+     * Central de Relatórios Gerenciais (Descontinuada)
      */
     public function relatorios(): void
     {
-        $this->render('admin/relatorios', [
-            'pageTitle'  => 'Relatórios Gerenciais',
-            'activeMenu' => 'relatorios'
-        ], 'admin');
+        $this->redirect('/admin');
     }
 
     /**
