@@ -460,8 +460,19 @@ function carregarProdutosFornecedor() {
     var fornDigitado = (inputForn.value || '').trim();
 
     if (fornDigitado.length < 2) {
-        alert('Por favor, informe ou selecione o nome do fornecedor antes de carregar os produtos.');
-        inputForn.focus();
+        if (typeof window.confirmarAcao === 'function') {
+            window.confirmarAcao({
+                titulo: 'Identificação do Fornecedor',
+                mensagem: 'Por favor, informe ou selecione o nome do fornecedor antes de carregar os produtos.',
+                tipo: 'warning',
+                textoConfirmar: 'Entendido',
+                textoCancelar: 'Fechar'
+            }).then(function() {
+                inputForn.focus();
+            });
+        } else {
+            inputForn.focus();
+        }
         return;
     }
 
@@ -653,10 +664,11 @@ function confirmarItemModal(e) {
     var quantidade = parseInt(inputQtd.value, 10);
 
     if (isNaN(quantidade) || quantidade <= 0) {
-        alert('Por favor, informe uma quantidade válida maior que zero.');
+        inputQtd.classList.add('is-invalid');
         inputQtd.focus();
         return false;
     }
+    inputQtd.classList.remove('is-invalid');
 
     var inputCusto = document.getElementById('modalInputPrecoCusto');
     var precoCusto = parseMoedaBR(inputCusto.value);
@@ -695,7 +707,21 @@ function removerItemLote(produtoId) {
 
 function limparListaLote() {
     if (loteItens.length === 0) return;
-    if (confirm('Tem certeza de que deseja limpar todos os produtos adicionados a esta lista de entrada?')) {
+
+    if (typeof window.confirmarAcao === 'function') {
+        window.confirmarAcao({
+            titulo: 'Limpar Lista de Entrada',
+            mensagem: 'Tem certeza de que deseja remover todos os <strong>' + loteItens.length + ' produto(s)</strong> adicionados a este lote de entrada?',
+            tipo: 'danger',
+            textoConfirmar: 'Sim, Limpar Lista',
+            textoCancelar: 'Cancelar'
+        }).then(function(confirmado) {
+            if (confirmado) {
+                loteItens = [];
+                renderizarTabelaLote();
+            }
+        });
+    } else {
         loteItens = [];
         renderizarTabelaLote();
     }
@@ -770,21 +796,83 @@ function renderizarTabelaLote() {
 }
 
 function validarGravacaoLote(e) {
+    if (e && e.preventDefault) {
+        e.preventDefault();
+    }
+
     var inputForn = document.getElementById('inputFornecedor');
     var forn = inputForn ? inputForn.value.trim() : '';
 
     if (forn.length < 2) {
-        alert('Por favor, informe o nome do fornecedor (mínimo de 2 caracteres).');
-        inputForn.focus();
+        if (typeof window.confirmarAcao === 'function') {
+            window.confirmarAcao({
+                titulo: 'Identificação do Fornecedor',
+                mensagem: 'Por favor, informe ou selecione o nome do fornecedor (mínimo de 2 caracteres) para identificar a entrega.',
+                tipo: 'warning',
+                textoConfirmar: 'Entendido',
+                textoCancelar: 'Fechar'
+            }).then(function() {
+                if (inputForn) inputForn.focus();
+            });
+        } else {
+            if (inputForn) inputForn.focus();
+        }
         return false;
     }
 
     if (!loteItens || loteItens.length === 0) {
-        alert('Nenhum produto foi adicionado à lista. Inclua ao menos um produto no lote antes de gravar.');
+        if (typeof window.confirmarAcao === 'function') {
+            window.confirmarAcao({
+                titulo: 'Lista de Entrada Vazia',
+                mensagem: 'Nenhum produto foi adicionado à lista. Selecione e inclua ao menos um produto no lote antes de gravar a entrada.',
+                tipo: 'warning',
+                textoConfirmar: 'Entendido',
+                textoCancelar: 'Fechar'
+            });
+        }
         return false;
     }
 
-    return confirm('Confirmar gravação da entrada de ' + loteItens.length + ' produto(s) no estoque físico?');
+    var totalItens = loteItens.length;
+    var totalVolume = 0;
+    var totalValor = 0;
+    loteItens.forEach(function(item) {
+        totalVolume += item.quantidade;
+        totalValor += item.quantidade * (item.preco_custo || 0);
+    });
+
+    var msgHtml = '<div class="py-1">' +
+        '<p class="text-slate-800 mb-2">Deseja realmente confirmar a entrada física deste lote no estoque?</p>' +
+        '<div class="p-2.5 rounded border bg-light small mb-2 text-slate-700">' +
+            '<div class="d-flex justify-content-between mb-1"><span>Fornecedor:</span> <strong class="text-slate-900">' + escapeHtml(forn) + '</strong></div>' +
+            '<div class="d-flex justify-content-between mb-1"><span>Produtos distintos:</span> <strong class="text-slate-900 font-tabular">' + totalItens + '</strong></div>' +
+            '<div class="d-flex justify-content-between mb-1"><span>Volume total:</span> <strong class="text-success font-tabular fw-bold">+' + totalVolume + ' unidades</strong></div>' +
+            (totalValor > 0 ? '<div class="d-flex justify-content-between"><span>Custo total previsto:</span> <strong class="text-slate-900 font-tabular">' + formatarMoeda(totalValor) + '</strong></div>' : '') +
+        '</div>' +
+        '<span class="text-muted" style="font-size: 11px;">O estoque físico será incrementado imediatamente e as movimentações serão registradas em auditoria.</span>' +
+    '</div>';
+
+    var form = document.getElementById('formEntradaLote');
+
+    if (typeof window.confirmarAcao === 'function') {
+        window.confirmarAcao({
+            titulo: 'Confirmar Entrada em Estoque',
+            mensagem: msgHtml,
+            tipo: 'primary',
+            textoConfirmar: 'Sim, Gravar Entrada',
+            textoCancelar: 'Voltar e Revisar'
+        }).then(function(confirmado) {
+            if (confirmado && form) {
+                form.submit();
+            }
+        });
+        return false;
+    }
+
+    if (form) {
+        form.submit();
+    }
+    return false;
 }
 
 function escapeHtml(text) {
