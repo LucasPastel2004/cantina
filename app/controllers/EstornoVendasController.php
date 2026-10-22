@@ -303,24 +303,36 @@ class EstornoVendasController extends Controller
             Session::setFlash('danger', 'Nenhuma venda pôde ser estornada. ' . implode('; ', $erros));
         }
 
-        // Redireciona mantendo os filtros
+        // Redireciona mantendo os filtros e o estado carregado
         $queryParams = http_build_query([
-            'venda_avulsa' => $tipoVenda,
-            'filtrar_por'  => $_POST['filtrar_por'] ?? 'aluno',
-            'aluno_id'     => $_POST['aluno_id'] ?? '',
-            'data_inicio'  => $_POST['data_inicio'] ?? date('Y-m-d'),
-            'data_fim'     => $_POST['data_fim'] ?? date('Y-m-d'),
+            'carregar'       => '1',
+            'venda_avulsa'   => $tipoVenda,
+            'filtrar_por'    => $_POST['filtrar_por'] ?? 'aluno',
+            'pessoa_id'      => $_POST['pessoa_id'] ?? '',
+            'aluno_id'       => $_POST['aluno_id'] ?? '',
+            'colaborador_id' => $_POST['colaborador_id'] ?? '',
+            'data_inicio'    => $_POST['data_inicio'] ?? date('Y-m-d'),
+            'data_fim'       => $_POST['data_fim'] ?? date('Y-m-d'),
         ]);
 
         $this->redirect('/operacional/estornos?' . $queryParams);
     }
 
     /**
-     * Redireciona para a página anterior ou para a listagem padrão
+     * Redireciona de volta para a listagem mantendo os filtros atuais
      */
     private function redirectBack(): void
     {
-        $referer = $_SERVER['HTTP_REFERER'] ?? '/operacional/estornos';
-        $this->redirect($referer);
+        $queryParams = http_build_query([
+            'carregar'       => '1',
+            'venda_avulsa'   => $_POST['venda_avulsa'] ?? 'nao',
+            'filtrar_por'    => $_POST['filtrar_por'] ?? 'aluno',
+            'pessoa_id'      => $_POST['pessoa_id'] ?? '',
+            'aluno_id'       => $_POST['aluno_id'] ?? '',
+            'colaborador_id' => $_POST['colaborador_id'] ?? '',
+            'data_inicio'    => $_POST['data_inicio'] ?? date('Y-m-d'),
+            'data_fim'       => $_POST['data_fim'] ?? date('Y-m-d'),
+        ]);
+        $this->redirect('/operacional/estornos?' . $queryParams);
     }
 }

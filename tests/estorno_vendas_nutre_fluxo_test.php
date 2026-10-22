@@ -254,7 +254,7 @@ if ($prodSalgado && $prodInd) {
     }
     assertCustom($motivoPerdaValido, "Itens estornados foram devidamente logados com tipo 'saida_perda' e motivo 'sobra_producao'", $testsPassed, $testsFailed);
 
-    // 8. Testar Presença do Campo 'Produto consumido?' na View (Barra e Modal)
+    // 8. Testar Presença do Campo 'Produto consumido?' na View (Oculto por padrão, ativado apenas para vendas de hoje)
     assertCustom(
         str_contains($outputCarregado, 'Produto consumido?'),
         "Campo 'Produto consumido?' presente na interface de estorno",
@@ -262,14 +262,20 @@ if ($prodSalgado && $prodInd) {
         $testsFailed
     );
     assertCustom(
-        str_contains($outputCarregado, 'name="radio_produto_consumido" id="pcSim"') && str_contains($outputCarregado, 'name="radio_produto_consumido" id="pcNao"'),
-        "Opções Sim e Não para 'Produto consumido?' presentes na barra de ações",
+        str_contains($outputCarregado, 'id="boxProdutoConsumidoBarra" style="display: none !important;"'),
+        "Campo 'Produto consumido?' na barra de estorno inicia oculto para não aparecer em vendas anteriores",
         $testsPassed,
         $testsFailed
     );
     assertCustom(
-        str_contains($outputCarregado, 'id="boxProdutoConsumidoModal"'),
-        "Controle de produto consumido presente no Modal de Confirmação",
+        str_contains($outputCarregado, 'id="boxProdutoConsumidoModal" style="display: none !important;"'),
+        "Campo 'Produto consumido?' no modal inicia oculto para não aparecer em vendas anteriores",
+        $testsPassed,
+        $testsFailed
+    );
+    assertCustom(
+        !str_contains($outputCarregado, 'name="csrf_token" value=""'),
+        "Token CSRF preenchido corretamente no formulário formGravarEstorno (sem valor vazio)",
         $testsPassed,
         $testsFailed
     );
@@ -354,6 +360,30 @@ if ($prodSalgado && $prodInd) {
         $pdo->exec("DELETE FROM vendas_balcao WHERE id = {$vIdHoje2}");
     }
 }
+
+// 11. Testar Submissão do Formulário de Gravação com CSRF e Redirecionamento sem Rota Duplicada
+$tokenCsrf = Session::getCsrfToken();
+$_SERVER['HTTP_REFERER'] = 'http://localhost:8080/operacional/estornos?carregar=1';
+$_POST = [
+    'csrf_token'        => $tokenCsrf,
+    'venda_avulsa'      => 'nao',
+    'filtrar_por'       => 'aluno',
+    'selecionados'      => [], // vazio para testar fluxo defensivo de redirect sem 404
+    'motivo_estorno'    => '1-ESTORNO',
+    'produto_consumido' => 'sim'
+];
+
+ob_start();
+$controller = new EstornoVendasController();
+$controller->gravar();
+$outputGravar = ob_get_clean();
+
+assertCustom(
+    !str_contains($outputGravar, '/http://localhost:8080') && !str_contains($outputGravar, '404'),
+    "Redirecionamento do controller trata URL absoluta do HTTP_REFERER sem prefixar indevidamente /http://...",
+    $testsPassed,
+    $testsFailed
+);
 
 echo "\n============================================\n";
 echo "RESULTADO FINAL: {$testsPassed} testes aprovados, {$testsFailed} falhas.\n";

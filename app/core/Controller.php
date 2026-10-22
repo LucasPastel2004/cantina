@@ -141,11 +141,15 @@ abstract class Controller
      */
     protected function redirect(string $path, int $statusCode = 302): void
     {
-        $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
-        $base = str_replace('\\', '/', $scriptDir);
-        $baseUrl = ($base === '/' || $base === '.') ? '' : rtrim($base, '/');
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            $target = $path;
+        } else {
+            $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+            $base = str_replace('\\', '/', $scriptDir);
+            $baseUrl = ($base === '/' || $base === '.') ? '' : rtrim($base, '/');
 
-        $target = $baseUrl . '/' . ltrim($path, '/');
+            $target = $baseUrl . '/' . ltrim($path, '/');
+        }
 
         if (!headers_sent()) {
             header("Location: {$target}", true, $statusCode);

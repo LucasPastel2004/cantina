@@ -2208,6 +2208,22 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Padrão replicado universalmente em todos os relatórios do sistema que possuem a barra de impressão e zoom.
 - Como evitar no futuro: Em barras de controle responsivas com botões fixos e controles de zoom, separar metadados secundários (como contagem de páginas ou período) em uma segunda linha dedicada, nunca permitindo que textos descritivos longos compitam horizontalmente com controles interativos.
 
+---
+
+## 2026-10-22 - Erro HTTP 404 por duplicação de URL ao redirecionar com HTTP_REFERER absoluto no estorno de vendas
+
+- Sintoma: Erro `404 — Página Não Encontrada` exibindo `ROTA SOLICITADA: /http://localhost:8080/operacional/estornos` após clicar em confirmar estorno.
+- Causa:
+  1. No formulário `formGravarEstorno`, o input hidden de CSRF continha `$csrfToken` em vez de `$csrf_token` / `Session::getCsrfToken()`.
+  2. Ao submeter, a validação de CSRF falhava e o controller acionava `redirectBack()`, que repassava `$_SERVER['HTTP_REFERER']` contendo a URL absoluta `http://localhost:8080/operacional/estornos?...`.
+  3. O método `Controller::redirect` concatenava incondicionalmente `$baseUrl . '/' . ltrim($path, '/')`, transformando a URL em `/http://localhost:8080/operacional/estornos?...`, que o Router interpretava como uma rota inexistente de 404.
+- Solução aplicada:
+  1. Método `Controller::redirect` atualizado para checar se `$path` inicia com `http://` ou `https://`; se sim, redireciona diretamente sem prefixar `$baseUrl`.
+  2. Método `EstornoVendasController::redirectBack()` e redirecionamento de sucesso atualizados para reconstruir a query string mantendo os filtros originais e a flag `'carregar' => '1'` de forma segura e relativa.
+  3. Input CSRF em `formGravarEstorno` corrigido para utilizar `\App\Core\Session::getCsrfToken()`.
+  4. Suíte automatizada `tests/estorno_vendas_nutre_fluxo_test.php` atualizada com asserção específica para blindagem do redirecionamento com 42/42 testes aprovados.
+- Como evitar no futuro: Em métodos utilitários de redirecionamento HTTP, nunca prefixar caminho base relativo quando o argumento recebido for uma URL absoluta com protocolo (`http://` ou `https://`).
+
 
 
 

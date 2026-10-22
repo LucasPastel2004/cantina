@@ -175,8 +175,8 @@ $carregado = $carregado ?? false;
             <input type="text" class="form-control form-control-sm d-none" id="inputMotivoOutro" placeholder="Especifique o motivo do estorno..." maxlength="200" value="<?php echo (!in_array($motivoFiltro, ['1-ESTORNO', '2-DESISTÊNCIA DO ALUNO', '3-FALTA DE PRODUTO', '4-ERRO DE LANÇAMENTO', '5-DUPLICIDADE', '6-OUTRO'])) ? htmlspecialchars($motivoFiltro, ENT_QUOTES, 'UTF-8') : ''; ?>">
         </div>
 
-        <!-- Campo Produto consumido? (Sim / Não) -->
-        <div class="d-flex align-items-center gap-2" id="boxProdutoConsumidoBarra">
+        <!-- Campo Produto consumido? (Sim / Não) - Apenas exibido dinamicamente se houver venda de hoje selecionada -->
+        <div class="d-flex align-items-center gap-2" id="boxProdutoConsumidoBarra" style="display: none !important;">
             <span class="text-secondary small font-weight-bold text-nowrap">Produto consumido?</span>
             <div class="btn-group btn-group-sm" role="group" aria-label="Produto consumido">
                 <input type="radio" class="btn-check radio-consumido-barra" name="radio_produto_consumido" id="pcNao" value="nao" checked>
@@ -208,7 +208,7 @@ $carregado = $carregado ?? false;
 
 <!-- Formulário que submete a gravação das vendas selecionadas -->
 <form id="formGravarEstorno" action="<?php echo $baseUrl; ?>/operacional/estornos/gravar" method="POST">
-    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+    <input type="hidden" name="csrf_token" value="<?php echo \App\Core\Session::getCsrfToken(); ?>">
     <input type="hidden" name="venda_avulsa" value="<?php echo htmlspecialchars($vendaAvulsa, ENT_QUOTES, 'UTF-8'); ?>">
     <input type="hidden" name="tipo_venda" value="<?php echo htmlspecialchars($vendaAvulsa, ENT_QUOTES, 'UTF-8'); ?>">
     <input type="hidden" name="filtrar_por" value="<?php echo htmlspecialchars($filtrarPor, ENT_QUOTES, 'UTF-8'); ?>">
@@ -400,7 +400,7 @@ $carregado = $carregado ?? false;
                             <strong>Motivo selecionado:</strong>
                             <div class="p-2 mt-1 rounded bg-light border text-dark font-weight-semibold font-tabular" id="txtConfirmarMotivo">1-ESTORNO</div>
                         </div>
-                        <div class="small mt-2" id="boxProdutoConsumidoModal">
+                        <div class="small mt-2" id="boxProdutoConsumidoModal" style="display: none !important;">
                             <strong>Produto consumido?</strong>
                             <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
                                 <div class="btn-group btn-group-sm" role="group" aria-label="Produto consumido modal">
@@ -494,6 +494,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let linhaSelecionadaAtiva = null;
 
+    const dataHojeIso = <?php echo json_encode(date('Y-m-d')); ?>;
+
+    function atualizarVisibilidadeProdutoConsumido() {
+        let temVendaHojeSelecionada = false;
+        checksVenda.forEach(function(ck) {
+            if (ck.checked && ck.dataset.dataIso === dataHojeIso) {
+                temVendaHojeSelecionada = true;
+            }
+        });
+
+        const boxBarra = document.getElementById('boxProdutoConsumidoBarra');
+        const boxModal = document.getElementById('boxProdutoConsumidoModal');
+
+        if (temVendaHojeSelecionada) {
+            if (boxBarra) boxBarra.style.setProperty('display', 'flex', 'important');
+            if (boxModal) boxModal.style.setProperty('display', 'block', 'important');
+        } else {
+            if (boxBarra) boxBarra.style.setProperty('display', 'none', 'important');
+            if (boxModal) boxModal.style.setProperty('display', 'none', 'important');
+        }
+    }
+
     // Recálculo de Totais Selecionados
     function recalcularTotais() {
         let qtd = 0;
@@ -507,6 +529,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (txtTotalSelecionados) txtTotalSelecionados.textContent = qtd;
         if (txtSomaSelecionados) txtSomaSelecionados.textContent = 'R$ ' + soma.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        atualizarVisibilidadeProdutoConsumido();
 
         if (checkTodos) {
             if (checksVenda.length > 0 && qtd === checksVenda.length) {
@@ -952,5 +976,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 modConteudo.style.display = '';
             });
     }
+
+    // Inicializa a visibilidade do seletor de produto consumido (oculto até selecionar venda de hoje)
+    atualizarVisibilidadeProdutoConsumido();
 });
 </script>
