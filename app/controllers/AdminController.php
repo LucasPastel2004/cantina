@@ -1218,9 +1218,13 @@ class AdminController extends Controller
         $usuario = Auth::user();
         $busca   = trim((string)$this->input('busca', ''));
         $status  = trim((string)$this->input('status', ''));
+        $filtrar = (bool)$this->input('filtrar', false);
         $pagina  = max(1, (int)$this->input('pagina', 1));
 
         $itensPorPagina = Configuracao::getItensPorPagina();
+
+        // Determina se houve interação com os filtros para carga sob demanda
+        $jaFiltrado = $filtrar || !empty($busca) || (!empty($status) && $status !== 'todos') || isset($_GET['pagina']);
 
         $filtros = [];
         if (!empty($busca)) {
@@ -1230,7 +1234,17 @@ class AdminController extends Controller
             $filtros['status'] = $status;
         }
 
-        $resultado = Responsavel::listarNegativadosMed($filtros, $pagina, $itensPorPagina);
+        if ($jaFiltrado) {
+            $resultado = Responsavel::listarNegativadosMed($filtros, $pagina, $itensPorPagina);
+        } else {
+            $resultado = [
+                'itens' => [],
+                'total' => 0,
+                'pagina' => 1,
+                'total_paginas' => 1,
+                'por_pagina' => $itensPorPagina
+            ];
+        }
 
         // Métricas do Stat-Strip
         $totalNegativados   = Responsavel::contarNegativadosMed();
@@ -1255,6 +1269,7 @@ class AdminController extends Controller
             'pageTitle'           => 'Contestações Pix & Negativados MED',
             'pageHeading'         => 'Mecanismo Especial de Devolução (MED)',
             'activeMenu'          => 'contestacoes',
+            'jaFiltrado'          => $jaFiltrado,
             'negativados'         => $resultado['itens'],
             'familias'            => $resultado['itens'],
             'totalNegativados'    => $totalNegativados,

@@ -22,6 +22,7 @@ $todosResponsaveis = $todosResponsaveis ?? [];
 
 $filtroBusca = $filtroBusca ?? '';
 $filtroStatus = $filtroStatus ?? 'todos';
+$jaFiltrado = (bool)($jaFiltrado ?? false);
 $pagina = $pagina ?? 1;
 $totalPaginas = $totalPaginas ?? 1;
 
@@ -140,6 +141,7 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
 <div class="card-enterprise card-overflow-visible mb-4" style="overflow: visible !important;">
     <div class="card-enterprise-body p-3" style="overflow: visible !important;">
         <form id="formFiltrosContestacoes" action="<?php echo $baseUrl; ?>/admin/contestacoes" method="GET" class="row g-2 align-items-end" style="position: relative;">
+            <input type="hidden" name="filtrar" value="1">
             <div class="col-12 col-sm-6 col-md-5 position-relative" style="position: relative;">
                 <label for="busca" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase;">
                     Buscar Responsável ou Titular
@@ -176,7 +178,7 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
                 <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-grow-1">
                     Filtrar Registros
                 </button>
-                <?php if (!empty($filtroBusca) || ($filtroStatus !== 'todos' && !empty($filtroStatus))): ?>
+                <?php if ($jaFiltrado): ?>
                     <a href="<?php echo $baseUrl; ?>/admin/contestacoes" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
                         Limpar
                     </a>
@@ -194,12 +196,21 @@ $queryStringMed = !empty($paramsMed) ? '?' . http_build_query($paramsMed) : '';
             <span class="text-secondary text-microcopy">Famílias sob restrição decorrente de contestação de recarga Pix</span>
         </div>
         <span class="badge bg-light text-secondary border font-tabular px-2 py-1">
-            <?php echo count($negativados); ?> exibido(s)
+            <?php echo $jaFiltrado ? count($negativados) . ' exibido(s)' : '0 exibido(s)'; ?>
         </span>
     </div>
 
     <div class="card-enterprise-body p-0">
-        <?php if (empty($negativados)): ?>
+        <?php if (!$jaFiltrado): ?>
+            <div class="p-4 text-center">
+                <p class="text-secondary mb-0" style="font-size: 13px; font-style: italic;">
+                    Não há nada para mostrar aqui
+                </p>
+                <span class="text-muted" style="font-size: 11px;">
+                    Utilize os filtros acima e clique em "Filtrar Registros" para exibir as contas com bloqueio ou saldo devedor.
+                </span>
+            </div>
+        <?php elseif (empty($negativados)): ?>
             <div class="p-4 text-center">
                 <div class="mb-2 text-secondary">
                     <svg width="40" height="40" viewBox="0 0 16 16" fill="currentColor" class="text-secondary opacity-75">
