@@ -39,7 +39,10 @@ class EstornoVendasController extends Controller
         $hoje = date('Y-m-d');
         $dataInicio = !empty($_GET['data_inicio']) ? trim(strip_tags($_GET['data_inicio'])) : $hoje;
         $dataFim = !empty($_GET['data_fim']) ? trim(strip_tags($_GET['data_fim'])) : $hoje;
-        $motivoFiltro = !empty($_GET['motivo']) ? trim(strip_tags($_GET['motivo'])) : '';
+        $motivoFiltro = !empty($_GET['motivo_estorno']) ? trim(strip_tags($_GET['motivo_estorno'])) : (!empty($_GET['motivo']) ? trim(strip_tags($_GET['motivo'])) : '1-ESTORNO');
+
+        // Flag de carregamento sob demanda (Fluxo Nutre: só busca se clicar em Carregar ou vier de gravação)
+        $carregado = isset($_GET['carregar']) || isset($_GET['data_inicio']);
 
         // Monta array de filtros
         $filtros = [
@@ -51,13 +54,15 @@ class EstornoVendasController extends Controller
             'pessoa_id'      => $pessoaId,
         ];
 
-        // Consulta vendas elegíveis para estorno conforme o tipo selecionado
+        // Consulta vendas elegíveis para estorno se o usuário acionou Carregar
         $vendas = [];
-        if ($vendaAvulsa === 'sim') {
-            $vendas = VendaBalcao::listarParaEstorno($filtros);
-        } else {
-            // Vendas agendadas online vinculadas a Alunos (Pedidos)
-            $vendas = Pedido::listarParaEstorno($filtros);
+        if ($carregado) {
+            if ($vendaAvulsa === 'sim') {
+                $vendas = VendaBalcao::listarParaEstorno($filtros);
+            } else {
+                // Vendas agendadas online vinculadas a Alunos (Pedidos)
+                $vendas = Pedido::listarParaEstorno($filtros);
+            }
         }
 
         // Listas para os filtros da tela
@@ -95,6 +100,7 @@ class EstornoVendasController extends Controller
             'dataInicio'            => $dataInicio,
             'dataFim'               => $dataFim,
             'motivoFiltro'          => $motivoFiltro,
+            'carregado'             => $carregado,
             'vendas'                => $vendas,
             'alunos'                => $alunos,
             'colaboradores'         => $colaboradores,

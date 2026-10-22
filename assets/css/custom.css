@@ -250,6 +250,18 @@ input[type="number"].text-end {
   color: var(--text-on-primary) !important;
 }
 
+.btn-check:checked + .btn-outline-secondary,
+.btn-check:checked + .btn.btn-outline-secondary {
+  background-color: #334155 !important;
+  border-color: #1e293b !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.table-primary-subtle {
+  background-color: #eff6ff !important;
+}
+
 .btn-success,
 .btn-enterprise.btn-success {
   background-color: var(--action-success);
