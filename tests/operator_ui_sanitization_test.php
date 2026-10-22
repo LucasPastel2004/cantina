@@ -164,8 +164,15 @@ assertCondition(
 );
 
 assertCondition(
-    str_contains($htmlAdminCompleto, 'Entrada XML NF-e'),
-    'Tela /admin EXIBE "Entrada XML NF-e" para o Administrador',
+    !str_contains($htmlAdminCompleto, 'Entrada XML NF-e'),
+    'Tela /admin NÃO contém mais "Entrada XML NF-e"',
+    $testsPassed,
+    $testsFailed
+);
+
+assertCondition(
+    str_contains($htmlAdminCompleto, 'Entrada de Estoque'),
+    'Tela /admin EXIBE "Entrada de Estoque" para o Administrador',
     $testsPassed,
     $testsFailed
 );

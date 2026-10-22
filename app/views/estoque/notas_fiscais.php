@@ -30,11 +30,11 @@ $filtros = $filtros ?? ['busca' => '', 'data_inicio' => '', 'data_fim' => ''];
             <p class="text-secondary text-microcopy mb-0">Repositório de notas fiscais importadas e histórico de abastecimento físico do estoque.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="<?php echo $baseUrl; ?>/estoque/importar-xml" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1">
+            <a href="<?php echo $baseUrl; ?>/estoque/entrada" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                     <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/>
                 </svg>
-                Nova Entrada via XML
+                Nova Entrada de Estoque
             </a>
             <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-primary btn-sm">
                 Grade de Saldos

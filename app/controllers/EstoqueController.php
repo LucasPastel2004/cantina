@@ -278,14 +278,12 @@ class EstoqueController extends Controller
     }
 
     /**
-     * Tela 6.2: Upload de XML de NF-e (Acesso exclusivo para Administrador)
+     * Tela 6.2: Entrada via XML de NF-e (Descontinuada - Redireciona para Entrada de Estoque)
      */
     public function importarXml(): void
     {
-        $this->render('estoque/importar_xml', [
-            'activeMenu' => 'xml',
-            'title'      => 'Importação de Entrada via XML de NF-e'
-        ], 'admin');
+        Session::setFlash('info', 'A importação de NF-e via XML foi descontinuada. Utilize a tela de Entrada de Estoque.');
+        $this->redirect('/estoque/entrada');
     }
 
     /**

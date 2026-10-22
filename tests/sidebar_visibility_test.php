@@ -77,8 +77,15 @@ assertCondition(
 );
 
 assertCondition(
-    str_contains($htmlAdmin, '/estoque/importar-xml'),
-    'Link Entrada XML NF-e (/estoque/importar-xml) presente na sidebar para Administrador',
+    !str_contains($htmlAdmin, '/estoque/importar-xml'),
+    'Link Entrada XML NF-e (/estoque/importar-xml) REMOVIDO da sidebar para Administrador',
+    $testsPassed,
+    $testsFailed
+);
+
+assertCondition(
+    str_contains($htmlAdmin, '/estoque/entrada'),
+    'Link Entrada de Estoque (/estoque/entrada) presente na sidebar para Administrador',
     $testsPassed,
     $testsFailed
 );
