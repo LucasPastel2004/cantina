@@ -207,7 +207,7 @@ $carregado = $carregado ?? false;
     <input type="hidden" name="data_fim" value="<?php echo htmlspecialchars($dataFim, ENT_QUOTES, 'UTF-8'); ?>">
     <input type="hidden" name="motivo_estorno" id="hiddenMotivoEstorno" value="">
 
-    <!-- Tabela de Vendas (Colunas estritas do Nutre: Checkbox | Data | Hora | Valor total | Pessoa) -->
+    <!-- Tabela de Vendas (Colunas do Nutre com botão Info Venda por linha) -->
     <div class="card-enterprise mb-3">
         <div class="table-responsive">
             <table class="table table-hover table-striped table-sm mb-0 align-middle" id="tabelaVendasEstorno">
@@ -220,12 +220,13 @@ $carregado = $carregado ?? false;
                         <th style="width: 100px; font-weight: 600; font-size: 12px;" class="font-tabular">Hora</th>
                         <th style="width: 130px; font-weight: 600; font-size: 12px; text-align: right;" class="font-tabular">Valor total</th>
                         <th style="font-weight: 600; font-size: 12px;">Pessoa</th>
+                        <th style="width: 130px; font-weight: 600; font-size: 12px; text-align: center;">Informações</th>
                     </tr>
                 </thead>
                 <tbody id="corpoTabelaVendas">
                     <?php if (!$carregado || empty($vendas)): ?>
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-secondary">
+                            <td colspan="6" class="text-center py-4 text-secondary">
                                 <div class="py-3">
                                     <div class="small font-weight-medium text-secondary">
                                         Não há nada para mostrar aqui
@@ -275,6 +276,18 @@ $carregado = $carregado ?? false;
                                         <div class="text-secondary text-microcopy"><?php echo htmlspecialchars($detalhePessoa, ENT_QUOTES, 'UTF-8'); ?></div>
                                     <?php endif; ?>
                                 </td>
+                                <td style="text-align: center;" onclick="event.stopPropagation();">
+                                    <button type="button" class="btn btn-enterprise btn-outline-secondary btn-sm py-1 px-2 d-inline-flex align-items-center gap-1 btn-ver-detalhes-linha" 
+                                            data-id="<?php echo $vId; ?>" 
+                                            data-tipo="<?php echo $tipoOrigem; ?>" 
+                                            title="Ver Informações VENDAS desta venda específica">
+                                        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                            <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.2"/>
+                                        </svg>
+                                        <span style="font-size: 11px; font-weight: 500;">Info Venda</span>
+                                    </button>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -282,29 +295,15 @@ $carregado = $carregado ?? false;
             </table>
         </div>
 
-        <!-- Rodapé do Data-Grid com Barra de Ferramentas (Padrão Nutre: Ícones no rodapé à esquerda com "Informações VENDAS") -->
+        <!-- Rodapé do Data-Grid: Totais e Dica operacional -->
         <div class="card-enterprise-footer bg-light border-top p-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <!-- Barra de Ferramentas / Ações do Grid (Estilo Nutre) -->
-            <div class="d-flex align-items-center gap-1">
-                <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" id="btnToolbarRecarregar" title="Recarregar">
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-                    </svg>
-                </button>
-                
-                <!-- Botão Informações Vendas: Anotado à mão pelo usuário "(i) -> Informações VENDAS" -->
-                <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5" id="btnInfoVendas" title="Informações VENDAS (Ver detalhes e itens da venda selecionada)">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-                        <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.2"/>
-                    </svg>
-                    <span style="font-size: 12px; font-weight: 500;">Informações VENDAS</span>
-                </button>
+            <div class="small text-secondary">
+                <span class="badge bg-white text-secondary border font-tabular" style="font-size: 10px;">Dica</span>
+                Clique em <strong>Info Venda</strong> na linha ou dê duplo clique para visualizar os itens consumidos.
             </div>
 
             <!-- Indicadores e Totais da Seleção à direita -->
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3 ms-auto">
                 <div class="small text-secondary">
                     Total de registros: <span class="font-tabular font-weight-bold text-dark" id="txtTotalRegistros"><?php echo count($vendas); ?></span>
                 </div>
@@ -410,8 +409,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectMotivoEstorno = document.getElementById('selectMotivoEstorno');
     const inputMotivoOutro = document.getElementById('inputMotivoOutro');
     const hiddenMotivoEstorno = document.getElementById('hiddenMotivoEstorno');
-    const btnToolbarRecarregar = document.getElementById('btnToolbarRecarregar');
-    const btnInfoVendas = document.getElementById('btnInfoVendas');
 
     // Filtros de Alternância
     const radiosVendaAvulsa = document.querySelectorAll('input[name="venda_avulsa"]');
@@ -517,35 +514,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Botão Recarregar Toolbar
-    if (btnToolbarRecarregar) {
-        btnToolbarRecarregar.addEventListener('click', function() {
-            formFiltros.submit();
+    // Botão Info Venda em cada linha da tabela (Informações VENDAS por item)
+    const btnsInfoLinha = document.querySelectorAll('.btn-ver-detalhes-linha');
+    btnsInfoLinha.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            abrirDetalhesVenda(this.dataset.id, this.dataset.tipo);
         });
-    }
-
-    // Botão Informações VENDAS
-    if (btnInfoVendas) {
-        btnInfoVendas.addEventListener('click', function() {
-            // Verifica se há linha ativa ou ao menos um checkbox marcado
-            let targetTr = linhaSelecionadaAtiva;
-            if (!targetTr) {
-                const primeiroChecado = document.querySelector('.check-venda:checked');
-                if (primeiroChecado) targetTr = primeiroChecado.closest('tr');
-            }
-
-            if (!targetTr && linhasTabela.length === 1) {
-                targetTr = linhasTabela[0];
-            }
-
-            if (!targetTr) {
-                alert('Selecione uma venda na tabela para visualizar as informações.');
-                return;
-            }
-
-            abrirDetalhesVenda(targetTr.dataset.id, targetTr.dataset.tipo);
-        });
-    }
+    });
 
     // Alternador Venda Avulsa (Sim / Não)
     radiosVendaAvulsa.forEach(function(r) {

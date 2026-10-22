@@ -85,7 +85,7 @@ assertCustom(str_contains($outputInicial, 'id="inputBuscaPessoa"'), "Campo de bu
 assertCustom(str_contains($outputInicial, 'name="data_inicio"'), "Campo Período De presente", $testsPassed, $testsFailed);
 assertCustom(str_contains($outputInicial, 'name="data_fim"'), "Campo Período Até presente", $testsPassed, $testsFailed);
 assertCustom(str_contains($outputInicial, 'id="btnCarregar"'), "Botão 'Carregar' presente no painel de filtros", $testsPassed, $testsFailed);
-assertCustom(str_contains($outputInicial, 'Informações VENDAS'), "Botão da barra inferior 'Informações VENDAS' presente", $testsPassed, $testsFailed);
+assertCustom(str_contains($outputInicial, 'Informações'), "Coluna 'Informações' presente no cabeçalho da tabela", $testsPassed, $testsFailed);
 
 assertCustom(str_contains($outputInicial, '<option value="colaborador" >Colaborador</option>') || str_contains($outputInicial, 'value="colaborador"'), "Opção Colaborador presente no select Filtrar por", $testsPassed, $testsFailed);
 assertCustom(!str_contains($outputInicial, '<option value="colaborador" disabled>'), "Opção Colaborador NÃO está desabilitada quando Venda Avulsa é Não", $testsPassed, $testsFailed);
@@ -143,6 +143,7 @@ assertCustom(str_contains($outputCarregado, '<th style="width: 120px; font-weigh
 assertCustom(str_contains($outputCarregado, '<th style="width: 100px; font-weight: 600; font-size: 12px;" class="font-tabular">Hora</th>'), "Coluna Hora com formatação tabular presente", $testsPassed, $testsFailed);
 assertCustom(str_contains($outputCarregado, '<th style="width: 130px; font-weight: 600; font-size: 12px; text-align: right;" class="font-tabular">Valor total</th>'), "Coluna Valor total alinhada à direita presente", $testsPassed, $testsFailed);
 assertCustom(str_contains($outputCarregado, '<th style="font-weight: 600; font-size: 12px;">Pessoa</th>'), "Coluna Pessoa presente", $testsPassed, $testsFailed);
+assertCustom(str_contains($outputCarregado, '<th style="width: 130px; font-weight: 600; font-size: 12px; text-align: center;">Informações</th>'), "Coluna Informações presente", $testsPassed, $testsFailed);
 assertCustom(!str_contains($outputCarregado, '<th>Tipo / Status</th>'), "Coluna legada 'Tipo / Status' removida", $testsPassed, $testsFailed);
 assertCustom(!str_contains($outputCarregado, '<th>Ações</th>'), "Coluna legada de ações por linha removida", $testsPassed, $testsFailed);
 
