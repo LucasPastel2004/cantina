@@ -68,11 +68,6 @@ $produtosRentaveis = $graficos['produtos_rentaveis'] ?? [];
             </div>
 
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <a href="<?php echo $baseUrl; ?>/financeiro/despesas" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1" title="Lançar e gerenciar despesas da cantina">
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M14 3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h12zM2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2z"/><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
-                    <span>Lançar Despesas</span>
-                </a>
-
                 <!-- Dupla Oficial de Emissão do DRE -->
                 <button type="submit" formaction="<?php echo $baseUrl; ?>/financeiro/dre/imprimir" formtarget="_blank" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1" title="Visualizar, imprimir ou salvar em PDF o DRE oficial A4">
                     <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>

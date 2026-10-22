@@ -28,10 +28,6 @@ $baseUrl = $baseUrl ?? '';
             </p>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <a href="<?php echo $baseUrl; ?>/financeiro/dre" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h4v-3zM1 4h4v3H1V4zm0 4h4v3H1V8zm0 4h4v3H1v-3zm5-8h4v3H6V4zm0 4h4v3H6V8zm0 4h4v3H6v-3z"/></svg>
-                <span>Ver DRE Gerencial</span>
-            </a>
             <button type="button" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1" onclick="abrirModalNovaDespesa()">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 8 2z"/></svg>
                 <span>Nova Despesa</span>
