@@ -86,89 +86,11 @@ class RelatoriosController extends Controller
     }
 
     /**
-     * Central / Hub de Relatórios Gerenciais (FSD Tela 8.1)
+     * Central de Relatórios Gerenciais (Descontinuada — Redireciona para o Painel da Cantina)
      */
     public function index(): void
     {
-        $mesAtual = date('m');
-        $anoAtual = date('Y');
-
-        // Métricas consolidadas do mês corrente para a Stat-Strip do Hub
-        $pdo = \App\Core\Model::getPdo();
-
-        // 1. Faturamento Total do Mês (Pedidos agendados/entregues + Vendas balcão realizadas)
-        $sqlFat = "
-            SELECT 
-                (
-                    SELECT COALESCE(SUM(valor_total), 0)
-                    FROM pedidos
-                    WHERE status IN ('agendado', 'editado', 'entregue')
-                      AND MONTH(data_consumo) = :mes1 AND YEAR(data_consumo) = :ano1
-                ) + (
-                    SELECT COALESCE(SUM(valor_total), 0)
-                    FROM vendas_balcao
-                    WHERE MONTH(created_at) = :mes2 AND YEAR(created_at) = :ano2
-                ) AS faturamento_total
-        ";
-        $stmt = $pdo->prepare($sqlFat);
-        $stmt->execute([
-            'mes1' => $mesAtual, 'ano1' => $anoAtual,
-            'mes2' => $mesAtual, 'ano2' => $anoAtual
-        ]);
-        $fatRow = $stmt->fetch(\PDO::FETCH_ASSOC);
-        $faturamentoMes = (float)($fatRow['faturamento_total'] ?? 0.0);
-
-        // 2. Total de Peças/Lanches Comercializados no Mês
-        $sqlLanches = "
-            SELECT 
-                (
-                    SELECT COALESCE(SUM(ip.quantidade), 0)
-                    FROM itens_pedido ip
-                    INNER JOIN pedidos p ON p.id = ip.pedido_id
-                    WHERE p.status IN ('agendado', 'editado', 'entregue')
-                      AND MONTH(p.data_consumo) = :mes1 AND YEAR(p.data_consumo) = :ano1
-                ) + (
-                    SELECT COALESCE(SUM(ivb.quantidade), 0)
-                    FROM itens_venda_balcao ivb
-                    INNER JOIN vendas_balcao vb ON vb.id = ivb.venda_balcao_id
-                    WHERE MONTH(vb.created_at) = :mes2 AND YEAR(vb.created_at) = :ano2
-                ) AS lanches_total
-        ";
-        $stmtLanches = $pdo->prepare($sqlLanches);
-        $stmtLanches->execute([
-            'mes1' => $mesAtual, 'ano1' => $anoAtual,
-            'mes2' => $mesAtual, 'ano2' => $anoAtual
-        ]);
-        $lanchesRow = $stmtLanches->fetch(\PDO::FETCH_ASSOC);
-        $lanchesMes = (int)($lanchesRow['lanches_total'] ?? 0);
-
-        // 3. Montante de Vendas no Balcão PDV no Mês
-        $sqlBalcao = "
-            SELECT COALESCE(SUM(valor_total), 0) AS total_balcao
-            FROM vendas_balcao
-            WHERE MONTH(created_at) = :mes AND YEAR(created_at) = :ano
-              AND (status IS NULL OR status = 'concluida')
-        ";
-        $stmtBalcao = $pdo->prepare($sqlBalcao);
-        $stmtBalcao->execute(['mes' => $mesAtual, 'ano' => $anoAtual]);
-        $balcaoRow = $stmtBalcao->fetch(\PDO::FETCH_ASSOC);
-        $faturamentoBalcaoMes = (float)($balcaoRow['total_balcao'] ?? 0.0);
-
-        // 4. Famílias com Saldo Devedor ou Bloqueadas por MED
-        $totalDevedores = Responsavel::contarNegativadosMed();
-        $saldoTotalDevedor = Responsavel::somarSaldoDevedorMed();
-
-        $this->render('relatorios/index', [
-            'pageTitle'            => 'Central de Relatórios Gerenciais',
-            'activeMenu'           => 'relatorios',
-            'user'                 => Auth::user(),
-            'faturamentoMes'       => $faturamentoMes,
-            'lanchesMes'           => $lanchesMes,
-            'faturamentoBalcaoMes' => $faturamentoBalcaoMes,
-            'totalDevedores'       => $totalDevedores,
-            'saldoTotalDevedor'    => $saldoTotalDevedor,
-            'mesReferencia'        => date('m/Y')
-        ], 'admin');
+        $this->redirect('/admin');
     }
 
     /**
@@ -615,7 +537,7 @@ class RelatoriosController extends Controller
     public function descontoFolha(): void
     {
         Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
-        $this->redirect('/relatorios');
+        $this->redirect('/admin');
     }
 
     /**
@@ -624,7 +546,7 @@ class RelatoriosController extends Controller
     public function descontoFolhaPdf(): void
     {
         Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
-        $this->redirect('/relatorios');
+        $this->redirect('/admin');
     }
 
     /**
@@ -633,7 +555,7 @@ class RelatoriosController extends Controller
     public function descontoFolhaCsv(): void
     {
         Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
-        $this->redirect('/relatorios');
+        $this->redirect('/admin');
     }
 
     /**
@@ -650,7 +572,7 @@ class RelatoriosController extends Controller
     public function descontoFolhaIndividualPdf(): void
     {
         Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
-        $this->redirect('/relatorios');
+        $this->redirect('/admin');
     }
 
     /**
@@ -659,7 +581,7 @@ class RelatoriosController extends Controller
     public function descontoFolhaIndividualImprimir(): void
     {
         Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
-        $this->redirect('/relatorios');
+        $this->redirect('/admin');
     }
 
     /**
@@ -668,7 +590,7 @@ class RelatoriosController extends Controller
     public function descontoFolhaLotePdf(): void
     {
         Session::setFlash('warning', 'O relatório de desconto em folha foi descontinuado do sistema.');
-        $this->redirect('/relatorios');
+        $this->redirect('/admin');
     }
 
     /**
