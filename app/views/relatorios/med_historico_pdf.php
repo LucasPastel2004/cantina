@@ -17,6 +17,20 @@ $filtros = $dados['filtros'] ?? [];
 $emissao = date('d/m/Y H:i:s');
 $operador = $dados['operador'] ?? 'Administração Geral';
 $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
+
+$infoFiltros = [];
+if (!empty($filtros['busca'])) {
+    $infoFiltros[] = 'Busca: "' . htmlspecialchars($filtros['busca'], ENT_QUOTES, 'UTF-8') . '"';
+}
+if (!empty($filtros['tipo']) && $filtros['tipo'] !== 'todos') {
+    $infoFiltros[] = ($filtros['tipo'] === 'estornos') ? 'Tipo: Apenas Estornos MED BACEN' : 'Tipo: Apenas Quitações / Ajustes';
+}
+if (!empty($filtros['data_inicio']) || !empty($filtros['data_fim'])) {
+    $dIni = !empty($filtros['data_inicio']) ? date('d/m/Y', strtotime($filtros['data_inicio'])) : 'início';
+    $dFim = !empty($filtros['data_fim']) ? date('d/m/Y', strtotime($filtros['data_fim'])) : 'hoje';
+    $infoFiltros[] = "Período: {$dIni} a {$dFim}";
+}
+$strFiltros = !empty($infoFiltros) ? implode(' &bull; ', $infoFiltros) : 'Todos os registros históricos';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -278,7 +292,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
                     <div>
                         <div class="school-title">COLÉGIO MONTEIRO LOBATO</div>
                         <div class="report-title">Relatório de Histórico de Eventos MED & Quitações</div>
-                        <div class="report-sub">Emissão: <?php echo $emissao; ?> &bull; Responsável: <?php echo htmlspecialchars($operador); ?></div>
+                        <div class="report-sub">Emissão: <?php echo $emissao; ?> &bull; Responsável: <?php echo htmlspecialchars($operador); ?> &bull; <?php echo $strFiltros; ?></div>
                     </div>
                 </div>
                 <div style="text-align: right; padding-right: 2px;">
