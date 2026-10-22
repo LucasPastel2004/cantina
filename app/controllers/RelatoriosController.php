@@ -228,42 +228,12 @@ class RelatoriosController extends Controller
     /**
      * Download do PDF A4 Timbrado do Extrato do Aluno
      */
+    /**
+     * Emissão do Extrato do Aluno para Impressão e Print to PDF Nativo
+     */
     public function extratoAlunoPdf(): void
     {
-        $alunoId = (int)$this->input('aluno_id', 0);
-        $dataInicio = trim((string)$this->input('data_inicio', date('Y-m-01')));
-        $dataFim = trim((string)$this->input('data_fim', date('Y-m-d')));
-        $apenasSaldo = ($this->input('apenas_saldo', 'nao') === 'sim');
-        $saldoApenasPeriodo = ($this->input('saldo_apenas_periodo', 'nao') === 'sim');
-
-        if ($alunoId <= 0) {
-            Session::setFlash('danger', 'Selecione um aluno para gerar o extrato em PDF.');
-            $this->redirect('/relatorios/extrato-aluno');
-            return;
-        }
-
-        $dadosExtrato = $this->obterDadosExtratoAluno($alunoId, $dataInicio, $dataFim, $apenasSaldo, $saldoApenasPeriodo, 1, 1, 50, false);
-        if (!$dadosExtrato) {
-            Session::setFlash('danger', 'Aluno não localizado.');
-            $this->redirect('/relatorios/extrato-aluno');
-            return;
-        }
-
-        $usuario = Auth::user();
-        $dadosExtrato['operador'] = $usuario['nome'] ?? 'Atendimento Cantina';
-
-        $pdfBinario = PdfService::gerarExtratoConsumoAlunoPdf($dadosExtrato);
-        $matricula = preg_replace('/[^A-Za-z0-9]/', '', $dadosExtrato['aluno']['matricula'] ?? 'aluno');
-        $nomeArquivo = 'extrato_aluno_' . $matricula . '_' . date('Ymd_His') . '.pdf';
-
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-        header('Content-Length: ' . strlen($pdfBinario));
-        header('Cache-Control: private, max-age=0, must-revalidate');
-        header('Pragma: public');
-
-        echo $pdfBinario;
-        exit;
+        $this->extratoAlunoImprimir();
     }
 
     /**
@@ -388,6 +358,7 @@ class RelatoriosController extends Controller
                 'id'         => (int)$a['id'],
                 'nome'       => $a['nome'],
                 'matricula'  => $a['matricula'],
+                'turma_id'   => (int)($a['turma_id'] ?? 0),
                 'turma'      => ($a['serie'] ?? '') . ' ' . ($a['nome_turma'] ?? ''),
                 'turno'      => ucfirst($a['turno'] ?? 'matutino'),
                 'saldo'      => (float)($a['saldo_atual'] ?? 0.0),
@@ -784,61 +755,11 @@ class RelatoriosController extends Controller
     }
 
     /**
-     * Emissão do Relatório A4 em PDF Timbrado do Histórico de Eventos MED e Quitações
+     * Emissão do Relatório A4 para Impressão e Print to PDF Nativo do Histórico de Eventos MED e Quitações
      */
     public function devedoresPdf(): void
     {
-        $tipo = trim((string)$this->input('tipo', 'todos'));
-        $busca = trim((string)$this->input('busca', ''));
-        $dataInicio = trim((string)$this->input('data_inicio', ''));
-        $dataFim = trim((string)$this->input('data_fim', ''));
-
-        $filtros = [
-            'tipo'        => $tipo,
-            'busca'       => $busca,
-            'data_inicio' => $dataInicio,
-            'data_fim'    => $dataFim
-        ];
-
-        $resultado = TransacaoCarteira::listarHistoricoMedPaginado($filtros, 1, 1000);
-        $usuario = Auth::user();
-
-        $html = PdfService::renderView('relatorios/med_historico_pdf', [
-            'dadosMed' => [
-                'eventos'         => $resultado['itens'],
-                'total_eventos'   => $resultado['total'],
-                'total_estornos'  => $resultado['total_estornos'],
-                'total_quitacoes' => $resultado['total_quitacoes'],
-                'filtros'         => $filtros,
-                'operador'        => $usuario['nome'] ?? 'Administração'
-            ]
-        ]);
-
-        $pdfBinario = PdfService::htmlToPdf($html, [
-            'preferCssPageSize' => 'true',
-            'printBackground'   => 'true'
-        ]);
-
-        // Se Gotenberg não responder, renderiza a visualização HTML oficial para impressão
-        if (empty($pdfBinario) || strlen($pdfBinario) < 2000) {
-            $this->devedoresImprimir();
-            return;
-        }
-
-        $nomeArquivo = 'relatorio_historico_med_' . date('Ymd_His') . '.pdf';
-
-        if (!headers_sent()) {
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-            header('Content-Length: ' . strlen($pdfBinario));
-            header('Cache-Control: private, max-age=0, must-revalidate');
-            header('Pragma: public');
-        }
-
-        echo $pdfBinario;
-        if (!defined('CANTINA_TEST_MODE')) {
-            exit;
-        }
+        $this->devedoresImprimir();
     }
 
     /**
@@ -2080,41 +2001,14 @@ class RelatoriosController extends Controller
     }
 
     /**
-     * Geração e download de PDF oficial (Retrato ou Paisagem via Gotenberg/Chromium)
+     * Emissão do Relatório Oficial de Movimentações de Estoque para Impressão e Print to PDF Nativo
      */
     public function estoqueMovimentacoesPdf(): void
     {
         $dados = $this->obterDadosMovimentacoesEstoqueAvancadas($_GET);
         $dados['baseUrl'] = $this->getBaseUrl();
 
-        $formato = $dados['formato_layout'] ?? $dados['formato_leiaute'] ?? 'retrato';
-        $isLandscape = ($formato === 'paisagem');
-
         $html = PdfService::renderView('relatorios/estoque_movimentacoes_pdf', $dados);
-
-        // Dispara compilação via Gotenberg com preferência CSS e parâmetro landscape explícito
-        $pdf = PdfService::htmlToPdf($html, [
-            'landscape'         => $isLandscape,
-            'preferCssPageSize' => 'true',
-            'printBackground'   => 'true'
-        ]);
-
-        if ($pdf !== null && str_starts_with($pdf, '%PDF')) {
-            $dataInicio = preg_replace('/[^0-9\-]/', '', $dados['data_inicio'] ?? date('Y-m-d'));
-            $dataFim    = preg_replace('/[^0-9\-]/', '', $dados['data_fim'] ?? date('Y-m-d'));
-            $filename   = "relatorio_movimentacoes_estoque_{$dataInicio}_{$dataFim}.pdf";
-
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: inline; filename="' . $filename . '"');
-            header('Content-Length: ' . strlen($pdf));
-            header('Cache-Control: private, max-age=0, must-revalidate');
-            header('Pragma: public');
-
-            echo $pdf;
-            exit;
-        }
-
-        // Fallback defensivo caso Gotenberg esteja indisponível: renderiza espelho HTML para impressão
         echo $html;
         exit;
     }
@@ -2888,57 +2782,11 @@ class RelatoriosController extends Controller
     }
 
     /**
-     * Download em PDF A4 do Relatório de Arrecadação via Gotenberg
+     * Emissão do Relatório de Arrecadação para Impressão e Print to PDF Nativo
      */
     public function arrecadacaoPdf(): void
     {
-        $hoje = date('Y-m-d');
-        $primeiroDiaMes = date('Y-m-01');
-        $dataInicio = $_GET['data_inicio'] ?? $primeiroDiaMes;
-        $dataFim    = $_GET['data_fim'] ?? $hoje;
-
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataInicio)) {
-            $dataInicio = $primeiroDiaMes;
-        }
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataFim)) {
-            $dataFim = $hoje;
-        }
-        if ($dataInicio > $dataFim) {
-            $tmp = $dataInicio;
-            $dataInicio = $dataFim;
-            $dataFim = $tmp;
-        }
-
-        $dados = $this->obterDadosArrecadacao($dataInicio, $dataFim);
-        $dados['baseUrl'] = $this->getBaseUrl();
-        $dados['isPdf'] = true;
-        $dados['dados'] = $dados;
-
-        $html = PdfService::renderView('relatorios/arrecadacao_pdf', $dados);
-
-        $pdf = PdfService::htmlToPdf($html, [
-            'preferCssPageSize' => 'true',
-            'printBackground'   => 'true'
-        ]);
-
-        if ($pdf !== null && str_starts_with($pdf, '%PDF')) {
-            $filename = "arrecadacao_financeira_{$dataInicio}_{$dataFim}.pdf";
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="' . $filename . '"');
-            header('Content-Length: ' . strlen($pdf));
-            header('Cache-Control: private, max-age=0, must-revalidate');
-            header('Pragma: public');
-            echo $pdf;
-            if (!defined('CANTINA_TEST_MODE')) {
-                exit;
-            }
-            return;
-        }
-
-        echo $html;
-        if (!defined('CANTINA_TEST_MODE')) {
-            exit;
-        }
+        $this->arrecadacaoImprimir();
     }
 
     /**

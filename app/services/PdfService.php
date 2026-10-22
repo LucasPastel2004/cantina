@@ -3,10 +3,11 @@
  * Cantina Web — Colégio Monteiro Lobato
  * Serviço de Geração de Documentos e Relatórios em PDF
  * 
- * Arquitetura Moderna de Views HTML + CSS com motor Chromium via Gotenberg (Docker/API)
- * e fallback resiliente para impressão e gerador canônico de contingência.
+ * Arquitetura de Views HTML + CSS com folhas de estilo estritas @media print
+ * projetadas para emissão nativa via função "Print to PDF" do navegador (window.print())
+ * e relatórios A4 / cupons térmicos de 80mm de alta fidelidade sem microsserviços externos.
  * 
- * Conforme docs/FSD.md e docs/DESIGN.md (Fase 20 de docs/PLANO.md)
+ * Conforme docs/FSD.md, docs/DESIGN.md e diretrizes de produção Hostnet em AGENTS.md
  */
 
 namespace App\Services;
@@ -150,105 +151,21 @@ class PdfService
     }
 
     /**
-     * Converte HTML para PDF binário através da API do Gotenberg 8 (Chromium)
-     * Retorna null caso o serviço Gotenberg esteja indisponível ou falhe.
+     * Converte HTML para PDF binário.
+     * 
+     * NOTA ARQUITETURAL MANDATÓRIA (Ambiente de Produção Hostnet):
+     * A Hostnet não roda contêineres Docker nem serviços headless em background.
+     * Toda e qualquer emissão ou salvamento de relatórios em PDF no sistema é executada
+     * exclusivamente via função nativa "Print to PDF" do navegador (window.print() com @media print).
+     * Este método retorna null para garantir que o fluxo canônico entregue o espelho HTML oficial de impressão.
      * 
      * @param string $html Código HTML completo
-     * @param array $opcoes Parâmetros opcionais (paperWidth, paperHeight, margins, etc.)
-     * @return string|null String binária do PDF gerado ou null em caso de indisponibilidade
+     * @param array $opcoes Parâmetros opcionais
+     * @return string|null Sempre null para acionamento do Print to PDF nativo
      */
     public static function htmlToPdf(string $html, array $opcoes = []): ?string
     {
-        // 1. Checa configuração do driver e url
-        $configPath = dirname(__DIR__, 2) . '/config/config.php';
-        $config = file_exists($configPath) ? include $configPath : [];
-        $pdfConfig = $config['pdf'] ?? [];
-
-        $driver = $pdfConfig['driver'] ?? (getenv('PDF_DRIVER') ?: 'gotenberg');
-        if ($driver === 'native_html') {
-            return null; // Força fallback nativo
-        }
-
-        $gotenbergUrl = $pdfConfig['gotenberg_url'] ?? (getenv('GOTENBERG_URL') ?: (file_exists('/.dockerenv') ? 'http://gotenberg:3000' : 'http://localhost:3000'));
-        $timeout = (int)($pdfConfig['timeout'] ?? 15);
-        $endpoint = rtrim($gotenbergUrl, '/') . '/forms/chromium/convert/html';
-
-        if (!function_exists('curl_init')) {
-            return null;
-        }
-
-        // Prepara multipart/form-data
-        $tempFile = tempnam(sys_get_temp_dir(), 'gotenberg_html_');
-        file_put_contents($tempFile, $html);
-
-        $postFields = [
-            'files' => new \CURLFile($tempFile, 'text/html', 'index.html'),
-            'preferCssPageSize' => $opcoes['preferCssPageSize'] ?? 'true',
-            'printBackground'   => $opcoes['printBackground'] ?? 'true',
-            'emulatedMediaType' => $opcoes['emulatedMediaType'] ?? 'print',
-        ];
-
-        if (isset($opcoes['marginTop'])) {
-            $postFields['marginTop'] = (string)$opcoes['marginTop'];
-        }
-        if (isset($opcoes['marginBottom'])) {
-            $postFields['marginBottom'] = (string)$opcoes['marginBottom'];
-        }
-        if (isset($opcoes['marginLeft'])) {
-            $postFields['marginLeft'] = (string)$opcoes['marginLeft'];
-        }
-        if (isset($opcoes['marginRight'])) {
-            $postFields['marginRight'] = (string)$opcoes['marginRight'];
-        }
-
-        if (isset($opcoes['paperWidth'])) {
-            $postFields['paperWidth'] = (string)$opcoes['paperWidth'];
-        }
-        if (isset($opcoes['paperHeight'])) {
-            $postFields['paperHeight'] = (string)$opcoes['paperHeight'];
-        }
-        if (isset($opcoes['landscape'])) {
-            $postFields['landscape'] = $opcoes['landscape'] ? 'true' : 'false';
-        }
-        if (isset($opcoes['scale'])) {
-            $postFields['scale'] = (string)$opcoes['scale'];
-        }
-
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL            => $endpoint,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $postFields,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 3,
-            CURLOPT_TIMEOUT        => $timeout,
-            CURLOPT_FAILONERROR    => false,
-            CURLOPT_FOLLOWLOCATION => true
-        ]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-
-        @unlink($tempFile);
-
-        if ($httpCode === 200 && is_string($response) && str_starts_with($response, '%PDF')) {
-            return $response;
-        }
-
-        // Se Gotenberg falhou, registra contingência no log
-        $logFile = dirname(__DIR__, 2) . '/storage/logs/error.log';
-        if (is_dir(dirname($logFile))) {
-            @file_put_contents($logFile, sprintf(
-                "[%s] [PDF_GOTENBERG_FALLBACK] Falha ao contatar Gotenberg em %s (HTTP %d, Error: %s). Acionando gerador canônico de contingência.\n",
-                date('Y-m-d H:i:s'),
-                $endpoint,
-                $httpCode,
-                $curlError ?: 'Resposta não-PDF'
-            ), FILE_APPEND);
-        }
-
+        // Emissão 100% nativa via navegador (Print to PDF / window.print())
         return null;
     }
 

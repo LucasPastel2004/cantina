@@ -152,57 +152,10 @@ class DreController extends Controller
     }
 
     /**
-     * Gera e efetua download direto do relatório DRE em PDF A4 timbrado via Gotenberg/Chromium para o período selecionado.
+     * Emissão do relatório DRE para impressão e Print to PDF Nativo
      */
     public function pdf(): void
     {
-        [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
-        $regime = (isset($_GET['regime']) && $_GET['regime'] === 'caixa') ? 'caixa' : 'competencia';
-        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim, $regime);
-        $dreAno = $this->dreModel->calcularAnoComparativo($ano, $regime);
-        $config = Configuracao::obter();
-        $logoBase64 = $this->obterLogoBase64();
-
-        $viewVars = [
-            'ano'         => $ano,
-            'dataInicio'  => $dataInicio,
-            'dataFim'     => $dataFim,
-            'regime'      => $regime,
-            'drePeriodo'  => $drePeriodo,
-            'dre'         => $dreAno,
-            'totais'      => $drePeriodo,
-            'config'      => $config,
-            'logoBase64'  => $logoBase64,
-            'dataEmissao' => date('d/m/Y H:i:s'),
-            'mesesAbrev'  => Dre::MESES_ABREV,
-            'mesesPt'     => Dre::MESES_PT,
-            'isPdf'       => true,
-            'baseUrl'     => $this->getBaseUrl(),
-        ];
-
-        $html = PdfService::renderView('financeiro/dre_pdf', $viewVars);
-
-        // Opções para Gotenberg: documento em modo Paisagem para comportar as colunas perfeitamente
-        $opcoes = [
-            'landscape'         => true,
-            'preferCssPageSize' => true,
-            'emulatedMediaType' => 'print',
-        ];
-
-        $pdfBinario = PdfService::htmlToPdf($html, $opcoes);
-
-        if ($pdfBinario !== null && strlen($pdfBinario) > 1000) {
-            $nomeArquivo = "dre_gerencial_{$dataInicio}_a_{$dataFim}_" . date('Ymd_His') . ".pdf";
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-            header('Content-Length: ' . strlen($pdfBinario));
-            header('Cache-Control: private, max-age=0, must-revalidate');
-            header('Pragma: public');
-            echo $pdfBinario;
-            exit;
-        }
-
-        // Fallback: exibe espelho de impressão caso Gotenberg não responda
         $this->imprimir();
     }
 

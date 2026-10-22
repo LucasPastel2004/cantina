@@ -1847,6 +1847,17 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Sustentação — Eliminação Definitiva de Gotenberg, Padronização Universal Print to PDF e Auto-Preenchimento de Turma (2026-10-22)
+* [x] **Auto-Preenchimento da Turma no Extrato do Aluno:** No script de autocomplete de alunos em `app/views/relatorios/extrato_aluno.php`, o campo de seleção de Turma (`#selectTurma`) agora é automaticamente preenchido com a turma do estudante selecionado (`selectTurma.value = aluno.turma_id`), sincronizado com o campo `turma_id` retornado pelo endpoint `buscarAlunosAjax()`.
+* [x] **Remoção Definitiva do Botão 'Baixar PDF':** Eliminado o botão redundante *"Baixar PDF"* e a função JavaScript `gerarPdfDownload()` em `app/views/relatorios/extrato_aluno.php`. A ação principal oficial permanece estritamente o botão corporativo neutro *"Imprimir / Salvar PDF (A4)"*, que abre o espelho timbrado oficial para emissão e acionamento nativo de impressão ou salvamento como PDF pelo próprio navegador.
+* [x] **Eliminação de Gotenberg do Docker Compose:** Removido o serviço `cantina_gotenberg` (Gotenberg 8) de `docker-compose.yml`, mantendo apenas os contêineres essenciais da aplicação (`cantina_app` e `cantina_db`).
+* [x] **Configuração Oficial Fixada em 'native_html':** Atualizados `config/config.example.php` e `config/config.php` para fixar `'driver' => 'native_html'` e remover qualquer dependência de URL ou porta do Gotenberg.
+* [x] **Desacoplamento Completo em `PdfService.php`:** O método `htmlToPdf()` foi neutralizado para retornar `null` imediatamente sem efetuar cURL para portas externas nem gerar falsos alarmes de contingência no log, consolidando os espelhos HTML A4 com `@media print`.
+* [x] **Alinhamento dos Controladores:** Em `RelatoriosController.php`, `CaixaController.php`, `DreController.php` e `AdminController.php`, todos os endpoints de emissão de PDF foram padronizados para entregar diretamente o espelho HTML oficial de alta fidelidade com acionamento de `window.print()` (Print to PDF).
+* [x] **Diretriz Mandatória Registrada em `AGENTS.md` e Manuais:** Registrada formalmente no `AGENTS.md`, em `docs/MANUTENCAO.md` e `docs/COMO-PEDIR-MUDANCAS.md` a diretriz absoluta de que a plataforma Hostnet não roda Docker e todo e qualquer PDF no sistema é emitido exclusivamente através do recurso nativo "Print to PDF" do navegador.
+
+---
+
 ## Próximo Passo Recomendado
 
 1. **Homologação Externa pela Equipe da Escola:** Equipe da cantina, secretaria e direção realizam testes remotos nas telas operacionais (tickets, corte de turno, PDV) e no Portal da Família a partir de seus computadores e celulares.

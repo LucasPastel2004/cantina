@@ -49,7 +49,7 @@ Todo agente de IA deve seguir rigorosamente o seguinte protocolo de trabalho em 
   * JavaScript puro (Vanilla JS, ES6+) em `assets/js/app.js`, sem frameworks reativos (React, Vue, Angular) ou dependências pesadas de runtime;
   * Bootstrap 5.3.3 compilado e servido exclusivamente de arquivos locais em `assets/css/bootstrap.min.css` e `assets/js/bootstrap.bundle.min.js` (sem dependência de links CDN externos).
 * **Bibliotecas e Microsserviços Auxiliares:**
-  * Microsserviço de impressão PDF: Gotenberg 8 (Chromium headless) orquestrado via Docker para relatórios A4 timbrados simétricos (14mm) e cupons térmicos contínuos em bobina de 80mm;
+  * Impressão e Exportação em PDF (Print to PDF Nativo): O sistema adota exclusivamente a função nativa 'Print to PDF' do navegador (`window.print()`) a partir de espelhos HTML A4 timbrados e cupons térmicos de 80mm com folhas de estilo estritas `@media print`. Sem microsserviços externos ou contêineres Docker (sem Gotenberg), garantindo compatibilidade total com a infraestrutura da Hostnet;
   * Leitura e extração de XML de NF-e: Extensões nativas `SimpleXML` e `DOMDocument`;
   * Leitura de planilhas escolares: Leitor nativo CSV via streaming com `fgetcsv` prioritário e `PhpSpreadsheet` para arquivos `.xlsx`;
   * Gerador Pix / QR Code: Codificação EMVCo nativa pura com cálculo polinomial CRC16 e matriz Reed-Solomon em PHP puro.
@@ -59,10 +59,11 @@ Todo agente de IA deve seguir rigorosamente o seguinte protocolo de trabalho em 
 ## 4. Ambientes do Projeto e Comandos Principais
 
 * **Desenvolvimento Local:**
-  * Docker e Docker Compose (`docker-compose.yml`) com contêineres: `cantina_app` (Apache/PHP 8.2), `cantina_db` (MySQL 8.0) e `cantina_gotenberg` (Chromium PDF).
+  * Docker e Docker Compose (`docker-compose.yml`) com contêineres: `cantina_app` (Apache/PHP 8.2) e `cantina_db` (MySQL 8.0).
   * Acesso local: `http://localhost:8080`.
 * **Produção:**
   * Hospedagem compartilhada gerenciada com Apache, PHP 8.2+ e MySQL na plataforma Hostnet.
+  * O ambiente de hospedagem Hostnet **NÃO RODA DOCKER** nem serviços de background.
   * O código é 100% portável e opera tanto na raiz quanto em subdiretórios (ex: `/cantina/`).
 * **Comandos Principais:**
   * Iniciar ambiente Docker: `docker compose up -d`
@@ -90,7 +91,7 @@ Todo agente de IA deve seguir rigorosamente o seguinte protocolo de trabalho em 
 │   ├── controllers/                 # Controladores por módulo funcional
 │   ├── models/                      # Modelos de dados e regras de negócio com transações PDO
 │   ├── views/                       # Templates e telas divididos por contexto (layouts, partials, portal, operacional, admin, etc.)
-│   └── services/                    # Adaptadores de integração (Pix, WhatsApp, XML NF-e, PDF/Gotenberg, Planilhas)
+│   └── services/                    # Adaptadores de integração (Pix, WhatsApp, XML NF-e, PDF/Print nativo, Planilhas)
 │
 ├── database/                        # Migrações e infraestrutura de dados
 │   ├── migrations/                  # 26 migrações sequenciais oficiais (001 a 026)
@@ -143,6 +144,14 @@ Todo agente de IA deve seguir rigorosamente o seguinte protocolo de trabalho em 
   - Nunca utilizar caixas cinzas nativas `confirm()` do navegador: use sempre o modal corporativo assíncrono via atributo `data-confirm` ou `window.confirmarAcao()`.
 * **Botões de Texto e Widgets Interativos (Padrão Neutro):** Sempre que um texto, valor ou widget informativo (como exibição de saldo, filtros ou atalhos) também funcionar como botão ou link clicável, **NUNCA usar fundos coloridos** (como verde, amarelo ou azul chamativo). Seguir rigorosamente o padrão corporativo neutro do botão de menu do usuário (`.btn.btn-enterprise.btn-secondary`: fundo branco/neutro, borda sutil cinza `#cbd5e1`, texto neutro escuro `#1e293b` e hover sutil `#f8fafc`).
 * **Cache Busting nos Assets:** Ao alterar folhas de estilo em `assets/css/custom.css` ou scripts em `assets/js/app.js`, incremente a versão dos arquivos nos layouts (ex: `custom.css?v=6.1.1`) para evitar inconsistências no navegador do cliente.
+* **Geração e Emissão de PDFs (Print to PDF Nativo Obrigatório):**
+  - O ambiente de produção na plataforma **Hostnet não roda Docker** nem contêineres de compilação headless em background.
+  - **É TERMINANTEMENTE PROIBIDO** utilizar ou referenciar Gotenberg, Puppeteer, wkhtmltopdf, Dompdf ou qualquer compilador de PDF no servidor.
+  - **É TERMINANTEMENTE PROIBIDO** adicionar botões como "Baixar PDF" ou criar rotas que tentem compilar PDFs binários no backend.
+  - Toda e qualquer impressão ou salvamento de relatórios e extratos em PDF utiliza **EXCLUSIVAMENTE a função nativa "Print to PDF" do navegador (`window.print()`)**:
+    * O sistema renderiza o espelho de impressão HTML timbrado com folhas de estilo estritas `@media print` e margens de 14mm;
+    * O botão padrão de emissão é "Imprimir / Salvar PDF (A4)";
+    * O usuário escolhe na caixa de diálogo do navegador se imprime fisicamente ou seleciona "Salvar como PDF" com precisão tipográfica milimétrica.
 
 ---
 

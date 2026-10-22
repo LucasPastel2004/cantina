@@ -184,7 +184,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             }
         }
 
-        /* Impressão Direta (Física / Browser Print / Gotenberg PDF) */
+        /* Impressão Direta (Física / Browser Print to PDF) */
         @media print {
             @page {
                 size: A4 portrait;

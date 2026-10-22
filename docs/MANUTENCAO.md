@@ -29,7 +29,7 @@ O **Cantina Web — Colégio Monteiro Lobato** é uma plataforma web corporativa
 4. **Estoque e Suprimentos:** Saldo físico contínuo, pausa rápida de produtos, lançamento auditado de perdas com motivos padronizados e importação de XML de NF-e com fator multiplicador de conversão.
 5. **Financeiro e Caixas:** Abertura e fechamento de caixas por turno com fundo de troco, relatório de arrecadação diária, DRE Gerencial completo com segregação de Regimes de Caixa e Competência e controle de negativados MED.
 6. **Administração e Cadastros Mestres:** Carga escolar em lote (planilhas CSV/XLSX com conferência prévia dry-run), catálogo de produtos, categorias, turmas, colaboradores, usuários internos, calendário escolar com cancelamento em lote e configurações globais.
-7. **Relatórios Oficiais e Motor de Impressão:** Relatórios A4 timbrados em PDF de alta fidelidade gerados via Chromium headless (Gotenberg) com margens físicas simétricas de 14mm anti-clipping.
+7. **Relatórios Oficiais e Motor de Impressão:** Relatórios A4 timbrados e cupons térmicos de alta fidelidade gerados com HTML5/CSS3 sob o padrão nativo "Print to PDF" do navegador (`window.print()`) com margens físicas simétricas de 14mm anti-clipping.
 
 ---
 
@@ -47,7 +47,7 @@ O **Cantina Web — Colégio Monteiro Lobato** é uma plataforma web corporativa
 * **Bootstrap:** Versão 5.3.3 compilada e servida exclusivamente de arquivos locais (`assets/css/bootstrap.min.css` e `assets/js/bootstrap.bundle.min.js`), com zero dependência de CDNs externas.
 
 ### Bibliotecas e Serviços Auxiliares
-* **Geração de PDFs:** Microsserviço Chromium headless (Gotenberg 8) em contêiner Docker para relatórios A4 institucionais e espelhos contínuos de bobina de 80mm com precisão tipográfica milimétrica. Fallback contingencial em PHP puro estruturado em `PdfService.php`.
+* **Geração e Impressão de PDFs:** Emissão 100% nativa via navegador pelo recurso "Print to PDF" (`window.print()` e `@media print`), utilizando espelhos de impressão A4 timbrados e cupons térmicos contínuos de bobina de 80mm com precisão tipográfica milimétrica. Sem microsserviços ou contêineres externos (sem Gotenberg), garantindo compatibilidade total com a plataforma Hostnet.
 * **Manipulação de Planilhas:** Leitor nativo de streaming CSV via `fgetcsv` otimizado para baixo consumo de memória, com detecção automática de delimitador (`;` ou `,`), remoção de BOM UTF-8 e suporte a arquivos `.xlsx` via `PhpSpreadsheet`.
 * **Extração Fiscal (XML NF-e):** Extensões nativas `SimpleXML` e `DOMDocument` para leitura da tag `<infNFe>`, produtos e tributos de notas de compra.
 * **Geração de Pix e QR Code:** Classes puras nativas (`PixService.php` e `QrCodeService.php`) com codificação ISO/IEC 18004 Reed-Solomon, padrão EMVCo TLV e polinômio CRC16-CCITT sem bibliotecas externas.
@@ -57,10 +57,10 @@ O **Cantina Web — Colégio Monteiro Lobato** é uma plataforma web corporativa
    * Orquestrado via `docker-compose.yml`:
      - `cantina_app`: Apache 2.4 com PHP 8.2 (porta 8080).
      - `cantina_db`: MySQL 8.0 (porta 3306).
-     - `cantina_gotenberg`: Gotenberg 8 Chromium Headless (porta 3000).
    * URL local de acesso: `http://localhost:8080`
 2. **Ambiente de Produção (Hostnet):**
    * Hospedagem gerenciada Linux Apache com PHP 8.2+ e MySQL.
+   * O ambiente Hostnet **NÃO RODA DOCKER** nem serviços de background.
    * Publicação de código via Git ou FTP e execução segura de migrações via `database/runner.php?token=...` ou CLI.
    * Suporte nativo a subdiretórios (ex: `/cantina/` ou `/public_html/cantina/`).
 
@@ -120,7 +120,6 @@ O **Cantina Web — Colégio Monteiro Lobato** é uma plataforma web corporativa
      define('APP_ENV', 'development'); // 'development' ou 'production'
      define('APP_DEBUG', true);
      define('APP_URL', 'http://localhost:8080');
-     define('GOTENBERG_URL', 'http://gotenberg:3000');
      define('MIGRATION_TOKEN', 'monteiro_lobato_secret_migration_token_2026');
      ```
 
@@ -149,7 +148,7 @@ O **Cantina Web — Colégio Monteiro Lobato** é uma plataforma web corporativa
 ```text
 ├── index.php                        # Front Controller único da aplicação
 ├── .htaccess                        # Reescreve URLs e protege diretórios
-├── docker-compose.yml               # Definição dos contêineres Docker (App, DB, Gotenberg)
+├── docker-compose.yml               # Definição dos contêineres Docker (App, DB)
 │
 ├── config/                          # Configurações globais (protegido por .htaccess)
 │   ├── config.example.php           # Modelo sem senhas para versionamento
@@ -221,7 +220,7 @@ O **Cantina Web — Colégio Monteiro Lobato** é uma plataforma web corporativa
 │       ├── QrCodeService.php        # Gerador autônomo de QR Code em SVG/Base64
 │       ├── WhatsAppService.php      # Disparo transacional de códigos de acesso e alertas
 │       ├── XmlParserService.php     # Extração de dados fiscais de XML NF-e
-│       ├── PdfService.php           # Integração com Gotenberg e renderização A4/80mm
+│       ├── PdfService.php           # Renderização de espelhos A4 e bobina térmica 80mm para Print to PDF
 │       └── SpreadsheetService.php   # Leitura em streaming de planilhas CSV e XLSX
 │
 ├── database/                        # Migrações e infraestrutura de dados
@@ -249,7 +248,7 @@ O **Cantina Web — Colégio Monteiro Lobato** é uma plataforma web corporativa
 - **`app/controllers/`**: Ao criar novos endpoints, fluxos de requisição ou preparar variáveis para novas telas. Sempre valide permissões com RBAC e proteja formulários com CSRF.
 - **`app/models/`**: Ao alterar lógica de negócio, consultas SQL ou cálculos matemáticos. Sempre utilize Prepared Statements com `$this->query()` ou `$this->execute()`.
 - **`app/views/`**: Ao alterar marcação HTML ou adicionar novos campos e tabelas. Siga estritamente o `docs/DESIGN.md`, utilizando fonte tabular (`.font-tabular`), modal corporativo (`data-confirm`) e botões com feedback tátil.
-- **`app/services/`**: Ao alterar integrações externas (Pix, WhatsApp, Gotenberg, XML, planilhas). Nunca introduza dependências de runtime externas que exijam Node.js ou Composer em produção.
+- **`app/services/`**: Ao alterar integrações externas (Pix, WhatsApp, XML, planilhas). Nunca introduza dependências de runtime externas que exijam Node.js ou Composer em produção.
 - **`database/migrations/`**: Ao alterar a estrutura de dados. Nunca edite migrações antigas já aplicadas; crie sempre um novo arquivo sequencial com o próximo número disponível.
 
 ---
@@ -528,5 +527,6 @@ Após qualquer alteração relevante no sistema:
 - **NÃO remova proteções de segurança** (como CSRF, Prepared Statements ou verificação RBAC) com o pretexto de "resolver rápido".
 - **NÃO versione senhas ou segredos reais** (o arquivo `config/config.php` deve permanecer no `.gitignore`).
 - **NÃO use CDNs externas** para scripts ou folhas de estilo (Bootstrap, fontes e ícones devem ser servidos localmente).
-- **NÃO altere layouts de impressão A4 sem testar a simetria** (margens laterais de 14mm físicas para evitar clipping de bordas no Chromium/Gotenberg).
+- **NÃO crie botões "Baixar PDF" nem utilize Gotenberg ou compiladores de PDF no servidor** (o ambiente Hostnet não roda Docker; todo PDF no sistema deve ser emitido exclusivamente via função nativa "Print to PDF" do navegador via `window.print()` e espelhos HTML com `@media print`).
+- **NÃO altere layouts de impressão A4 sem testar a simetria** (margens laterais de 14mm físicas para evitar clipping de bordas na impressão física ou salvamento como PDF pelo navegador).
 - **NÃO faça alterações em múltiplos módulos simultaneamente** sem explicar o impacto de cada uma delas ao usuário.

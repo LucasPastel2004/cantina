@@ -191,8 +191,8 @@ Formato de entrega: [Visualização na tela + Exportação em PDF A4 timbrado pa
 Por favor:
 1. Crie as consultas no Model correspondente utilizando Prepared Statements nativos via PDO.
 2. Crie a tela de filtros e a visualização em tabela de alta densidade no RelatoriosController.
-3. Crie a view de impressão timbrada A4 seguindo o padrão de Gotenberg homologado (margens físicas simétricas de 14mm para não cortar a borda preta à direita).
-4. Rode a suíte de testes de PDFs para validar que o arquivo binário é gerado perfeitamente com HTTP 200.
+3. Crie a view de impressão timbrada A4 seguindo o padrão homologado de Print to PDF nativo do navegador (margens físicas simétricas de 14mm para não cortar a borda preta à direita e regras estritas @media print).
+4. Assegure que a emissão utilize a visualização/espelho de impressão com window.print() (Print to PDF), sem dependência de microsserviços externos ou contêineres Docker (sem Gotenberg).
 5. Atualize docs/STATUS.md e me forneça o link direto para testar a geração do relatório.
 ```
 

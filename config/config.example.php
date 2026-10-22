@@ -66,11 +66,9 @@ return [
         ],
     ],
 
-    // Configurações de Geração de PDF (Gotenberg / Fallback HTML Print)
+    // Configurações de Impressão e PDF (Nativo via Navegador - Print to PDF)
     'pdf' => [
-        'driver'        => 'gotenberg', // 'gotenberg' ou 'native_html'
-        'gotenberg_url' => 'http://gotenberg:3000', // Em Docker: 'http://gotenberg:3000', Local: 'http://localhost:3000'
-        'timeout'       => 15,
+        'driver' => 'native_html', // Emissão 100% nativa via navegador (Print to PDF / window.print() em páginas A4 e bobina térmica)
     ],
 
     // Segurança das Migrações

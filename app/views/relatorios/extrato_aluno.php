@@ -100,13 +100,7 @@ $alunoId = (int)($alunoId ?? ($aluno['id'] ?? 0));
                         <span>Exportar Planilha (CSV)</span>
                     </button>
 
-                    <!-- Baixar PDF Direto -->
-                    <button type="button" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5" onclick="gerarPdfDownload()" title="Fazer download direto do arquivo PDF A4 timbrado">
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
-                        <span>Baixar PDF</span>
-                    </button>
-
-                    <!-- Imprimir / Salvar PDF (A4) - Ação Principal -->
+                    <!-- Imprimir / Salvar PDF (A4) - Ação Principal Nativa via Navegador -->
                     <button type="submit" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5 px-3" id="btnImprimirPdf" title="Imprimir ou Salvar em PDF (A4) o Extrato do Aluno">
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
                         <span>Imprimir / Salvar PDF (A4)</span>
@@ -227,6 +221,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (hiddenAlunoId) {
                                 hiddenAlunoId.value = aluno.id;
                             }
+                            if (selectTurma && aluno.turma_id) {
+                                selectTurma.value = aluno.turma_id;
+                            }
                             dropdown.classList.add('d-none');
                         });
 
@@ -261,26 +258,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
-// Ação de download direto do PDF (A4)
-function gerarPdfDownload() {
-    const hiddenAlunoId = document.getElementById('hiddenAlunoId');
-    const inputBusca = document.getElementById('aluno_busca') || document.getElementById('inputBuscaAluno');
-    const idVal = hiddenAlunoId ? hiddenAlunoId.value : '0';
-    if (!idVal || parseInt(idVal) <= 0) {
-        alert('Por favor, digite o nome ou matrícula do aluno e selecione-o na lista antes de baixar o PDF.');
-        if (inputBusca) inputBusca.focus();
-        return;
-    }
-    const dataInicio = document.getElementById('dataInicio').value;
-    const dataFim = document.getElementById('dataFim').value;
-    const turmaId = document.getElementById('selectTurma').value;
-    const url = '<?php echo $baseUrl; ?>/relatorios/extrato-aluno/pdf?aluno_id=' + encodeURIComponent(idVal) +
-                '&data_inicio=' + encodeURIComponent(dataInicio) +
-                '&data_fim=' + encodeURIComponent(dataFim) +
-                (turmaId ? '&turma_id=' + encodeURIComponent(turmaId) : '');
-    window.location.href = url;
-}
 
 // Ação de exportação para planilha CSV
 function exportarCsv() {

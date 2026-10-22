@@ -1517,49 +1517,12 @@ class AdminController extends Controller
     /**
      * Emissão do Relatório A4 em PDF Timbrado de Negativados MED (FSD Tela 8.4)
      */
+    /**
+     * Emissão do Relatório de Famílias Negativadas MED para Impressão e Print to PDF Nativo
+     */
     public function contestacoesPdf(): void
     {
-        $busca = trim((string)$this->input('busca', ''));
-        $status = trim((string)$this->input('status', 'todos'));
-        $filtros = [];
-        if (!empty($busca)) {
-            $filtros['busca'] = $busca;
-        }
-        if (!empty($status) && $status !== 'todos') {
-            $filtros['status'] = $status;
-        }
-
-        $dados = Responsavel::listarNegativadosMed($filtros, 1, 1000);
-        $totalDevedor = Responsavel::somarSaldoDevedorMed();
-        $usuario = Auth::user();
-
-        $pdfBinario = \App\Services\PdfService::gerarRelatorioNegativadosMedPdf([
-            'familias'       => $dados['itens'],
-            'total_devedor'  => $totalDevedor,
-            'total_familias' => $dados['total'],
-            'operador'       => $usuario['nome'] ?? 'Administração'
-        ]);
-
-        // Se Gotenberg não estiver disponível (ex: produção Hostnet), renderiza a visualização HTML oficial para impressão/PDF
-        if (empty($pdfBinario) || strlen($pdfBinario) < 2000) {
-            $this->contestacoesImprimir();
-            return;
-        }
-
-        $nomeArquivo = 'relatorio_negativados_med_' . date('Ymd_His') . '.pdf';
-
-        if (!headers_sent()) {
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
-            header('Content-Length: ' . strlen($pdfBinario));
-            header('Cache-Control: private, max-age=0, must-revalidate');
-            header('Pragma: public');
-        }
-
-        echo $pdfBinario;
-        if (!defined('CANTINA_TEST_MODE')) {
-            exit;
-        }
+        $this->contestacoesImprimir();
     }
 }
 
