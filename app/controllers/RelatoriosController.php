@@ -682,15 +682,34 @@ class RelatoriosController extends Controller
         $pagina = max(1, (int)$this->input('pagina', 1));
         $itensPorPagina = Configuracao::getItensPorPagina();
 
+        // Carga sob demanda: ativa ao clicar em 'Filtrar' (mesmo com filtros padrão) ou ao paginar/filtrar
+        $filtrar = (bool)($this->input('filtrar', false) || isset($_GET['filtrar']));
+        $jaFiltrado = $filtrar || !empty($turno) || !empty($dataInicio) || !empty($dataFim) || isset($_GET['pagina']);
+
         $filtroTurno = in_array($turno, [SessaoCaixa::TURNO_MATUTINO, SessaoCaixa::TURNO_VESPERTINO], true) ? $turno : null;
-        $totalHistorico = SessaoCaixa::contarHistorico($filtroTurno, $dataInicio ?: null, $dataFim ?: null);
-        $totalPaginas = max(1, (int)ceil($totalHistorico / $itensPorPagina));
-        $offset = ($pagina - 1) * $itensPorPagina;
 
-        $sessoes = SessaoCaixa::listarHistorico($filtroTurno, $dataInicio ?: null, $dataFim ?: null, $itensPorPagina, $offset);
+        if ($jaFiltrado) {
+            $totalHistorico = SessaoCaixa::contarHistorico($filtroTurno, $dataInicio ?: null, $dataFim ?: null);
+            $totalPaginas = max(1, (int)ceil($totalHistorico / $itensPorPagina));
+            $offset = ($pagina - 1) * $itensPorPagina;
 
-        // Agregação de estatísticas para a Stat-Strip
-        $totaisPeriodo = SessaoCaixa::obterEstatisticasPeriodo($filtroTurno, $dataInicio ?: null, $dataFim ?: null);
+            $sessoes = SessaoCaixa::listarHistorico($filtroTurno, $dataInicio ?: null, $dataFim ?: null, $itensPorPagina, $offset);
+
+            // Agregação de estatísticas para a Stat-Strip
+            $totaisPeriodo = SessaoCaixa::obterEstatisticasPeriodo($filtroTurno, $dataInicio ?: null, $dataFim ?: null);
+        } else {
+            $totalHistorico = 0;
+            $totalPaginas = 1;
+            $sessoes = [];
+            $totaisPeriodo = [
+                'faturamento_total'    => 0.0,
+                'faturamento_dinheiro' => 0.0,
+                'faturamento_pix'      => 0.0,
+                'saldo_quebra_sobra'   => 0.0,
+                'total_com_sobra'      => 0,
+                'total_com_quebra'     => 0,
+            ];
+        }
 
         $this->render('relatorios/fechamento_caixa', [
             'pageTitle'      => 'Demonstrativo de Fechamento de Caixa',
@@ -706,7 +725,8 @@ class RelatoriosController extends Controller
             'totalRegistros' => $totalHistorico,
             'itensPorPagina' => $itensPorPagina,
             'sessoes'        => $sessoes,
-            'totaisPeriodo'  => $totaisPeriodo
+            'totaisPeriodo'  => $totaisPeriodo,
+            'jaFiltrado'     => $jaFiltrado
         ], 'admin');
     }
 

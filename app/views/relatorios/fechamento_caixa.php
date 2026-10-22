@@ -32,6 +32,7 @@ $baseUrl = $baseUrl ?? '';
 <div class="card-enterprise mb-4">
     <div class="card-enterprise-body">
         <form action="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" method="GET" class="row g-3 align-items-end">
+            <input type="hidden" name="filtrar" value="1">
             <div class="col-6 col-md-3">
                 <label for="filtroTurno" class="form-label text-microcopy text-uppercase font-weight-bold text-secondary">Turno Escolar</label>
                 <select name="turno" id="filtroTurno" class="form-select form-select-sm font-tabular">
@@ -55,14 +56,17 @@ $baseUrl = $baseUrl ?? '';
                 <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-fill">
                     Filtrar
                 </button>
-                <a href="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
-                    Limpar
-                </a>
+                <?php if (!empty($jaFiltrado)): ?>
+                    <a href="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">
+                        Limpar
+                    </a>
+                <?php endif; ?>
             </div>
         </form>
     </div>
 </div>
 
+<?php if (!empty($jaFiltrado)): ?>
 <!-- Stat-Strip: Apuração Consolidada do Período -->
 <div class="stat-strip mb-4">
     <div class="stat-item">
@@ -105,6 +109,7 @@ $baseUrl = $baseUrl ?? '';
         </span>
     </div>
 </div>
+<?php endif; ?>
 
 <!-- Tabela de Sessões de Caixa -->
 <div class="card-enterprise">
@@ -131,7 +136,14 @@ $baseUrl = $baseUrl ?? '';
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($sessoes)): ?>
+                <?php if (empty($jaFiltrado)): ?>
+                    <tr>
+                        <td colspan="10" class="text-center py-4 text-secondary">
+                            <p class="mb-1 fst-italic" style="font-size: 13px;">Não há nada para mostrar aqui</p>
+                            <span class="text-muted small">Utilize os filtros acima e clique em "Filtrar" para exibir o histórico de fechamentos de caixa.</span>
+                        </td>
+                    </tr>
+                <?php elseif (empty($sessoes)): ?>
                     <tr>
                         <td colspan="10" class="text-center py-4 text-secondary text-microcopy">
                             Nenhuma sessão de caixa encontrada para os filtros selecionados.
@@ -201,11 +213,13 @@ $baseUrl = $baseUrl ?? '';
 
     <!-- Paginação Corporativa Oficial (Padrão Enterprise Anti-Slop) -->
     <?php 
-        $paginaAtual    = (int)($paginaAtual ?? $pagina ?? 1);
-        $totalRegistros = (int)($totalRegistros ?? $totalHistorico ?? 0);
-        $totalPaginas   = (int)($totalPaginas ?? 1);
-        $itensPorPagina = (int)($itensPorPagina ?? 20);
-        require __DIR__ . '/../partials/pagination.php'; 
+        if (!empty($jaFiltrado)) {
+            $paginaAtual    = (int)($paginaAtual ?? $pagina ?? 1);
+            $totalRegistros = (int)($totalRegistros ?? $totalHistorico ?? 0);
+            $totalPaginas   = (int)($totalPaginas ?? 1);
+            $itensPorPagina = (int)($itensPorPagina ?? 20);
+            require __DIR__ . '/../partials/pagination.php'; 
+        }
     ?>
 </div>
 

@@ -46,6 +46,7 @@ $ordPor       = $filtros['ordenar_por'] ?? 'maior_consumo';
 
 $operador = $dados['operador'] ?? 'Administração';
 $emissao = date('d/m/Y H:i');
+$logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
 $qtdTotal = (int)($totais['quantidade_total'] ?? 0);
 $fatTotal = (float)($totais['faturamento_total'] ?? 0.0);
@@ -75,7 +76,7 @@ if ($emitirAlim && $emitirAluno) {
             print-color-adjust: exact;
         }
         html, body {
-            font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: #000000;
             margin: 0;
             padding: 0;
@@ -257,7 +258,8 @@ if ($emitirAlim && $emitirAluno) {
             }
 
             /* Quebras de páginas limpas: previne fatiamento de linhas na divisão da folha A4 */
-            table.tabela-relatorio {
+            table.tabela-relatorio,
+            table.table-doc-excel {
                 width: 100% !important;
                 table-layout: fixed !important;
                 border-collapse: separate !important;
@@ -270,30 +272,40 @@ if ($emitirAlim && $emitirAluno) {
                 border-bottom: none !important;
                 border-right: none !important;
             }
-            table.tabela-relatorio thead {
+            table.tabela-relatorio thead,
+            table.table-doc-excel thead {
                 display: table-header-group !important;
             }
-            table.tabela-relatorio thead tr {
+            table.tabela-relatorio thead tr,
+            table.table-doc-excel thead tr {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
             }
-            table.tabela-relatorio tfoot {
+            table.tabela-relatorio tfoot,
+            table.table-doc-excel tfoot {
                 display: table-footer-group !important;
             }
-            table.tabela-relatorio tbody tr {
+            table.tabela-relatorio tbody tr,
+            table.table-doc-excel tbody tr {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
             }
             table.tabela-relatorio th,
-            table.tabela-relatorio td {
+            table.tabela-relatorio td,
+            table.table-doc-excel th,
+            table.table-doc-excel td {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
                 border-right: 1px solid #000000 !important;
                 border-bottom: 1px solid #000000 !important;
             }
             .school-header,
+            .param-bar,
+            .section-banner,
             .resumo-alimentos-card,
             .footer-assinaturas-box,
+            .footer-relatorio,
+            .doc-footer-meta,
             .row-total-dia,
             .row-total-periodo,
             .row-subtotal-turma {
@@ -306,126 +318,177 @@ if ($emitirAlim && $emitirAluno) {
         thead { display: table-header-group; }
         tfoot { display: table-footer-group; }
         tr { page-break-inside: avoid; break-inside: avoid; }
-        .school-header, .resumo-alimentos-card, .footer-assinaturas-box { page-break-inside: avoid; break-inside: avoid; }
+        .school-header, .param-bar, .section-banner, .resumo-alimentos-card, .footer-assinaturas-box, .doc-footer-meta { page-break-inside: avoid; break-inside: avoid; }
 
         /* Cabeçalho Oficial Escolar */
         .school-header {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 8px;
             margin-bottom: 8px;
+        }
+        .school-logo-col {
+            width: 52px;
+            margin-right: 12px;
+        }
+        .school-logo-col img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #cbd5e1;
+        }
+        .school-title-col {
+            flex: 1;
             line-height: 1.25;
         }
         .school-name {
             font-size: 10.5pt;
-            font-weight: bold;
+            font-weight: 700;
             color: #000000;
             text-transform: uppercase;
             letter-spacing: 0.02em;
         }
-        .report-emission-date {
-            font-size: 8pt;
-            color: #000000;
-            margin-top: 1px;
-            margin-bottom: 4px;
-        }
         .report-title-main {
             font-size: 9.5pt;
-            font-weight: bold;
+            font-weight: 700;
             color: #000000;
-            margin-top: 3px;
-            margin-bottom: 2px;
-        }
-        .report-period-badge {
-            font-size: 8.5pt;
-            font-weight: bold;
-            color: #000000;
-            margin-bottom: 8px;
+            margin-top: 2px;
             text-transform: uppercase;
         }
+        .report-subtitle {
+            font-size: 7.8pt;
+            color: #334155;
+            margin-top: 1px;
+        }
+        .school-meta-col {
+            text-align: right;
+            font-size: 7.5pt;
+            color: #334155;
+            line-height: 1.35;
+            padding-right: 2px;
+        }
 
-        /* Tabela de Vendas Oficial (Estética Excel com Laterais e Linhas Pretas entre Itens) */
-        table.tabela-relatorio {
+        /* Faixa de Parâmetros */
+        .param-bar {
+            font-size: 8pt;
+            background: #f8fafc;
+            border: 1px solid #000000;
+            padding: 4px 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Banners de Seção */
+        .section-banner {
+            font-weight: 700;
+            font-size: 8pt;
+            text-transform: uppercase;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 3.5px 8px;
+            margin-top: 8px;
+            margin-bottom: 3px;
+            border-radius: 2px;
+        }
+
+        /* Tabela de Vendas Oficial (Estética Excel com Divisórias Pretas e Cabeçalho Neutro) */
+        table.tabela-relatorio,
+        table.table-doc-excel {
             width: 100% !important;
             table-layout: fixed !important;
             box-sizing: border-box !important;
             border-collapse: collapse !important;
             margin-top: 4px;
             margin-bottom: 8px;
-            font-size: 8pt;
+            font-size: 7.8pt;
             border: 1px solid #000000 !important;
         }
-        table.tabela-relatorio th {
+        table.tabela-relatorio th,
+        table.table-doc-excel th {
             border: 1px solid #000000 !important;
-            padding: 3px 4px;
-            font-weight: bold;
+            padding: 3.5px 5px !important;
+            font-weight: 700 !important;
             text-align: left;
             color: #000000;
-            font-size: 8pt;
-            background: #ffffff !important;
+            font-size: 7.5pt !important;
+            text-transform: uppercase !important;
+            background: #f8fafc !important;
             white-space: nowrap;
             overflow: hidden;
         }
         table.tabela-relatorio th:first-child,
-        table.tabela-relatorio td:first-child {
+        table.tabela-relatorio td:first-child,
+        table.table-doc-excel th:first-child,
+        table.table-doc-excel td:first-child {
             border-left: 1px solid #000000 !important;
         }
         table.tabela-relatorio th:last-child,
-        table.tabela-relatorio td:last-child {
+        table.tabela-relatorio td:last-child,
+        table.table-doc-excel th:last-child,
+        table.table-doc-excel td:last-child {
             border-right: 1px solid #000000 !important;
         }
-        table.tabela-relatorio td {
-            padding: 2.5px 4px;
+        table.tabela-relatorio td,
+        table.table-doc-excel td {
+            padding: 3px 5px !important;
             vertical-align: middle;
-            border: 1px solid #000000 !important; /* Linha preta estilo Excel */
+            border: 1px solid #000000 !important;
             color: #000000;
-            background: #ffffff !important; /* Fundo branco puro nos itens das listas */
+            background: #ffffff !important;
             overflow-wrap: break-word;
             word-break: break-word;
         }
-        table.tabela-relatorio tbody tr td {
+        table.tabela-relatorio tbody tr td,
+        table.table-doc-excel tbody tr td {
             background: #ffffff !important;
         }
 
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .text-left { text-align: left; }
+        .text-center { text-align: center !important; }
+        .text-right, .text-end { text-align: right !important; }
+        .text-left, .text-start { text-align: left !important; }
 
         /* Linhas de Totalização Oficial */
         .row-total-dia td {
             border-top: 1px solid #000000 !important;
             border-bottom: 1px solid #000000 !important;
-            font-weight: bold;
-            padding: 3.5px 4px;
+            font-weight: 700 !important;
+            padding: 3.5px 5px !important;
             color: #000000;
-            background: #ffffff !important;
+            background: #f8fafc !important;
         }
         .row-total-periodo td {
             border-top: 1px solid #000000 !important;
             border-bottom: 2px solid #000000 !important;
-            font-weight: bold;
-            padding: 4px 4px;
+            font-weight: 700 !important;
+            padding: 4px 5px !important;
             color: #000000;
-            font-size: 8.5pt;
-            background: #ffffff !important;
+            font-size: 8.2pt !important;
+            background: #f8fafc !important;
         }
         .row-subtotal-turma td {
             border-top: 1px solid #000000 !important;
             border-bottom: 1px solid #000000 !important;
-            font-weight: bold;
-            padding: 3px 4px;
+            font-weight: 700 !important;
+            padding: 3.5px 5px !important;
             color: #000000;
-            background: #ffffff !important;
+            background: #f8fafc !important;
         }
 
         /* Banners de Turma e Quebras de Página */
         .turma-header-banner {
-            background: #1e3a8a;
+            background: #0f172a;
             color: #ffffff;
-            font-weight: bold;
-            font-size: 8.5pt;
+            font-weight: 700;
+            font-size: 8pt;
             padding: 3.5px 8px;
-            margin-top: 14px;
+            margin-top: 12px;
             margin-bottom: 4px;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.02em;
             border-radius: 2px;
         }
         .page-break-turma {
@@ -455,7 +518,7 @@ if ($emitirAlim && $emitirAluno) {
             padding-bottom: 4px;
         }
         .aluno-titulo-linha {
-            font-weight: bold;
+            font-weight: 700;
             font-size: 8pt;
             background: #f1f5f9;
             padding: 3px 6px;
@@ -482,16 +545,42 @@ if ($emitirAlim && $emitirAluno) {
             border-bottom: 1px dotted #f1f5f9;
         }
 
-        /* Rodapé Institucional do Colégio */
-        .footer-relatorio {
-            margin-top: 16px;
-            padding-top: 4px;
+        /* Assinaturas e Rodapé Oficial */
+        .footer-assinaturas-box {
+            margin-top: 18px;
+            padding-top: 14px;
             border-top: 1px solid #000000;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+        }
+        .signature-line {
+            width: 44%;
+            border-top: 1px solid #000000;
+            padding-top: 4px;
+            text-align: center;
             font-size: 7.5pt;
-            color: #000000;
+            line-height: 1.25;
+        }
+        .doc-footer-meta {
+            margin-top: 10px;
+            font-size: 7pt;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 3px;
+        }
+
+        /* Rodapé Institucional do Colégio */
+        .footer-relatorio {
+            margin-top: 8px;
+            padding-top: 4px;
+            border-top: 1px solid #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 7.2pt;
+            color: #64748b;
         }
         .footer-relatorio .brand {
             font-weight: normal;
@@ -509,8 +598,8 @@ if ($emitirAlim && $emitirAluno) {
 <!-- Barra de Controle de Impressão (Apenas na Visualização em Tela) -->
 <div class="no-print">
     <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
-        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Relatório de Emissão de Vendas</div>
-        <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">Período: <?php echo htmlspecialchars($periodoOficial); ?></div>
+        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">Cantina Web — Relatório Oficial de Emissão de Vendas</div>
+        <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">Período: <?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?></div>
     </div>
     <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
         <!-- Controles de Zoom para Conferência -->
@@ -537,16 +626,36 @@ if ($emitirAlim && $emitirAluno) {
 <div id="document-zoom-area" class="document-zoom-area">
 <div class="container">
 
-    <!-- Cabeçalho Oficial do Colégio Monteiro Lobato -->
+    <!-- Cabeçalho Oficial Escolar -->
     <div class="school-header">
-        <div class="school-name">COLÉGIO MONTEIRO LOBATO</div>
-        <div class="report-emission-date font-tabular"><?php echo $emissao; ?></div>
-        <div class="report-title-main"><?php echo htmlspecialchars($tituloRelatorio); ?></div>
-        <div class="report-period-badge font-tabular">PERÍODO ENTRE DATAS : <?php echo htmlspecialchars($periodoOficial); ?></div>
+        <?php if (!empty($logoDataUri)): ?>
+        <div class="school-logo-col">
+            <img src="<?php echo $logoDataUri; ?>" alt="Logotipo Oficial">
+        </div>
+        <?php endif; ?>
+        <div class="school-title-col">
+            <div class="school-name">COLÉGIO MONTEIRO LOBATO</div>
+            <div class="report-title-main"><?php echo htmlspecialchars($tituloRelatorio); ?></div>
+            <div class="report-subtitle">Sistema de Gestão Cantina Web • Módulo Operacional & Relatórios de Vendas</div>
+        </div>
+        <div class="school-meta-col">
+            <div><strong>Emissão:</strong> <?php echo $emissao; ?></div>
+            <div><strong>Unidade:</strong> Cantina Geral</div>
+            <div><strong>Documento:</strong> A4 Oficial</div>
+        </div>
+    </div>
+
+    <!-- Faixa de Parâmetros e Filtros -->
+    <div class="param-bar">
+        <div><strong>Período Apurado:</strong> <?php echo htmlspecialchars($periodoOficial); ?> <span style="font-size: 7.2pt; color: #475569;">(PERÍODO ENTRE DATAS : <?php echo htmlspecialchars($periodoOficial); ?>)</span></div>
+        <div><strong>Critério:</strong> <?php echo $agruparPer ? 'Vendas por Alimento & Agrupamento Diário' : 'Vendas por Alimento Consolidadas no Período'; ?></div>
     </div>
 
     <!-- SEÇÃO 1: TABELA DE VENDAS POR ALIMENTO (Emitida se $emitirAlim for true) -->
     <?php if ($emitirAlim): ?>
+        <div class="section-banner">
+            1. Demonstrativo de Vendas da Cantina por Alimento
+        </div>
 
         <?php if ($agruparPer): ?>
             <!-- CASO 1.1: AGRUPADO POR DIA (Conforme relatorio de vendas por período.pdf) -->
@@ -687,9 +796,8 @@ if ($emitirAlim && $emitirAluno) {
 
     <!-- SEÇÃO 2: DEMONSTRATIVO DE VENDAS POR ALUNO & TURMAS (Emitida se $emitirAluno for true) -->
     <?php if ($emitirAluno): ?>
-
-        <div style="margin-top: <?php echo $emitirAlim ? '18px' : '6px'; ?>; margin-bottom: 4px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; border-bottom: 1px solid #000;">
-            Demonstrativo de Consumo por Aluno
+        <div class="section-banner" style="margin-top: <?php echo $emitirAlim ? '14px' : '8px'; ?>;">
+            <?php echo $emitirAlim ? '2.' : '1.'; ?> Demonstrativo de Consumo por Aluno & Turmas
         </div>
 
         <?php if (empty($alunos)): ?>
@@ -879,8 +987,26 @@ if ($emitirAlim && $emitirAluno) {
         </div>
     <?php endif; ?>
 
+    <!-- Bloco de Assinaturas e Conferência Oficial -->
+    <div class="footer-assinaturas-box">
+        <div class="signature-line">
+            <strong><?php echo htmlspecialchars($operador); ?></strong><br>
+            Emissor / Responsável pelo Relatório
+        </div>
+        <div class="signature-line">
+            <strong>Diretoria / Gestão Financeira</strong><br>
+            Colégio Monteiro Lobato
+        </div>
+    </div>
+
+    <!-- Metadados Técnicos de Rodapé -->
+    <div class="doc-footer-meta">
+        <div>Sistema Cantina Web &bull; Colégio Monteiro Lobato &bull; Valores para o Futuro!</div>
+        <div class="font-tabular">Documento A4 Oficial &bull; <?php echo $emissao; ?></div>
+    </div>
+
     <!-- Rodapé Institucional Oficial do Colégio Monteiro Lobato -->
-    <div class="footer-relatorio">
+    <div class="footer-relatorio" style="display: none;">
         <div class="brand">
             <strong>Colégio Monteiro Lobato</strong> &bull; Sistema Cantina Web
         </div>
