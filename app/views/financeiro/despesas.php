@@ -40,7 +40,7 @@ $baseUrl = $baseUrl ?? '';
         <div class="stat-item">
             <span class="stat-label">Competência em Análise</span>
             <span class="stat-value font-tabular text-dark" style="font-size: 18px;">
-                <?php echo htmlspecialchars($competenciaAtual !== 'todas' ? $competenciaAtual : 'Geral (Todas)', ENT_QUOTES, 'UTF-8'); ?>
+                <?php echo htmlspecialchars($competenciaAtual !== 'todas' ? $competenciaAtual : 'Todas as Competências', ENT_QUOTES, 'UTF-8'); ?>
             </span>
             <span class="text-secondary text-microcopy mt-1 font-tabular">
                 <?php echo (int)($resumo['total_lancamentos'] ?? 0); ?> lançamento(s) registrados

@@ -175,6 +175,7 @@ class CargaSobDemandaTest
 
         $this->assert(str_contains($htmlInicial, 'Não há nada para mostrar aqui'), 'Acesso inicial a /financeiro/despesas exibe mensagem "Não há nada para mostrar aqui"');
         $this->assert(str_contains($htmlInicial, 'clique no botão com a lupa'), 'Mensagem inicial orienta a clicar no botão com a lupa');
+        $this->assert(str_contains($htmlInicial, '<option value="todas" selected>Todas as Competências</option>'), 'Opção padrão do campo competência é "Todas as Competências"');
         $this->assert(!str_contains($htmlInicial, 'title="Limpar Filtros"'), 'Botão de limpar filtros NÃO aparece no estado inicial');
 
         // Cenário B: Clique no botão com a lupa (filtrar=1)

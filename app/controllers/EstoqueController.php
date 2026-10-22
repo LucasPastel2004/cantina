@@ -33,6 +33,10 @@ class EstoqueController extends Controller
         $statusPausa = (isset($_GET['status_pausa']) && $_GET['status_pausa'] !== '') ? trim($_GET['status_pausa']) : null;
         $apenasAlerta= isset($_GET['alerta']) && $_GET['alerta'] === '1';
         $busca       = isset($_GET['busca']) ? trim($_GET['busca']) : '';
+        $filtrar     = (bool)($this->input('filtrar', false) || isset($_GET['filtrar']));
+
+        // Carga sob demanda: ativa ao clicar em 'Filtrar' (mesmo com padrões) ou ao interagir com paginação/filtros
+        $jaFiltrado  = $filtrar || !empty($busca) || $categoriaId !== null || !empty($tipo) || $apenasAlerta || !empty($statusPausa) || isset($_GET['pagina']);
 
         $filtros = [
             'categoria_id' => $categoriaId,
@@ -44,14 +48,21 @@ class EstoqueController extends Controller
 
         $paginaAtual    = max(1, (int)($_GET['pagina'] ?? 1));
         $itensPorPagina = Configuracao::getItensPorPagina();
-        $totalProdutos  = Estoque::contarSaldos($filtros);
-        $totalPaginas   = max(1, (int)ceil($totalProdutos / $itensPorPagina));
-        if ($paginaAtual > $totalPaginas) {
-            $paginaAtual = $totalPaginas;
-        }
-        $offset = ($paginaAtual - 1) * $itensPorPagina;
 
-        $produtos   = Estoque::listarSaldos($filtros, $itensPorPagina, $offset);
+        if ($jaFiltrado) {
+            $totalProdutos  = Estoque::contarSaldos($filtros);
+            $totalPaginas   = max(1, (int)ceil($totalProdutos / $itensPorPagina));
+            if ($paginaAtual > $totalPaginas) {
+                $paginaAtual = $totalPaginas;
+            }
+            $offset = ($paginaAtual - 1) * $itensPorPagina;
+            $produtos = Estoque::listarSaldos($filtros, $itensPorPagina, $offset);
+        } else {
+            $totalProdutos  = 0;
+            $totalPaginas   = 1;
+            $produtos       = [];
+        }
+
         $metricas   = Estoque::obterMetricasGerais();
         $categorias = Categoria::listarTodas();
 
@@ -60,6 +71,7 @@ class EstoqueController extends Controller
             'metricas'       => $metricas,
             'categorias'     => $categorias,
             'filtros'        => $filtros,
+            'jaFiltrado'     => $jaFiltrado,
             'paginaAtual'    => $paginaAtual,
             'totalPaginas'   => $totalPaginas,
             'totalRegistros' => $totalProdutos,

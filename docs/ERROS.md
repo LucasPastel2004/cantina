@@ -2241,15 +2241,16 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 
 ---
 
-## 2026-10-22 - Tabela de estoque vazia por bloqueio artificial de carga sob demanda
+## 2026-10-22 - Tabela de estoque: alinhamento de carga sob demanda e geração da lista geral ao filtrar com opções padrões
 
-- Sintoma: Ao acessar o painel de Controle de Estoque & Saldos Físicos (`/estoque`) ou clicar em "Filtrar" sem alterar os campos, a tabela "Grade de Produtos & Inventário Físico" exibia "Exibindo 0 de 0 produtos" e "Não há nada para mostrar aqui", ocultando a listagem geral de produtos.
-- Causa: Havia sido inserida uma verificação artificial de flag `$jaFiltrado` em `EstoqueController` e na view `estoque/index.php`, condicionando a exibição de produtos a uma interação prévia com filtros e exigindo um parâmetro oculto `filtrar=1`, o que impedia a visualização da grade geral padrão de inventário.
+- Sintoma: Ao acessar `/estoque`, ou tudo vinha carregado automaticamente ("comportamento padrão" prévio) ou a tela iniciava vazia e não respondia com clareza ao clique em "Filtrar" mantendo os campos vazios.
+- Causa: Falta de alinhamento fino no gatilho de carga sob demanda: a tela deve iniciar limpa/vazia (sem onchange nos seletores e sem despejar dezenas de itens logo na abertura da página), mas ao clicar diretamente no botão "Filtrar" sem alterar os campos, deve gerar com exatidão a lista geral de todas as opções padrões cadastradas no estoque.
 - Solução aplicada:
-  1. Removida a restrição `$jaFiltrado` em `app/controllers/EstoqueController.php`: a consulta `Estoque::listarSaldos` e a contagem `Estoque::contarSaldos` são sempre realizadas, retornando a lista geral completa por padrão.
-  2. Ajustada a view `app/views/estoque/index.php` para renderizar diretamente os produtos retornados e exibir "Não há nada para mostrar aqui" apenas quando um filtro específico realmente não localizar registros.
-  3. Criada suíte automatizada `tests/estoque_lista_geral_test.php` cobrindo carregamento padrão, clique em filtrar com opções padrão, filtros específicos e busca inexistente (13/13 testes aprovados).
-- Como evitar no futuro: Em telas operacionais de inventário e saldos físicos (diferente de telas analíticas pesadas com grandes volumes históricos), a grade mestre geral de itens deve estar sempre disponível por padrão, sem impor telas em branco ou bloqueios de pré-filtragem desnecessários.
+  1. Em `app/views/estoque/index.php`, o formulário inclui `<input type="hidden" name="filtrar" value="1">` e os seletores operam sem submit prematuro.
+  2. Em `app/controllers/EstoqueController.php`, a flag `$jaFiltrado` é acionada por `$filtrar || !empty($busca) || $categoriaId !== null || !empty($tipo) || $apenasAlerta || !empty($statusPausa) || isset($_GET['pagina'])`. Quando o usuário apenas clica em "Filtrar" sem alterar nada, `filtrar=1` ativa a consulta sem nenhuma restrição SQL WHERE, gerando e exibindo a lista geral completa de todos os produtos do inventário.
+  3. No estado inicial antes de filtrar, a tela exibe o estado corporativo limpo `Não há nada para mostrar aqui` com instrução e contador zerado (`0 de 0 produtos`).
+  4. Suíte automatizada `tests/carga_sob_demanda_test.php` (28/28 asserções) e `tests/estoque_lista_geral_test.php` (14/14 asserções) cobrindo todos os cenários aprovadas com 100% de sucesso.
+- Como evitar no futuro: Em telas com carga sob demanda, certificar-se de que o botão de filtro submeta um parâmetro indicador (`filtrar=1`) para que, mesmo com todos os selects no valor padrão ("Todas as Categorias", "Todos os Tipos", etc.), o backend saiba que a geração da lista geral foi expressamente solicitada pelo usuário.
 
 
 

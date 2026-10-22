@@ -303,11 +303,19 @@ class DespesaOperacional extends Model
     }
 
     /**
-     * Obtém resumo financeiro consolidado de uma competência.
+     * Obtém resumo financeiro consolidado de uma competência (ou geral se 'todas').
      */
-    public function obterResumoCompetencia(string $competencia): array
+    public function obterResumoCompetencia(string $competencia = 'todas'): array
     {
         $pdo = self::getConnection();
+        $where = ["`deleted_at` IS NULL"];
+        $params = [];
+
+        if (!empty($competencia) && $competencia !== 'todas') {
+            $where[] = "`competencia_mes_ano` = :comp";
+            $params[':comp'] = $competencia;
+        }
+
         $sql = "SELECT 
                     COUNT(*) as total_lancamentos,
                     COALESCE(SUM(valor), 0.00) as total_geral,
@@ -315,19 +323,27 @@ class DespesaOperacional extends Model
                     COALESCE(SUM(CASE WHEN status = 'pendente' THEN valor ELSE 0 END), 0.00) as total_pendente,
                     COALESCE(SUM(CASE WHEN status = 'cancelado' THEN valor ELSE 0 END), 0.00) as total_cancelado
                 FROM `despesas_operacionais`
-                WHERE `competencia_mes_ano` = :comp AND `deleted_at` IS NULL";
+                WHERE " . implode(' AND ', $where);
 
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([':comp' => $competencia]);
+        $stmt->execute($params);
         $resumo = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
 
         // Totais por categoria na competência
+        $whereCat = ["`status` != 'cancelado'", "`deleted_at` IS NULL"];
+        $paramsCat = [];
+
+        if (!empty($competencia) && $competencia !== 'todas') {
+            $whereCat[] = "`competencia_mes_ano` = :comp";
+            $paramsCat[':comp'] = $competencia;
+        }
+
         $sqlCat = "SELECT `categoria`, COALESCE(SUM(valor), 0.00) as total
                    FROM `despesas_operacionais`
-                   WHERE `competencia_mes_ano` = :comp AND `status` != 'cancelado' AND `deleted_at` IS NULL
+                   WHERE " . implode(' AND ', $whereCat) . "
                    GROUP BY `categoria`";
         $stmtCat = $pdo->prepare($sqlCat);
-        $stmtCat->execute([':comp' => $competencia]);
+        $stmtCat->execute($paramsCat);
         $categorias = $stmtCat->fetchAll(\PDO::FETCH_KEY_PAIR) ?: [];
 
         $resumo['categorias'] = $categorias;

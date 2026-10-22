@@ -56,7 +56,7 @@ $assertCustom = function(bool $cond, string $msg) use (&$erros, &$sucessos) {
 };
 
 // -------------------------------------------------------------
-// [Cenário 1]: Acesso direto a /estoque (sem parâmetros GET)
+// [Cenário 1]: Acesso direto a /estoque (sem parâmetros GET) - Abre vazia
 // -------------------------------------------------------------
 $_GET = [];
 $controller = new \App\Controllers\EstoqueController();
@@ -65,14 +65,16 @@ $controller->index();
 $html1 = ob_get_clean();
 
 $assertCustom(strpos($html1, 'Grade de Produtos & Inventário Físico') !== false, "Cenário 1: Título da grade presente na tela");
-$assertCustom(strpos($html1, 'Exibindo <span class="font-tabular fw-semibold">0</span> de <span class="font-tabular fw-semibold">0</span>') === false, "Cenário 1: NÃO exibe '0 de 0 produtos' no carregamento inicial");
-$assertCustom(strpos($html1, 'Não há nada para mostrar aqui') === false, "Cenário 1: NÃO exibe 'Não há nada para mostrar aqui' no carregamento inicial");
-$assertCustom(strpos($html1, 'title="Limpar Filtros">✕</a>') === false, "Cenário 1: Botão Limpar Filtros '✕' NÃO deve aparecer na listagem geral padrão");
+$assertCustom(strpos($html1, 'Exibindo <span class="font-tabular fw-semibold">0</span> de <span class="font-tabular fw-semibold">0</span>') !== false, "Cenário 1: Exibe '0 de 0 produtos' no carregamento inicial antes de filtrar");
+$assertCustom(strpos($html1, 'Não há nada para mostrar aqui') !== false, "Cenário 1: Exibe 'Não há nada para mostrar aqui' no carregamento inicial");
+$assertCustom(strpos($html1, 'Utilize os filtros acima e clique em "Filtrar"') !== false, "Cenário 1: Exibe instrução amigável para usar os filtros");
+$assertCustom(strpos($html1, 'title="Limpar Filtros">✕</a>') === false, "Cenário 1: Botão Limpar Filtros '✕' NÃO aparece no estado inicial");
 
 // -------------------------------------------------------------
-// [Cenário 2]: Clicar em Filtrar sem alterar nenhum campo (?busca=&categoria_id=&tipo=&alerta=)
+// [Cenário 2]: Clicar em Filtrar sem alterar nenhum campo (?filtrar=1&busca=&categoria_id=&tipo=&alerta=)
 // -------------------------------------------------------------
 $_GET = [
+    'filtrar'      => '1',
     'busca'        => '',
     'categoria_id' => '',
     'tipo'         => '',
@@ -83,14 +85,15 @@ $controller->index();
 $html2 = ob_get_clean();
 
 $assertCustom(strpos($html2, 'Grade de Produtos & Inventário Físico') !== false, "Cenário 2: Título da grade presente após filtrar com valores padrão");
-$assertCustom(strpos($html2, 'Exibindo <span class="font-tabular fw-semibold">0</span> de <span class="font-tabular fw-semibold">0</span>') === false, "Cenário 2: NÃO exibe '0 de 0 produtos' ao filtrar com opções padrão");
+$assertCustom(strpos($html2, 'Exibindo <span class="font-tabular fw-semibold">0</span> de <span class="font-tabular fw-semibold">0</span>') === false, "Cenário 2: NÃO exibe '0 de 0 produtos' ao filtrar com opções padrão (gera lista geral)");
 $assertCustom(strpos($html2, 'Não há nada para mostrar aqui') === false, "Cenário 2: NÃO exibe 'Não há nada para mostrar aqui' ao filtrar com opções padrão");
-$assertCustom(strpos($html2, 'title="Limpar Filtros">✕</a>') === false, "Cenário 2: Botão Limpar Filtros '✕' NÃO aparece quando todas as opções são padrão");
+$assertCustom(strpos($html2, 'title="Limpar Filtros">✕</a>') !== false, "Cenário 2: Botão Limpar Filtros '✕' aparece após filtrar para permitir resetar");
 
 // -------------------------------------------------------------
 // [Cenário 3]: Filtrar com busca específica válida
 // -------------------------------------------------------------
 $_GET = [
+    'filtrar'      => '1',
     'busca'        => 'Coxinha',
     'categoria_id' => '',
     'tipo'         => '',
@@ -107,6 +110,7 @@ $assertCustom(strpos($html3, 'title="Limpar Filtros">✕</a>') !== false, "Cená
 // [Cenário 4]: Filtrar com termo que não existe
 // -------------------------------------------------------------
 $_GET = [
+    'filtrar'      => '1',
     'busca'        => 'ITEM_INEXISTENTE_XYZ_999',
     'categoria_id' => '',
     'tipo'         => '',
@@ -116,7 +120,7 @@ ob_start();
 $controller->index();
 $html4 = ob_get_clean();
 
-$assertCustom(strpos($html4, 'Não há nada para mostrar aqui') !== false, "Cenário 4: Exibe mensagem sóbria de 'Não há nada para mostrar aqui' quando nada é encontrado");
+$assertCustom(strpos($html4, 'Nenhum produto encontrado com os filtros aplicados') !== false, "Cenário 4: Exibe mensagem sóbria de 'Nenhum produto encontrado com os filtros aplicados'");
 $assertCustom(strpos($html4, 'Exibindo <span class="font-tabular fw-semibold">0</span> de <span class="font-tabular fw-semibold">0</span>') !== false, "Cenário 4: Exibe 0 de 0 quando busca não localiza produtos");
 $assertCustom(strpos($html4, 'title="Limpar Filtros">✕</a>') !== false, "Cenário 4: Exibe botão Limpar Filtros '✕' para permitir desfazer o filtro");
 

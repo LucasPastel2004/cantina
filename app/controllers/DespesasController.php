@@ -36,7 +36,7 @@ class DespesasController extends Controller
     public function index(): void
     {
         $mesAtual = date('Y-m');
-        $competencia = isset($_GET['competencia']) && is_string($_GET['competencia']) ? trim($_GET['competencia']) : $mesAtual;
+        $competencia = isset($_GET['competencia']) && is_string($_GET['competencia']) ? trim($_GET['competencia']) : 'todas';
         $categoria = isset($_GET['categoria']) && is_string($_GET['categoria']) ? trim($_GET['categoria']) : '';
         $status = isset($_GET['status']) && is_string($_GET['status']) ? trim($_GET['status']) : '';
         $busca = isset($_GET['busca']) && is_string($_GET['busca']) ? trim($_GET['busca']) : '';
@@ -46,7 +46,7 @@ class DespesasController extends Controller
         $offset = ($pagina - 1) * $limite;
 
         // Determina se houve interação com os filtros para carga sob demanda
-        $jaFiltrado = $filtrar || !empty($categoria) || !empty($status) || !empty($busca) || isset($_GET['pagina']);
+        $jaFiltrado = $filtrar || !empty($categoria) || !empty($status) || !empty($busca) || (isset($_GET['competencia']) && $_GET['competencia'] !== 'todas') || isset($_GET['pagina']);
 
         $filtros = [
             'competencia' => $competencia !== 'todas' ? $competencia : '',
@@ -65,7 +65,7 @@ class DespesasController extends Controller
             $totalPaginas = 1;
         }
 
-        $resumoCompetencia = $this->model->obterResumoCompetencia($competencia !== 'todas' ? $competencia : $mesAtual);
+        $resumoCompetencia = $this->model->obterResumoCompetencia($competencia);
         $competenciasDisponiveis = $this->model->obterCompetenciasDisponiveis();
 
         $this->render('financeiro/despesas', [

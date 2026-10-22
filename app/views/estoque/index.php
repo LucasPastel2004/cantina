@@ -51,6 +51,7 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
     <!-- Barra de Filtros e Busca Rápida -->
     <div class="card-enterprise p-3 mb-3">
         <form method="GET" action="<?php echo $baseUrl; ?>/estoque" class="row g-2 align-items-center">
+            <input type="hidden" name="filtrar" value="1">
             <div class="col-12 col-md-4">
                 <input type="text" name="busca" class="form-control form-control-sm" placeholder="Buscar por código, produto ou categoria..." value="<?php echo htmlspecialchars($filtros['busca'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
             </div>
@@ -81,7 +82,7 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
                 <button type="submit" class="btn btn-enterprise btn-primary btn-sm w-100" title="Filtrar">
                     Filtrar
                 </button>
-                <?php if (!empty($filtros['busca']) || !empty($filtros['categoria_id']) || !empty($filtros['tipo']) || !empty($filtros['apenas_alerta'])): ?>
+                <?php if (!empty($jaFiltrado)): ?>
                     <a href="<?php echo $baseUrl; ?>/estoque" class="btn btn-enterprise btn-primary btn-sm" title="Limpar Filtros">✕</a>
                 <?php endif; ?>
             </div>
@@ -93,8 +94,8 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
         <div class="card-enterprise-header d-flex justify-content-between align-items-center">
             <span class="card-enterprise-title">Grade de Produtos & Inventário Físico</span>
             <span class="text-muted small">
-                Exibindo <span class="font-tabular fw-semibold"><?php echo count($produtos); ?></span> de <span class="font-tabular fw-semibold"><?php echo $totalRegistros ?? count($produtos); ?></span> produtos
-                <?php if (!empty($totalPaginas) && $totalPaginas > 1): ?>
+                Exibindo <span class="font-tabular fw-semibold"><?php echo !empty($jaFiltrado) ? count($produtos) : 0; ?></span> de <span class="font-tabular fw-semibold"><?php echo !empty($jaFiltrado) ? ($totalRegistros ?? count($produtos)) : 0; ?></span> produtos
+                <?php if (!empty($jaFiltrado) && !empty($totalPaginas) && $totalPaginas > 1): ?>
                     (Pág. <span class="font-tabular"><?php echo $paginaAtual; ?></span> de <span class="font-tabular"><?php echo $totalPaginas; ?></span>)
                 <?php endif; ?>
             </span>
@@ -116,11 +117,18 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($produtos)): ?>
+                    <?php if (empty($jaFiltrado)): ?>
                         <tr>
                             <td colspan="10" class="text-center py-4 text-secondary">
                                 <p class="mb-1 fst-italic" style="font-size: 13px;">Não há nada para mostrar aqui</p>
-                                <span class="text-muted small">Nenhum produto localizado para os critérios informados.</span>
+                                <span class="text-muted small">Utilize os filtros acima e clique em "Filtrar" para exibir a grade de produtos e inventário físico.</span>
+                            </td>
+                        </tr>
+                    <?php elseif (empty($produtos)): ?>
+                        <tr>
+                            <td colspan="10" class="text-center py-4 text-secondary">
+                                <p class="mb-1 fst-italic" style="font-size: 13px;">Nenhum produto encontrado com os filtros aplicados</p>
+                                <span class="text-muted small">Tente ajustar os termos de busca ou filtros selecionados.</span>
                             </td>
                         </tr>
                     <?php else: ?>
@@ -201,7 +209,9 @@ $isAdmin = ($user['role'] ?? $user['perfil'] ?? '') === 'administrador';
             </table>
         </div>
         <!-- Paginação Dinâmica Conforme Configuração Oficial -->
-        <?php require __DIR__ . '/../partials/pagination.php'; ?>
+        <?php if (!empty($jaFiltrado)): ?>
+            <?php require __DIR__ . '/../partials/pagination.php'; ?>
+        <?php endif; ?>
     </div>
 </div>
 
