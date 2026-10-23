@@ -3,33 +3,41 @@
  * Cantina Web — Colégio Monteiro Lobato
  * View: Demonstrativo Individual de Consumo para Professor/Colaborador (A4)
  * 
- * Conforme docs/FSD.md e docs/DESIGN.md
+ * Conforme docs/FSD.md, docs/DESIGN.md e padrão oficial de relatórios A4
+ * Padrão Excel Corporativo com divisórias pretas e fundo branco puro, banners azul marinho (#0f172a)
  */
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
-$dados = $dados['dados'] ?? ($dados ?? []);
-$colaborador = $dados['colaborador'] ?? ($colaborador ?? []);
-$competencia = $dados['competencia'] ?? ($competencia ?? date('m/Y'));
-$operador = $dados['operador'] ?? ($operador ?? 'Administração Geral');
-$emissao = $dados['emissao'] ?? ($emissao ?? date('d/m/Y H:i:s'));
-$itens = $dados['itens'] ?? ($itens ?? []);
-$totais = $dados['totais'] ?? ($totais ?? []);
-$logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
+$baseUrl = $baseUrl ?? '';
+if (!isset($dados) || !is_array($dados)) {
+    $dados = get_defined_vars();
+}
+$dados = $dados['dados'] ?? $dados;
 
-$totalDesconto = (float)($totais['total_desconto'] ?? 0.0);
-$totalLanches = (int)($totais['total_lanches'] ?? 0);
-$totalCompras = (int)($totais['total_compras'] ?? 0);
+$colaborador = $dados['colaborador'] ?? [];
+$competencia = $dados['competencia'] ?? date('m/Y');
+$operador = $dados['operador'] ?? 'Administração Geral';
+$emissao = $dados['emissao'] ?? date('d/m/Y H:i:s');
+$itens = $dados['itens'] ?? ($dados['lancamentos'] ?? []);
+$totais = $dados['totais'] ?? [];
+$isPdf = $isPdf ?? false;
+
+$totalDesconto = (float)($totais['total_desconto'] ?? ($dados['total_valor'] ?? 0.0));
+$totalLanches = (int)($totais['total_lanches'] ?? ($dados['total_itens'] ?? 0));
+$totalCompras = (int)($totais['total_compras'] ?? count($itens));
+
+$logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Demonstrativo Individual — <?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador'); ?></title>
+    <title>Demonstrativo Individual — <?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador'); ?> — Colégio Monteiro Lobato</title>
     <style>
         @page {
             size: A4 portrait;
-            margin: 0;
+            margin: 12mm 14mm 14mm 14mm;
         }
         * {
             box-sizing: border-box !important;
@@ -37,13 +45,13 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
             print-color-adjust: exact;
         }
         html, body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: #0f172a;
-            background: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #000000;
             margin: 0;
             padding: 0;
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 8.5pt;
+            line-height: 1.35;
+            background: #ffffff;
             width: 100%;
         }
         .font-tabular {
@@ -51,15 +59,119 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
             font-feature-settings: 'tnum' 1, 'zero' 1;
         }
 
+        /* Barra de Ações para Navegador (Oculta na Impressão e no PDF) */
+        .no-print {
+            background-color: #1e293b;
+            color: #ffffff;
+            border: 1px solid #0f172a;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            font-size: 11px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        .no-print button, .no-print a {
+            cursor: pointer;
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-print-action {
+            background: #1d4ed8;
+            color: #ffffff !important;
+            border: 1px solid #1e40af;
+        }
+        .btn-print-action:hover {
+            background: #1e40af;
+        }
+        .btn-close-action {
+            background: #ffffff;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1;
+            margin-left: 6px;
+        }
+        .btn-close-action:hover {
+            background: #f1f5f9;
+        }
+
+        /* Visualização de Folha A4 em Tela */
         @media screen {
             body {
                 background-color: #cbd5e1;
-                padding: 20px 10px 40px 10px;
+                padding: 24px 0 40px 0;
+            }
+            .no-print {
+                width: 210mm;
+                max-width: calc(100% - 32px);
+                margin: 0 auto 16px auto;
+                position: sticky;
+                top: 10px;
+                z-index: 1000;
+            }
+            .no-print .zoom-controls {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 4px;
+                padding: 2px 6px;
+                margin-right: 8px;
+            }
+            .no-print .btn-zoom {
+                background: transparent;
+                color: #ffffff;
+                border: none;
+                width: 22px;
+                height: 22px;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                border-radius: 3px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+                transition: all 0.15s ease;
+            }
+            .no-print .btn-zoom:hover {
+                background: rgba(255, 255, 255, 0.25);
+                color: #93c5fd;
+            }
+            .no-print .btn-zoom-val {
+                background: transparent;
+                color: #ffffff;
+                border: none;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                padding: 2px 5px;
+                border-radius: 3px;
+                min-width: 40px;
+                text-align: center;
+                font-variant-numeric: tabular-nums;
+                transition: all 0.15s ease;
+            }
+            .no-print .btn-zoom-val:hover {
+                background: rgba(255, 255, 255, 0.25);
+                text-decoration: underline;
+            }
+            .document-zoom-area {
+                zoom: var(--doc-zoom, 1);
+                transform-origin: top center;
+                transition: zoom 0.1s ease-out;
             }
             .container {
-                width: 200mm;
+                width: 210mm;
                 max-width: calc(100% - 24px);
-                min-height: 280mm;
+                min-height: 297mm;
                 margin: 0 auto;
                 background: #ffffff;
                 padding: 10mm 14mm;
@@ -70,129 +182,83 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
             }
         }
 
-        /* Barra de Controle Superior Padronizada (#1e293b) */
-        .no-print-bar, .no-print {
-            background-color: #1e293b;
-            color: #ffffff;
-            padding: 8px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 200mm;
-            max-width: calc(100% - 32px);
-            margin: 0 auto 16px auto;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            position: sticky;
-            top: 10px;
-            z-index: 1000;
-        }
-        .no-print .zoom-controls {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            padding: 2px 6px;
-        }
-        .no-print .btn-zoom {
-            background: transparent;
-            color: #ffffff;
-            border: none;
-            width: 24px;
-            height: 24px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            border-radius: 3px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            transition: all 0.15s ease;
-        }
-        .no-print .btn-zoom:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: #93c5fd;
-        }
-        .no-print .btn-zoom-val {
-            background: transparent;
-            color: #ffffff;
-            border: none;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-variant-numeric: tabular-nums;
-            min-width: 44px;
-            text-align: center;
-            transition: all 0.15s ease;
-        }
-        .no-print .btn-zoom-val:hover {
-            background: rgba(255, 255, 255, 0.2);
-            text-decoration: underline;
-        }
-        .no-print .btn-action {
-            background: #ffffff;
-            color: #0f172a;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.15s ease-in-out;
-        }
-        .no-print .btn-action:hover {
-            background: #f1f5f9;
-            color: #1d4ed8;
-        }
-        .no-print .btn-primary {
-            background: #1d4ed8;
-            color: #ffffff;
-            border: 1px solid #1e40af;
-        }
-        .no-print .btn-primary:hover {
-            background: #1e40af;
-            color: #ffffff;
-        }
-
-        .document-zoom-area {
-            zoom: var(--doc-zoom, 1);
-            transform-origin: top center;
-            transition: zoom 0.1s ease-out;
-        }
-
+        /* Impressão Direta (Física / Browser Print to PDF) */
         @media print {
-            html, body {
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: #ffffff !important;
-            }
-            .no-print-bar, .no-print {
-                display: none !important;
+            @page {
+                size: A4 portrait;
+                margin: 12mm 14mm 14mm 14mm;
             }
             .document-zoom-area {
                 zoom: 1 !important;
                 transform: none !important;
             }
+            html, body {
+                width: 100% !important;
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 8pt;
+                color: #000000 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
             .container {
-                width: 210mm !important;
-                max-width: 210mm !important;
-                min-height: 297mm !important;
-                margin: 0 auto !important;
-                padding: 10mm 14mm !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
                 box-shadow: none !important;
                 border: none !important;
+                border-radius: 0 !important;
                 background: #ffffff !important;
                 box-sizing: border-box !important;
+            }
+
+            /* Quebras de páginas limpas em tabelas oficiais */
+            table.table-doc-excel {
+                width: 100% !important;
+                table-layout: fixed !important;
+                border-collapse: separate !important;
+                border-spacing: 0 !important;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+                margin-top: 4px !important;
+                margin-bottom: 8px !important;
+                border: 1px solid #000000 !important;
+                border-bottom: none !important;
+                border-right: none !important;
+            }
+            table.table-doc-excel thead {
+                display: table-header-group !important;
+            }
+            table.table-doc-excel thead tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            table.table-doc-excel tfoot {
+                display: table-footer-group !important;
+            }
+            table.table-doc-excel tbody tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            table.table-doc-excel th,
+            table.table-doc-excel td {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                border-right: 1px solid #000000 !important;
+                border-bottom: 1px solid #000000 !important;
+            }
+            .school-header,
+            .colab-banner,
+            .param-bar,
+            .footer-assinaturas-box,
+            .row-geral-total {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
 
@@ -200,112 +266,184 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
         thead { display: table-header-group; }
         tfoot { display: table-footer-group; }
         tr { page-break-inside: avoid; break-inside: avoid; }
-        .print-header, .colab-card, .stat-grid, .sign-box { page-break-inside: avoid; break-inside: avoid; }
+        .school-header, .colab-banner, .param-bar, .footer-assinaturas-box { page-break-inside: avoid; break-inside: avoid; }
 
-        .print-header {
-            border-bottom: 2px solid #1d4ed8;
-            padding-bottom: 10px;
-            margin-bottom: 14px;
+        /* Cabeçalho Oficial Escolar */
+        .school-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
         }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .logo-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
-        .school-title { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0; }
-        .report-title { font-size: 12px; font-weight: 600; color: #1d4ed8; margin: 2px 0 0 0; }
-        .report-sub { font-size: 9px; color: #64748b; margin: 1px 0 0 0; }
-        .colab-card {
-            background: #f8fafc;
+        .school-logo-col {
+            width: 52px;
+            margin-right: 12px;
+        }
+        .school-logo-col img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
             border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            padding: 10px 14px;
-            margin-bottom: 14px;
+        }
+        .school-title-col {
+            flex: 1;
+            line-height: 1.25;
+        }
+        .school-name {
+            font-size: 10.5pt;
+            font-weight: 700;
+            color: #000000;
+            text-transform: uppercase;
+        }
+        .report-title-main {
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: #000000;
+            margin-top: 2px;
+        }
+        .school-meta-col {
+            text-align: right;
+            font-size: 7.5pt;
+            color: #334155;
+            line-height: 1.3;
+            padding-right: 2px;
+        }
+
+        /* Banner de Identificação do Colaborador */
+        .colab-banner {
+            background: #f8fafc;
+            border: 1px solid #000000;
+            padding: 6px 10px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .colab-name { font-size: 13px; font-weight: 700; color: #0f172a; }
-        .colab-meta { font-size: 10px; color: #475569; margin-top: 2px; }
-        .stat-grid {
+        .colab-name {
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: #000000;
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .code-tag {
+            display: inline-block;
+            background: #ffffff;
+            border: 1px solid #000000;
+            border-radius: 2px;
+            padding: 1px 5px;
+            font-size: 7pt;
+            font-weight: 700;
+            color: #000000;
+            margin-left: 4px;
+        }
+
+        /* Faixa de Parâmetros */
+        .param-bar {
+            font-size: 8pt;
+            background: #f8fafc;
+            border: 1px solid #000000;
+            padding: 4px 8px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            padding: 8px 12px;
-            margin-bottom: 16px;
         }
-        .stat-item { text-align: left; }
-        .stat-label { font-size: 8.5px; font-weight: 600; color: #64748b; text-transform: uppercase; }
-        .stat-value { font-size: 12px; font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; }
-        table {
+
+        /* Tabela Estilo Excel Oficial */
+        table.table-doc-excel {
             width: 100% !important;
             table-layout: fixed !important;
             box-sizing: border-box !important;
             border-collapse: collapse !important;
-            margin-bottom: 20px;
-            font-size: 10px;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            font-size: 7.8pt;
             border: 1px solid #000000 !important;
         }
-        th {
-            background: #ffffff !important;
-            color: #0f172a;
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            padding: 5px 8px;
+        table.table-doc-excel th,
+        table.table-doc-excel td {
             border: 1px solid #000000 !important;
-            text-align: left;
-        }
-        th:first-child,
-        td:first-child {
-            border-left: 1px solid #000000 !important;
-        }
-        th:last-child,
-        td:last-child {
-            border-right: 1px solid #000000 !important;
-        }
-        td {
-            padding: 5px 8px;
-            border: 1px solid #000000 !important; /* Linha preta estilo Excel */
-            background-color: #ffffff !important; /* Branco puro nos itens das listas */
-            overflow-wrap: break-word;
+            padding: 4px 6px !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
             word-break: break-word;
         }
-        tr:nth-child(even) td { background-color: #ffffff !important; }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        .total-row td {
-            background: #ffffff !important;
-            font-weight: 700;
-            border: 1.5px solid #000000 !important;
-            font-size: 11px;
+        table.table-doc-excel thead th {
+            font-weight: 700 !important;
+            text-align: center;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            background-color: #f8fafc !important;
         }
-        .sign-box {
+        table.table-doc-excel tfoot td {
+            font-weight: 700 !important;
+            background-color: #f8fafc !important;
+            border-top: 2px solid #000000 !important;
+        }
+
+        .text-start { text-align: left !important; }
+        .text-center { text-align: center !important; }
+        .text-end { text-align: right !important; }
+
+        /* Banners de Seção */
+        .section-banner {
+            font-weight: 700;
+            font-size: 8pt;
+            text-transform: uppercase;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 3.5px 8px;
+            margin-top: 8px;
+            margin-bottom: 2px;
+            border-radius: 2px;
             display: flex;
             justify-content: space-between;
-            margin-top: 36px;
-            padding-top: 20px;
+            align-items: center;
         }
-        .sign-line {
-            width: 45%;
-            text-align: center;
+
+        /* Assinaturas */
+        .footer-assinaturas-box {
+            margin-top: 24px;
+            padding-top: 14px;
+            border-top: 1px solid #000000;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-line {
+            width: 44%;
             border-top: 1px solid #000000;
             padding-top: 4px;
-            font-size: 9px;
-            color: #475569;
+            text-align: center;
+            font-size: 7.5pt;
+            line-height: 1.25;
+        }
+        .doc-footer-meta {
+            margin-top: 10px;
+            font-size: 7pt;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 3px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Barra de Controle Superior Padronizada (#1e293b - Visível apenas na tela) -->
-    <div class="no-print-bar no-print">
-        <div style="font-size: 12px; font-weight: 600;">
-            Demonstrativo Individual RH • <?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador'); ?> • Competência: <?php echo htmlspecialchars($competencia); ?> • Total de Páginas: 1
+<?php if (!$isPdf): ?>
+<div class="no-print">
+    <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">
+            Demonstrativo Individual &bull; <?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador'); ?>
         </div>
-
+        <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
+            Competência: <?php echo htmlspecialchars($competencia); ?> &bull; Total: R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?>
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
         <!-- Controles de Zoom para Conferência -->
         <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes e números antes de imprimir ou salvar">
             <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">
@@ -318,115 +456,140 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
             <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
         </div>
 
-        <div style="display: flex; gap: 8px;">
-            <button type="button" class="btn-action btn-primary" onclick="window.print()">
-                🖨 Imprimir Documento
-            </button>
-            <button type="button" class="btn-action" onclick="fecharJanela()">
-                ✕ Fechar
-            </button>
+        <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
+            🖨 Imprimir / Salvar PDF
+        </button>
+        <button type="button" class="btn-close-action" onclick="window.close()">
+            ✕ Fechar
+        </button>
+    </div>
+</div>
+<?php endif; ?>
+
+<div id="document-zoom-area" class="document-zoom-area">
+<div class="container">
+
+    <!-- Cabeçalho Oficial Escolar -->
+    <div class="school-header">
+        <?php if (!empty($logoDataUri)): ?>
+        <div class="school-logo-col">
+            <img src="<?php echo $logoDataUri; ?>" alt="Logotipo Oficial">
+        </div>
+        <?php endif; ?>
+        <div class="school-title-col">
+            <div class="school-name">COLÉGIO MONTEIRO LOBATO</div>
+            <div class="report-title-main">DEMONSTRATIVO INDIVIDUAL DE CONSUMO — DESCONTO EM FOLHA DE PAGAMENTO</div>
+            <div style="font-size: 8pt; color: #334155;">Sistema de Gestão Cantina Web • Módulo de Recursos Humanos & Pessoal</div>
+        </div>
+        <div class="school-meta-col font-tabular">
+            <div><strong>Competência:</strong> <?php echo htmlspecialchars($competencia, ENT_QUOTES, 'UTF-8'); ?></div>
+            <div><strong>Emissão:</strong> <?php echo $emissao; ?></div>
+            <div><strong>Operador:</strong> <?php echo htmlspecialchars($operador, ENT_QUOTES, 'UTF-8'); ?></div>
         </div>
     </div>
 
-    <!-- ÁREA ESCALÁVEL COM ZOOM PARA CONFERÊNCIA -->
-    <div id="document-zoom-area" class="document-zoom-area">
-        <div class="container">
-
-    <div class="print-header">
-        <div class="header-left">
-            <?php if (!empty($logoDataUri)): ?>
-                <img src="<?php echo $logoDataUri; ?>" alt="Logo" class="logo-img">
-            <?php endif; ?>
-            <div>
-                <div class="school-title">COLÉGIO MONTEIRO LOBATO</div>
-                <div class="report-title">Demonstrativo Individual de Consumo na Cantina — Desconto em Folha</div>
-                <div class="report-sub">Competência: <?php echo htmlspecialchars($competencia); ?> &bull; Emissão: <?php echo $emissao; ?> &bull; Responsável: <?php echo htmlspecialchars($operador); ?></div>
-            </div>
-        </div>
-        <div style="text-align: right; padding-right: 2px;">
-            <div style="font-size: 13px; font-weight: 700; color: #0f172a;">RH &bull; COLABORADOR</div>
-            <div style="font-size: 9px; color: #1d4ed8; font-weight: 600; text-transform: uppercase;">Mês <?php echo htmlspecialchars($competencia); ?></div>
-        </div>
-    </div>
-
-    <div class="colab-card">
+    <!-- Banner de Identificação do Colaborador -->
+    <div class="colab-banner">
         <div>
-            <div class="colab-name"><?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador'); ?></div>
-            <div class="colab-meta">
-                <strong>Matrícula:</strong> <?php echo htmlspecialchars($colaborador['matricula_funcional'] ?? '-'); ?> &bull;
-                <strong>Cargo:</strong> <?php echo htmlspecialchars($colaborador['cargo'] ?? 'Colaborador'); ?>
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <span class="colab-name"><?php echo htmlspecialchars(mb_strtoupper($colaborador['nome'] ?? 'COLABORADOR', 'UTF-8')); ?></span>
+                <span class="code-tag font-tabular">Matrícula: <?php echo htmlspecialchars($colaborador['matricula'] ?? ($colaborador['codigo'] ?? '-')); ?></span>
+                <?php if (!empty($colaborador['cpf'])): ?>
+                    <span class="code-tag font-tabular">CPF: <?php echo htmlspecialchars($colaborador['cpf']); ?></span>
+                <?php endif; ?>
+            </div>
+            <div style="font-size: 7.5pt; color: #334155; margin-top: 2px;">
+                Cargo / Departamento: <strong><?php echo htmlspecialchars($colaborador['cargo'] ?? ($colaborador['departamento'] ?? 'Docente / Administrativo')); ?></strong>
             </div>
         </div>
-        <div style="text-align: right;">
-            <div style="font-size: 9px; color: #64748b; text-transform: uppercase;">Total do Mês</div>
-            <div style="font-size: 14px; font-weight: 700; color: #1d4ed8;" class="font-tabular">R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?></div>
+        <div style="text-align: right;" class="font-tabular">
+            <div style="font-size: 7pt; font-weight: 700; color: #475569; text-transform: uppercase;">Total a Descontar</div>
+            <div style="font-size: 11pt; font-weight: 800; color: #000000;">R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?></div>
         </div>
     </div>
 
-    <div class="stat-grid">
-        <div class="stat-item">
-            <div class="stat-label">Total de Lanches/Itens</div>
-            <div class="stat-value font-tabular"><?php echo $totalLanches; ?> un</div>
+    <!-- Faixa de Parâmetros e Indicadores -->
+    <div class="param-bar font-tabular">
+        <div>
+            <strong>Competência:</strong> <?php echo htmlspecialchars($competencia); ?> &bull; 
+            <strong>Total de Compras:</strong> <?php echo $totalCompras; ?>
         </div>
-        <div class="stat-item">
-            <div class="stat-label">Idas à Cantina (Compras)</div>
-            <div class="stat-value font-tabular"><?php echo $totalCompras; ?></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">Valor Total do Desconto</div>
-            <div class="stat-value font-tabular" style="color: #1d4ed8;">R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?></div>
+        <div>
+            <strong>Total de Lanches / Itens:</strong> <?php echo $totalLanches; ?> un &bull; 
+            <strong>Valor Total Averbação:</strong> R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?>
         </div>
     </div>
 
-    <table>
+    <!-- Banner de Seção Escuro -->
+    <div class="section-banner">
+        <span>DISCRIMINAÇÃO ANALÍTICA DOS CONSUMOS DA COMPETÊNCIA</span>
+        <span class="font-tabular"><?php echo count($itens); ?> lançamento(s)</span>
+    </div>
+
+    <!-- Tabela Estilo Excel Corporativo -->
+    <table class="table-doc-excel">
         <thead>
             <tr>
-                <th style="width: 14%;">Data/Hora</th>
-                <th style="width: 10%;">Venda #</th>
-                <th style="width: 44%;">Item Consumido</th>
-                <th style="width: 10%; text-align: center;">Qtd</th>
-                <th style="width: 11%; text-align: right;">Vlr Unit</th>
-                <th style="width: 11%; text-align: right;">Subtotal</th>
+                <th style="width: 14%;" class="text-center">Data / Hora</th>
+                <th style="width: 46%;" class="text-start">Descrição do Alimento / Produto</th>
+                <th style="width: 12%;" class="text-center">Qtd.</th>
+                <th style="width: 14%;" class="text-end">Valor Unitário</th>
+                <th style="width: 14%;" class="text-end">Subtotal</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($itens)): ?>
                 <tr>
-                    <td colspan="6" class="text-center" style="color: #64748b; padding: 12px;">Nenhum item consumido sob desconto em folha nesta competência.</td>
+                    <td colspan="5" class="text-center" style="padding: 12px; color: #000000;">
+                        Não há consumos registrados para este colaborador no período selecionado.
+                    </td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($itens as $it): ?>
+                <?php foreach ($itens as $it): 
+                    $dataFmt = htmlspecialchars($it['data_formatada'] ?? (!empty($it['data']) ? date('d/m/Y H:i', strtotime($it['data'])) : '-'), ENT_QUOTES, 'UTF-8');
+                    $desc = htmlspecialchars($it['descricao'] ?? ($it['produto_nome'] ?? '-'), ENT_QUOTES, 'UTF-8');
+                    $qtd = (int)($it['quantidade'] ?? 1);
+                    $unit = (float)($it['valor_unitario'] ?? ($it['preco_unitario'] ?? 0.0));
+                    $sub = (float)($it['valor_total'] ?? ($it['subtotal'] ?? ($qtd * $unit)));
+                ?>
                     <tr>
-                        <td class="font-tabular"><?php echo date('d/m/Y H:i', strtotime($it['data_venda'] ?? 'now')); ?></td>
-                        <td class="font-tabular" style="color: #64748b;">#<?php echo (int)($it['venda_balcao_id'] ?? 0); ?></td>
-                        <td><strong><?php echo htmlspecialchars($it['produto_nome'] ?? 'Produto'); ?></strong></td>
-                        <td class="text-center font-tabular"><?php echo (int)($it['quantidade'] ?? 1); ?> un</td>
-                        <td class="text-right font-tabular">R$ <?php echo number_format((float)($it['preco_unitario'] ?? 0), 2, ',', '.'); ?></td>
-                        <td class="text-right font-tabular">R$ <?php echo number_format((float)($it['subtotal'] ?? 0), 2, ',', '.'); ?></td>
+                        <td class="text-center font-tabular"><?php echo $dataFmt; ?></td>
+                        <td class="text-start"><strong><?php echo $desc; ?></strong></td>
+                        <td class="text-center font-tabular"><?php echo $qtd; ?> un</td>
+                        <td class="text-end font-tabular">R$ <?php echo number_format($unit, 2, ',', '.'); ?></td>
+                        <td class="text-end font-tabular">
+                            <strong>R$ <?php echo number_format($sub, 2, ',', '.'); ?></strong>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
-                <tr class="total-row">
-                    <td colspan="3">TOTAL A DESCONTAR EM FOLHA DE PAGAMENTO</td>
-                    <td class="text-center font-tabular"><?php echo $totalLanches; ?> un</td>
-                    <td></td>
-                    <td class="text-right font-tabular">R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?></td>
-                </tr>
             <?php endif; ?>
         </tbody>
+        <tfoot>
+            <tr class="row-geral-total">
+                <td colspan="2" class="text-end">TOTAL DESTE DEMONSTRATIVO INDIVIDUAL:</td>
+                <td class="text-center font-tabular"><?php echo $totalLanches; ?> UN</td>
+                <td class="text-end font-tabular" colspan="2">R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?></td>
+            </tr>
+        </tfoot>
     </table>
 
-    <div style="font-size: 8.5px; color: #64748b; margin-top: 10px;">
-        <strong>Termo de Ciência do Colaborador:</strong> Autorizo o desconto em folha de pagamento do valor acima discriminado referente ao meu consumo na cantina escolar na competência <?php echo htmlspecialchars($competencia); ?>.
+    <!-- Assinaturas e Rodapé -->
+    <div class="footer-assinaturas-box">
+        <div class="signature-line">
+            <strong><?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador(a)'); ?></strong><br>
+            Ciente do Consumo / Assinatura
+        </div>
+        <div class="signature-line">
+            <strong>Cantina Escolar / Recursos Humanos</strong><br>
+            Conferência e Averbação
+        </div>
     </div>
 
-    <div class="sign-box">
-        <div class="sign-line">
-            Assinatura do Colaborador: <?php echo htmlspecialchars($colaborador['nome'] ?? 'Colaborador'); ?>
-        </div>
-        <div class="sign-line">
-            Visto / Conferência Recursos Humanos
-        </div>
+    <div class="doc-footer-meta">
+        <div>Cantina Web &bull; Sistema Integrado de Gestão Escolar &bull; Módulo de Pessoal</div>
+        <div>Página 1 de 1 &bull; Documento Oficial de Averbação em Folha de Pagamento</div>
     </div>
+
 </div>
 </div>
 
@@ -488,17 +651,6 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
         }
     });
 
-    window.addEventListener('wheel', function(e) {
-        if (e.ctrlKey) {
-            e.preventDefault();
-            if (e.deltaY < 0) {
-                alterarZoom(0.1);
-            } else {
-                alterarZoom(-0.1);
-            }
-        }
-    }, { passive: false });
-
     window.addEventListener('beforeprint', function() {
         const zoomArea = document.getElementById('document-zoom-area');
         if (zoomArea) {
@@ -511,21 +663,6 @@ $totalCompras = (int)($totais['total_compras'] ?? 0);
             zoomArea.style.zoom = currentZoom;
         }
     });
-
-    function fecharJanela() {
-        window.close();
-        setTimeout(function() {
-            if (!window.closed) {
-                if (window.opener) {
-                    window.close();
-                } else if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.location.href = '<?php echo $baseUrl; ?>/relatorios/desconto-folha';
-                }
-            }
-        }, 150);
-    }
 </script>
 </body>
 </html>

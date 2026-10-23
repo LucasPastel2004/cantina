@@ -265,6 +265,9 @@ $isCaixa = ($regime === 'caixa');
             text-align: center;
             font-size: 7.2pt;
             text-transform: uppercase;
+            background-color: #f8fafc !important;
+            color: #000000 !important;
+            border: 1px solid #000000 !important;
         }
 
         table.table-dre-doc thead {
@@ -621,8 +624,8 @@ $isCaixa = ($regime === 'caixa');
 
             <?php if ($isCaixa): ?>
             <!-- SUBSEÇÃO INFORMATIVA: CONTROLE DE CARTEIRA (RECARGAS VS CONSUMO) -->
-            <tr class="row-secao" style="background-color: #f8fafc !important;">
-                <td class="col-desc" colspan="14" style="font-weight: 700; text-transform: uppercase; font-size: 7.2pt; color: #0f172a; background-color: #f1f5f9 !important; border-top: 2px solid #000000 !important;">
+            <tr class="row-secao">
+                <td class="col-desc" colspan="14" style="font-weight: 700; text-transform: uppercase; font-size: 7.2pt; color: #ffffff !important; background-color: #0f172a !important; border-top: 2px solid #000000 !important;">
                     INFORMATIVO DE CONTROLE DA CARTEIRA: RECARGAS VS CONSUMO REAL DE LANCHES POR SALDO
                 </td>
             </tr>
@@ -645,13 +648,13 @@ $isCaixa = ($regime === 'caixa');
                 <?php for ($m = 1; $m <= 12; $m++): 
                     $difM = (float)($meses[$m]['diferenca_recarga_consumo'] ?? 0);
                 ?>
-                    <td class="col-mes font-tabular" style="<?php echo $difM < 0 ? 'color: #dc2626 !important;' : ''; ?>">
+                    <td class="col-mes font-tabular">
                         <?php echo ($difM > 0 ? '+' : '') . number_format($difM, 2, ',', '.'); ?>
                     </td>
                 <?php endfor; 
                 $difT = (float)($totais['diferenca_recarga_consumo'] ?? 0);
                 ?>
-                <td class="col-total font-tabular" style="<?php echo $difT < 0 ? 'color: #dc2626 !important;' : ''; ?>">
+                <td class="col-total font-tabular">
                     <?php echo ($difT > 0 ? '+' : '') . number_format($difT, 2, ',', '.'); ?>
                 </td>
             </tr>

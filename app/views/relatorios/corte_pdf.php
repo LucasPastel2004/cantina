@@ -3,31 +3,38 @@
  * Cantina Web — Colégio Monteiro Lobato
  * View: Relatório A4 Timbrado de Corte do Turno para Fornecedores
  * 
- * Conforme docs/FSD.md (Área 2, Tela 3.1) e docs/DESIGN.md
+ * Conforme docs/FSD.md (Área 2, Tela 3.1), docs/DESIGN.md e padrão oficial de relatórios A4
+ * Padrão Excel Corporativo com divisórias pretas e fundo branco puro, banners azul marinho (#0f172a)
  */
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
-$dataConsumo = $dadosCorte['data_consumo'] ?? date('Y-m-d');
+$baseUrl = $baseUrl ?? '';
+$dadosCorte = $dadosCorte ?? ($dados ?? []);
+
+// Suporte tanto ao formato agrupado quanto aos campos diretos
+$dataConsumo = $dadosCorte['data_consumo'] ?? ($dadosCorte['data'] ?? date('Y-m-d'));
 $dataFmt = date('d/m/Y', strtotime($dataConsumo));
-$turno = ucfirst($dadosCorte['turno_consumo'] ?? 'matutino');
-$itens = $dadosCorte['itens'] ?? [];
-$totalPecas = (int)($dadosCorte['total_pecas'] ?? 0);
+$turno = ucfirst($dadosCorte['turno_consumo'] ?? ($dadosCorte['turno'] ?? 'matutino'));
+$itens = $dadosCorte['itens'] ?? ($dadosCorte['lanches'] ?? []);
+$totalPecas = (int)($dadosCorte['total_pecas'] ?? ($dadosCorte['total_itens'] ?? 0));
 $totalPedidos = (int)($dadosCorte['total_pedidos'] ?? 0);
 $totalAlunos = (int)($dadosCorte['total_alunos'] ?? 0);
-$statusCorte = $dadosCorte['status_corte']['rotulo'] ?? 'Corte Fechado';
+$statusCorte = $dadosCorte['status_corte']['rotulo'] ?? ($dadosCorte['status_corte'] ?? 'Corte Fechado');
 $emissao = date('d/m/Y H:i:s');
-$logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
+$isPdf = $isPdf ?? false;
+
+$logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Pedido Fornecedor — <?php echo htmlspecialchars($dataFmt . ' ' . $turno); ?></title>
+    <title>Consolidação de Compra de Lanches — <?php echo htmlspecialchars($dataFmt . ' ' . $turno); ?></title>
     <style>
         @page {
             size: A4 portrait;
-            margin: 0;
+            margin: 12mm 14mm 14mm 14mm;
         }
         * {
             box-sizing: border-box !important;
@@ -35,13 +42,13 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             print-color-adjust: exact;
         }
         html, body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: #0f172a;
-            background: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #000000;
             margin: 0;
             padding: 0;
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 8.5pt;
+            line-height: 1.35;
+            background: #ffffff;
             width: 100%;
         }
         .font-tabular {
@@ -49,15 +56,119 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             font-feature-settings: 'tnum' 1, 'zero' 1;
         }
 
+        /* Barra de Ações para Navegador (Oculta na Impressão e no PDF) */
+        .no-print {
+            background-color: #1e293b;
+            color: #ffffff;
+            border: 1px solid #0f172a;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            font-size: 11px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        .no-print button, .no-print a {
+            cursor: pointer;
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-print-action {
+            background: #1d4ed8;
+            color: #ffffff !important;
+            border: 1px solid #1e40af;
+        }
+        .btn-print-action:hover {
+            background: #1e40af;
+        }
+        .btn-close-action {
+            background: #ffffff;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1;
+            margin-left: 6px;
+        }
+        .btn-close-action:hover {
+            background: #f1f5f9;
+        }
+
+        /* Visualização de Folha A4 em Tela */
         @media screen {
             body {
                 background-color: #cbd5e1;
-                padding: 20px 10px 40px 10px;
+                padding: 24px 0 40px 0;
+            }
+            .no-print {
+                width: 210mm;
+                max-width: calc(100% - 32px);
+                margin: 0 auto 16px auto;
+                position: sticky;
+                top: 10px;
+                z-index: 1000;
+            }
+            .no-print .zoom-controls {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 4px;
+                padding: 2px 6px;
+                margin-right: 8px;
+            }
+            .no-print .btn-zoom {
+                background: transparent;
+                color: #ffffff;
+                border: none;
+                width: 22px;
+                height: 22px;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                border-radius: 3px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+                transition: all 0.15s ease;
+            }
+            .no-print .btn-zoom:hover {
+                background: rgba(255, 255, 255, 0.25);
+                color: #93c5fd;
+            }
+            .no-print .btn-zoom-val {
+                background: transparent;
+                color: #ffffff;
+                border: none;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                padding: 2px 5px;
+                border-radius: 3px;
+                min-width: 40px;
+                text-align: center;
+                font-variant-numeric: tabular-nums;
+                transition: all 0.15s ease;
+            }
+            .no-print .btn-zoom-val:hover {
+                background: rgba(255, 255, 255, 0.25);
+                text-decoration: underline;
+            }
+            .document-zoom-area {
+                zoom: var(--doc-zoom, 1);
+                transform-origin: top center;
+                transition: zoom 0.1s ease-out;
             }
             .container {
-                width: 200mm;
+                width: 210mm;
                 max-width: calc(100% - 24px);
-                min-height: 280mm;
+                min-height: 297mm;
                 margin: 0 auto;
                 background: #ffffff;
                 padding: 10mm 14mm;
@@ -68,132 +179,82 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             }
         }
 
-        /* Barra de Controle Superior Padronizada (#1e293b) */
-        .no-print-bar, .no-print {
-            background-color: #1e293b;
-            color: #ffffff;
-            padding: 8px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            width: 200mm;
-            max-width: calc(100% - 32px);
-            margin: 0 auto 16px auto;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            position: sticky;
-            top: 10px;
-            z-index: 1000;
-        }
-        .no-print .zoom-controls {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            padding: 2px 6px;
-            flex-shrink: 0;
-            margin: 0 4px;
-        }
-        .no-print .btn-zoom {
-            background: transparent;
-            color: #ffffff;
-            border: none;
-            width: 24px;
-            height: 24px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            border-radius: 3px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            transition: all 0.15s ease;
-        }
-        .no-print .btn-zoom:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: #93c5fd;
-        }
-        .no-print .btn-zoom-val {
-            background: transparent;
-            color: #ffffff;
-            border: none;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-variant-numeric: tabular-nums;
-            min-width: 44px;
-            text-align: center;
-            transition: all 0.15s ease;
-        }
-        .no-print .btn-zoom-val:hover {
-            background: rgba(255, 255, 255, 0.2);
-            text-decoration: underline;
-        }
-        .no-print .btn-action {
-            background: #ffffff;
-            color: #0f172a;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.15s ease-in-out;
-        }
-        .no-print .btn-action:hover {
-            background: #f1f5f9;
-            color: #1d4ed8;
-        }
-        .no-print .btn-primary {
-            background: #1d4ed8;
-            color: #ffffff;
-            border: 1px solid #1e40af;
-        }
-        .no-print .btn-primary:hover {
-            background: #1e40af;
-            color: #ffffff;
-        }
-
-        .document-zoom-area {
-            zoom: var(--doc-zoom, 1);
-            transform-origin: top center;
-            transition: zoom 0.1s ease-out;
-        }
-
+        /* Impressão Direta (Física / Browser Print to PDF) */
         @media print {
-            html, body {
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: #ffffff !important;
-            }
-            .no-print-bar, .no-print {
-                display: none !important;
+            @page {
+                size: A4 portrait;
+                margin: 12mm 14mm 14mm 14mm;
             }
             .document-zoom-area {
                 zoom: 1 !important;
                 transform: none !important;
             }
+            html, body {
+                width: 100% !important;
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 8pt;
+                color: #000000 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
             .container {
-                width: 210mm !important;
-                max-width: 210mm !important;
-                min-height: 297mm !important;
-                margin: 0 auto !important;
-                padding: 10mm 14mm !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
                 box-shadow: none !important;
                 border: none !important;
+                border-radius: 0 !important;
                 background: #ffffff !important;
                 box-sizing: border-box !important;
+            }
+
+            /* Quebras de páginas limpas em tabelas oficiais */
+            table.table-doc-excel {
+                width: 100% !important;
+                table-layout: fixed !important;
+                border-collapse: separate !important;
+                border-spacing: 0 !important;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+                margin-top: 4px !important;
+                margin-bottom: 8px !important;
+                border: 1px solid #000000 !important;
+                border-bottom: none !important;
+                border-right: none !important;
+            }
+            table.table-doc-excel thead {
+                display: table-header-group !important;
+            }
+            table.table-doc-excel thead tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            table.table-doc-excel tfoot {
+                display: table-footer-group !important;
+            }
+            table.table-doc-excel tbody tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            table.table-doc-excel th,
+            table.table-doc-excel td {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                border-right: 1px solid #000000 !important;
+                border-bottom: 1px solid #000000 !important;
+            }
+            .school-header,
+            .param-bar,
+            .footer-assinaturas-box,
+            .row-geral-total {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
 
@@ -201,107 +262,153 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
         thead { display: table-header-group; }
         tfoot { display: table-footer-group; }
         tr { page-break-inside: avoid; break-inside: avoid; }
-        .print-header, .stat-grid, .sign-box { page-break-inside: avoid; break-inside: avoid; }
+        .school-header, .param-bar, .footer-assinaturas-box { page-break-inside: avoid; break-inside: avoid; }
 
-        .print-header {
-            border-bottom: 2px solid #1d4ed8;
-            padding-bottom: 10px;
-            margin-bottom: 14px;
+        /* Cabeçalho Oficial Escolar */
+        .school-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
         }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .logo-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
-        .school-title { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0; }
-        .report-title { font-size: 12px; font-weight: 600; color: #1d4ed8; margin: 2px 0 0 0; }
-        .report-sub { font-size: 9px; color: #64748b; margin: 1px 0 0 0; }
-        .stat-grid {
+        .school-logo-col {
+            width: 52px;
+            margin-right: 12px;
+        }
+        .school-logo-col img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #cbd5e1;
+        }
+        .school-title-col {
+            flex: 1;
+            line-height: 1.25;
+        }
+        .school-name {
+            font-size: 10.5pt;
+            font-weight: 700;
+            color: #000000;
+            text-transform: uppercase;
+        }
+        .report-title-main {
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: #000000;
+            margin-top: 2px;
+        }
+        .school-meta-col {
+            text-align: right;
+            font-size: 7.5pt;
+            color: #334155;
+            line-height: 1.3;
+            padding-right: 2px;
+        }
+
+        /* Faixa de Parâmetros */
+        .param-bar {
+            font-size: 8pt;
+            background: #f8fafc;
+            border: 1px solid #000000;
+            padding: 4px 8px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            padding: 8px 12px;
-            margin-bottom: 16px;
         }
-        .stat-item { text-align: left; }
-        .stat-label { font-size: 8.5px; font-weight: 600; color: #64748b; text-transform: uppercase; }
-        .stat-value { font-size: 12px; font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; }
-        .data-table {
+
+        /* Tabela Estilo Excel Oficial */
+        table.table-doc-excel {
             width: 100% !important;
             table-layout: fixed !important;
-            border-collapse: collapse !important;
-            margin-bottom: 20px;
-            font-size: 10.5px;
-            border: 1px solid #000000 !important;
             box-sizing: border-box !important;
-        }
-        .data-table th {
-            background: #ffffff !important;
-            color: #0f172a;
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            padding: 6px 8px;
+            border-collapse: collapse !important;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            font-size: 7.8pt;
             border: 1px solid #000000 !important;
-            text-align: left;
         }
-        .data-table th:first-child,
-        .data-table td:first-child {
-            border-left: 1px solid #000000 !important;
-        }
-        .data-table th:last-child,
-        .data-table td:last-child {
-            border-right: 1px solid #000000 !important;
-        }
-        .data-table tbody tr {
-            background: #ffffff !important;
-        }
-        .data-table td {
-            padding: 6px 8px;
-            border: 1px solid #000000 !important; /* Linhas pretas estilo Excel */
-            font-size: 10.5px;
-            background: #ffffff !important;
-            overflow-wrap: break-word;
+        table.table-doc-excel th,
+        table.table-doc-excel td {
+            border: 1px solid #000000 !important;
+            padding: 4px 6px !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
             word-break: break-word;
         }
-        .data-table tr:nth-child(even) { background: #ffffff !important; }
-        .cell-code { font-family: monospace; font-weight: 600; color: #334155; }
-        .cell-right { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
-        .total-row { background: #ffffff !important; font-weight: 700; }
-        .total-row td { border: 1.5px solid #000000 !important; font-size: 12px; background: #ffffff !important; }
-        .sign-box {
+        table.table-doc-excel thead th {
+            font-weight: 700 !important;
+            text-align: center;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            background-color: #f8fafc !important;
+        }
+        table.table-doc-excel tfoot td {
+            font-weight: 700 !important;
+            background-color: #f8fafc !important;
+            border-top: 2px solid #000000 !important;
+        }
+
+        .text-start { text-align: left !important; }
+        .text-center { text-align: center !important; }
+        .text-end { text-align: right !important; }
+
+        /* Banners de Seção */
+        .section-banner {
+            font-weight: 700;
+            font-size: 8pt;
+            text-transform: uppercase;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 3.5px 8px;
+            margin-top: 8px;
+            margin-bottom: 2px;
+            border-radius: 2px;
+        }
+
+        /* Assinaturas */
+        .footer-assinaturas-box {
+            margin-top: 24px;
+            padding-top: 14px;
+            border-top: 1px solid #000000;
             display: flex;
             justify-content: space-between;
-            margin-top: 30px;
-            padding-top: 20px;
         }
-        .sign-line {
-            width: 45%;
-            text-align: center;
+        .signature-line {
+            width: 44%;
             border-top: 1px solid #000000;
             padding-top: 4px;
-            font-size: 9px;
-            color: #475569;
+            text-align: center;
+            font-size: 7.5pt;
+            line-height: 1.25;
+        }
+        .doc-footer-meta {
+            margin-top: 10px;
+            font-size: 7pt;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 3px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Barra de Controle Superior Padronizada (#1e293b - Visível apenas na tela) -->
-    <div class="no-print-bar no-print">
-        <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
-            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                Relatório de Corte do Turno &bull; <?php echo htmlspecialchars($dataFmt . ' ' . $turno); ?>
-            </div>
-            <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
-                Total de Páginas: 1
-            </div>
+<?php if (!$isPdf): ?>
+<div class="no-print">
+    <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">
+            Cantina Web — Consolidação de Compra de Lanches (Corte do Turno)
         </div>
-
+        <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
+            Consumo: <?php echo htmlspecialchars($dataFmt . ' • ' . $turno); ?> &bull; Total: <?php echo $totalPecas; ?> peças
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
         <!-- Controles de Zoom para Conferência -->
-        <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes e números antes de imprimir ou salvar">
+        <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes antes de imprimir ou salvar">
             <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">
                 <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
@@ -312,95 +419,120 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
         </div>
 
-        <div style="display: flex; gap: 8px;">
-            <button type="button" class="btn-action btn-primary" onclick="window.print()">
-                🖨 Imprimir Documento
-            </button>
-            <button type="button" class="btn-action" onclick="fecharJanela()">
-                ✕ Fechar
-            </button>
+        <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
+            🖨 Imprimir / Salvar PDF
+        </button>
+        <button type="button" class="btn-close-action" onclick="fecharJanela()">
+            ✕ Fechar
+        </button>
+    </div>
+</div>
+<?php endif; ?>
+
+<div id="document-zoom-area" class="document-zoom-area">
+<div class="container">
+
+    <!-- Cabeçalho Oficial Escolar -->
+    <div class="school-header">
+        <?php if (!empty($logoDataUri)): ?>
+        <div class="school-logo-col">
+            <img src="<?php echo $logoDataUri; ?>" alt="Logotipo Oficial">
+        </div>
+        <?php endif; ?>
+        <div class="school-title-col">
+            <div class="school-name">COLÉGIO MONTEIRO LOBATO</div>
+            <div class="report-title-main">CONSOLIDAÇÃO DE COMPRA DE LANCHES — FORNECEDOR PARCEIRO</div>
+            <div style="font-size: 8pt; color: #334155;">Sistema de Gestão Cantina Web • Módulo Operacional & Produção Diária</div>
+        </div>
+        <div class="school-meta-col">
+            <div><strong>Consumo:</strong> <?php echo $dataFmt; ?> (<?php echo $turno; ?>)</div>
+            <div><strong>Emissão:</strong> <?php echo $emissao; ?></div>
+            <div><strong>Status:</strong> <?php echo htmlspecialchars($statusCorte, ENT_QUOTES, 'UTF-8'); ?></div>
         </div>
     </div>
 
-    <!-- ÁREA ESCALÁVEL COM ZOOM PARA CONFERÊNCIA -->
-    <div id="document-zoom-area" class="document-zoom-area">
-        <div class="container">
-
-    <div class="print-header">
-        <div class="header-left">
-            <?php if (!empty($logoDataUri)): ?>
-                <img src="<?php echo $logoDataUri; ?>" alt="Logo" class="logo-img">
+    <!-- Faixa de Parâmetros e Indicadores -->
+    <div class="param-bar">
+        <div>
+            <strong>Turno de Consumo:</strong> <?php echo $turno; ?> (<?php echo $dataFmt; ?>) &bull;
+            <strong>Status do Corte:</strong> <?php echo htmlspecialchars($statusCorte, ENT_QUOTES, 'UTF-8'); ?>
+        </div>
+        <div>
+            <strong>Total a Fornecer:</strong> <span class="font-tabular"><?php echo $totalPecas; ?> un</span>
+            <?php if ($totalPedidos > 0): ?>
+                | <strong>Pedidos:</strong> <span class="font-tabular"><?php echo $totalPedidos; ?></span>
             <?php endif; ?>
-            <div>
-                <div class="school-title">Colégio Monteiro Lobato — Cantina Escolar</div>
-                <div class="report-title">Consolidação de Compra de Lanches — Fornecedor Parceiro</div>
-                <div class="report-sub">Emissão do Sistema Cantina Web &bull; <?php echo $emissao; ?></div>
-            </div>
-        </div>
-        <div style="text-align: right; padding-right: 2px;">
-            <div style="font-size: 13px; font-weight: 700; color: #0f172a;"><?php echo $dataFmt; ?> &bull; <?php echo $turno; ?></div>
-            <div style="font-size: 9px; color: #16a34a; font-weight: 600; text-transform: uppercase;"><?php echo htmlspecialchars($statusCorte); ?></div>
+            <?php if ($totalAlunos > 0): ?>
+                | <strong>Alunos:</strong> <span class="font-tabular"><?php echo $totalAlunos; ?></span>
+            <?php endif; ?>
         </div>
     </div>
 
-    <div class="stat-grid">
-        <div class="stat-item">
-            <div class="stat-label">Total de Peças</div>
-            <div class="stat-value"><?php echo $totalPecas; ?> un</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">Pedidos Encomendados</div>
-            <div class="stat-value"><?php echo $totalPedidos; ?></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">Alunos Atendidos</div>
-            <div class="stat-value"><?php echo $totalAlunos; ?></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">Turno Letivo</div>
-            <div class="stat-value"><?php echo $turno; ?></div>
-        </div>
+    <!-- Banner de Seção Escuro -->
+    <div class="section-banner">
+        GRADE DE DEMANDA DE PRODUÇÃO & FORNECIMENTO POR ALIMENTO
     </div>
 
-    <table class="data-table">
+    <!-- Tabela Estilo Excel Corporativo -->
+    <table class="table-doc-excel">
         <thead>
             <tr>
-                <th style="width: 15%;">Código</th>
-                <th style="width: 50%;">Descrição do Alimento</th>
-                <th style="width: 20%;">Classificação</th>
-                <th style="width: 15%; text-align: right;">Qtd Encomendar</th>
+                <th style="width: 14%;" class="text-center">Código</th>
+                <th style="width: 52%;" class="text-start">Descrição do Alimento / Produto</th>
+                <th style="width: 18%;" class="text-center">Classificação</th>
+                <th style="width: 16%;" class="text-end">Qtd Encomendar</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($itens)): ?>
                 <tr>
-                    <td colspan="4" style="text-align: center; color: #64748b; padding: 12px;">Não há encomendas consolidadas para este turno.</td>
+                    <td colspan="4" class="text-center" style="padding: 12px; color: #000000;">
+                        Não há encomendas consolidadas para este turno letivo.
+                    </td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($itens as $it): ?>
+                <?php foreach ($itens as $it): 
+                    $cod = htmlspecialchars($it['codigo_interno'] ?? ($it['produto_codigo'] ?? ($it['codigo'] ?? '-')), ENT_QUOTES, 'UTF-8');
+                    $desc = htmlspecialchars($it['descricao'] ?? ($it['produto_nome'] ?? '-'), ENT_QUOTES, 'UTF-8');
+                    $cat = htmlspecialchars($it['categoria_nome'] ?? ($it['categoria'] ?? 'Geral'), ENT_QUOTES, 'UTF-8');
+                    $qtd = (int)($it['quantidade_total'] ?? ($it['quantidade'] ?? 0));
+                ?>
                     <tr>
-                        <td class="cell-code font-tabular"><?php echo htmlspecialchars($it['codigo_interno'] ?? ($it['produto_codigo'] ?? '-')); ?></td>
-                        <td><strong><?php echo htmlspecialchars($it['descricao'] ?? ($it['produto_nome'] ?? '-')); ?></strong></td>
-                        <td style="color: #64748b;"><?php echo htmlspecialchars($it['categoria_nome'] ?? 'Geral'); ?></td>
-                        <td class="cell-right font-tabular"><?php echo (int)($it['quantidade_total'] ?? 0); ?> un</td>
+                        <td class="text-center font-tabular"><?php echo $cod; ?></td>
+                        <td class="text-start"><strong><?php echo $desc; ?></strong></td>
+                        <td class="text-center"><?php echo $cat; ?></td>
+                        <td class="text-end font-tabular">
+                            <strong><?php echo $qtd; ?> un</strong>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
-                <tr class="total-row">
-                    <td colspan="3">TOTAL GERAL DE SALGADOS A FORNECER</td>
-                    <td class="cell-right font-tabular"><?php echo $totalPecas; ?> PEÇAS</td>
-                </tr>
             <?php endif; ?>
         </tbody>
+        <tfoot>
+            <tr class="row-geral-total">
+                <td colspan="3" class="text-end">TOTAL GERAL DE SALGADOS / ALIMENTOS A FORNECER:</td>
+                <td class="text-end font-tabular"><?php echo $totalPecas; ?> PEÇAS</td>
+            </tr>
+        </tfoot>
     </table>
 
-    <div class="sign-box">
-        <div class="sign-line">
-            Responsável pelo Recebimento na Cantina
+    <!-- Assinaturas e Rodapé -->
+    <div class="footer-assinaturas-box">
+        <div class="signature-line">
+            <strong>Responsável pelo Recebimento na Cantina</strong><br>
+            Conferência Física de Entrega
         </div>
-        <div class="sign-line">
-            Fornecedor Parceiro / Entregador
+        <div class="signature-line">
+            <strong>Entregador / Fornecedor Parceiro</strong><br>
+            Comprovante de Fornecimento
         </div>
     </div>
+
+    <div class="doc-footer-meta">
+        <div>Cantina Web &bull; Sistema Integrado de Gestão Escolar &bull; Módulo Operacional & Corte</div>
+        <div>Página 1 de 1 &bull; Documento Oficial para Produção Diária e Pedido de Compra</div>
+    </div>
+
 </div>
 </div>
 
@@ -461,17 +593,6 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(true);
             resetarZoom();
         }
     });
-
-    window.addEventListener('wheel', function(e) {
-        if (e.ctrlKey) {
-            e.preventDefault();
-            if (e.deltaY < 0) {
-                alterarZoom(0.1);
-            } else {
-                alterarZoom(-0.1);
-            }
-        }
-    }, { passive: false });
 
     window.addEventListener('beforeprint', function() {
         const zoomArea = document.getElementById('document-zoom-area');

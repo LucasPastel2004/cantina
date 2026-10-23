@@ -537,14 +537,14 @@ $totalPaginas = count($paginas);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 2px solid #0f172a;
+            border-bottom: 2px solid #000000;
             padding-bottom: 8px;
             margin-bottom: 10px;
         }
         .doc-header.compact {
             padding-bottom: 5px;
             margin-bottom: 8px;
-            border-bottom: 1px solid #64748b;
+            border-bottom: 1px solid #000000;
         }
         .doc-brand {
             display: flex;
@@ -556,18 +556,19 @@ $totalPaginas = count($paginas);
             height: 44px;
             border-radius: 50%;
             object-fit: cover;
-            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08);
+            border: 1px solid #cbd5e1;
         }
         .doc-logo-small {
             width: 32px;
             height: 32px;
             border-radius: 50%;
             object-fit: cover;
+            border: 1px solid #cbd5e1;
         }
         .doc-titles h1 {
             font-size: 14px;
             font-weight: 800;
-            color: #0f172a;
+            color: #000000;
             margin: 0;
             text-transform: uppercase;
             letter-spacing: 0.02em;
@@ -575,11 +576,12 @@ $totalPaginas = count($paginas);
         .doc-titles.compact h1 {
             font-size: 12px;
             font-weight: 700;
+            color: #000000;
         }
         .doc-titles h2 {
             font-size: 11px;
             font-weight: 700;
-            color: #1d4ed8;
+            color: #000000;
             margin: 2px 0 0 0;
             text-transform: uppercase;
             letter-spacing: 0.04em;
@@ -592,14 +594,14 @@ $totalPaginas = count($paginas);
         }
         .doc-page-badge {
             font-weight: 700;
-            color: #1d4ed8;
+            color: #000000;
         }
 
         /* Faixa de Parâmetros */
         .params-strip {
             background-color: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
+            border: 1px solid #000000;
+            border-radius: 2px;
             padding: 5px 10px;
             margin-bottom: 10px;
             display: flex;
@@ -614,13 +616,13 @@ $totalPaginas = count($paginas);
         }
         .params-label {
             font-weight: 700;
-            color: #475569;
+            color: #000000;
             text-transform: uppercase;
             font-size: 8px;
         }
         .params-val {
             font-weight: 600;
-            color: #0f172a;
+            color: #000000;
         }
 
         /* Tabelas Analíticas Oficiais (Estética Excel com Laterais e Linhas Pretas entre Itens) */
@@ -644,8 +646,8 @@ $totalPaginas = count($paginas);
             break-inside: avoid;
         }
         .table-estoque th {
-            background-color: #ffffff !important;
-            color: #0f172a;
+            background-color: #f8fafc !important;
+            color: #000000 !important;
             font-weight: 700;
             text-transform: uppercase;
             font-size: 8px;
@@ -669,7 +671,7 @@ $totalPaginas = count($paginas);
             padding: 3px 5px;
             border: 1px solid #000000 !important; /* Linhas pretas estilo Excel */
             vertical-align: middle;
-            color: #0f172a;
+            color: #000000 !important;
             overflow: hidden;
             word-break: break-word;
             overflow-wrap: break-word;
@@ -700,37 +702,41 @@ $totalPaginas = count($paginas);
         }
 
         .qtd-entrada {
-            color: #15803d;
+            color: #000000 !important;
             font-weight: 700;
         }
         .qtd-saida {
-            color: #b91c1c;
+            color: #000000 !important;
             font-weight: 700;
         }
 
         /* Banners de Agrupamento */
         .group-header {
-            background-color: #e2e8f0;
-            color: #0f172a;
-            font-weight: 800;
+            background-color: #0f172a;
+            color: #ffffff;
+            font-weight: 700;
             text-transform: uppercase;
-            font-size: 9.5px;
-            padding: 5px 8px;
-            border-left: 4px solid #1d4ed8;
+            font-size: 8pt;
+            padding: 4px 8px;
             margin-top: 8px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            border-radius: 2px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+        .group-header span {
+            color: #ffffff !important;
+        }
         .group-subtotal {
-            background-color: #ffffff !important;
-            border-top: 1px solid #000000;
-            border-bottom: 2px solid #000000;
+            background-color: #f8fafc !important;
+            border-top: 1px solid #000000 !important;
+            border-bottom: 2px solid #000000 !important;
             font-weight: 700;
         }
         .group-subtotal td {
-            background-color: #ffffff !important;
+            background-color: #f8fafc !important;
+            color: #000000 !important;
         }
 
         /* Quebras de Página Físicas e Lógicas */
@@ -1249,7 +1255,7 @@ $totalPaginas = count($paginas);
                             </div>
                             <div class="totais-item">
                                 <span class="totais-label">Baixas por Perdas</span>
-                                <span class="totais-val" style="color: #92400e;">-<?php echo number_format($totais['total_perdas'], 0, ',', '.'); ?> un</span>
+                                <span class="totais-val" style="color: #000000;">-<?php echo number_format($totais['total_perdas'], 0, ',', '.'); ?> un</span>
                             </div>
                             <div class="totais-item">
                                 <span class="totais-label">Balanço Líquido</span>

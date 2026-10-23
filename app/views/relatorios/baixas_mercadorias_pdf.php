@@ -3,7 +3,8 @@
  * Cantina Web — Colégio Monteiro Lobato
  * View: Relatório Oficial A4 Timbrado — Baixas de Mercadorias (Perdas & Descarte)
  * 
- * Conforme docs/FSD.md (RN-15), docs/DESIGN.md e padrões oficiais de relatórios A4
+ * Conforme docs/FSD.md (RN-15), docs/DESIGN.md e padrão oficial de relatórios A4
+ * Padrão Excel Corporativo com divisórias pretas e fundo branco puro, banners azul marinho (#0f172a)
  */
 
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
@@ -29,6 +30,7 @@ $motivosPerda = $dados['motivos_perda'] ?? [
     'sobra_producao' => 'Produto Não Consumido',
     'ajuste_contagem' => 'Ajuste de Contagem'
 ];
+$isPdf = $isPdf ?? false;
 
 $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 ?>
@@ -76,55 +78,6 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
-        .no-print .zoom-controls {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            padding: 2px 6px;
-            flex-shrink: 0;
-            margin: 0 4px;
-        }
-        .no-print .btn-zoom {
-            background: transparent;
-            color: #ffffff;
-            border: none;
-            width: 24px;
-            height: 24px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            border-radius: 3px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            transition: all 0.15s ease;
-        }
-        .no-print .btn-zoom:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: #93c5fd;
-        }
-        .no-print .btn-zoom-val {
-            background: transparent;
-            color: #ffffff;
-            border: none;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-variant-numeric: tabular-nums;
-            min-width: 44px;
-            text-align: center;
-            transition: all 0.15s ease;
-        }
-        .no-print .btn-zoom-val:hover {
-            background: rgba(255, 255, 255, 0.2);
-            text-decoration: underline;
-        }
         .no-print button, .no-print a {
             cursor: pointer;
             padding: 5px 12px;
@@ -153,12 +106,6 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             background: #f1f5f9;
         }
 
-        .document-zoom-area {
-            zoom: var(--doc-zoom, 1);
-            transform-origin: top center;
-            transition: zoom 0.1s ease-out;
-        }
-
         /* Visualização de Folha A4 em Tela */
         @media screen {
             body {
@@ -173,157 +120,304 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 top: 10px;
                 z-index: 1000;
             }
-            .page-sheet {
-                background: #ffffff;
+            .no-print .zoom-controls {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 4px;
+                padding: 2px 6px;
+                margin-right: 8px;
+            }
+            .no-print .btn-zoom {
+                background: transparent;
+                color: #ffffff;
+                border: none;
+                width: 22px;
+                height: 22px;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                border-radius: 3px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+                transition: all 0.15s ease;
+            }
+            .no-print .btn-zoom:hover {
+                background: rgba(255, 255, 255, 0.25);
+                color: #93c5fd;
+            }
+            .no-print .btn-zoom-val {
+                background: transparent;
+                color: #ffffff;
+                border: none;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                padding: 2px 5px;
+                border-radius: 3px;
+                min-width: 40px;
+                text-align: center;
+                font-variant-numeric: tabular-nums;
+                transition: all 0.15s ease;
+            }
+            .no-print .btn-zoom-val:hover {
+                background: rgba(255, 255, 255, 0.25);
+                text-decoration: underline;
+            }
+            .document-zoom-area {
+                zoom: var(--doc-zoom, 1);
+                transform-origin: top center;
+                transition: zoom 0.1s ease-out;
+            }
+            .container {
                 width: 210mm;
+                max-width: calc(100% - 24px);
                 min-height: 297mm;
                 margin: 0 auto;
-                padding: 14mm 14mm 14mm 14mm;
-                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+                background: #ffffff;
+                padding: 10mm 14mm;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                box-sizing: border-box;
                 border-radius: 2px;
+                position: relative;
             }
         }
 
+        /* Impressão Direta (Física / Browser Print to PDF) */
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 12mm 14mm 14mm 14mm;
+            }
+            .document-zoom-area {
+                zoom: 1 !important;
+                transform: none !important;
+            }
+            html, body {
+                width: 100% !important;
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 8pt;
+                color: #000000 !important;
+            }
             .no-print {
                 display: none !important;
             }
-            body {
-                background: #ffffff !important;
-                padding: 0 !important;
-            }
-            .page-sheet {
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                height: auto !important;
+                margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                background: #ffffff !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Quebras de páginas limpas em tabelas oficiais */
+            table.table-doc-excel {
                 width: 100% !important;
+                table-layout: fixed !important;
+                border-collapse: separate !important;
+                border-spacing: 0 !important;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+                margin-top: 4px !important;
+                margin-bottom: 8px !important;
+                border: 1px solid #000000 !important;
+                border-bottom: none !important;
+                border-right: none !important;
+            }
+            table.table-doc-excel thead {
+                display: table-header-group !important;
+            }
+            table.table-doc-excel thead tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            table.table-doc-excel tfoot {
+                display: table-footer-group !important;
+            }
+            table.table-doc-excel tbody tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            table.table-doc-excel th,
+            table.table-doc-excel td {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                border-right: 1px solid #000000 !important;
+                border-bottom: 1px solid #000000 !important;
+            }
+            .school-header,
+            .param-bar,
+            .footer-assinaturas-box,
+            .row-geral-total {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
 
-        /* Cabeçalho Oficial Timbrado */
-        .report-header {
-            border-bottom: 2px solid #0f172a;
-            padding-bottom: 10px;
-            margin-bottom: 12px;
+        /* Quebra de páginas adequada em tabelas longas */
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+        tr { page-break-inside: avoid; break-inside: avoid; }
+        .school-header, .param-bar, .footer-assinaturas-box { page-break-inside: avoid; break-inside: avoid; }
+
+        /* Cabeçalho Oficial Escolar */
+        .school-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
         }
-        .report-header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .school-logo-col {
+            width: 52px;
+            margin-right: 12px;
         }
-        .report-header-logo {
-            width: 44px;
-            height: 44px;
+        .school-logo-col img {
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid #cbd5e1;
         }
-        .report-title-block h1 {
-            font-size: 14pt;
-            font-weight: 800;
-            margin: 0;
-            color: #0f172a;
-            letter-spacing: -0.02em;
-        }
-        .report-title-block .subtitle {
-            font-size: 9pt;
-            font-weight: 600;
-            color: #475569;
-            margin: 2px 0 0 0;
-        }
-        .report-header-right {
-            text-align: right;
-            font-size: 8pt;
-            color: #334155;
-            line-height: 1.35;
-        }
-
-        /* Resumo Estatístico */
-        .stat-grid {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 14px;
-        }
-        .stat-box {
+        .school-title-col {
             flex: 1;
-            border: 1px solid #cbd5e1;
-            padding: 8px 10px;
-            background: #f8fafc;
-            border-radius: 4px;
+            line-height: 1.25;
         }
-        .stat-box-title {
-            font-size: 7.5pt;
-            text-transform: uppercase;
+        .school-name {
+            font-size: 10.5pt;
             font-weight: 700;
-            color: #475569;
-            display: block;
-            margin-bottom: 3px;
+            color: #000000;
+            text-transform: uppercase;
         }
-        .stat-box-value {
-            font-size: 12pt;
-            font-weight: 800;
-            color: #0f172a;
+        .report-title-main {
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: #000000;
+            margin-top: 2px;
         }
-        .stat-box-value.text-danger {
-            color: #b91c1c;
+        .school-meta-col {
+            text-align: right;
+            font-size: 7.5pt;
+            color: #334155;
+            line-height: 1.3;
+            padding-right: 2px;
         }
 
-        /* Tabela Oficial de Auditoria */
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
+        /* Faixa de Parâmetros */
+        .param-bar {
             font-size: 8pt;
-            margin-bottom: 16px;
-        }
-        .report-table th {
-            background-color: #f1f5f9;
-            color: #0f172a;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 7.5pt;
-            border: 1px solid #94a3b8;
-            padding: 5px 6px;
-            letter-spacing: 0.02em;
-        }
-        .report-table td {
-            border: 1px solid #cbd5e1;
-            padding: 5px 6px;
-            vertical-align: middle;
-        }
-        .report-table tbody tr:nth-child(even) {
-            background-color: #f8fafc;
-        }
-        .cell-center { text-align: center; }
-        .cell-right { text-align: right; }
-        .cell-left { text-align: left; }
-
-        /* Rodapé de Página e Auditoria */
-        .report-footer {
-            margin-top: 18px;
-            padding-top: 8px;
-            border-top: 1px solid #cbd5e1;
+            background: #f8fafc;
+            border: 1px solid #000000;
+            padding: 4px 8px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
+        }
+
+        /* Tabela Estilo Excel Oficial */
+        table.table-doc-excel {
+            width: 100% !important;
+            table-layout: fixed !important;
+            box-sizing: border-box !important;
+            border-collapse: collapse !important;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            font-size: 7.8pt;
+            border: 1px solid #000000 !important;
+        }
+        table.table-doc-excel th,
+        table.table-doc-excel td {
+            border: 1px solid #000000 !important;
+            padding: 3.5px 6px !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            word-break: break-word;
+        }
+        table.table-doc-excel thead th {
+            font-weight: 700 !important;
+            text-align: center;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            background-color: #f8fafc !important;
+        }
+        table.table-doc-excel tfoot td {
+            font-weight: 700 !important;
+            background-color: #f8fafc !important;
+            border-top: 2px solid #000000 !important;
+        }
+
+        .text-start { text-align: left !important; }
+        .text-center { text-align: center !important; }
+        .text-end { text-align: right !important; }
+
+        /* Banners de Seção */
+        .section-banner {
+            font-weight: 700;
+            font-size: 8pt;
+            text-transform: uppercase;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 3.5px 8px;
+            margin-top: 8px;
+            margin-bottom: 2px;
+            border-radius: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Assinaturas */
+        .footer-assinaturas-box {
+            margin-top: 24px;
+            padding-top: 14px;
+            border-top: 1px solid #000000;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-line {
+            width: 44%;
+            border-top: 1px solid #000000;
+            padding-top: 4px;
+            text-align: center;
+            font-size: 7.5pt;
+            line-height: 1.25;
+        }
+        .doc-footer-meta {
+            margin-top: 10px;
             font-size: 7pt;
             color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 3px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Barra Superior de Controle para Navegador -->
-    <div class="no-print">
-        <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
-            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                Relatório de Baixas de Mercadorias &bull; Período: <?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?>
-            </div>
-            <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
-                Total de Páginas: 1
-            </div>
+<?php if (!$isPdf): ?>
+<div class="no-print">
+    <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
+        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">
+            Cantina Web — Relatório de Baixas de Mercadorias (Perdas & Descarte)
         </div>
-
+        <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">
+            Período: <?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?> &bull; Total: -<?php echo number_format($totais['total_unidades'] ?? 0, 0, ',', '.'); ?> un
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
         <!-- Controles de Zoom para Conferência -->
         <div class="zoom-controls" title="Ajuste o zoom para conferir detalhes e números antes de imprimir ou salvar">
             <span style="display: inline-flex; align-items: center; color: #cbd5e1; margin-right: 3px;" title="Zoom">
@@ -336,238 +430,235 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
         </div>
 
-        <div style="display: flex; gap: 8px;">
-            <button onclick="window.print()" class="btn-print-action">
-                🖨 Imprimir Documento
-            </button>
-            <button onclick="fecharJanela()" class="btn-close-action">
-                ✕ Fechar
-            </button>
+        <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
+            🖨 Imprimir / Salvar PDF
+        </button>
+        <button type="button" class="btn-close-action" onclick="fecharJanela()">
+            ✕ Fechar
+        </button>
+    </div>
+</div>
+<?php endif; ?>
+
+<div id="document-zoom-area" class="document-zoom-area">
+<div class="container">
+
+    <!-- Cabeçalho Oficial Escolar -->
+    <div class="school-header">
+        <?php if (!empty($logoDataUri)): ?>
+        <div class="school-logo-col">
+            <img src="<?php echo $logoDataUri; ?>" alt="Logotipo Oficial">
+        </div>
+        <?php endif; ?>
+        <div class="school-title-col">
+            <div class="school-name">COLÉGIO MONTEIRO LOBATO</div>
+            <div class="report-title-main">DEMONSTRATIVO DE BAIXAS DE MERCADORIAS (PERDAS & DESCARTE)</div>
+            <div style="font-size: 8pt; color: #334155;">Sistema de Gestão Cantina Web • Módulo de Estoque & Auditoria (RN-15)</div>
+        </div>
+        <div class="school-meta-col font-tabular">
+            <div><strong>Período:</strong> <?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?></div>
+            <div><strong>Emissão:</strong> <?php echo date('d/m/Y H:i:s'); ?></div>
+            <div><strong>Autenticação:</strong> <?php echo strtoupper(substr(md5('BAIXAS_' . $periodoOficial), 0, 12)); ?></div>
         </div>
     </div>
 
-    <!-- ÁREA ESCALÁVEL COM ZOOM PARA CONFERÊNCIA -->
-    <div id="document-zoom-area" class="document-zoom-area">
-
-    <!-- Folha Física A4 -->
-    <div class="page-sheet">
-
-        <!-- Cabeçalho Oficial -->
-        <header class="report-header">
-            <div class="report-header-left">
-                <?php if (!empty($logoDataUri)): ?>
-                    <img src="<?php echo $logoDataUri; ?>" alt="Colégio Monteiro Lobato" class="report-header-logo">
-                <?php endif; ?>
-                <div class="report-title-block">
-                    <h1>COLÉGIO MONTEIRO LOBATO</h1>
-                    <div class="subtitle">Relatório Oficial de Baixas de Mercadorias (Perdas & Descarte)</div>
-                </div>
-            </div>
-            <div class="report-header-right font-tabular">
-                <div><strong>Período:</strong> <?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?></div>
-                <div><strong>Emissão:</strong> <?php echo date('d/m/Y H:i:s'); ?></div>
-                <div><strong>Módulo:</strong> Gestão de Estoque & Auditoria (RN-15)</div>
-            </div>
-        </header>
-
-        <!-- Filtros Aplicados (Se Houver) -->
-        <?php if (!empty($filtrosDesc)): ?>
-            <div style="font-size: 7.5pt; color: #475569; margin-bottom: 10px; padding: 4px 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 3px;">
-                <strong>Filtros aplicados:</strong> <?php echo htmlspecialchars(implode(' | ', $filtrosDesc), ENT_QUOTES, 'UTF-8'); ?>
-            </div>
-        <?php endif; ?>
-
-        <!-- Resumo Estatístico em Blocos -->
-        <div class="stat-grid">
-            <div class="stat-box">
-                <span class="stat-box-title">Total de Baixas (Unidades)</span>
-                <span class="stat-box-value text-danger font-tabular">-<?php echo number_format($totais['total_unidades'] ?? 0, 0, ',', '.'); ?> un</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-box-title">Ocorrências / Lançamentos</span>
-                <span class="stat-box-value font-tabular"><?php echo (int)($totais['total_registros'] ?? count($movimentacoes)); ?></span>
-            </div>
-            <div class="stat-box" style="flex: 2;">
-                <span class="stat-box-title">Distribuição por Motivo no Período</span>
-                <div style="font-size: 8pt; margin-top: 2px;">
-                    <?php 
-                    $dist = $totais['por_motivo'] ?? [];
-                    if (empty($dist)): ?>
-                        <span style="color: #64748b;">Nenhuma ocorrência computada.</span>
-                    <?php else: 
-                        $itensMot = [];
-                        foreach ($dist as $mot => $qtd) {
-                            $nomeMot = $motivosPerda[$mot] ?? $mot;
-                            $itensMot[] = "<strong>{$nomeMot}:</strong> -{$qtd} un";
-                        }
-                        echo implode(' &nbsp;|&nbsp; ', $itensMot);
-                    endif; ?>
-                </div>
-            </div>
+    <!-- Faixa de Parâmetros e Indicadores -->
+    <div class="param-bar font-tabular">
+        <div>
+            <strong>Total Baixas:</strong> -<?php echo number_format($totais['total_unidades'] ?? 0, 0, ',', '.'); ?> un &bull; 
+            <strong>Lançamentos:</strong> <?php echo (int)($totais['total_registros'] ?? count($movimentacoes)); ?>
+            <?php if (!empty($filtrosDesc)): ?>
+                &bull; <strong>Filtros:</strong> <?php echo htmlspecialchars(implode(' | ', $filtrosDesc), ENT_QUOTES, 'UTF-8'); ?>
+            <?php endif; ?>
         </div>
+        <div>
+            <?php 
+            $dist = $totais['por_motivo'] ?? [];
+            if (!empty($dist)) {
+                $itensMot = [];
+                foreach ($dist as $mot => $qtd) {
+                    $nomeMot = $motivosPerda[$mot] ?? $mot;
+                    $itensMot[] = "{$nomeMot}: -{$qtd} un";
+                }
+                echo '<strong>Motivos:</strong> ' . htmlspecialchars(implode(' | ', $itensMot), ENT_QUOTES, 'UTF-8');
+            }
+            ?>
+        </div>
+    </div>
 
-        <!-- Tabela Analítica -->
-        <table class="report-table">
-            <thead>
+    <!-- Banner de Seção Escuro -->
+    <div class="section-banner">
+        <span>HISTÓRICO ANALÍTICO DE BAIXAS & PERDAS OPERACIONAIS</span>
+        <span class="font-tabular"><?php echo count($movimentacoes); ?> registro(s)</span>
+    </div>
+
+    <!-- Tabela Estilo Excel Corporativo -->
+    <table class="table-doc-excel">
+        <thead>
+            <tr>
+                <th style="width: 14%;" class="text-center">Data / Hora</th>
+                <th style="width: 10%;" class="text-center">Código</th>
+                <th style="width: 30%;" class="text-start">Produto / Categoria</th>
+                <th style="width: 10%;" class="text-end">Qtd Baixa</th>
+                <th style="width: 15%;" class="text-start">Motivo Padronizado</th>
+                <th style="width: 21%;" class="text-start">Justificativa / Operador</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (empty($movimentacoes)): ?>
                 <tr>
-                    <th style="width: 105px;" class="cell-center">Data / Hora</th>
-                    <th style="width: 75px;" class="cell-center">Código</th>
-                    <th class="cell-left">Produto</th>
-                    <th style="width: 65px;" class="cell-right">Qtd</th>
-                    <th style="width: 130px;" class="cell-left">Motivo Padronizado</th>
-                    <th class="cell-left">Justificativa Operacional</th>
-                    <th style="width: 100px;" class="cell-left">Operador</th>
+                    <td colspan="6" class="text-center" style="padding: 12px; color: #000000;">
+                        Nenhum registro de perda localizado para os parâmetros informados.
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($movimentacoes)): ?>
+            <?php else: ?>
+                <?php foreach ($movimentacoes as $mov): 
+                    $dataFmt = date('d/m/Y H:i', strtotime($mov['created_at']));
+                    $cod = htmlspecialchars($mov['produto_codigo'], ENT_QUOTES, 'UTF-8');
+                    $desc = htmlspecialchars($mov['produto_descricao'], ENT_QUOTES, 'UTF-8');
+                    $cat = htmlspecialchars($mov['categoria_nome'], ENT_QUOTES, 'UTF-8');
+                    $qtd = (int)$mov['quantidade'];
+                    $mot = htmlspecialchars($motivosPerda[$mov['motivo_perda']] ?? $mov['motivo_perda'], ENT_QUOTES, 'UTF-8');
+                    $just = !empty($mov['justificativa']) ? htmlspecialchars($mov['justificativa'], ENT_QUOTES, 'UTF-8') : '—';
+                    $op = htmlspecialchars($mov['operador_nome'] ?? '-', ENT_QUOTES, 'UTF-8');
+                ?>
                     <tr>
-                        <td colspan="7" class="cell-center" style="padding: 16px; color: #64748b;">
-                            Nenhum registro de perda localizado para os parâmetros informados.
+                        <td class="text-center font-tabular"><?php echo $dataFmt; ?></td>
+                        <td class="text-center font-tabular"><?php echo $cod; ?></td>
+                        <td class="text-start">
+                            <strong><?php echo $desc; ?></strong>
+                            <span style="font-size: 7pt; color: #334155; display: block;"><?php echo $cat; ?></span>
+                        </td>
+                        <td class="text-end font-tabular">
+                            <strong>-<?php echo $qtd; ?> un</strong>
+                        </td>
+                        <td class="text-start">
+                            <strong><?php echo $mot; ?></strong>
+                        </td>
+                        <td class="text-start">
+                            <div><?php echo $just; ?></div>
+                            <div style="font-size: 7pt; color: #334155;">Op: <?php echo $op; ?></div>
                         </td>
                     </tr>
-                <?php else: ?>
-                    <?php foreach ($movimentacoes as $mov): ?>
-                        <tr>
-                            <td class="cell-center font-tabular" style="font-size: 7.5pt; color: #334155;">
-                                <?php echo date('d/m/Y H:i', strtotime($mov['created_at'])); ?>
-                            </td>
-                            <td class="cell-center font-tabular" style="font-size: 7.5pt; font-weight: 600;">
-                                <?php echo htmlspecialchars($mov['produto_codigo'], ENT_QUOTES, 'UTF-8'); ?>
-                            </td>
-                            <td class="cell-left">
-                                <strong style="color: #0f172a;"><?php echo htmlspecialchars($mov['produto_descricao'], ENT_QUOTES, 'UTF-8'); ?></strong>
-                                <span style="font-size: 7pt; color: #64748b; display: block;"><?php echo htmlspecialchars($mov['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
-                            </td>
-                            <td class="cell-right font-tabular" style="font-weight: 700; color: #b91c1c;">
-                                -<?php echo (int)$mov['quantidade']; ?> un
-                            </td>
-                            <td class="cell-left" style="font-weight: 600; color: #475569;">
-                                <?php echo htmlspecialchars($motivosPerda[$mov['motivo_perda']] ?? $mov['motivo_perda'], ENT_QUOTES, 'UTF-8'); ?>
-                            </td>
-                            <td class="cell-left" style="color: #334155; font-size: 7.5pt;">
-                                <?php echo !empty($mov['justificativa']) ? htmlspecialchars($mov['justificativa'], ENT_QUOTES, 'UTF-8') : '—'; ?>
-                            </td>
-                            <td class="cell-left" style="font-size: 7.5pt; color: #334155;">
-                                <?php echo htmlspecialchars($mov['operador_nome'], ENT_QUOTES, 'UTF-8'); ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+        <tfoot>
+            <tr class="row-geral-total">
+                <td colspan="3" class="text-end">TOTAL DE PERDAS / BAIXAS CONSOLIDADAS NO PERÍODO:</td>
+                <td class="text-end font-tabular">-<?php echo number_format($totais['total_unidades'] ?? 0, 0, ',', '.'); ?> UN</td>
+                <td colspan="2" class="text-end font-tabular">
+                    <?php echo (int)($totais['total_registros'] ?? count($movimentacoes)); ?> lançamento(s)
+                </td>
+            </tr>
+        </tfoot>
+    </table>
 
-        <!-- Rodapé do Relatório -->
-        <footer class="report-footer">
-            <div>
-                Cantina Web — Colégio Monteiro Lobato &bull; Documento de Auditoria e Controle Físico de Estoque
-            </div>
-            <div class="font-tabular">
-                Página 1 de 1 &bull; Sistema Cantina Web V2
-            </div>
-        </footer>
-
-    </div>
+    <!-- Assinaturas e Rodapé -->
+    <div class="footer-assinaturas-box">
+        <div class="signature-line">
+            <strong>Responsável pelo Lançamento de Estoque</strong><br>
+            Conferência Física de Avarias e Descarte
+        </div>
+        <div class="signature-line">
+            <strong>Gerência / Supervisão Geral</strong><br>
+            Aprovação e Auditoria de Perdas (RN-15)
+        </div>
     </div>
 
-    <script>
-        let currentZoom = 1.0;
-        const minZoom = 0.5;
-        const maxZoom = 2.0;
+    <div class="doc-footer-meta">
+        <div>Cantina Web &bull; Sistema Integrado de Gestão Escolar &bull; Módulo de Estoque & Suprimentos</div>
+        <div>Página 1 de 1 &bull; Documento Oficial de Auditoria Contábil de Perdas Físicas</div>
+    </div>
 
-        function aplicarZoom(novoZoom) {
-            currentZoom = Math.min(Math.max(novoZoom, minZoom), maxZoom);
-            currentZoom = Math.round(currentZoom * 100) / 100;
+</div>
+</div>
 
-            const zoomArea = document.getElementById('document-zoom-area');
-            if (zoomArea) {
-                zoomArea.style.setProperty('--doc-zoom', currentZoom);
-                zoomArea.style.zoom = currentZoom;
-            }
+<script>
+    let currentZoom = 1.0;
+    const minZoom = 0.5;
+    const maxZoom = 2.0;
 
-            const resetBtn = document.getElementById('btnZoomReset');
-            if (resetBtn) {
-                resetBtn.textContent = Math.round(currentZoom * 100) + '%';
-            }
+    function aplicarZoom(novoZoom) {
+        currentZoom = Math.min(Math.max(novoZoom, minZoom), maxZoom);
+        currentZoom = Math.round(currentZoom * 100) / 100;
 
-            try {
-                localStorage.setItem('cantina_report_zoom', currentZoom);
-            } catch(e) {}
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.setProperty('--doc-zoom', currentZoom);
+            zoomArea.style.zoom = currentZoom;
         }
 
-        function alterarZoom(delta) {
-            aplicarZoom(currentZoom + delta);
+        const resetBtn = document.getElementById('btnZoomReset');
+        if (resetBtn) {
+            resetBtn.textContent = Math.round(currentZoom * 100) + '%';
         }
 
-        function resetarZoom() {
-            aplicarZoom(1.0);
-        }
+        try {
+            localStorage.setItem('cantina_report_zoom', currentZoom);
+        } catch(e) {}
+    }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                const savedZoom = localStorage.getItem('cantina_report_zoom');
-                if (savedZoom) {
-                    const z = parseFloat(savedZoom);
-                    if (!isNaN(z) && z >= minZoom && z <= maxZoom) {
-                        aplicarZoom(z);
-                    }
+    function alterarZoom(delta) {
+        aplicarZoom(currentZoom + delta);
+    }
+
+    function resetarZoom() {
+        aplicarZoom(1.0);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const savedZoom = localStorage.getItem('cantina_report_zoom');
+            if (savedZoom) {
+                const z = parseFloat(savedZoom);
+                if (!isNaN(z) && z >= minZoom && z <= maxZoom) {
+                    aplicarZoom(z);
                 }
-            } catch(e) {}
-        });
-
-        // Atalhos de Teclado (Ctrl + / Ctrl - / Ctrl 0)
-        window.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
-                e.preventDefault();
-                alterarZoom(0.15);
-            } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
-                e.preventDefault();
-                alterarZoom(-0.15);
-            } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
-                e.preventDefault();
-                resetarZoom();
             }
-        });
+        } catch(e) {}
+    });
 
-        // Atalho Ctrl + Roda do Mouse
-        window.addEventListener('wheel', function(e) {
-            if (e.ctrlKey) {
-                e.preventDefault();
-                if (e.deltaY < 0) {
-                    alterarZoom(0.1);
+    window.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
+            e.preventDefault();
+            alterarZoom(0.15);
+        } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
+            e.preventDefault();
+            alterarZoom(-0.15);
+        } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+            e.preventDefault();
+            resetarZoom();
+        }
+    });
+
+    window.addEventListener('beforeprint', function() {
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.zoom = 1;
+        }
+    });
+    window.addEventListener('afterprint', function() {
+        const zoomArea = document.getElementById('document-zoom-area');
+        if (zoomArea) {
+            zoomArea.style.zoom = currentZoom;
+        }
+    });
+
+    function fecharJanela() {
+        window.close();
+        setTimeout(function() {
+            if (!window.closed) {
+                if (window.opener) {
+                    window.close();
+                } else if (window.history.length > 1) {
+                    window.history.back();
                 } else {
-                    alterarZoom(-0.1);
+                    window.location.href = '<?php echo $baseUrl; ?>/relatorios/baixas-mercadorias';
                 }
             }
-        }, { passive: false });
-
-        window.addEventListener('beforeprint', function() {
-            const zoomArea = document.getElementById('document-zoom-area');
-            if (zoomArea) {
-                zoomArea.style.zoom = 1;
-            }
-        });
-        window.addEventListener('afterprint', function() {
-            const zoomArea = document.getElementById('document-zoom-area');
-            if (zoomArea) {
-                zoomArea.style.zoom = currentZoom;
-            }
-        });
-
-        function fecharJanela() {
-            window.close();
-            setTimeout(function() {
-                if (!window.closed) {
-                    if (window.opener) {
-                        window.close();
-                    } else if (window.history.length > 1) {
-                        window.history.back();
-                    } else {
-                        window.location.href = '<?php echo $baseUrl; ?>/relatorios/baixas-mercadorias';
-                    }
-                }
-            }, 150);
-        }
-    </script>
+        }, 150);
+    }
+</script>
 </body>
 </html>
