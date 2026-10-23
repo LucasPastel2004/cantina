@@ -36,8 +36,6 @@ $alunoId = (int)($alunoId ?? ($aluno['id'] ?? 0));
 <div class="card-enterprise card-overflow-visible mb-4" style="overflow: visible !important; position: relative; z-index: 30;">
     <div class="card-enterprise-body p-3" style="overflow: visible !important;">
         <form action="<?php echo $baseUrl; ?>/relatorios/extrato-aluno/imprimir" method="GET" id="formExtratoAluno" target="_blank" style="position: relative; overflow: visible !important;">
-            <input type="hidden" name="apenas_saldo" value="<?php echo $apenasSaldo ? 'sim' : 'nao'; ?>">
-            <input type="hidden" name="saldo_apenas_periodo" value="<?php echo $saldoApenasPeriodo ? 'sim' : 'nao'; ?>">
             <div class="row g-3 align-items-end">
                 <!-- Localizar Aluno com Autocomplete -->
                 <div class="col-12 col-md-5" style="position: relative; z-index: 40;">

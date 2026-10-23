@@ -71,30 +71,26 @@ $verificar(!empty($html), "RenderView de extrato_aluno_pdf gerou HTML com sucess
 
 // Verificação de elementos no banner do aluno
 $verificar(strpos($html, 'class="student-banner"') !== false, "HTML contém o banner do aluno (.student-banner)");
-$verificar(strpos($html, 'class="student-avatar') !== false, "HTML contém o avatar com inicial (.student-avatar)");
 $verificar(strpos($html, mb_strtoupper($aluno['nome'], 'UTF-8')) !== false, "HTML contém o nome do aluno em caixa alta");
 $verificar(strpos($html, $aluno['matricula']) !== false, "HTML contém a matrícula do aluno");
 $verificar(strpos($html, 'Responsável:') !== false, "HTML contém o campo 'Responsável:'");
-$verificar(strpos($html, 'Saldo Atual da Carteira') !== false, "HTML contém 'Saldo Atual da Carteira'");
-$verificar(strpos($html, 'Saldo integrado familiar') !== false, "HTML contém 'Saldo integrado familiar'");
+$verificar(strpos($html, 'Saldo Atual na Carteira') !== false, "HTML contém 'Saldo Atual na Carteira'");
 
-// Verificação do Stat-Strip com 4 cards
-$verificar(strpos($html, 'class="stat-strip"') !== false, "HTML contém o Stat-Strip (.stat-strip)");
-$verificar(strpos($html, 'Saldo Inicial') !== false, "HTML contém o card 'Saldo Inicial'");
-$verificar(strpos($html, 'Total Recarregado') !== false, "HTML contém o card 'Total Recarregado'");
-$verificar(strpos($html, 'Total Consumido') !== false, "HTML contém o card 'Total Consumido'");
-$verificar(strpos($html, 'Saldo Atual') !== false, "HTML contém o card 'Saldo Atual'");
-$verificar(strpos($html, 'Créditos aportados no período') !== false, "HTML contém legenda 'Créditos aportados no período'");
-$verificar(strpos($html, 'Disponível na carteira') !== false, "HTML contém legenda 'Disponível na carteira'");
+// Verificação da Faixa de Parâmetros e Indicadores Sintéticos
+$verificar(strpos($html, 'class="param-bar') !== false, "HTML contém a faixa de parâmetros (.param-bar)");
+$verificar(strpos($html, 'Saldo Inicial:') !== false, "HTML contém indicador 'Saldo Inicial:'");
+$verificar(strpos($html, 'Total Recarregado:') !== false, "HTML contém indicador 'Total Recarregado:'");
+$verificar(strpos($html, 'Total Consumido:') !== false, "HTML contém indicador 'Total Consumido:'");
+$verificar(strpos($html, 'Saldo Disponível:') !== false, "HTML contém indicador 'Saldo Disponível:'");
 
 // Verificação da Seção Analítica de Movimentações
-$verificar(strpos($html, 'Extrato Analítico de Consumo e Recargas') !== false, "HTML contém título da seção analítica");
-$verificar(strpos($html, 'class="table-extrato"') !== false, "HTML contém a tabela (.table-extrato)");
-$verificar(strpos($html, 'Saldo inicial') !== false, "HTML contém a linha de saldo inicial");
-$verificar(strpos($html, 'Total gasto no período') !== false, "HTML contém rodapé 'Total gasto no período'");
+$verificar(strpos($html, 'HISTÓRICO ANALÍTICO DE MOVIMENTAÇÕES') !== false, "HTML contém título da seção analítica");
+$verificar(strpos($html, 'class="table-doc-excel"') !== false, "HTML contém a tabela (.table-doc-excel)");
+$verificar(strpos($html, 'SALDO INICIAL DO PERÍODO') !== false, "HTML contém a linha de saldo inicial");
+$verificar(strpos($html, 'TOTAIS DO PERÍODO:') !== false, "HTML contém rodapé 'TOTAIS DO PERÍODO:'");
 $verificar(strpos($html, 'Saldo Atual: R$') !== false, "HTML contém rodapé 'Saldo Atual: R$'");
 
-// 2. Geração do PDF via Gotenberg
+// 2. Geração do PDF via Gotenberg / Fallback
 $pdfBinario = PdfService::gerarExtratoConsumoAlunoPdf($dados);
 $verificar(!empty($pdfBinario), "gerarExtratoConsumoAlunoPdf retornou binário de PDF");
 $verificar(str_starts_with($pdfBinario, '%PDF-'), "Binário gerado é um arquivo PDF válido (cabeçalho %PDF-)");
@@ -115,7 +111,6 @@ $htmlWeb = PdfService::renderView('relatorios/extrato_aluno', [
 $verificar(strpos($htmlWeb, 'action="/relatorios/extrato-aluno/imprimir"') !== false, "Formulário web direciona para /relatorios/extrato-aluno/imprimir");
 $verificar(strpos($htmlWeb, 'target="_blank"') !== false, "Formulário web abre em nova aba (target='_blank')");
 $verificar(strpos($htmlWeb, 'Imprimir / Salvar PDF (A4)') !== false, "Botão principal da tela é 'Imprimir / Salvar PDF (A4)'");
-$verificar(strpos($htmlWeb, 'Baixar PDF') !== false, "Botão 'Baixar PDF' está presente no filtro");
 $verificar(strpos($htmlWeb, 'Exportar Planilha (CSV)') !== false, "Botão 'Exportar Planilha (CSV)' está presente no filtro");
 $verificar(strpos($htmlWeb, 'Filtrar / Carregar Extrato') === false, "Botão antigo 'Filtrar / Carregar Extrato' foi substituído");
 

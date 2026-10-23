@@ -10,14 +10,15 @@
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
-if (!isset($dados) || !is_array($dados)) {
-    $dados = $dadosFolha ?? get_defined_vars();
+$dados = $dadosFolha ?? ($dados['dadosFolha'] ?? ($dados ?? []));
+if (!is_array($dados)) {
+    $dados = get_defined_vars();
 }
 
-$competencia = $dados['competencia'] ?? date('m/Y');
-$colaboradores = $dados['colaboradores'] ?? [];
-$totais = $dados['totais'] ?? [];
-$operador = $dados['operador'] ?? 'Administração Geral';
+$competencia = $dados['competencia'] ?? ($competencia ?? date('m/Y'));
+$colaboradores = $dados['colaboradores'] ?? ($colaboradores ?? []);
+$totais = $dados['totais'] ?? ($totais ?? []);
+$operador = $dados['operador'] ?? ($operador ?? 'Administração Geral');
 $emissao = date('d/m/Y H:i:s');
 $isPdf = $isPdf ?? false;
 

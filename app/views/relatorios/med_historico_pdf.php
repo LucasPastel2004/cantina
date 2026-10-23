@@ -10,16 +10,17 @@
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
-if (!isset($dados) || !is_array($dados)) {
-    $dados = $dadosMed ?? get_defined_vars();
+$dados = $dadosMed ?? ($dados['dadosMed'] ?? ($dados ?? []));
+if (!is_array($dados)) {
+    $dados = get_defined_vars();
 }
-$eventos = $dados['eventos'] ?? [];
-$totalEventos = (int)($dados['total_eventos'] ?? count($eventos));
-$totalEstornos = (float)($dados['total_estornos'] ?? 0.0);
-$totalQuitacoes = (float)($dados['total_quitacoes'] ?? 0.0);
-$filtros = $dados['filtros'] ?? [];
+$eventos = $dados['eventos'] ?? ($eventos ?? []);
+$totalEventos = (int)($dados['total_eventos'] ?? ($totalEventos ?? count($eventos)));
+$totalEstornos = (float)($dados['total_estornos'] ?? ($totalEstornos ?? 0.0));
+$totalQuitacoes = (float)($dados['total_quitacoes'] ?? ($totalQuitacoes ?? 0.0));
+$filtros = $dados['filtros'] ?? ($filtros ?? []);
 $emissao = date('d/m/Y H:i:s');
-$operador = $dados['operador'] ?? 'Administração Geral';
+$operador = $dados['operador'] ?? ($operador ?? 'Administração Geral');
 $isPdf = $isPdf ?? false;
 
 $infoFiltros = [];

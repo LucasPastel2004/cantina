@@ -2252,6 +2252,30 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Suíte automatizada `tests/carga_sob_demanda_test.php` (28/28 asserções) e `tests/estoque_lista_geral_test.php` (14/14 asserções) cobrindo todos os cenários aprovadas com 100% de sucesso.
 - Como evitar no futuro: Em telas com carga sob demanda, certificar-se de que o botão de filtro submeta um parâmetro indicador (`filtrar=1`) para que, mesmo com todos os selects no valor padrão ("Todas as Categorias", "Todos os Tipos", etc.), o backend saiba que a geração da lista geral foi expressamente solicitada pelo usuário.
 
+---
+
+## 2026-10-23 - Extrato do aluno exibe "ALUNO NÃO IDENTIFICADO" e zeramento de dados devido a invólucro não desempacotado no renderView
+
+- Sintoma: Ao emitir o extrato do aluno no formato de impressão / PDF A4 (`/relatorios/extrato-aluno/imprimir`), mesmo com o aluno devidamente selecionado e preenchido na busca (ex: ANNE SOARES MENEZES), o documento era renderizado com o cabeçalho "ALUNO NÃO IDENTIFICADO", matrícula "-", turma não informada, responsável não informado, saldos zerados (`R$ 0,00`) e zero movimentações.
+- Causa:
+  1. No motor de impressão `PdfService::renderView`, caso `$_viewVars['dados']` não estivesse explicitamente definido, o serviço aplicava `$_viewVars['dados'] = $_viewVars;` antes de chamar `extract($_viewVars)`.
+  2. Ao emitir o extrato, `RelatoriosController::extratoAlunoImprimir` chama `PdfService::gerarEspelhoExtratoConsumoAlunoHtml($dadosExtrato)`, passando `['dadosExtrato' => $dadosExtrato]`. Com isso, `$_viewVars['dados']` era populado com o array invólucro `['dadosExtrato' => $dadosExtrato, 'baseUrl' => '']`.
+  3. Na view `app/views/relatorios/extrato_aluno_pdf.php`, a inicialização continha `if (!isset($dados) || !is_array($dados)) { $dados = $dadosExtrato ?? get_defined_vars(); }`.
+  4. Como `$dados` já vinha setado pelo `renderView` contendo o invólucro, a condição `!isset($dados)` resultava em falso, impedindo que `$dados` recebesse o array real de dados `$dadosExtrato`.
+  5. Consequentemente, as tentativas de acessar `$dados['aluno']`, `$dados['saldo_atual']`, `$dados['linhas']`, etc. resultavam em `null`, acionando os fallbacks padrão ("ALUNO NÃO IDENTIFICADO", saldos zerados e zero lançamentos).
+  6. Comportamento análogo de invólucro ocorria potencialmente em `med_negativados_pdf.php`, `med_historico_pdf.php` e `desconto_folha_pdf.php`.
+- Solução aplicada:
+  1. Em `app/services/PdfService.php` (`renderView`), adicionado desempacotamento inteligente de chaves conhecidas de coleções (`dadosExtrato`, `dadosMed`, `dadosVendas`, `dadosCorte`, `dadosFechamento`, `dadosFolha`, `dadosRecarga`) para apontar `$_viewVars['dados']` diretamente para o array de dados interno quando `$_viewVars['dados']` não for fornecido.
+  2. Em `app/views/relatorios/extrato_aluno_pdf.php`, implementado desempacotamento ultra-resiliente e defensivo:
+     `$dados = $dadosExtrato ?? ($dados['dadosExtrato'] ?? ($dados ?? []));`
+     com suporte tanto a variáveis estruturadas em `$dados` quanto a variáveis livres no escopo (`$aluno`, `$saldoInicial`, `$totalGasto`, etc., tanto em snake_case quanto em camelCase).
+  3. Em `app/views/relatorios/med_negativados_pdf.php`, `med_historico_pdf.php` e `desconto_folha_pdf.php`, aplicada a mesma resiliência de desempacotamento de dados.
+  4. Em `app/views/relatorios/extrato_aluno.php`, removidos inputs ocultos não utilizados (`apenas_saldo` e `saldo_apenas_periodo`).
+  5. Criação de teste de integração `tests/teste_simulacao_extrato_anne.php` validando a geração do extrato com a aluna ID 146 (ANNE SOARES MENEZES), aprovado com 100% de sucesso.
+  6. Suítes automatizadas `tests/fase22_test.php` (79/79 asserções), `tests/teste_extrato_pdf_render.php` (26/26 asserções) e `tests/teste_validacao_relatorios_design.php` (13/13 relatórios) executadas e aprovadas com 100% de sucesso.
+- Como evitar no futuro: Em métodos de renderização de templates isolados que utilizam `extract()`, certificar-se de que variáveis genéricas como `$dados` não sobrescrevam chaves específicas com arrays invólucro; e nas views filhas, priorizar a chave específica da entidade antes do fallback genérico (`$dados = $dadosExtrato ?? ($dados['dadosExtrato'] ?? ($dados ?? []))`).
+
+
 
 
 

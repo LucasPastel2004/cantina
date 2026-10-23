@@ -141,7 +141,23 @@ class PdfService
 
         // Blindagem defensiva: assegura disponibilidade de $dados na view
         if (!isset($_viewVars['dados'])) {
-            $_viewVars['dados'] = $_viewVars;
+            if (isset($_viewVars['dadosExtrato']) && is_array($_viewVars['dadosExtrato'])) {
+                $_viewVars['dados'] = $_viewVars['dadosExtrato'];
+            } elseif (isset($_viewVars['dadosMed']) && is_array($_viewVars['dadosMed'])) {
+                $_viewVars['dados'] = $_viewVars['dadosMed'];
+            } elseif (isset($_viewVars['dadosVendas']) && is_array($_viewVars['dadosVendas'])) {
+                $_viewVars['dados'] = $_viewVars['dadosVendas'];
+            } elseif (isset($_viewVars['dadosCorte']) && is_array($_viewVars['dadosCorte'])) {
+                $_viewVars['dados'] = $_viewVars['dadosCorte'];
+            } elseif (isset($_viewVars['dadosFechamento']) && is_array($_viewVars['dadosFechamento'])) {
+                $_viewVars['dados'] = $_viewVars['dadosFechamento'];
+            } elseif (isset($_viewVars['dadosFolha']) && is_array($_viewVars['dadosFolha'])) {
+                $_viewVars['dados'] = $_viewVars['dadosFolha'];
+            } elseif (isset($_viewVars['dadosRecarga']) && is_array($_viewVars['dadosRecarga'])) {
+                $_viewVars['dados'] = $_viewVars['dadosRecarga'];
+            } else {
+                $_viewVars['dados'] = $_viewVars;
+            }
         }
 
         extract($_viewVars, EXTR_OVERWRITE);

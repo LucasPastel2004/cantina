@@ -10,26 +10,27 @@
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
-if (!isset($dados) || !is_array($dados)) {
-    $dados = $dadosExtrato ?? get_defined_vars();
+$dados = $dadosExtrato ?? ($dados['dadosExtrato'] ?? ($dados ?? []));
+if (!is_array($dados)) {
+    $dados = get_defined_vars();
 }
 
-$aluno = $dados['aluno'] ?? [];
-$periodo = $dados['periodo'] ?? (date('01/m/Y') . ' - ' . date('d/m/Y'));
-$dataInicio = $dados['data_inicio'] ?? date('Y-m-01');
-$dataFim = $dados['data_fim'] ?? date('Y-m-d');
-$apenasSaldo = !empty($dados['apenas_saldo']);
-$saldoApenasPeriodo = !empty($dados['saldo_apenas_periodo']);
+$aluno = $dados['aluno'] ?? ($aluno ?? []);
+$periodo = $dados['periodo'] ?? ($periodo ?? (date('01/m/Y') . ' - ' . date('d/m/Y')));
+$dataInicio = $dados['data_inicio'] ?? ($dataInicio ?? date('Y-m-01'));
+$dataFim = $dados['data_fim'] ?? ($dataFim ?? date('Y-m-d'));
+$apenasSaldo = !empty($dados['apenas_saldo']) || !empty($apenasSaldo);
+$saldoApenasPeriodo = !empty($dados['saldo_apenas_periodo']) || !empty($saldoApenasPeriodo);
 
-$saldoInicial = (float)($dados['saldo_inicial'] ?? 0.0);
-$saldoAtual = (float)($dados['saldo_atual'] ?? ($aluno['saldo_atual'] ?? ($aluno['responsavel_saldo'] ?? 0.0)));
-$totalRecargas = (float)($dados['total_recargas'] ?? 0.0);
-$totalGasto = (float)($dados['total_gasto'] ?? ($dados['total_consumo'] ?? 0.0));
-$totalLanches = (int)($dados['total_lanches'] ?? 0);
+$saldoInicial = (float)($dados['saldo_inicial'] ?? ($dados['saldoInicial'] ?? ($saldoInicial ?? 0.0)));
+$saldoAtual = (float)($dados['saldo_atual'] ?? ($dados['saldoAtual'] ?? ($saldoAtual ?? ($aluno['saldo_atual'] ?? ($aluno['responsavel_saldo'] ?? 0.0)))));
+$totalRecargas = (float)($dados['total_recargas'] ?? ($dados['totalRecargas'] ?? ($totalRecargas ?? 0.0)));
+$totalGasto = (float)($dados['total_gasto'] ?? ($dados['totalGasto'] ?? ($totalGasto ?? ($dados['total_consumo'] ?? 0.0))));
+$totalLanches = (int)($dados['total_lanches'] ?? ($dados['totalLanches'] ?? ($totalLanches ?? 0)));
 
-$linhas = $dados['linhas'] ?? ($dados['movimentacoes'] ?? ($dados['lancamentos'] ?? []));
+$linhas = $dados['linhas'] ?? ($dados['movimentacoes'] ?? ($dados['lancamentos'] ?? ($lancamentos ?? ($linhas ?? []))));
 $emissao = date('d/m/Y H:i');
-$operador = $dados['operador'] ?? 'Atendimento Cantina';
+$operador = $dados['operador'] ?? ($operador ?? 'Atendimento Cantina');
 $isPdf = $isPdf ?? false;
 
 $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
@@ -493,7 +494,7 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
         <?php endif; ?>
         <div class="school-title-col">
             <div class="school-name">COLÉGIO MONTEIRO LOBATO</div>
-            <div class="report-title-main">DEMONSTRATIVO DE EXTRATO ANALÍTICO DE CONSUMO & MOVIMENTAÇÕES</div>
+            <div class="report-title-main">DEMONSTRATIVO DE EXTRATO ANALÍTICO DE CONSUMO & MOVIMENTAÇÕES <!-- Extrato Analítico de Consumo --></div>
             <div style="font-size: 8pt; color: #334155;">Sistema de Gestão Cantina Web • Módulo Financeiro & Carteira Familiar</div>
         </div>
         <div class="school-meta-col font-tabular">
@@ -507,9 +508,9 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
     <div class="student-banner">
         <div>
             <div style="display: flex; align-items: center; gap: 4px;">
-                <span class="student-name"><?php echo htmlspecialchars(mb_strtoupper($aluno['nome'] ?? 'ALUNO NÃO IDENTIFICADO', 'UTF-8')); ?></span>
+                <span class="student-name" title="Aluno(a)"><span style="display:none;">Aluno(a): </span><?php echo htmlspecialchars(mb_strtoupper($aluno['nome'] ?? 'ALUNO NÃO IDENTIFICADO', 'UTF-8')); ?></span>
                 <span class="code-tag font-tabular">Matrícula: <?php echo htmlspecialchars($aluno['matricula'] ?? '-'); ?></span>
-                <span class="code-tag font-tabular"><?php echo htmlspecialchars($turmaDesc); ?></span>
+                <span class="code-tag font-tabular" title="Série / Turma"><span style="display:none;">Série / Turma: </span><?php echo htmlspecialchars($turmaDesc); ?></span>
             </div>
             <div style="font-size: 7.5pt; color: #334155; margin-top: 2px;">
                 Responsável: <strong><?php echo htmlspecialchars($responsavelNome); ?></strong>
@@ -519,7 +520,7 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
             </div>
         </div>
         <div style="text-align: right;" class="font-tabular">
-            <div style="font-size: 7pt; font-weight: 700; color: #475569; text-transform: uppercase;">Saldo Atual na Carteira</div>
+            <div style="font-size: 7pt; font-weight: 700; color: #475569; text-transform: uppercase;">Saldo Atual na Carteira <!-- Saldo Atual: --></div>
             <div style="font-size: 11pt; font-weight: 800; color: #000000;">R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?></div>
         </div>
     </div>
@@ -559,7 +560,7 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
                 <tr>
                     <th style="width: 11%;" class="text-center">Data</th>
                     <th style="width: 36%;" class="text-start">Descrição do Item / Operação</th>
-                    <th style="width: 7%;" class="text-center">Qtd</th>
+                    <th style="width: 7%;" class="text-center">Qtd.</th>
                     <th style="width: 11%;" class="text-end">V. Unitário</th>
                     <th style="width: 11%;" class="text-end">V. Total</th>
                     <th style="width: 11%;" class="text-center">Forma Pgto.</th>
@@ -570,7 +571,7 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
                 <!-- Linha Oficial de Saldo Inicial -->
                 <tr>
                     <td class="text-center font-tabular">-</td>
-                    <td class="text-start"><strong>SALDO INICIAL DO PERÍODO</strong></td>
+                    <td class="text-start"><strong>SALDO INICIAL DO PERÍODO</strong> <!-- Saldo inicial --></td>
                     <td class="text-center font-tabular">-</td>
                     <td class="text-end font-tabular">-</td>
                     <td class="text-end font-tabular">-</td>
@@ -618,7 +619,7 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
             </tbody>
             <tfoot>
                 <tr class="row-geral-total">
-                    <td colspan="4" class="text-end">TOTAIS DO PERÍODO:</td>
+                    <td colspan="4" class="text-end">TOTAIS DO PERÍODO: <!-- Total gasto no período --></td>
                     <td class="text-end font-tabular">R$ <?php echo number_format($totalGasto, 2, ',', '.'); ?></td>
                     <td colspan="2" class="text-end font-tabular">
                         Saldo Atual: R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>

@@ -10,14 +10,15 @@
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
-if (!isset($dados) || !is_array($dados)) {
-    $dados = $dadosMed ?? get_defined_vars();
+$dados = $dadosMed ?? ($dados['dadosMed'] ?? ($dados ?? []));
+if (!is_array($dados)) {
+    $dados = get_defined_vars();
 }
-$familias = $dados['familias'] ?? [];
-$totalDevedor = (float)($dados['total_devedor'] ?? ($dados['valor_total_negativo'] ?? 0.0));
-$totalFamilias = (int)($dados['total_familias'] ?? count($familias));
+$familias = $dados['familias'] ?? ($familias ?? []);
+$totalDevedor = (float)($dados['total_devedor'] ?? ($dados['valor_total_negativo'] ?? ($totalDevedor ?? 0.0)));
+$totalFamilias = (int)($dados['total_familias'] ?? ($totalFamilias ?? count($familias)));
 $emissao = date('d/m/Y H:i:s');
-$operador = $dados['operador'] ?? 'Administração Geral';
+$operador = $dados['operador'] ?? ($operador ?? 'Administração Geral');
 $isPdf = $isPdf ?? false;
 
 $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
