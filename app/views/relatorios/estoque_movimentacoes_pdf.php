@@ -710,14 +710,15 @@ $totalPaginas = count($paginas);
             font-weight: 700;
         }
 
-        /* Banners de Agrupamento */
+        /* Banners de Seção e Agrupamento */
+        .section-banner,
         .group-header {
-            background-color: #0f172a;
-            color: #ffffff;
+            background-color: #0f172a !important;
+            color: #ffffff !important;
             font-weight: 700;
             text-transform: uppercase;
             font-size: 8pt;
-            padding: 4px 8px;
+            padding: 3.5px 8px;
             margin-top: 8px;
             margin-bottom: 2px;
             border-radius: 2px;
@@ -725,6 +726,7 @@ $totalPaginas = count($paginas);
             justify-content: space-between;
             align-items: center;
         }
+        .section-banner span,
         .group-header span {
             color: #ffffff !important;
         }
@@ -874,10 +876,10 @@ $totalPaginas = count($paginas);
         </div>
 
         <div style="display: flex; gap: 8px; flex-shrink: 0;">
-            <button type="button" class="btn-action btn-primary" onclick="window.print()">
-                🖨 Imprimir Documento
+            <button type="button" class="btn-action btn-primary" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
+                🖨 Imprimir / Salvar PDF (A4)
             </button>
-            <button type="button" class="btn-action" onclick="fecharJanela()">
+            <button type="button" class="btn-action" onclick="window.close()">
                 ✕ Fechar
             </button>
         </div>
@@ -958,6 +960,10 @@ $totalPaginas = count($paginas);
 
                 <?php elseif ($pag['modo'] === 'geral'): ?>
                     <!-- TABELA GERAL CRONOLÓGICA -->
+                    <div class="section-banner">
+                        <span>1. Movimentações Analíticas de Estoque <?php echo ($indexPagina > 0) ? '<small style="font-weight:normal; opacity:0.85; text-transform:none;">(Página ' . $numPagina . ' de ' . $totalPaginas . ')</small>' : ''; ?></span>
+                        <span class="font-tabular" style="font-size: 8pt; font-weight: normal; opacity: 0.9;">Total da Folha: <?php echo count($pag['itens']); ?> registro(s)</span>
+                    </div>
                     <table class="table-estoque">
                         <thead>
                             <tr>
@@ -1243,6 +1249,9 @@ $totalPaginas = count($paginas);
 
                 <!-- Caixa de Consolidação Geral e Totais do Período (Apenas na Última Página) -->
                 <?php if ($pag['tem_totais']): ?>
+                    <div class="section-banner" style="margin-top: 14px;">
+                        <span>2. Síntese e Totais Consolidados de Movimentação do Período</span>
+                    </div>
                     <div class="totais-box font-tabular">
                         <div class="totais-grid">
                             <div class="totais-item">

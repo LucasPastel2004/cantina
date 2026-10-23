@@ -93,24 +93,26 @@ $isCaixa = ($regime === 'caixa');
         /* ==========================================================================
            3. Barra Superior de Controle Padronizada (#1e293b - Apenas em Tela)
            ========================================================================== */
-        .action-bar-top {
+        .no-print {
             background-color: #1e293b;
             color: #ffffff;
+            border: 1px solid #0f172a;
             padding: 8px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 16px;
+            font-size: 11px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             width: 280mm;
             max-width: calc(100% - 32px);
             margin: 0 auto 16px auto;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             position: sticky;
             top: 10px;
             z-index: 1000;
         }
-        .action-bar-top .zoom-controls {
+        .no-print .zoom-controls {
             display: inline-flex;
             align-items: center;
             gap: 4px;
@@ -121,7 +123,7 @@ $isCaixa = ($regime === 'caixa');
             flex-shrink: 0;
             margin: 0 4px;
         }
-        .action-bar-top .btn-zoom {
+        .no-print .btn-zoom {
             background: transparent;
             color: #ffffff;
             border: none;
@@ -137,11 +139,11 @@ $isCaixa = ($regime === 'caixa');
             line-height: 1;
             transition: all 0.15s ease;
         }
-        .action-bar-top .btn-zoom:hover {
+        .no-print .btn-zoom:hover {
             background: rgba(255, 255, 255, 0.2);
             color: #93c5fd;
         }
-        .action-bar-top .btn-zoom-val {
+        .no-print .btn-zoom-val {
             background: transparent;
             color: #ffffff;
             border: none;
@@ -155,18 +157,18 @@ $isCaixa = ($regime === 'caixa');
             text-align: center;
             transition: all 0.15s ease;
         }
-        .action-bar-top .btn-zoom-val:hover {
+        .no-print .btn-zoom-val:hover {
             background: rgba(255, 255, 255, 0.2);
             text-decoration: underline;
         }
-        .action-bar-top .btn-action-nav {
-            background: #ffffff;
-            color: #0f172a;
-            border: none;
-            border-radius: 4px;
+        .btn-print-action {
+            background: #1d4ed8;
+            color: #ffffff !important;
+            border: 1px solid #1e40af;
             padding: 5px 12px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
+            border-radius: 4px;
             text-decoration: none;
             cursor: pointer;
             display: inline-flex;
@@ -174,18 +176,26 @@ $isCaixa = ($regime === 'caixa');
             gap: 5px;
             transition: all 0.15s ease-in-out;
         }
-        .action-bar-top .btn-action-nav:hover {
-            background: #f1f5f9;
-            color: #1d4ed8;
-        }
-        .action-bar-top .btn-primary {
-            background: #1d4ed8;
-            color: #ffffff;
-            border: 1px solid #1e40af;
-        }
-        .action-bar-top .btn-primary:hover {
+        .btn-print-action:hover {
             background: #1e40af;
-            color: #ffffff;
+        }
+        .btn-close-action {
+            background: #ffffff;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1;
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-close-action:hover {
+            background: #f1f5f9;
         }
 
         .document-zoom-area {
@@ -203,41 +213,78 @@ $isCaixa = ($regime === 'caixa');
         /* ==========================================================================
            4. Cabeçalho Escolar Oficial
            ========================================================================== */
-        .header-box {
+        .school-header {
             display: flex;
             align-items: center;
             border-bottom: 2px solid #000000;
             padding-bottom: 8px;
             margin-bottom: 8px;
         }
-        .header-logo {
+        .school-logo-col {
+            width: 48px;
+            margin-right: 12px;
+        }
+        .school-logo-col img {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            margin-right: 12px;
             object-fit: cover;
+            border: 1px solid #cbd5e1;
         }
-        .header-text {
+        .school-title-col {
             flex: 1;
+            line-height: 1.25;
         }
-        .header-text h1 {
-            font-size: 13pt;
+        .school-name {
+            font-size: 11pt;
             font-weight: 700;
-            margin: 0 0 2px 0;
             color: #000000;
             text-transform: uppercase;
             letter-spacing: 0.02em;
         }
-        .header-text p {
-            margin: 0;
-            font-size: 8.5pt;
-            color: #334155;
+        .report-title-main {
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: #000000;
+            margin-top: 2px;
+            text-transform: uppercase;
         }
-        .header-meta {
-            text-align: right;
+        .report-subtitle {
             font-size: 8pt;
-            color: #475569;
+            color: #334155;
+            margin-top: 1px;
+        }
+        .school-meta-col {
+            text-align: right;
+            font-size: 7.5pt;
+            color: #334155;
+            line-height: 1.35;
             padding-right: 2px;
+        }
+
+        /* Faixa de Parâmetros */
+        .param-bar {
+            font-size: 8pt;
+            background: #f8fafc;
+            border: 1px solid #000000;
+            padding: 4px 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Banners de Seção */
+        .section-banner {
+            font-weight: 700;
+            font-size: 8pt;
+            text-transform: uppercase;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 3.5px 8px;
+            margin-top: 8px;
+            margin-bottom: 2px;
+            border-radius: 2px;
         }
 
         /* ==========================================================================
@@ -318,8 +365,11 @@ $isCaixa = ($regime === 'caixa');
             letter-spacing: -0.01em;
         }
 
-        .row-secao {
+        .row-secao td {
             font-weight: 700 !important;
+            background-color: #f8fafc !important;
+            border-top: 1.5px solid #000000 !important;
+            border-bottom: 1px solid #000000 !important;
         }
         .row-subitem td.col-desc {
             padding-left: 14px !important;
@@ -373,7 +423,7 @@ $isCaixa = ($regime === 'caixa');
 <body>
 
 <?php if (!$isPdf): ?>
-<div class="action-bar-top no-print">
+<div class="no-print">
     <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
         <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff; font-weight: 700; font-size: 12px;">Cantina Web — Relatório Oficial DRE (<?php echo $isCaixa ? 'Regime de Caixa' : 'Regime de Competência'; ?>)</div>
         <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">Período: <?php echo date('d/m/Y', strtotime($dataInicio ?? date('Y-01-01'))); ?> a <?php echo date('d/m/Y', strtotime($dataFim ?? date('Y-m-d'))); ?> &bull; Formato A4 Paisagem</div>
@@ -391,38 +441,50 @@ $isCaixa = ($regime === 'caixa');
             <button type="button" class="btn-zoom" id="btnZoomIn" title="Aumentar Zoom (Ctrl +)" onclick="alterarZoom(0.15)">+</button>
         </div>
 
-        <div style="display: flex; gap: 8px;">
-            <button type="button" class="btn-action-nav btn-primary" onclick="window.print()">
-                🖨 Imprimir Documento
-            </button>
-            <button type="button" class="btn-action-nav" onclick="fecharJanela()">
-                ✕ Fechar
-            </button>
-        </div>
+        <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
+            🖨 Imprimir / Salvar PDF (A4)
+        </button>
+        <button type="button" class="btn-close-action" onclick="window.close()">
+            ✕ Fechar
+        </button>
     </div>
 </div>
 <?php endif; ?>
 
 <div id="document-zoom-area" class="document-zoom-area">
 <div class="doc-page">
-    <!-- Cabeçalho Oficial -->
-    <div class="header-box">
+    <!-- Cabeçalho Oficial Escolar -->
+    <div class="school-header">
         <?php if (!empty($logoBase64)): ?>
-            <img src="<?php echo $logoBase64; ?>" alt="Logotipo Oficial" class="header-logo">
-        <?php endif; ?>
-        <div class="header-text">
-            <h1><?php echo htmlspecialchars($razaoSocial, ENT_QUOTES, 'UTF-8'); ?></h1>
-            <p>
-                DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE) &bull; <?php echo $isCaixa ? 'REGIME DE CAIXA (RECARGAS & ARRECADAÇÃO)' : 'REGIME DE COMPETÊNCIA (VENDAS & CONSUMO)'; ?> — PERÍODO DE <?php echo date('d/m/Y', strtotime($dataInicio ?? date('Y-01-01'))); ?> A <?php echo date('d/m/Y', strtotime($dataFim ?? date('Y-m-d'))); ?>
-            </p>
+        <div class="school-logo-col">
+            <img src="<?php echo $logoBase64; ?>" alt="Logotipo Oficial">
         </div>
-        <div class="header-meta">
+        <?php endif; ?>
+        <div class="school-title-col">
+            <div class="school-name">COLÉGIO MONTEIRO LOBATO</div>
+            <div class="report-title-main">DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE) — EXERCÍCIO <?php echo $anoAtual; ?></div>
+            <div class="report-subtitle">Sistema de Gestão Cantina Web • Módulo Financeiro & Contabilidade Gerencial</div>
+        </div>
+        <div class="school-meta-col">
             <?php if (!empty($cnpj)): ?>
                 <div><strong>CNPJ:</strong> <?php echo htmlspecialchars($cnpj, ENT_QUOTES, 'UTF-8'); ?></div>
             <?php endif; ?>
             <div><strong>Emissão:</strong> <?php echo $dataEmissao; ?></div>
             <div><strong>Unidade:</strong> Cantina Escolar Geral</div>
+            <div><strong>Documento:</strong> A4 Paisagem</div>
         </div>
+    </div>
+
+    <!-- Faixa de Parâmetros e Filtros -->
+    <div class="param-bar">
+        <div><strong>Período Apurado:</strong> <?php echo date('d/m/Y', strtotime($dataInicio ?? date('Y-01-01'))); ?> a <?php echo date('d/m/Y', strtotime($dataFim ?? date('Y-m-d'))); ?> (Exercício <?php echo $anoAtual; ?>)</div>
+        <div><strong>Regime Contábil:</strong> <?php echo $isCaixa ? 'Regime de Caixa (Recargas & Vendas Presenciais Diretas)' : 'Regime de Competência (Faturamento Bruto & Consumo Real)'; ?></div>
+        <div><strong>Formato:</strong> A4 Paisagem Oficial</div>
+    </div>
+
+    <!-- Banner de Seção Oficial -->
+    <div class="section-banner">
+        1. Demonstrativo Comparativo Mensal — DRE (Ano <?php echo $anoAtual; ?>)
     </div>
 
     <!-- Tabela Comparativa DRE (Grade Estilo Excel) -->

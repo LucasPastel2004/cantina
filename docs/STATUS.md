@@ -1941,6 +1941,22 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Sustentação — Padronização Visual Integral de DRE e Movimentações de Estoque (2026-10-23)
+* [x] **Alinhamento dos Relatórios Restantes ao Padrão Corporativo:**
+  * **Relatório Oficial DRE (`app/views/financeiro/dre_pdf.php`):**
+    * Substituído o cabeçalho antigo `.header-box` pelo componente oficial `.school-header` com logotipo circular timbrado, títulos hierárquicos e metadados oficiais da cantina e da escola;
+    * Adicionada a faixa de parâmetros `.param-bar` (`#f8fafc` com borda `1px solid #000000`) detalhando período apurado, regime contábil e formato oficial A4 Paisagem;
+    * Inserido o banner de seção `.section-banner` em azul marinho escuro `#0f172a` com texto branco (*"1. Demonstrativo Comparativo Mensal — DRE"*);
+    * Padronizada a barra de ferramentas superior (`.no-print` em `#1e293b`) com botão oficial `🖨 Imprimir / Salvar PDF (A4)` e botão `✕ Fechar`;
+    * Destacadas as linhas principais de seção (`.row-secao td` com `#f8fafc` e bordas duplas pretas nítidas).
+  * **Relatório de Movimentações de Estoque (`app/views/relatorios/estoque_movimentacoes_pdf.php`):**
+    * Inserido o banner de seção `.section-banner` em azul marinho `#0f172a` no modo de listagem geral (*"1. Movimentações Analíticas de Estoque"* com contador de registros da folha e paginação) e padronizados os banners de categoria e produto;
+    * Inserido banner `.section-banner` sobre a caixa de totalização geral (*"2. Síntese e Totais Consolidados de Movimentação do Período"*);
+    * Atualizados os botões da barra superior para `🖨 Imprimir / Salvar PDF (A4)` e `✕ Fechar`.
+* [x] **Suíte de Testes Automatizada (`tests/teste_dre_estoque_design.php`):** Validada a presença de todos os componentes (`.school-header`, `.param-bar`, `.section-banner`, `#0f172a`, `Imprimir / Salvar PDF (A4)`), com 100% de aprovação.
+
+---
+
 ## Próximo Passo Recomendado
 
 1. **Homologação Externa pela Equipe da Escola:** Equipe da cantina, secretaria e direção realizam testes remotos nas telas operacionais (tickets, corte de turno, PDV) e no Portal da Família a partir de seus computadores e celulares.
