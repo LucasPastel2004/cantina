@@ -338,7 +338,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         table.table-doc-excel th,
         table.table-doc-excel td {
             border: 1px solid #000000 !important;
-            padding: 3.5px 6px !important;
+            padding: 3px 4px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
             word-break: break-word;
@@ -346,7 +346,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         table.table-doc-excel thead th {
             font-weight: 700 !important;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.2pt;
+            letter-spacing: -0.01em;
             text-transform: uppercase;
             background-color: #f8fafc !important;
         }

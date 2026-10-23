@@ -2275,6 +2275,34 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   6. Suítes automatizadas `tests/fase22_test.php` (79/79 asserções), `tests/teste_extrato_pdf_render.php` (26/26 asserções) e `tests/teste_validacao_relatorios_design.php` (13/13 relatórios) executadas e aprovadas com 100% de sucesso.
 - Como evitar no futuro: Em métodos de renderização de templates isolados que utilizam `extract()`, certificar-se de que variáveis genéricas como `$dados` não sobrescrevam chaves específicas com arrays invólucro; e nas views filhas, priorizar a chave específica da entidade antes do fallback genérico (`$dados = $dadosExtrato ?? ($dados['dadosExtrato'] ?? ($dados ?? []))`).
 
+---
+
+## 2026-10-23 - Truncamento de caracteres em cabeçalhos e números de relatórios A4 por padding lateral excessivo e colunas estreitas
+
+- Sintoma: Em cerca de 4 a 5 relatórios do sistema (como MED Negativados, Vendas por Alimento, Desconto em Folha, Baixas de Mercadorias e Fechamento de Caixa), o último caractere de cabeçalhos de coluna em caixa alta ou de valores monetários ficava cortado ou quebrava de forma deselegante (ex: "TOTAL A DESCONTA", "PREÇO MÉDI", "SUBTOTA", "SALDO DEVEDO").
+- Causa:
+  1. As células das tabelas utilizavam padding lateral de 6px (`padding: 3.5px 6px` ou `4px 6px`), consumindo 12px de largura útil por coluna (em tabelas de 8 a 10 colunas, gastavam até 120px apenas em respiro lateral).
+  2. Os cabeçalhos utilizavam `text-transform: uppercase` com tamanho fixo em 7.5pt, expandindo o comprimento das palavras em até 25%.
+  3. No relatório de vendas (`vendas_alimento_pdf.php`), o cabeçalho possuía a diretiva `white-space: nowrap; overflow: hidden;`, que forçava o corte milimétrico do último caractere ao menor aperto de coluna.
+  4. Colunas com títulos longos (ex: "TOTAL A DESCONTAR", "MOTIVO PADRONIZADO", "SALDO RESULTANTE", "VALOR MOVIMENTADO") possuíam porcentagens horizontais subdimensionadas (11% a 15%).
+- Solução aplicada:
+  1. Reduzido o padding lateral universalmente para `padding: 3px 4px !important;` (ou `2.5px 3.5px` em tabelas com 11+ colunas como Fechamento de Caixa), recuperando espaço útil imediato por célula.
+  2. Tipografia dos cabeçalhos (`thead th`) calibrada para `font-size: 7.2pt; letter-spacing: -0.01em; word-break: break-word;` sem `overflow: hidden`.
+  3. Rebalanceamento estrito das larguras percentuais (`width: X%` totalizando 100% por tabela) em todos os 12 relatórios A4:
+     - `med_negativados_pdf.php`: "Saldo Devedor" ampliado para 15% e "Status" para 12%;
+     - `med_historico_pdf.php`: "Valor Movimentado" e "Saldo Resultante" ampliados para 14% cada;
+     - `fechamento_caixa_pdf.php`: Recebido ampliado para 12%, colunas monetárias 14%;
+     - `extrato_aluno_pdf.php`: "Saldo Result." ampliado para 15%, "V. Unitário" e "Forma Pgto." 12%;
+     - `desconto_folha_pdf.php`: "Total a Descontar" ampliado para 19% (respiro completo para os 17 caracteres maiúsculos);
+     - `desconto_folha_individual_pdf.php`: "Valor Unitário" e "Subtotal" ampliados para 18% cada;
+     - `baixas_mercadorias_pdf.php`: "Motivo Padronizado" ampliado para 18%;
+     - `vendas_alimento_pdf.php`: "Preço Médio" 15%, "Valor Total" 15%, subtabela "Subtotal" 14% e "Total (R$)" 16%;
+     - `estoque_movimentacoes_pdf.php`: Código 8%, Entrada 8.5%, Saída 8%, Doc/Justif 13%;
+     - `dre_pdf.php`: .col-desc 14.5%, 12 meses com 6.4% e .col-total com 8.7%;
+     - `arrecadacao_pdf.php` e `corte_pdf.php`: thead th 7.2pt e Qtd Encomendar 18%.
+  4. Executada a suíte de testes `tests/teste_validacao_relatorios_design.php`, com 13/13 aprovações (0 erros).
+- Como evitar no futuro: Em tabelas de impressão A4 com larguras fixas (`table-layout: fixed`), nunca utilizar `overflow: hidden` nos `<th>` sem respiro suficiente; limitar o padding horizontal das células a no máximo 4px e dimensionar colunas com títulos em caixa alta com pelo menos 15% a 18% de largura.
+
 
 
 

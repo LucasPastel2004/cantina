@@ -331,38 +331,38 @@ $isCaixa = ($regime === 'caixa');
         }
 
         .col-desc {
-            width: 14.8%;
+            width: 14.5%;
             text-align: left !important;
             padding: 3px 5px !important;
             font-size: 7.2pt;
             word-break: break-word;
         }
         .col-mes {
-            width: 6.45%;
+            width: 6.4%;
             text-align: right !important;
-            padding: 3px 2px !important;
+            padding: 2.5px 2px !important;
             white-space: nowrap !important;
-            font-size: 6.7pt !important;
-            letter-spacing: -0.01em;
+            font-size: 6.6pt !important;
+            letter-spacing: -0.015em;
         }
         .col-total {
-            width: 7.8%;
+            width: 8.7%;
             font-weight: 700 !important;
-            font-size: 6.8pt !important;
+            font-size: 6.7pt !important;
         }
         th.col-total {
             text-align: center !important;
             white-space: normal !important;
             line-height: 1.15 !important;
-            font-size: 6.8pt !important;
+            font-size: 6.7pt !important;
             padding: 2px 2px !important;
         }
         td.col-total {
             text-align: right !important;
             white-space: nowrap !important;
-            padding: 3px 3px !important;
-            font-size: 6.8pt !important;
-            letter-spacing: -0.01em;
+            padding: 2.5px 3px !important;
+            font-size: 6.7pt !important;
+            letter-spacing: -0.015em;
         }
 
         .row-secao td {

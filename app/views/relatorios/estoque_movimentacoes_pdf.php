@@ -650,12 +650,11 @@ $totalPaginas = count($paginas);
             color: #000000 !important;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 8px;
-            letter-spacing: 0.02em;
-            padding: 4px 5px;
+            font-size: 7.2pt;
+            letter-spacing: -0.01em;
+            padding: 3px 4px !important;
             border: 1px solid #000000 !important;
             text-align: left;
-            overflow: hidden;
             word-break: break-word;
         }
         .table-estoque th:first-child,
@@ -971,23 +970,23 @@ $totalPaginas = count($paginas);
                                     <th style="width: 8.5%;" class="text-center th-nowrap">Data/Hora</th>
                                     <th style="width: 7%;">C. Custo</th>
                                     <th style="width: 9%;">Categoria</th>
-                                    <th style="width: 7%;">Código</th>
+                                    <th style="width: 7.5%;">Código</th>
                                     <th style="width: 20%;">Produto</th>
                                     <th style="width: 11.5%;">Tipo Mov.</th>
                                     <th style="width: 7.5%;" class="text-right col-qtd">Entrada</th>
-                                    <th style="width: 7%;" class="text-right col-qtd">Saída</th>
-                                    <th style="width: 9.5%;" class="th-nowrap">Operador</th>
-                                    <th style="width: 13%;">Doc / Justif.</th>
-                                <?php else: ?>
-                                    <th style="width: 10.5%;" class="text-center th-nowrap">Data/Hora</th>
-                                    <th style="width: 9.5%;">Categoria</th>
-                                    <th style="width: 7.5%;">Código</th>
-                                    <th style="width: 20%;">Produto</th>
-                                    <th style="width: 12%;">Tipo Mov.</th>
-                                    <th style="width: 8%;" class="text-right col-qtd">Entrada</th>
                                     <th style="width: 7.5%;" class="text-right col-qtd">Saída</th>
+                                    <th style="width: 9.5%;" class="th-nowrap">Operador</th>
+                                    <th style="width: 12%;">Doc / Justif.</th>
+                                <?php else: ?>
+                                    <th style="width: 11%;" class="text-center th-nowrap">Data/Hora</th>
+                                    <th style="width: 10%;">Categoria</th>
+                                    <th style="width: 8%;">Código</th>
+                                    <th style="width: 19%;">Produto</th>
+                                    <th style="width: 12%;">Tipo Mov.</th>
+                                    <th style="width: 8.5%;" class="text-right col-qtd">Entrada</th>
+                                    <th style="width: 8%;" class="text-right col-qtd">Saída</th>
                                     <th style="width: 10.5%;" class="th-nowrap">Operador</th>
-                                    <th style="width: 14.5%;">Doc / Justif.</th>
+                                    <th style="width: 13%;">Doc / Justif.</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>

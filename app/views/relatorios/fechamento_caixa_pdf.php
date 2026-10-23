@@ -397,7 +397,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         table.table-doc-excel th,
         table.table-doc-excel td {
             border: 1px solid #000000 !important;
-            padding: 3px 5px !important;
+            padding: 2.5px 3.5px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
             word-break: break-word;
@@ -405,7 +405,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         table.table-doc-excel thead th {
             font-weight: 700 !important;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.0pt;
+            letter-spacing: -0.015em;
             text-transform: uppercase;
             background-color: #f8fafc !important;
         }
@@ -573,17 +574,17 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <table class="table-doc-excel font-tabular">
         <thead>
             <tr>
-                <th style="width: 10%;">Duplicata</th>
-                <th style="width: 25%;" class="text-start">Aluno / Titular</th>
-                <th style="width: 7%;" class="text-center">Ref.</th>
-                <th style="width: 10%;" class="text-start">Finalidade</th>
+                <th style="width: 9%;">Duplicata</th>
+                <th style="width: 22%;" class="text-start">Aluno / Titular</th>
+                <th style="width: 6%;" class="text-center">Ref.</th>
+                <th style="width: 9%;" class="text-start">Finalidade</th>
                 <th style="width: 8%;" class="text-center">Vencto</th>
                 <th style="width: 8%;" class="text-end">Nominal</th>
-                <th style="width: 5%;" class="text-end">Multa</th>
-                <th style="width: 5%;" class="text-end">Juros</th>
-                <th style="width: 5%;" class="text-end">Desc.</th>
-                <th style="width: 10%;" class="text-end">Recebido</th>
-                <th style="width: 7%;" class="text-center">Tipo</th>
+                <th style="width: 6%;" class="text-end">Multa</th>
+                <th style="width: 6%;" class="text-end">Juros</th>
+                <th style="width: 6%;" class="text-end">Desc.</th>
+                <th style="width: 12%;" class="text-end">Recebido</th>
+                <th style="width: 8%;" class="text-center">Tipo</th>
             </tr>
         </thead>
         <tbody>
@@ -628,12 +629,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <table class="table-doc-excel font-tabular">
         <thead>
             <tr>
-                <th style="width: 34%;" class="text-start">Alimento / Produto</th>
-                <th style="width: 28%;" class="text-start">Aluno</th>
-                <th style="width: 12%;" class="text-end">Prc. Unit.</th>
+                <th style="width: 32%;" class="text-start">Alimento / Produto</th>
+                <th style="width: 24%;" class="text-start">Aluno</th>
+                <th style="width: 14%;" class="text-end">Prc. Unit.</th>
                 <th style="width: 7%;" class="text-center">Qtd</th>
-                <th style="width: 11%;" class="text-end">Vlr. Pago</th>
-                <th style="width: 8%;" class="text-center">Tipo</th>
+                <th style="width: 14%;" class="text-end">Vlr. Pago</th>
+                <th style="width: 9%;" class="text-center">Tipo</th>
             </tr>
         </thead>
         <tbody>
@@ -672,12 +673,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <table class="table-doc-excel font-tabular">
         <thead>
             <tr>
-                <th style="width: 34%;" class="text-start">Alimento / Produto</th>
-                <th style="width: 28%;" class="text-start">Pessoa / Cliente</th>
-                <th style="width: 12%;" class="text-end">Prc. Unit.</th>
+                <th style="width: 32%;" class="text-start">Alimento / Produto</th>
+                <th style="width: 24%;" class="text-start">Pessoa / Cliente</th>
+                <th style="width: 14%;" class="text-end">Prc. Unit.</th>
                 <th style="width: 7%;" class="text-center">Qtd</th>
-                <th style="width: 11%;" class="text-end">Vlr. Pago</th>
-                <th style="width: 8%;" class="text-center">Tipo</th>
+                <th style="width: 14%;" class="text-end">Vlr. Pago</th>
+                <th style="width: 9%;" class="text-center">Tipo</th>
             </tr>
         </thead>
         <tbody>
@@ -716,10 +717,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <table class="table-doc-excel font-tabular">
         <thead>
             <tr>
-                <th style="width: 25%;" class="text-start">Banco</th>
-                <th style="width: 45%;" class="text-start">Descrição</th>
-                <th style="width: 15%;" class="text-center">Observação</th>
-                <th style="width: 15%;" class="text-end">Valor</th>
+                <th style="width: 22%;" class="text-start">Banco</th>
+                <th style="width: 46%;" class="text-start">Descrição</th>
+                <th style="width: 16%;" class="text-center">Observação</th>
+                <th style="width: 16%;" class="text-end">Valor</th>
             </tr>
         </thead>
         <tbody>

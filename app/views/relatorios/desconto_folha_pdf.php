@@ -334,7 +334,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         table.table-doc-excel th,
         table.table-doc-excel td {
             border: 1px solid #000000 !important;
-            padding: 4px 6px !important;
+            padding: 3px 4px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
             word-break: break-word;
@@ -342,7 +342,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         table.table-doc-excel thead th {
             font-weight: 700 !important;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.2pt;
+            letter-spacing: -0.01em;
             text-transform: uppercase;
             background-color: #f8fafc !important;
         }
@@ -478,11 +479,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <table class="table-doc-excel">
         <thead>
             <tr>
-                <th style="width: 14%;" class="text-center">Matrícula</th>
-                <th style="width: 38%;" class="text-start">Nome do Colaborador / Professor</th>
+                <th style="width: 13%;" class="text-center">Matrícula</th>
+                <th style="width: 36%;" class="text-start">Nome do Colaborador / Professor</th>
                 <th style="width: 20%;" class="text-start">Cargo / Departamento</th>
-                <th style="width: 13%;" class="text-center">Qtd. Lanches</th>
-                <th style="width: 15%;" class="text-end">Total a Descontar</th>
+                <th style="width: 12%;" class="text-center">Qtd. Lanches</th>
+                <th style="width: 19%;" class="text-end">Total a Descontar</th>
             </tr>
         </thead>
         <tbody>

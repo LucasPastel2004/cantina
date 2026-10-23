@@ -366,7 +366,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         table.table-doc-excel th,
         table.table-doc-excel td {
             border: 1px solid #000000 !important;
-            padding: 4px 6px !important;
+            padding: 3px 4px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
             word-break: break-word;
@@ -374,7 +374,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         table.table-doc-excel thead th {
             font-weight: 700 !important;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.2pt;
+            letter-spacing: -0.01em;
             text-transform: uppercase;
             background-color: #f8fafc !important;
         }
@@ -531,10 +532,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         <thead>
             <tr>
                 <th style="width: 14%;" class="text-center">Data / Hora</th>
-                <th style="width: 46%;" class="text-start">Descrição do Alimento / Produto</th>
-                <th style="width: 12%;" class="text-center">Qtd.</th>
-                <th style="width: 14%;" class="text-end">Valor Unitário</th>
-                <th style="width: 14%;" class="text-end">Subtotal</th>
+                <th style="width: 42%;" class="text-start">Descrição do Alimento / Produto</th>
+                <th style="width: 8%;" class="text-center">Qtd.</th>
+                <th style="width: 18%;" class="text-end">Valor Unitário</th>
+                <th style="width: 18%;" class="text-end">Subtotal</th>
             </tr>
         </thead>
         <tbody>

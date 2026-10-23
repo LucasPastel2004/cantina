@@ -382,7 +382,7 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
         table.table-doc-excel th,
         table.table-doc-excel td {
             border: 1px solid #000000 !important;
-            padding: 3.5px 6px !important;
+            padding: 3px 4px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
             word-break: break-word;
@@ -390,7 +390,8 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
         table.table-doc-excel thead th {
             font-weight: 700 !important;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.2pt;
+            letter-spacing: -0.01em;
             text-transform: uppercase;
             background-color: #f8fafc !important;
         }
@@ -558,13 +559,13 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
         <table class="table-doc-excel">
             <thead>
                 <tr>
-                    <th style="width: 11%;" class="text-center">Data</th>
-                    <th style="width: 36%;" class="text-start">Descrição do Item / Operação</th>
-                    <th style="width: 7%;" class="text-center">Qtd.</th>
-                    <th style="width: 11%;" class="text-end">V. Unitário</th>
-                    <th style="width: 11%;" class="text-end">V. Total</th>
-                    <th style="width: 11%;" class="text-center">Forma Pgto.</th>
-                    <th style="width: 13%;" class="text-end">Saldo Result.</th>
+                    <th style="width: 10%;" class="text-center">Data</th>
+                    <th style="width: 33%;" class="text-start">Descrição do Item / Operação</th>
+                    <th style="width: 6.5%;" class="text-center">Qtd.</th>
+                    <th style="width: 12%;" class="text-end">V. Unitário</th>
+                    <th style="width: 11.5%;" class="text-end">V. Total</th>
+                    <th style="width: 12%;" class="text-center">Forma Pgto.</th>
+                    <th style="width: 15%;" class="text-end">Saldo Result.</th>
                 </tr>
             </thead>
             <tbody>

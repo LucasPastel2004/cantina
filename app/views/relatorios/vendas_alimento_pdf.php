@@ -410,15 +410,15 @@ if ($emitirAlim && $emitirAluno) {
         table.tabela-relatorio th,
         table.table-doc-excel th {
             border: 1px solid #000000 !important;
-            padding: 3.5px 5px !important;
+            padding: 3px 4px !important;
             font-weight: 700 !important;
             text-align: left;
             color: #000000;
-            font-size: 7.5pt !important;
+            font-size: 7.2pt !important;
+            letter-spacing: -0.01em;
             text-transform: uppercase !important;
             background: #f8fafc !important;
-            white-space: nowrap;
-            overflow: hidden;
+            word-break: break-word;
         }
         table.tabela-relatorio th:first-child,
         table.tabela-relatorio td:first-child,
@@ -754,12 +754,12 @@ if ($emitirAlim && $emitirAluno) {
             <table class="tabela-relatorio">
                 <thead>
                     <tr>
-                        <th style="width: 12%;">Código</th>
-                        <th style="width: 36%;">Alimento</th>
-                        <th style="width: 16%;">Categoria</th>
+                        <th style="width: 11%;">Código</th>
+                        <th style="width: 33%;">Alimento</th>
+                        <th style="width: 15%;">Categoria</th>
                         <th style="width: 11%;" class="text-right">Qtd Total</th>
-                        <th style="width: 12%;" class="text-right">Preço Médio</th>
-                        <th style="width: 13%;" class="text-right">Valor Total</th>
+                        <th style="width: 15%;" class="text-right">Preço Médio</th>
+                        <th style="width: 15%;" class="text-right">Valor Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -824,10 +824,10 @@ if ($emitirAlim && $emitirAluno) {
                         <table class="tabela-relatorio">
                             <thead>
                                 <tr>
-                                    <th style="width: 16%;">Matrícula</th>
-                                    <th style="width: 54%;">Nome do Aluno</th>
-                                    <th style="width: 14%;" class="text-right">Quantidade</th>
-                                    <th style="width: 16%;" class="text-right">Total Consumo (R$)</th>
+                                    <th style="width: 15%;">Matrícula</th>
+                                    <th style="width: 50%;">Nome do Aluno</th>
+                                    <th style="width: 15%;" class="text-right">Quantidade</th>
+                                    <th style="width: 20%;" class="text-right">Total Consumo (R$)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -860,12 +860,12 @@ if ($emitirAlim && $emitirAluno) {
                                     <table class="tabela-compras-aluno">
                                         <thead>
                                             <tr>
-                                                <th style="width: 16%;">Data</th>
-                                                <th style="width: 12%;">Horário</th>
-                                                <th style="width: 44%;">Produto</th>
+                                                <th style="width: 14%;">Data</th>
+                                                <th style="width: 11%;">Horário</th>
+                                                <th style="width: 41%;">Produto</th>
                                                 <th style="width: 8%;" class="text-right">Qtd</th>
-                                                <th style="width: 10%;" class="text-right">Preço</th>
-                                                <th style="width: 10%;" class="text-right">Subtotal</th>
+                                                <th style="width: 12%;" class="text-right">Preço</th>
+                                                <th style="width: 14%;" class="text-right">Subtotal</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -900,10 +900,10 @@ if ($emitirAlim && $emitirAluno) {
                         <thead>
                             <tr>
                                 <th style="width: 14%;">Matrícula</th>
-                                <th style="width: 44%;">Nome do Aluno</th>
-                                <th style="width: 20%;">Série / Turma</th>
+                                <th style="width: 42%;">Nome do Aluno</th>
+                                <th style="width: 18%;">Série / Turma</th>
                                 <th style="width: 10%;" class="text-right">Qtd</th>
-                                <th style="width: 12%;" class="text-right">Total (R$)</th>
+                                <th style="width: 16%;" class="text-right">Total (R$)</th>
                             </tr>
                         </thead>
                         <tbody>
