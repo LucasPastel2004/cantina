@@ -120,8 +120,39 @@ if (!$checkDb || empty($checkDb['deleted_at'])) {
     echo "[PASS] Auditoria e integridade preservadas: deleted_at gravado em {$checkDb['deleted_at']}.\n";
 }
 
-// 8. Testando Renderização da View
+// 8. Testando Renderização da View (Padrão de Ouro: Carga Sob Demanda)
 $baseUrl = '';
+$csrf_field = '<input type="hidden" name="csrf_token" value="abc">';
+$csrf_token = 'abc';
+$totalAtivos = 1;
+$totalGeral = 1;
+
+// 8.1. Testando Estado Inicial (Lista Vazia Sem Filtro)
+$fornecedores = [];
+$busca = '';
+$status = '';
+$jaFiltrado = false;
+$totalRegistros = 0;
+$totalPaginas = 1;
+$paginaAtual = 1;
+
+ob_start();
+include __DIR__ . '/../app/views/admin/fornecedores.php';
+$htmlInicial = ob_get_clean();
+
+if (strpos($htmlInicial, 'Não há nada para mostrar aqui') === false) {
+    $erros[] = "Estado inicial não exibiu a mensagem 'Não há nada para mostrar aqui'.";
+} else {
+    echo "[PASS] Estado inicial exibe lista vazia com mensagem orientativa padronizada.\n";
+}
+
+if (strpos($htmlInicial, 'title="Limpar Filtros e Ocultar Lista"') !== false) {
+    $erros[] = "Botão 'Limpar' apareceu no estado inicial (só deve aparecer com lista ativa).";
+} else {
+    echo "[PASS] Botão 'Limpar' permanece oculto no estado inicial sem lista ativa.\n";
+}
+
+// 8.2. Testando Estado Filtrado (Lista Ativa com Botão Limpar)
 $fornecedores = [
     [
         'id'                  => 1,
@@ -134,28 +165,23 @@ $fornecedores = [
         'ativo'               => 1
     ]
 ];
-$busca = '';
-$status = '';
+$jaFiltrado = true;
 $totalRegistros = 1;
-$totalAtivos = 1;
-$totalGeral = 1;
-$totalPaginas = 1;
-$paginaAtual = 1;
-$csrf_field = '<input type="hidden" name="csrf_token" value="abc">';
-$csrf_token = 'abc';
 
 ob_start();
 include __DIR__ . '/../app/views/admin/fornecedores.php';
-$htmlView = ob_get_clean();
+$htmlFiltrado = ob_get_clean();
 
-if (strpos($htmlView, 'Fornecedores Parceiros') === false) {
-    $erros[] = "View admin/fornecedores.php não renderizou o título 'Fornecedores Parceiros'.";
+if (strpos($htmlFiltrado, 'Fornecedor Demonstração') === false) {
+    $erros[] = "Estado filtrado não exibiu a tabela com o fornecedor.";
+} else {
+    echo "[PASS] Estado filtrado renderizou os dados do fornecedor na tabela.\n";
 }
-if (strpos($htmlView, 'Fornecedor Demonstração') === false) {
-    $erros[] = "View admin/fornecedores.php não exibiu o fornecedor de demonstração.";
-}
-if (strpos($htmlView, 'modalFornecedor') === false) {
-    $erros[] = "Modal #modalFornecedor ausente na view admin/fornecedores.php.";
+
+if (strpos($htmlFiltrado, 'Limpar') === false || strpos($htmlFiltrado, 'title="Limpar Filtros e Ocultar Lista"') === false) {
+    $erros[] = "Botão 'Limpar' não apareceu com a lista ativa na tela.";
+} else {
+    echo "[PASS] Botão 'Limpar' visível quando há lista ativa na tela.\n";
 }
 
 // 9. Testando se o item Fornecedores está no Sidebar

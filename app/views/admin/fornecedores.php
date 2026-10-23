@@ -12,6 +12,7 @@ $baseUrl = $baseUrl ?? '';
 $fornecedores = $fornecedores ?? [];
 $busca = $busca ?? '';
 $status = $status ?? '';
+$jaFiltrado = $jaFiltrado ?? false;
 $totalRegistros = $totalRegistros ?? count($fornecedores);
 $totalAtivos = $totalAtivos ?? 0;
 $totalGeral = $totalGeral ?? $totalRegistros;
@@ -55,6 +56,7 @@ $csrfToken = $csrf_token ?? '';
 <div class="card-enterprise mb-4">
     <div class="card-enterprise-body p-3">
         <form action="<?php echo $baseUrl; ?>/admin/fornecedores" method="GET" class="row g-2 align-items-end">
+            <input type="hidden" name="filtrar" value="1">
             <div class="col-12 col-md-5">
                 <label for="busca" class="form-label font-weight-semibold text-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Buscar Fornecedor</label>
                 <div class="search-input-wrapper">
@@ -80,8 +82,8 @@ $csrfToken = $csrf_token ?? '';
                 <button type="submit" class="btn btn-enterprise btn-primary btn-sm flex-grow-1">
                     Filtrar
                 </button>
-                <?php if (!empty($busca) || $status !== ''): ?>
-                    <a href="<?php echo $baseUrl; ?>/admin/fornecedores" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros">
+                <?php if (!empty($jaFiltrado)): ?>
+                    <a href="<?php echo $baseUrl; ?>/admin/fornecedores" class="btn btn-enterprise btn-secondary btn-sm" title="Limpar Filtros e Ocultar Lista">
                         Limpar
                     </a>
                 <?php endif; ?>
@@ -95,19 +97,29 @@ $csrfToken = $csrf_token ?? '';
     <div class="card-enterprise-header">
         <div class="d-flex align-items-center gap-2">
             <span>Relação de Fornecedores</span>
-            <span class="badge-count"><?php echo $totalRegistros; ?> <?php echo $totalRegistros === 1 ? 'registro' : 'registros'; ?></span>
+            <?php if (!empty($jaFiltrado)): ?>
+                <span class="badge-count"><?php echo $totalRegistros; ?> <?php echo $totalRegistros === 1 ? 'registro' : 'registros'; ?></span>
+            <?php endif; ?>
         </div>
         <div class="text-secondary font-microcopy d-none d-sm-block">
-            Sincronizado com abastecimento e controle de estoque
+            <?php if (!empty($jaFiltrado)): ?>
+                Sincronizado com abastecimento e controle de estoque
+            <?php else: ?>
+                Aguardando filtragem para exibição
+            <?php endif; ?>
         </div>
     </div>
     <div class="card-enterprise-body p-0">
-        <?php if (empty($fornecedores)): ?>
+        <?php if (empty($jaFiltrado)): ?>
             <?php 
-            $emptyMessage = 'Nenhum fornecedor localizado';
-            $emptyDescription = !empty($busca) 
-                ? 'Nenhum resultado corresponde aos critérios de pesquisa informados.' 
-                : 'Cadastre o primeiro fornecedor clicando no botão "+ Novo Fornecedor" acima.';
+            $emptyMessage = 'Não há nada para mostrar aqui';
+            $emptyDescription = 'Utilize os filtros acima e clique em "Filtrar" para pesquisar fornecedores específicos ou clique em "Filtrar" para carregar a lista geral com todos os itens.';
+            require __DIR__ . '/../partials/empty_state.php'; 
+            ?>
+        <?php elseif (empty($fornecedores)): ?>
+            <?php 
+            $emptyMessage = 'Nenhum fornecedor encontrado';
+            $emptyDescription = 'Nenhum resultado corresponde aos critérios de pesquisa informados.';
             require __DIR__ . '/../partials/empty_state.php'; 
             ?>
         <?php else: ?>
@@ -226,17 +238,17 @@ $csrfToken = $csrf_token ?? '';
                         <ul class="pagination pagination-sm mb-0">
                             <?php if ($paginaAtual > 1): ?>
                                 <li class="page-item">
-                                    <a class="page-link" href="<?php echo $baseUrl; ?>/admin/fornecedores?pagina=<?php echo ($paginaAtual - 1); ?>&busca=<?php echo urlencode($busca); ?>&status=<?php echo urlencode($status); ?>">Anterior</a>
+                                    <a class="page-link" href="<?php echo $baseUrl; ?>/admin/fornecedores?filtrar=1&pagina=<?php echo ($paginaAtual - 1); ?>&busca=<?php echo urlencode($busca); ?>&status=<?php echo urlencode($status); ?>">Anterior</a>
                                 </li>
                             <?php endif; ?>
                             <?php for ($p = 1; $p <= $totalPaginas; $p++): ?>
                                 <li class="page-item <?php echo ($p === $paginaAtual) ? 'active' : ''; ?>">
-                                    <a class="page-link" href="<?php echo $baseUrl; ?>/admin/fornecedores?pagina=<?php echo $p; ?>&busca=<?php echo urlencode($busca); ?>&status=<?php echo urlencode($status); ?>"><?php echo $p; ?></a>
+                                    <a class="page-link" href="<?php echo $baseUrl; ?>/admin/fornecedores?filtrar=1&pagina=<?php echo $p; ?>&busca=<?php echo urlencode($busca); ?>&status=<?php echo urlencode($status); ?>"><?php echo $p; ?></a>
                                 </li>
                             <?php endfor; ?>
                             <?php if ($paginaAtual < $totalPaginas): ?>
                                 <li class="page-item">
-                                    <a class="page-link" href="<?php echo $baseUrl; ?>/admin/fornecedores?pagina=<?php echo ($paginaAtual + 1); ?>&busca=<?php echo urlencode($busca); ?>&status=<?php echo urlencode($status); ?>">Próxima</a>
+                                    <a class="page-link" href="<?php echo $baseUrl; ?>/admin/fornecedores?filtrar=1&pagina=<?php echo ($paginaAtual + 1); ?>&busca=<?php echo urlencode($busca); ?>&status=<?php echo urlencode($status); ?>">Próxima</a>
                                 </li>
                             <?php endif; ?>
                         </ul>

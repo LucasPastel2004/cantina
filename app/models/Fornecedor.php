@@ -21,14 +21,18 @@ class Fornecedor extends Model
 
     /**
      * Lista todos os fornecedores com suporte a filtros de busca e status
+     * 
+     * @param string|bool|null $status '1'/'0', true/false ou '' para todos
      */
-    public static function listarTodos(bool $apenasAtivos = false, string $busca = '', ?int $limit = null, int $offset = 0): array
+    public static function listarTodos(mixed $status = '', string $busca = '', ?int $limit = null, int $offset = 0): array
     {
         $sql = "SELECT * FROM fornecedores WHERE deleted_at IS NULL";
         $params = [];
 
-        if ($apenasAtivos) {
+        if ($status === '1' || $status === 1 || $status === true) {
             $sql .= " AND ativo = 1";
+        } elseif ($status === '0' || $status === 0) {
+            $sql .= " AND ativo = 0";
         }
 
         if (!empty($busca)) {
@@ -52,14 +56,18 @@ class Fornecedor extends Model
 
     /**
      * Conta o total de fornecedores cadastrados
+     * 
+     * @param string|bool|null $status '1'/'0', true/false ou '' para todos
      */
-    public static function contarTodos(bool $apenasAtivos = false, string $busca = ''): int
+    public static function contarTodos(mixed $status = '', string $busca = ''): int
     {
         $sql = "SELECT COUNT(*) as total FROM fornecedores WHERE deleted_at IS NULL";
         $params = [];
 
-        if ($apenasAtivos) {
+        if ($status === '1' || $status === 1 || $status === true) {
             $sql .= " AND ativo = 1";
+        } elseif ($status === '0' || $status === 0) {
+            $sql .= " AND ativo = 0";
         }
 
         if (!empty($busca)) {

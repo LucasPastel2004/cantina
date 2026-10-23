@@ -575,22 +575,28 @@ class AdminController extends Controller
     {
         $busca = (string)$this->input('busca', '');
         $status = (string)$this->input('status', '');
-        $apenasAtivos = ($status === '1');
+        $filtrar = (bool)($this->input('filtrar', false) || isset($_GET['filtrar']));
+        $jaFiltrado = $filtrar || !empty($busca) || $status !== '' || isset($_GET['pagina']);
 
         $paginaAtual = max(1, (int)$this->input('pagina', 1));
         $itensPorPagina = Configuracao::getItensPorPagina();
 
-        $totalFornecedores = Fornecedor::contarTodos($apenasAtivos, $busca);
-        $totalPaginas = max(1, (int)ceil($totalFornecedores / $itensPorPagina));
-        if ($paginaAtual > $totalPaginas) {
-            $paginaAtual = $totalPaginas;
+        if ($jaFiltrado) {
+            $totalFornecedores = Fornecedor::contarTodos($status, $busca);
+            $totalPaginas = max(1, (int)ceil($totalFornecedores / $itensPorPagina));
+            if ($paginaAtual > $totalPaginas) {
+                $paginaAtual = $totalPaginas;
+            }
+            $offset = ($paginaAtual - 1) * $itensPorPagina;
+            $fornecedores = Fornecedor::listarTodos($status, $busca, $itensPorPagina, $offset);
+        } else {
+            $totalFornecedores = 0;
+            $totalPaginas = 1;
+            $fornecedores = [];
         }
-        $offset = ($paginaAtual - 1) * $itensPorPagina;
 
-        $fornecedores = Fornecedor::listarTodos($apenasAtivos, $busca, $itensPorPagina, $offset);
-        $totalAtivos = Fornecedor::contarTodos(true, '');
-        $totalGeral = Fornecedor::contarTodos(false, '');
-
+        $totalAtivos = Fornecedor::contarTodos('1', '');
+        $totalGeral = Fornecedor::contarTodos('', '');
         $usuario = Auth::user();
 
         $this->render('admin/fornecedores', [
@@ -600,6 +606,7 @@ class AdminController extends Controller
             'fornecedores'      => $fornecedores,
             'busca'             => $busca,
             'status'            => $status,
+            'jaFiltrado'        => $jaFiltrado,
             'paginaAtual'       => $paginaAtual,
             'totalPaginas'      => $totalPaginas,
             'totalRegistros'    => $totalFornecedores,
@@ -659,7 +666,7 @@ class AdminController extends Controller
             : "Fornecedor [{$nomeFantasia}] cadastrado com sucesso.";
         Session::setFlash('success', $msg);
 
-        $this->redirect('/admin/fornecedores');
+        $this->redirect('/admin/fornecedores?filtrar=1');
     }
 
     /**
@@ -669,7 +676,7 @@ class AdminController extends Controller
     {
         if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
             Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
-            $this->redirect('/admin/fornecedores');
+            $this->redirect('/admin/fornecedores?filtrar=1');
             return;
         }
 
@@ -678,13 +685,13 @@ class AdminController extends Controller
 
         if (!$fornecedor) {
             Session::setFlash('danger', 'Fornecedor não encontrado.');
-            $this->redirect('/admin/fornecedores');
+            $this->redirect('/admin/fornecedores?filtrar=1');
             return;
         }
 
         Fornecedor::excluir($id, Auth::id());
         Session::setFlash('success', "Fornecedor [{$fornecedor['nome_fantasia']}] removido com sucesso.");
-        $this->redirect('/admin/fornecedores');
+        $this->redirect('/admin/fornecedores?filtrar=1');
     }
 
     // =========================================================================
