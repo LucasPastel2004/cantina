@@ -942,6 +942,8 @@ class Estoque extends Model
     public static function listarFornecedoresSugestao(): array
     {
         $sql = "SELECT DISTINCT fornecedor FROM (
+                    SELECT nome_fantasia AS fornecedor FROM fornecedores WHERE ativo = 1 AND deleted_at IS NULL
+                    UNION
                     SELECT fornecedor FROM estoque_movimentacoes WHERE fornecedor IS NOT NULL AND TRIM(fornecedor) != ''
                     UNION
                     SELECT razao_social_emitente AS fornecedor FROM notas_fiscais_xml WHERE razao_social_emitente IS NOT NULL AND TRIM(razao_social_emitente) != ''

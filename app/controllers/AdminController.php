@@ -18,6 +18,7 @@ use App\Models\Categoria;
 use App\Models\Produto;
 use App\Models\RestricaoAlimentar;
 use App\Models\Colaborador;
+use App\Models\Fornecedor;
 use App\Models\Turma;
 use App\Models\Usuario;
 use App\Models\Aluno;
@@ -561,6 +562,129 @@ class AdminController extends Controller
         Colaborador::excluir($id, Auth::id());
         Session::setFlash('success', "Colaborador [{$colaborador['nome']}] removido com sucesso (histórico preservado).");
         $this->redirect('/admin/colaboradores?filtrar=1');
+    }
+
+    // =========================================================================
+    // FORNECEDORES PARCEIROS
+    // =========================================================================
+
+    /**
+     * Listagem e gestão de fornecedores parceiros
+     */
+    public function fornecedores(): void
+    {
+        $busca = (string)$this->input('busca', '');
+        $status = (string)$this->input('status', '');
+        $apenasAtivos = ($status === '1');
+
+        $paginaAtual = max(1, (int)$this->input('pagina', 1));
+        $itensPorPagina = Configuracao::getItensPorPagina();
+
+        $totalFornecedores = Fornecedor::contarTodos($apenasAtivos, $busca);
+        $totalPaginas = max(1, (int)ceil($totalFornecedores / $itensPorPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
+        }
+        $offset = ($paginaAtual - 1) * $itensPorPagina;
+
+        $fornecedores = Fornecedor::listarTodos($apenasAtivos, $busca, $itensPorPagina, $offset);
+        $totalAtivos = Fornecedor::contarTodos(true, '');
+        $totalGeral = Fornecedor::contarTodos(false, '');
+
+        $usuario = Auth::user();
+
+        $this->render('admin/fornecedores', [
+            'pageTitle'         => 'Fornecedores Parceiros',
+            'pageHeading'       => 'Gestão de Fornecedores',
+            'activeMenu'        => 'fornecedores',
+            'fornecedores'      => $fornecedores,
+            'busca'             => $busca,
+            'status'            => $status,
+            'paginaAtual'       => $paginaAtual,
+            'totalPaginas'      => $totalPaginas,
+            'totalRegistros'    => $totalFornecedores,
+            'totalAtivos'       => $totalAtivos,
+            'totalGeral'        => $totalGeral,
+            'itensPorPagina'    => $itensPorPagina,
+            'usuario'           => $usuario,
+            'user'              => $usuario
+        ], 'admin');
+    }
+
+    /**
+     * Salva ou atualiza um fornecedor parceiro
+     */
+    public function fornecedoresSalvar(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/fornecedores');
+            return;
+        }
+
+        $id = (int)$this->input('id', 0);
+        $nomeFantasia = trim((string)$this->input('nome_fantasia', ''));
+        $razaoSocial = trim((string)$this->input('razao_social', ''));
+        $cnpjCpf = trim((string)$this->input('cnpj_cpf', ''));
+        $telefone = trim((string)$this->input('telefone', ''));
+        $email = trim((string)$this->input('email', ''));
+        $contato = trim((string)$this->input('contato_responsavel', ''));
+        $endereco = trim((string)$this->input('endereco', ''));
+        $observacoes = trim((string)$this->input('observacoes', ''));
+        $ativo = (int)$this->input('ativo', 1);
+
+        if (mb_strlen($nomeFantasia, 'UTF-8') < 2) {
+            Session::setFlash('danger', 'O nome do fornecedor deve conter pelo menos 2 caracteres.');
+            $this->redirect('/admin/fornecedores');
+            return;
+        }
+
+        $dados = [
+            'id'                  => $id,
+            'nome_fantasia'       => $nomeFantasia,
+            'razao_social'        => $razaoSocial !== '' ? $razaoSocial : $nomeFantasia,
+            'cnpj_cpf'            => $cnpjCpf,
+            'telefone'            => $telefone,
+            'email'               => $email,
+            'contato_responsavel' => $contato,
+            'endereco'            => $endereco,
+            'observacoes'         => $observacoes,
+            'ativo'               => $ativo
+        ];
+
+        Fornecedor::salvar($dados, Auth::id());
+
+        $msg = ($id > 0)
+            ? "Fornecedor [{$nomeFantasia}] atualizado com sucesso."
+            : "Fornecedor [{$nomeFantasia}] cadastrado com sucesso.";
+        Session::setFlash('success', $msg);
+
+        $this->redirect('/admin/fornecedores');
+    }
+
+    /**
+     * Exclui um fornecedor (soft delete com preservação de integridade)
+     */
+    public function fornecedoresExcluir(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/fornecedores');
+            return;
+        }
+
+        $id = (int)$this->input('id', 0);
+        $fornecedor = Fornecedor::buscarPorId($id);
+
+        if (!$fornecedor) {
+            Session::setFlash('danger', 'Fornecedor não encontrado.');
+            $this->redirect('/admin/fornecedores');
+            return;
+        }
+
+        Fornecedor::excluir($id, Auth::id());
+        Session::setFlash('success', "Fornecedor [{$fornecedor['nome_fantasia']}] removido com sucesso.");
+        $this->redirect('/admin/fornecedores');
     }
 
     // =========================================================================

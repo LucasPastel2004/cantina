@@ -394,6 +394,17 @@ $router->post('/admin/colaboradores/excluir', [\App\Controllers\AdminController:
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 
+// 3.4.1. Fornecedores Parceiros (Acesso exclusivo para 'administrador')
+$router->get('/admin/fornecedores', [\App\Controllers\AdminController::class, 'fornecedores'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/fornecedores/salvar', [\App\Controllers\AdminController::class, 'fornecedoresSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/fornecedores/excluir', [\App\Controllers\AdminController::class, 'fornecedoresExcluir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+
 // 3.5. Turmas Escolares (Acesso exclusivo para 'administrador')
 $router->get('/admin/turmas', [\App\Controllers\AdminController::class, 'turmas'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)

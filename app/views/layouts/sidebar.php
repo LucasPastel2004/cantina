@@ -23,7 +23,7 @@ $isAdmin = ($userRole === 'administrador');
 $isOperacionalActive = in_array($activeMenu, ['corte', 'recebimento', 'tickets', 'pdv', 'caixa', 'estornos'], true);
 $isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'entrada_estoque', 'importar_xml'], true);
 $isFinanceiroActive = in_array($activeMenu, ['despesas', 'dre', 'contestacoes'], true);
-$isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'calendario', 'configuracoes'], true);
+$isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'fornecedores', 'calendario', 'configuracoes'], true);
 $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'devedores', 'arrecadacao', 'movimentacoes_estoque', 'corte_relatorio'], true);
 $isCardapioActive = in_array($activeMenu, ['produtos', 'categorias', 'cardapio'], true);
 $isProdutosActive = $isCardapioActive;
@@ -306,6 +306,12 @@ $isProdutosActive = $isCardapioActive;
                 <a href="<?php echo $baseUrl; ?>/admin/colaboradores" class="nav-link <?php echo ($activeMenu === 'colaboradores') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Colaboradores</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/admin/fornecedores" class="nav-link <?php echo ($activeMenu === 'fornecedores') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Fornecedores</span>
                 </a>
             </li>
             <li class="flyout-item nav-item">
