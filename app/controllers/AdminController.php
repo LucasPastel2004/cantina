@@ -140,7 +140,7 @@ class AdminController extends Controller
         $this->render('admin/categorias', [
             'pageTitle'   => 'Categorias de Cardápio',
             'pageHeading' => 'Categorias de Alimentos',
-            'activeMenu'  => 'produtos',
+            'activeMenu'  => 'categorias',
             'categorias'  => $categorias,
             'usuario'     => $usuario,
             'user'        => $usuario

@@ -25,7 +25,8 @@ $isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'entrada_estoque'
 $isFinanceiroActive = in_array($activeMenu, ['despesas', 'dre', 'contestacoes'], true);
 $isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'calendario', 'configuracoes'], true);
 $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'devedores', 'arrecadacao', 'movimentacoes_estoque', 'corte_relatorio'], true);
-$isProdutosActive = ($activeMenu === 'produtos');
+$isCardapioActive = in_array($activeMenu, ['produtos', 'categorias', 'cardapio'], true);
+$isProdutosActive = $isCardapioActive;
 ?>
 
 <!-- Backdrop para fechar menus em suspensão e mobile -->
@@ -133,12 +134,15 @@ $isProdutosActive = ($activeMenu === 'produtos');
             </svg>
         </button>
 
-        <!-- 6. Cardápio & Preços: Ícone Único com Redirecionamento Direto (Sem Flyout) -->
-        <a href="<?php echo $baseUrl; ?>/admin/produtos" 
-           class="dock-btn <?php echo $isProdutosActive ? 'is-current' : ''; ?>" 
-           id="btnDirectProdutos"
-           title="Cardápio & Preços" 
-           aria-label="Cardápio & Preços">
+        <!-- 6. Categoria: Cardápio & Produtos -->
+        <button type="button" 
+                class="dock-btn <?php echo $isCardapioActive ? 'is-current' : ''; ?>" 
+                id="btnCategoryCardapio"
+                data-category="cardapio" 
+                onclick="toggleCategoryFlyout('cardapio')" 
+                title="Cardápio" 
+                aria-label="Cardápio"
+                aria-expanded="false">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
                 <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
@@ -146,7 +150,7 @@ $isProdutosActive = ($activeMenu === 'produtos');
                 <line x1="10" y1="1" x2="10" y2="4"></line>
                 <line x1="14" y1="1" x2="14" y2="4"></line>
             </svg>
-        </a>
+        </button>
         <?php endif; ?>
     </nav>
 
@@ -366,6 +370,28 @@ $isProdutosActive = ($activeMenu === 'produtos');
                 <a href="<?php echo $baseUrl; ?>/relatorios/corte" class="nav-link <?php echo ($activeMenu === 'corte_relatorio') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Corte do Turno</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Flyout 6: Cardápio -->
+    <div class="sidebar-flyout" id="flyoutCardapio" data-category="cardapio" role="menu" aria-label="Menu Cardápio" style="display: none;">
+        <div class="flyout-header">
+            <span class="flyout-title">Cardápio</span>
+            <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>
+        </div>
+        <ul class="flyout-list nav-list">
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/admin/produtos" class="nav-link <?php echo ($activeMenu === 'produtos') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Cardápio & Produtos</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/admin/categorias" class="nav-link <?php echo ($activeMenu === 'categorias') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Categorias</span>
                 </a>
             </li>
         </ul>

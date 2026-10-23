@@ -241,7 +241,8 @@ const flyoutIdMap = {
   estoque: 'flyoutEstoque',
   financeiro: 'flyoutFinanceiro',
   admin: 'navSectionAdmin',
-  relatorios: 'flyoutRelatorios'
+  relatorios: 'flyoutRelatorios',
+  cardapio: 'flyoutCardapio'
 };
 
 /**

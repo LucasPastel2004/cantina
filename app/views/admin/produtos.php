@@ -24,10 +24,7 @@ $csrfToken = $csrf_token ?? '';
             Cadastro de alimentos, preços de venda, alérgenos declarados e pausa rápida de vendas.
         </p>
     </div>
-    <div class="d-flex gap-2">
-        <a href="<?php echo $baseUrl; ?>/admin/categorias" class="btn btn-enterprise btn-primary">
-            Gerenciar Categorias
-        </a>
+    <div>
         <button type="button" class="btn btn-enterprise btn-primary" onclick="abrirModalProduto()">
             + Novo Produto
         </button>
