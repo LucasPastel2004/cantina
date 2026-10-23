@@ -244,8 +244,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const idVal = hiddenAlunoId ? hiddenAlunoId.value : '0';
             if (!idVal || parseInt(idVal) <= 0) {
                 e.preventDefault();
-                alert('Por favor, digite o nome ou matrícula do aluno e selecione-o na lista antes de emitir o extrato.');
-                if (inputBusca) inputBusca.focus();
+                window.alertaAcao({
+                    titulo: 'Identificação Obrigatória',
+                    mensagem: 'Por favor, digite o nome ou matrícula do aluno e selecione-o na lista antes de emitir o extrato.',
+                    tipo: 'warning',
+                    textoBotao: 'Entendido'
+                }).then(function() {
+                    if (inputBusca) inputBusca.focus();
+                });
                 return false;
             }
         });
@@ -265,8 +271,14 @@ function exportarCsv() {
     const inputBusca = document.getElementById('aluno_busca') || document.getElementById('inputBuscaAluno');
     const idVal = hiddenAlunoId ? hiddenAlunoId.value : '0';
     if (!idVal || parseInt(idVal) <= 0) {
-        alert('Por favor, digite o nome ou matrícula do aluno e selecione-o na lista antes de exportar a planilha CSV.');
-        if (inputBusca) inputBusca.focus();
+        window.alertaAcao({
+            titulo: 'Identificação Obrigatória',
+            mensagem: 'Por favor, digite o nome ou matrícula do aluno e selecione-o na lista antes de exportar a planilha CSV.',
+            tipo: 'warning',
+            textoBotao: 'Entendido'
+        }).then(function() {
+            if (inputBusca) inputBusca.focus();
+        });
         return;
     }
     const dataInicio = document.getElementById('dataInicio').value;
