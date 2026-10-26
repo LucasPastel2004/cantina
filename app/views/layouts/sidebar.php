@@ -24,7 +24,7 @@ $isOperacionalActive = in_array($activeMenu, ['corte', 'recebimento', 'tickets',
 $isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'entrada_estoque', 'importar_xml'], true);
 $isFinanceiroActive = in_array($activeMenu, ['despesas', 'dre', 'contestacoes'], true);
 $isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'fornecedores', 'calendario', 'configuracoes'], true);
-$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'devedores', 'arrecadacao', 'movimentacoes_estoque', 'corte_relatorio'], true);
+$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'fechamento_caixa', 'devedores', 'arrecadacao', 'movimentacoes_estoque', 'corte_relatorio'], true);
 $isCardapioActive = in_array($activeMenu, ['produtos', 'categorias', 'cardapio'], true);
 $isProdutosActive = $isCardapioActive;
 ?>
@@ -343,7 +343,7 @@ $isProdutosActive = $isCardapioActive;
                 </a>
             </li>
             <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/vendas-filtros" class="nav-link <?php echo ($activeMenu === 'vendas_filtros') ? 'active' : ''; ?>">
+                <a href="<?php echo $baseUrl; ?>/relatorios/vendas-filtros" class="nav-link <?php echo ($activeMenu === 'vendas_filtros' || $activeMenu === 'relatorio_alimento') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Vendas por Alimento</span>
                 </a>
@@ -355,7 +355,7 @@ $isProdutosActive = $isCardapioActive;
                 </a>
             </li>
             <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" class="nav-link <?php echo ($activeMenu === 'fechamento_caixa_relatorio') ? 'active' : ''; ?>">
+                <a href="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" class="nav-link <?php echo ($activeMenu === 'fechamento_caixa_relatorio' || $activeMenu === 'fechamento_caixa') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Fechamento de Caixa</span>
                 </a>

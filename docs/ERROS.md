@@ -2303,6 +2303,22 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Executada a suíte de testes `tests/teste_validacao_relatorios_design.php`, com 13/13 aprovações (0 erros).
 - Como evitar no futuro: Em tabelas de impressão A4 com larguras fixas (`table-layout: fixed`), nunca utilizar `overflow: hidden` nos `<th>` sem respiro suficiente; limitar o padding horizontal das células a no máximo 4px e dimensionar colunas com títulos em caixa alta com pelo menos 15% a 18% de largura.
 
+---
+
+## 2026-10-26 - Ausência de contorno azul e destaque ativo no menu lateral dock nas telas de Extrato do Aluno, Vendas por Alimento e Fechamento de Caixa
+
+- Sintoma: Ao navegar para as páginas `/relatorios/extrato-aluno`, `/relatorios/vendas-filtros` e `/relatorios/fechamento-caixa`, o botão de categoria Relatórios no dock lateral ficava com fundo azul, mas no menu em suspensão (flyout) o item da página ativa não recebia o contorno azul à esquerda (`border-left: 3px solid #1d4ed8`), o fundo azul suave (`#eff6ff`) e o bullet indicador azul, aparentando que nenhuma página da categoria estava ativa na tela.
+- Causa: Em `app/controllers/RelatoriosController.php`, os métodos `extratoAluno()`, `vendasFiltros()` (e `vendasAlimento()`) e `fechamentoCaixa()` passavam para a view o valor genérico `'activeMenu' => 'relatorios'`, enquanto `app/views/layouts/sidebar.php` validava identificadores específicos de rota (`extrato_aluno`, `vendas_filtros`, `fechamento_caixa_relatorio`). Como o valor passado era genérico, a condição `$activeMenu === 'extrato_aluno'` falhava e o elemento `<a>` não recebia a classe CSS `.active`.
+- Solução aplicada:
+  1. Em `app/controllers/RelatoriosController.php`, atualizados os valores de `activeMenu`:
+     - `extratoAluno()`: `'activeMenu' => 'extrato_aluno'`;
+     - `vendasFiltros()` e `vendasAlimento()`: `'activeMenu' => 'vendas_filtros'`;
+     - `fechamentoCaixa()`: `'activeMenu' => 'fechamento_caixa_relatorio'`.
+  2. Em `app/views/layouts/sidebar.php`, adicionados aliases defensivos para aceitar `fechamento_caixa_relatorio` ou `fechamento_caixa` e `vendas_filtros` ou `relatorio_alimento`.
+  3. Criada a suíte de testes `tests/teste_destaque_relatorios_dock.php`, validando que todos os 7 relatórios recebem a classe `active` e ativam o dock (`is-current`) com 19/19 asserções aprovadas com 100% de sucesso.
+- Como evitar no futuro: Sempre que uma categoria de menu lateral contiver submódulos ou flyouts com links filhos, o controller deve passar o identificador exato da página ativa (específico da rota filha) e o layout deve mapear tanto o item filho quanto a categoria pai na verificação de menu ativo.
+
+
 
 
 

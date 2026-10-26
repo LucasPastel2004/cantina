@@ -133,7 +133,7 @@ class RelatoriosController extends Controller
 
         $this->render('relatorios/extrato_aluno', [
             'pageTitle'           => 'Extrato Analítico do Aluno',
-            'activeMenu'          => 'relatorios',
+            'activeMenu'          => 'extrato_aluno',
             'user'                => Auth::user(),
             'alunoId'             => $alunoId,
             'turmaId'             => $turmaId,
@@ -308,7 +308,7 @@ class RelatoriosController extends Controller
 
         $this->render('relatorios/vendas_alimento', [
             'pageTitle'      => 'Vendas por Alimento',
-            'activeMenu'     => 'relatorios',
+            'activeMenu'     => 'vendas_filtros',
             'user'           => Auth::user(),
             'dataInicio'     => $dataInicio,
             'dataFim'        => $dataFim,
@@ -366,7 +366,7 @@ class RelatoriosController extends Controller
 
         $this->render('relatorios/vendas_filtros', [
             'pageTitle'      => 'Filtros de Vendas & Relatório por Alimento',
-            'activeMenu'     => 'relatorios',
+            'activeMenu'     => 'vendas_filtros',
             'user'           => Auth::user(),
             'filtros'        => $filtros,
             'categorias'     => $categorias,
@@ -635,7 +635,7 @@ class RelatoriosController extends Controller
 
         $this->render('relatorios/fechamento_caixa', [
             'pageTitle'      => 'Demonstrativo de Fechamento de Caixa',
-            'activeMenu'     => 'relatorios',
+            'activeMenu'     => 'fechamento_caixa_relatorio',
             'user'           => Auth::user(),
             'turno'          => $turno,
             'dataInicio'     => $dataInicio,
