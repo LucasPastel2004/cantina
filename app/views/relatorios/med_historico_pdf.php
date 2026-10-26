@@ -488,8 +488,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 <th style="width: 13%;" class="text-center">Data/Hora</th>
                 <th style="width: 23%;" class="text-start">Titular / Responsável</th>
                 <th style="width: 14%;" class="text-center">Tipo de Operação</th>
-                <th style="width: 14%;" class="text-end">Valor Movimentado</th>
-                <th style="width: 14%;" class="text-end">Saldo Resultante</th>
+                <th style="width: 14%;" class="text-center">Valor Movimentado</th>
+                <th style="width: 14%;" class="text-center">Saldo Resultante</th>
                 <th style="width: 22%;" class="text-start">Motivo / Protocolo</th>
             </tr>
         </thead>
