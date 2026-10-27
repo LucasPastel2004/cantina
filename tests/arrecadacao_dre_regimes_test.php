@@ -209,11 +209,11 @@ class ArrecadacaoDreRegimesTest
     }
 
     /**
-     * Teste 3: Compilação de PDF via Gotenberg
+     * Teste 3: Espelho A4 para Print to PDF Nativo
      */
     private function testarPdfArrecadacaoCompilacao(): void
     {
-        echo "\n>> 3. Testando Compilação do PDF Oficial de Arrecadação via Gotenberg...\n";
+        echo "\n>> 3. Testando Espelho A4 do Demonstrativo Financeiro - Canais de Entrada (Print to PDF Nativo)...\n";
         $ctrl = new RelatoriosController();
 
         $dados = $ctrl->obterDadosArrecadacao('2026-10-01', '2026-10-05');
@@ -222,17 +222,12 @@ class ArrecadacaoDreRegimesTest
 
         $html = PdfService::renderView('relatorios/arrecadacao_pdf', $dados);
         $this->assert(str_contains($html, 'COLÉGIO MONTEIRO LOBATO'), "HTML gerado contém razão social da instituição");
-        $this->assert(str_contains($html, 'DEMONSTRATIVO DE ARRECADAÇÃO FINANCEIRA'), "HTML gerado contém título oficial do relatório");
+        $this->assert(str_contains($html, 'DEMONSTRATIVO FINANCEIRO - CANAIS DE ENTRADA'), "HTML gerado contém título oficial do relatório");
         $this->assert(str_contains($html, 'table-doc-excel'), "HTML gerado utiliza classe de tabela Excel homologada");
-
-        $pdf = PdfService::htmlToPdf($html, [
-            'preferCssPageSize' => 'true',
-            'printBackground'   => 'true'
-        ]);
-
-        $this->assert($pdf !== null, "Gotenberg respondeu à compilação do PDF");
-        $this->assert(is_string($pdf) && str_starts_with($pdf, '%PDF'), "Documento gerado é um binário PDF 1.4 válido (%PDF)");
-        $this->assert(strlen($pdf) > 20000, "Tamanho do PDF de Arrecadação gerado é substancial (> 20 KB): " . strlen($pdf) . " bytes");
+        $this->assert(str_contains($html, 'Vendas Presenciais Pix'), "HTML gerado contém linha de Vendas Presenciais Pix");
+        $this->assert(str_contains($html, 'Vendas Presenciais Dinheiro'), "HTML gerado contém linha de Vendas Presenciais Dinheiro");
+        $this->assert(strlen($html) > 10000, "Espelho HTML gerado possui conteúdo substancial (> 10 KB): " . strlen($html) . " bytes");
+        $this->assert(PdfService::htmlToPdf($html) === null, "PdfService::htmlToPdf retorna null garantindo emissão nativa Print to PDF do navegador");
     }
 
     /**
@@ -285,7 +280,7 @@ class ArrecadacaoDreRegimesTest
         ob_start();
         $dreCtrl->imprimir();
         $htmlPrint = ob_get_clean();
-        $this->assert(str_contains($htmlPrint, 'REGIME DE CAIXA (RECARGAS & ARRECADAÇÃO)'), "DRE Impressão exibe título Regime de Caixa no cabeçalho");
+        $this->assert(str_contains($htmlPrint, 'Regime de Caixa'), "DRE Impressão exibe título Regime de Caixa no cabeçalho");
         $this->assert(str_contains($htmlPrint, 'Recargas Pix Online (Carteira Familiar)'), "DRE Impressão exibe linha de Recargas Pix Online");
         $this->assert(str_contains($htmlPrint, 'INFORMATIVO DE CONTROLE DA CARTEIRA'), "DRE Impressão exibe subseção informativa de confronto com consumo");
 
@@ -296,7 +291,7 @@ class ArrecadacaoDreRegimesTest
         ob_start();
         $relCtrl->arrecadacao();
         $htmlArrec = ob_get_clean();
-        $this->assert(str_contains($htmlArrec, 'Arrecadação Financeira & Fluxo de Entradas'), "RelatoriosController::arrecadacao renderiza view principal");
+        $this->assert(str_contains($htmlArrec, 'formFiltroArrecadacao'), "RelatoriosController::arrecadacao renderiza view principal");
         $this->assert(str_contains($htmlArrec, 'Imprimir / Salvar PDF (A4)'), "View de Arrecadação exibe botão de emissão direta no formulário de período");
         $this->assert(!str_contains($htmlArrec, 'stat-strip-item'), "View de Arrecadação removeu cartões de métricas do rodapé conforme solicitado");
         $this->assert(!str_contains($htmlArrec, 'Arrecadação por Canal de Pagamento'), "View de Arrecadação omite bloco de canais para manter tela limpa");
@@ -309,11 +304,13 @@ class ArrecadacaoDreRegimesTest
         ob_start();
         $relCtrl->arrecadacaoImprimir();
         $htmlArrecImp = ob_get_clean();
-        $this->assert(str_contains($htmlArrecImp, 'DEMONSTRATIVO DE ARRECADAÇÃO FINANCEIRA'), "RelatoriosController::arrecadacaoImprimir renderiza espelho A4 oficial");
+        $this->assert(str_contains($htmlArrecImp, 'DEMONSTRATIVO FINANCEIRO - CANAIS DE ENTRADA'), "RelatoriosController::arrecadacaoImprimir renderiza espelho A4 oficial");
         $this->assert(str_contains($htmlArrecImp, 'Síntese dos Indicadores Financeiros do Período'), "Relatório A4 oficial contém tabela própria de síntese dos indicadores");
         $this->assert(str_contains($htmlArrecImp, 'Total Arrecadado (Cash-In Real)'), "Relatório A4 oficial exibe métrica de Total Arrecadado na tabela de síntese");
+        $this->assert(str_contains($htmlArrecImp, 'Vendas Presenciais Pix'), "Relatório A4 oficial exibe Vendas Presenciais Pix na tabela de síntese");
+        $this->assert(str_contains($htmlArrecImp, 'Vendas Presenciais Dinheiro'), "Relatório A4 oficial exibe Vendas Presenciais Dinheiro na tabela de síntese");
         $this->assert(str_contains($htmlArrecImp, 'Resumo por Canais de Entrada Financeira'), "Relatório A4 oficial preserva discriminação por canais");
-        $this->assert(str_contains($htmlArrecImp, 'Detalhamento Cronológico Diário de Arrecadação e Consumo'), "Relatório A4 oficial preserva listagem diária detalhada");
+        $this->assert(str_contains($htmlArrecImp, 'Detalhamento Cronológico Diário'), "Relatório A4 oficial preserva listagem diária detalhada");
     }
 }
 

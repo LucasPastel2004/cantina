@@ -1,7 +1,7 @@
 <?php
 /**
  * Cantina Web — Colégio Monteiro Lobato
- * View: Relatório Oficial A4 Timbrado — Arrecadação Financeira & Fluxo de Entradas (Cash-In)
+ * View: Relatório Oficial A4 Timbrado — Entradas (Cash-In)
  * 
  * Conforme docs/FSD.md, docs/DESIGN.md e padrões oficiais de relatórios A4
  * Grade estilo Excel com divisórias pretas e fundo 100% branco
@@ -26,7 +26,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Relatório de Arrecadação Financeira — Colégio Monteiro Lobato</title>
+    <title>Demonstrativo Financeiro - Canais de Entrada — Colégio Monteiro Lobato</title>
     <style>
         @page {
             size: A4 portrait;
@@ -406,7 +406,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 <?php if (!$isPdf): ?>
 <div class="no-print">
     <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
-        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">Cantina Web — Relatório Oficial de Arrecadação</div>
+        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">Cantina Web — Demonstrativo Financeiro - Canais de Entrada</div>
         <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">Período: <?php echo htmlspecialchars($periodoOficial, ENT_QUOTES, 'UTF-8'); ?></div>
     </div>
     <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
@@ -444,7 +444,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         <?php endif; ?>
         <div class="school-title-col">
             <div class="school-name">COLÉGIO MONTEIRO LOBATO</div>
-            <div class="report-title-main">DEMONSTRATIVO DE ARRECADAÇÃO FINANCEIRA & FLUXO DE ENTRADAS (CASH-IN)</div>
+            <div class="report-title-main">DEMONSTRATIVO FINANCEIRO - CANAIS DE ENTRADA</div>
             <div style="font-size: 8pt; color: #334155;">Sistema de Gestão Cantina Web • Módulo Financeiro & Fluxo de Caixa</div>
         </div>
         <div class="school-meta-col">
@@ -519,16 +519,30 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             </tr>
             <tr>
                 <td class="text-start">
-                    <strong>Vendas Presenciais Balcão</strong>
+                    <strong>Vendas Presenciais Pix</strong>
                 </td>
                 <td class="text-start" style="font-size: 7.2pt; color: #334155;">
-                    Vendas diretas no PDV (Dinheiro: R$ <?php echo number_format((float)($dados['vendas_dinheiro_total'] ?? 0), 2, ',', '.'); ?> | Pix: R$ <?php echo number_format((float)($dados['vendas_pix_total'] ?? 0), 2, ',', '.'); ?>)
+                    Vendas diretas no PDV balcão pagas via QR Code / Pix
                 </td>
                 <td class="text-end font-tabular">
-                    <?php echo number_format((int)(($dados['vendas_dinheiro_qtd'] ?? 0) + ($dados['vendas_pix_qtd'] ?? 0)), 0, ',', '.'); ?> vendas
+                    <?php echo number_format((int)($dados['vendas_pix_qtd'] ?? 0), 0, ',', '.'); ?> vendas
                 </td>
                 <td class="text-end font-tabular">
-                    R$ <?php echo number_format((float)(($dados['vendas_dinheiro_total'] ?? 0) + ($dados['vendas_pix_total'] ?? 0)), 2, ',', '.'); ?>
+                    R$ <?php echo number_format((float)($dados['vendas_pix_total'] ?? 0), 2, ',', '.'); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-start">
+                    <strong>Vendas Presenciais Dinheiro</strong>
+                </td>
+                <td class="text-start" style="font-size: 7.2pt; color: #334155;">
+                    Vendas diretas no PDV balcão pagas em espécie (dinheiro físico)
+                </td>
+                <td class="text-end font-tabular">
+                    <?php echo number_format((int)($dados['vendas_dinheiro_qtd'] ?? 0), 0, ',', '.'); ?> vendas
+                </td>
+                <td class="text-end font-tabular">
+                    R$ <?php echo number_format((float)($dados['vendas_dinheiro_total'] ?? 0), 2, ',', '.'); ?>
                 </td>
             </tr>
             <tr style="background-color: #f8fafc !important;">
@@ -548,7 +562,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         </tbody>
     </table>
 
-    <!-- SEÇÃO 2: RESUMO POR CANAIS DE ARRECADAÇÃO -->
+    <!-- SEÇÃO 2: RESUMO POR CANAIS DE ENTRADAS -->
     <div class="section-banner">
         2. Resumo por Canais de Entrada Financeira (Cash-In Real)
     </div>
@@ -559,7 +573,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 <th style="width: 30%; text-align: left;">Canal / Meio de Pagamento</th>
                 <th style="width: 27%; text-align: left;">Origem / Ambiente</th>
                 <th style="width: 12%; text-align: right;">Transações</th>
-                <th style="width: 16%; text-align: right;">Total Arrecadado</th>
+                <th style="width: 16%; text-align: right;">Total de Entradas</th>
                 <th style="width: 15%; text-align: right;">Participação</th>
             </tr>
         </thead>
@@ -587,7 +601,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         <tfoot>
             <tr>
                 <td colspan="2" class="text-start text-uppercase">
-                    TOTAL GERAL ARRECADADO (CASH-IN LÍQUIDO)
+                    TOTAL GERAL DE ENTRADAS (CASH-IN LÍQUIDO)
                 </td>
                 <td class="text-end font-tabular">
                     <?php echo number_format((int)($dados['total_transacoes_arrecadacao'] ?? 0), 0, ',', '.'); ?>
@@ -654,7 +668,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
     <!-- SEÇÃO 4: DETALHAMENTO DIÁRIO -->
     <div class="section-banner">
-        4. Detalhamento Cronológico Diário de Arrecadação e Consumo
+        4. Detalhamento Cronológico Diário de Entradas e Consumo
     </div>
 
     <table class="table-doc-excel">
@@ -666,7 +680,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 <th style="width: 12%; text-align: right;">Recarga Din</th>
                 <th style="width: 12%; text-align: right;">Venda Din</th>
                 <th style="width: 12%; text-align: right;">Venda Pix</th>
-                <th style="width: 15%; text-align: right; background-color: #f1f5f9 !important;">Arrecadado Dia</th>
+                <th style="width: 15%; text-align: right; background-color: #f1f5f9 !important;">Entradas do Dia</th>
                 <th style="width: 15%; text-align: right;">Consumo Saldo</th>
             </tr>
         </thead>

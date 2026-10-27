@@ -2305,18 +2305,23 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 
 ---
 
-## 2026-10-26 - Ausência de contorno azul e destaque ativo no menu lateral dock nas telas de Extrato do Aluno, Vendas por Alimento e Fechamento de Caixa
+## 2026-10-27 - Acesso negado (403) para operadores e descompasso de rotas ao migrar itens operacionais e relatórios para o flyout Financeiro
 
-- Sintoma: Ao navegar para as páginas `/relatorios/extrato-aluno`, `/relatorios/vendas-filtros` e `/relatorios/fechamento-caixa`, o botão de categoria Relatórios no dock lateral ficava com fundo azul, mas no menu em suspensão (flyout) o item da página ativa não recebia o contorno azul à esquerda (`border-left: 3px solid #1d4ed8`), o fundo azul suave (`#eff6ff`) e o bullet indicador azul, aparentando que nenhuma página da categoria estava ativa na tela.
-- Causa: Em `app/controllers/RelatoriosController.php`, os métodos `extratoAluno()`, `vendasFiltros()` (e `vendasAlimento()`) e `fechamentoCaixa()` passavam para a view o valor genérico `'activeMenu' => 'relatorios'`, enquanto `app/views/layouts/sidebar.php` validava identificadores específicos de rota (`extrato_aluno`, `vendas_filtros`, `fechamento_caixa_relatorio`). Como o valor passado era genérico, a condição `$activeMenu === 'extrato_aluno'` falhava e o elemento `<a>` não recebia a classe CSS `.active`.
+- Sintoma: Ao reorganizar a arquitetura de navegação do dock lateral movendo 'Fechamento de Caixa' (anteriormente alocado na categoria de Relatórios) para a categoria 'Financeiro' (visível tanto para Administrador quanto para Operador), usuários com perfil Operador poderiam receber erro HTTP 403 Forbidden ao tentar visualizar o fechamento de caixa, e a ativação visual do botão no dock (`is-current`) permanecia atrelada à categoria de origem.
+- Causa:
+  1. A rota `/relatorios/fechamento-caixa` estava registrada em `index.php` com restrição estrita `[RBAC::ROLE_ADMINISTRADOR]`. Como os operadores realizam o fechamento de caixa físico e conferência de turnos diariamente, a presença do link no menu Financeiro do operador causaria rejeição de segurança por RBAC ao clicar.
+  2. As variáveis de menu ativo em `app/views/layouts/sidebar.php` (`$isFinanceiroActive`, `$isOperacionalActive`, `$isRelatoriosActive`) possuíam mapeamentos estáticos baseados na alocação antiga dos itens nos menus.
+  3. A renomeação de 'Arrecadação & Entradas' para 'Entradas' exigia compatibilidade com requisições existentes e novos aliases de rota sem quebrar os espelhos A4 de impressão/PDF e suítes de testes analíticos do DRE.
 - Solução aplicada:
-  1. Em `app/controllers/RelatoriosController.php`, atualizados os valores de `activeMenu`:
-     - `extratoAluno()`: `'activeMenu' => 'extrato_aluno'`;
-     - `vendasFiltros()` e `vendasAlimento()`: `'activeMenu' => 'vendas_filtros'`;
-     - `fechamentoCaixa()`: `'activeMenu' => 'fechamento_caixa_relatorio'`.
-  2. Em `app/views/layouts/sidebar.php`, adicionados aliases defensivos para aceitar `fechamento_caixa_relatorio` ou `fechamento_caixa` e `vendas_filtros` ou `relatorio_alimento`.
-  3. Criada a suíte de testes `tests/teste_destaque_relatorios_dock.php`, validando que todos os 7 relatórios recebem a classe `active` e ativam o dock (`is-current`) com 19/19 asserções aprovadas com 100% de sucesso.
-- Como evitar no futuro: Sempre que uma categoria de menu lateral contiver submódulos ou flyouts com links filhos, o controller deve passar o identificador exato da página ativa (específico da rota filha) e o layout deve mapear tanto o item filho quanto a categoria pai na verificação de menu ativo.
+  1. Em `index.php`, a rota `/relatorios/fechamento-caixa` e seu alias `/financeiro/fechamento-caixa` foram atualizados para permitir `[RBAC::ROLE_ADMINISTRADOR, RBAC::ROLE_OPERADOR]`.
+  2. Adicionadas rotas aliases para Entradas (`/financeiro/entradas`, `/financeiro/entradas/pdf`, `/financeiro/entradas/imprimir`, `/financeiro/entradas/csv`), mantendo compatibilidade transparente com as rotas `/relatorios/arrecadacao*`.
+  3. Em `app/views/layouts/sidebar.php`, reordenados os flyouts:
+     - Flyout Operacional: Corte do Turno, Conferência Fornecedor e Tickets Térmicos.
+     - Flyout Financeiro: Caixa do Turno, Estorno de Vendas, PDV Balcão, Fechamento de Caixa, Entradas, Despesas da Cantina, DRE Gerencial e Contestações MED.
+     - Flyout Relatórios: Extrato do Aluno, Vendas por Alimento, Histórico MED & Quitações, Movimentações de Estoque e Corte do Turno.
+  4. Mapeamentos `$isFinanceiroActive`, `$isOperacionalActive` e `$isRelatoriosActive` redefinidos para que cada rota ative rigorosamente seu menu pai correspondente sem conflito de foco.
+  5. Criada a suíte `tests/teste_movimentacao_itens_financeiro.php` (37/37 aprovados) e atualizadas as suítes `tests/dock_sidebar_flyout_test.php` (50/50), `tests/teste_destaque_relatorios_dock.php` (28/28) e `tests/arrecadacao_dre_regimes_test.php` (101/101), todas validadas com 100% de sucesso.
+- Como evitar no futuro: Ao remanejar rotas entre categorias de menus com diferentes níveis de visibilidade de perfis (RBAC), sempre revisar os privilégios da rota no roteador e sincronizar os seletores de menu ativo no layout pai.
 
 
 

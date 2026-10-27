@@ -2714,13 +2714,36 @@ class RelatoriosController extends Controller
         $dados['baseUrl'] = $this->getBaseUrl();
 
         $this->render('relatorios/arrecadacao', [
-            'title'       => 'Arrecadação Financeira & Fluxo de Entradas — Colégio Monteiro Lobato',
+            'title'       => 'Entradas — Colégio Monteiro Lobato',
             'activeMenu'  => 'arrecadacao',
             'dados'       => $dados,
             'dataInicio'  => $dataInicio,
             'dataFim'     => $dataFim,
             'baseUrl'     => $this->getBaseUrl()
         ], 'admin');
+    }
+
+    /**
+     * Alias para o módulo de Entradas
+     */
+    public function entradas(): void
+    {
+        $this->arrecadacao();
+    }
+
+    public function entradasPdf(): void
+    {
+        $this->arrecadacaoPdf();
+    }
+
+    public function entradasImprimir(): void
+    {
+        $this->arrecadacaoImprimir();
+    }
+
+    public function entradasCsv(): void
+    {
+        $this->arrecadacaoCsv();
     }
 
     /**
@@ -2788,7 +2811,7 @@ class RelatoriosController extends Controller
 
         $dados = $this->obterDadosArrecadacao($dataInicio, $dataFim);
 
-        $filename = "arrecadacao_financeira_{$dataInicio}_{$dataFim}.csv";
+        $filename = "entradas_{$dataInicio}_{$dataFim}.csv";
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Cache-Control: max-age=0, no-cache, no-store, must-revalidate');
@@ -2798,12 +2821,12 @@ class RelatoriosController extends Controller
         fwrite($output, "\xEF\xBB\xBF"); // BOM UTF-8
 
         fputcsv($output, ['COLÉGIO MONTEIRO LOBATO — SISTEMA CANTINA WEB'], ';', '"', "\\");
-        fputcsv($output, ['RELATÓRIO DE ARRECADAÇÃO FINANCEIRA & FLUXO DE ENTRADAS (CASH-IN)'], ';', '"', "\\");
+        fputcsv($output, ['RELATÓRIO DE ENTRADAS (CASH-IN)'], ';', '"', "\\");
         fputcsv($output, ['PERÍODO:', $dados['periodo_oficial'], 'EMISSÃO:', date('d/m/Y H:i:s')], ';', '"', "\\");
         fputcsv($output, [], ';', '"', "\\");
 
-        fputcsv($output, ['RESUMO POR CANAIS DE ARRECADAÇÃO'], ';', '"', "\\");
-        fputcsv($output, ['Canal / Meio de Pagamento', 'Descrição', 'Ambiente', 'Qtd Transações', 'Total Arrecadado (R$)', 'Participação (%)'], ';', '"', "\\");
+        fputcsv($output, ['RESUMO POR CANAIS DE ENTRADAS'], ';', '"', "\\");
+        fputcsv($output, ['Canal / Meio de Pagamento', 'Descrição', 'Ambiente', 'Qtd Transações', 'Total de Entradas (R$)', 'Participação (%)'], ';', '"', "\\");
         foreach ($dados['canais'] as $c) {
             fputcsv($output, self::sanitizarCsvLinha([
                 $c['canal'],
@@ -2815,7 +2838,7 @@ class RelatoriosController extends Controller
             ]), ';', '"', "\\");
         }
         fputcsv($output, [
-            'TOTAL GERAL ARRECADADO',
+            'TOTAL GERAL DE ENTRADAS',
             '',
             '',
             $dados['total_transacoes_arrecadacao'],
@@ -2832,7 +2855,7 @@ class RelatoriosController extends Controller
             'Recargas Balcão Dinheiro (R$)',
             'Vendas Balcão Dinheiro (R$)',
             'Vendas Balcão Pix (R$)',
-            'Total Arrecadado Dia (R$)',
+            'Total de Entradas do Dia (R$)',
             'Consumo em Saldo (R$)',
             'Variação Saldo (R$)'
         ], ';', '"', "\\");

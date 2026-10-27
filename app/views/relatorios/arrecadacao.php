@@ -29,7 +29,7 @@ $canais = $dados['canais'] ?? [];
             <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="text-secondary text-microcopy text-uppercase font-weight-bold">Módulo Financeiro & Fluxo de Caixa</span>
             </div>
-            <h1 class="h4 font-weight-bold mb-0 text-dark">Arrecadação Financeira & Fluxo de Entradas</h1>
+            <h1 class="h4 font-weight-bold mb-0 text-dark">Entradas</h1>
             <p class="text-secondary text-microcopy mb-0 mt-1">
                 Consolidação contábil de todo o dinheiro real que entrou na cantina (Recargas Pix Online, Recargas Balcão e Vendas Presenciais) no período.
             </p>

@@ -114,7 +114,7 @@ $baseUrl = $baseUrl ?? '';
             </div>
         </div>
 
-        <!-- Relatório: Arrecadação Financeira & Fluxo de Entradas -->
+        <!-- Relatório: Entradas -->
         <div class="col-12 col-md-6 col-lg-4">
             <div class="card-report" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
                 <div>
@@ -122,14 +122,14 @@ $baseUrl = $baseUrl ?? '';
                         <span class="text-microcopy text-uppercase fw-semibold text-secondary">Controladoria & Cash-In</span>
                         <span class="code-tag font-tabular">A4 + Planilha CSV</span>
                     </div>
-                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Arrecadação Financeira & Entradas</h2>
+                    <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Entradas</h2>
                     <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
-                        Todo o dinheiro real arrecadado no período (Recargas Pix Online do Portal, Recargas Balcão em Dinheiro e Vendas Presenciais) com detalhamento diário e confronto de carteira.
+                        Todo o dinheiro real que entrou na cantina no período (Recargas Pix Online do Portal, Recargas Balcão em Dinheiro e Vendas Presenciais) com detalhamento diário e confronto de carteira.
                     </p>
                 </div>
                 <div class="d-flex gap-2 pt-3 border-top mt-auto flex-wrap">
                     <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao" class="btn btn-enterprise btn-primary btn-sm flex-fill text-center fw-medium">
-                        Ver Arrecadação
+                        Ver Entradas
                     </a>
                     <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao/imprimir" class="btn btn-enterprise btn-secondary btn-sm text-center fw-medium" target="_blank" title="Visualizar / Imprimir A4">
                         Visualizar A4

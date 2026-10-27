@@ -509,7 +509,10 @@ $router->get('/relatorios/desconto-folha/lote-pdf', [\App\Controllers\Relatorios
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 $router->get('/relatorios/fechamento-caixa', [\App\Controllers\RelatoriosController::class, 'fechamentoCaixa'], [
-    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/financeiro/fechamento-caixa', [\App\Controllers\RelatoriosController::class, 'fechamentoCaixa'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
 $router->get('/relatorios/devedores', [\App\Controllers\RelatoriosController::class, 'devedores'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
@@ -589,7 +592,7 @@ $router->get('/relatorios/estoque-movimentacoes/csv', [\App\Controllers\Relatori
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
 
-// 4.5. Relatório de Arrecadação Financeira & Fluxo de Entradas (Cash-In Real)
+// 4.5. Relatório e Módulo de Entradas (Cash-In Real)
 $router->get('/relatorios/arrecadacao', [\App\Controllers\RelatoriosController::class, 'arrecadacao'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
@@ -600,6 +603,18 @@ $router->get('/relatorios/arrecadacao/imprimir', [\App\Controllers\RelatoriosCon
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
 $router->get('/relatorios/arrecadacao/csv', [\App\Controllers\RelatoriosController::class, 'arrecadacaoCsv'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/financeiro/entradas', [\App\Controllers\RelatoriosController::class, 'entradas'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/financeiro/entradas/pdf', [\App\Controllers\RelatoriosController::class, 'entradasPdf'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/financeiro/entradas/imprimir', [\App\Controllers\RelatoriosController::class, 'entradasImprimir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/financeiro/entradas/csv', [\App\Controllers\RelatoriosController::class, 'entradasCsv'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
 
