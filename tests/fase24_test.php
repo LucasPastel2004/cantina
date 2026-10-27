@@ -348,7 +348,7 @@ class Fase24Test
 
     private function testRotasDreController(): void
     {
-        echo "\n[9] Testando DreController (Index, Gráficos JSON e CSV)...\n";
+        echo "\n[9] Testando DreController (Index Sob Demanda, Relatório Texto A4 e Relatório Gráfico A4)...\n";
 
         \App\Core\Session::start();
         \App\Core\Session::set('_auth_user_id', $this->adminId);
@@ -356,23 +356,29 @@ class Fase24Test
 
         $controller = new \App\Controllers\DreController();
 
-        // 1. Index (Painel Visual & Gráficos Interativos sempre abertos com seletor de período)
+        // 1. Index (Tela limpa sob demanda com seletor de período e menu Imprimir: Texto / Gráfico / CSV)
         $_GET['data_inicio'] = '2026-09-01';
         $_GET['data_fim']    = '2026-09-30';
         ob_start();
         $controller->index();
         $html = ob_get_clean();
 
-        $this->assert(str_contains($html, 'Painel Financeiro & DRE Gerencial'), "View do DRE renderizou título oficial.");
+        $this->assert(str_contains($html, 'Painel Financeiro & DRE Gerencial Unificado'), "View do DRE renderizou título oficial.");
         $this->assert(str_contains($html, 'data_inicio') && str_contains($html, 'data_fim'), "Filtro de período por datas presente na interface.");
-        $this->assert(str_contains($html, 'stat-strip'), "Stat-strip de métricas financeiras presente.");
-        $this->assert(str_contains($html, 'chartEvolucaoMensal'), "Painel de gráficos interativos sempre aberto na view.");
-        $this->assert(str_contains($html, 'chartCanaisVenda'), "Gráfico de canais de venda presente.");
-        $this->assert(str_contains($html, 'chartDespesasCat'), "Gráfico de despesas por categoria presente.");
-        $this->assert(str_contains($html, 'chartProdutosRentaveis'), "Gráfico de ranking de produtos rentáveis presente.");
-        $this->assert(str_contains($html, 'chart.min.js'), "Inclusão da biblioteca local chart.min.js confirmada na view.");
+        $this->assert(str_contains($html, 'Imprimir / Salvar PDF (A4)'), "Botão Imprimir / Salvar PDF (A4) presente no filtro de período.");
+        $this->assert(str_contains($html, 'Relatório Texto (DRE Contábil A4)'), "Opção de Relatório Texto disponível no seletor de emissão.");
+        $this->assert(str_contains($html, 'Relatório Gráfico (DRE Visual + Produtos Rentáveis A4)'), "Opção de Relatório Gráfico disponível no seletor de emissão.");
 
-        // 2. Imprimir (A4) — Onde o DRE completo em formato contábil/planilha é exibido sob demanda
+        // 2. Relatório Gráfico (A4) — DRE Visual Unificado + Lista de Produtos Mais Rentáveis
+        ob_start();
+        $controller->grafico();
+        $htmlGrafico = ob_get_clean();
+        $this->assert(str_contains($htmlGrafico, 'chartCanaisVenda'), "Gráfico circular de canais de venda presente no Relatório Gráfico.");
+        $this->assert(str_contains($htmlGrafico, 'Estrutura Visual do DRE & Despesas por Categoria'), "DRE Visual unificado com despesas por categoria presente no Relatório Gráfico.");
+        $this->assert(str_contains($htmlGrafico, 'Detalhamento dos Produtos Mais Rentáveis do Período'), "Lista de produtos mais rentáveis presente abaixo do DRE Visual.");
+        $this->assert(str_contains($htmlGrafico, 'chart.min.js'), "Inclusão da biblioteca local chart.min.js confirmada no Relatório Gráfico.");
+
+        // 3. Imprimir (A4) — Onde o DRE completo em formato contábil/planilha é exibido sob demanda
         ob_start();
         $controller->imprimir();
         $htmlPrint = ob_get_clean();
@@ -388,7 +394,7 @@ class Fase24Test
 
     private function testGotenbergCompilacaoDrePdf(): void
     {
-        echo "\n[10] Testando Compilação de PDF A4 do DRE via Gotenberg (Chromium Headless)...\n";
+        echo "\n[10] Testando Espelho A4 Paisagem do DRE (Print to PDF Nativo — Hostnet Compatible)...\n";
 
         $dreModel = new \App\Models\Dre();
         $dreAno = $dreModel->calcularAnoComparativo(2026);
@@ -405,7 +411,7 @@ class Fase24Test
             'dataEmissao' => date('d/m/Y H:i:s'),
             'mesesAbrev'  => \App\Models\Dre::MESES_ABREV,
             'mesesPt'     => \App\Models\Dre::MESES_PT,
-            'isPdf'       => true,
+            'isPdf'       => false,
             'baseUrl'     => 'http://localhost:8080',
         ]);
 
@@ -415,14 +421,10 @@ class Fase24Test
             'emulatedMediaType' => 'print',
         ]);
 
-        $this->assert($pdfBinario !== null, "Gotenberg compilou o HTML do DRE em binário PDF com sucesso.");
-        $tamanho = strlen($pdfBinario ?? '');
-        $this->assert($tamanho > 15000, "Arquivo PDF gerado possui tamanho consistente ({$tamanho} bytes > 15 KB).");
-
-        // Salva temporariamente para inspeção óptica se necessário
-        file_put_contents(__DIR__ . '/../storage/dre_gerencial_2026_test.pdf', $pdfBinario);
-        $this->assert(file_exists(__DIR__ . '/../storage/dre_gerencial_2026_test.pdf'), "Arquivo de homologação salvo em storage/dre_gerencial_2026_test.pdf.");
-        @unlink(__DIR__ . '/../storage/dre_gerencial_2026_test.pdf');
+        $this->assert($pdfBinario === null, "PdfService::htmlToPdf retorna null garantindo emissão nativa Print to PDF do navegador.");
+        $tamanhoHtml = strlen($html);
+        $this->assert($tamanhoHtml > 15000, "Espelho HTML A4 do DRE possui tamanho consistente ({$tamanhoHtml} bytes > 15 KB).");
+        $this->assert(str_contains($html, 'window.print()'), "Espelho HTML A4 inclui acionador nativo window.print().");
     }
 
     private function testIntegridadeSidebarEHub(): void

@@ -54,9 +54,11 @@ class Dre extends Model
 
     /**
      * Calcula o DRE consolidado de uma competência mensal específica (YYYY-MM).
-     * Suporta regime de 'competencia' (vendas de lanches) ou 'caixa' (recargas de saldo + vendas avulsas).
+     * Opera por padrão no Modelo Contábil Unificado (Duplo Estágio com Ponte de Conciliação de Carteira:
+     * Apuração de Vendas/Consumo + Conciliação de Recargas/Custódia + Resultado Financeiro em Conta sem duplicidade).
+     * Mantém suporte retrocompatível aos parâmetros 'competencia' e 'caixa'.
      */
-    public function calcularCompetencia(string $competencia, string $regime = 'competencia'): array
+    public function calcularCompetencia(string $competencia, string $regime = 'unificado'): array
     {
         $pdo = self::getConnection();
 
@@ -67,7 +69,7 @@ class Dre extends Model
         $dataInicio = sprintf('%04d-%02d-01', $ano, $mes);
         $dataFim    = date('Y-m-t', strtotime($dataInicio));
 
-        // 2. Receita Bruta de Vendas Online (Pedidos) e Consumo Saldo
+        // 2. Receita Bruta de Vendas Online (Pedidos) — 100% via Saldo da Carteira
         $sqlOnline = "SELECT 
                         COALESCE(SUM(p.valor_total), 0.00) as total,
                         COUNT(p.id) as qtd_pedidos
@@ -77,7 +79,7 @@ class Dre extends Model
         $stmtOnline = $pdo->prepare($sqlOnline);
         $stmtOnline->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $resOnline = $stmtOnline->fetch(\PDO::FETCH_ASSOC);
-        $receitaOnline = (float)($resOnline['total'] ?? 0.00);
+        $vendasOnline = (float)($resOnline['total'] ?? 0.00);
 
         // 3. Receita Bruta de Vendas Presenciais (Balcão)
         $sqlBalcao = "SELECT 
@@ -90,9 +92,9 @@ class Dre extends Model
         $stmtBalcao = $pdo->prepare($sqlBalcao);
         $stmtBalcao->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $resBalcao = $stmtBalcao->fetch(\PDO::FETCH_ASSOC);
-        $receitaBalcao = (float)($resBalcao['total'] ?? 0.00);
+        $vendasBalcaoTotal = (float)($resBalcao['total'] ?? 0.00);
 
-        // Vendas Balcão em Saldo (Consumo)
+        // Vendas Balcão em Saldo (Consumo de Carteira no PDV)
         $sqlBalcaoSaldo = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
                            FROM `vendas_balcao` vb
                            WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
@@ -102,9 +104,10 @@ class Dre extends Model
         $stmtBS = $pdo->prepare($sqlBalcaoSaldo);
         $stmtBS->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $consumoSaldoBalcao = (float)$stmtBS->fetchColumn();
-        $consumoSaldoTotal = $receitaOnline + $consumoSaldoBalcao;
+        $consumoSaldoOnline = $vendasOnline;
+        $consumoSaldoTotal  = round($consumoSaldoOnline + $consumoSaldoBalcao, 2);
 
-        // Vendas Balcão em Dinheiro e Pix
+        // Vendas Diretas no Balcão (Dinheiro e Pix — Entrada Direta sem passar por Recarga)
         $sqlBalcaoDinheiro = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
                               FROM `vendas_balcao` vb
                               WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
@@ -125,7 +128,9 @@ class Dre extends Model
         $stmtBP->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $vendasBalcaoPix = (float)$stmtBP->fetchColumn();
 
-        // Recargas da Carteira no Mês (Cash-In)
+        $vendasDiretasBalcao = round($vendasBalcaoDinheiro + $vendasBalcaoPix, 2);
+
+        // Recargas da Carteira no Mês (Cash-In Real Depositado na Conta/Caixa)
         $sqlRecargasPix = "SELECT COALESCE(SUM(tc.valor), 0.00)
                            FROM `transacoes_carteira` tc
                            WHERE tc.tipo_transacao = 'recarga_pix'
@@ -133,6 +138,17 @@ class Dre extends Model
         $stmtRP = $pdo->prepare($sqlRecargasPix);
         $stmtRP->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $recargasPix = (float)$stmtRP->fetchColumn();
+
+        // Segregação de Recargas Pix: Online (Portal da Família) vs Presencial (Balcão/PDV)
+        $sqlRecargasPixPdv = "SELECT COALESCE(SUM(tc.valor), 0.00)
+                              FROM `transacoes_carteira` tc
+                              WHERE tc.tipo_transacao = 'recarga_pix'
+                                AND (tc.operador_id IS NOT NULL OR tc.descricao LIKE '%Balcão%' OR tc.descricao LIKE '%PDV%')
+                                AND DATE(tc.created_at) BETWEEN :dt_inicio AND :dt_fim";
+        $stmtRPPdv = $pdo->prepare($sqlRecargasPixPdv);
+        $stmtRPPdv->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $recargasPixPdv = (float)$stmtRPPdv->fetchColumn();
+        $recargasPixOnline = max(0.00, round($recargasPix - $recargasPixPdv, 2));
 
         $sqlRecargasDinheiro = "SELECT COALESCE(SUM(tc.valor), 0.00)
                                 FROM `transacoes_carteira` tc
@@ -142,18 +158,25 @@ class Dre extends Model
         $stmtRD->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $recargasDinheiro = (float)$stmtRD->fetchColumn();
 
-        $totalRecargas = $recargasPix + $recargasDinheiro;
+        $recargasBalcao = round($recargasPixPdv + $recargasDinheiro, 2);
+        $totalRecargas  = round($recargasPix + $recargasDinheiro, 2);
+
+        // Arrecadação Real na Conta (Cash-In Bruto: Recargas de Saldo + Vendas Diretas no Balcão)
+        // Nota: O consumo de saldo NÃO entra aqui porque o dinheiro já entrou via Recargas.
+        $arrecadacaoBruta = round($totalRecargas + $vendasDiretasBalcao, 2);
+
+        // Faturamento Bruto de Vendas e Consumo (Lanches Entregues: Consumo de Saldo + Vendas Diretas)
+        $receitaVendasBruta = round($vendasOnline + $vendasBalcaoTotal, 2);
 
         if ($regime === 'caixa') {
-            // No Regime de Caixa:
-            // Receita Online = Recargas Pix (Portal da Família)
-            // Receita Balcão = Recargas Balcão Dinheiro + Vendas Balcão Dinheiro + Vendas Balcão Pix
             $receitaOnline = $recargasPix;
-            $receitaBalcao = $recargasDinheiro + $vendasBalcaoDinheiro + $vendasBalcaoPix;
-            $receitaBruta = $receitaOnline + $receitaBalcao;
+            $receitaBalcao = round($recargasDinheiro + $vendasDiretasBalcao, 2);
+            $receitaBruta  = $arrecadacaoBruta;
         } else {
-            // No Regime de Competência (Padrão): Vendas totais de alimentos entregues
-            $receitaBruta = $receitaOnline + $receitaBalcao;
+            // No DRE Unificado (e Competência): A linha de topo do Bloco 1 é a Receita Bruta de Vendas (Consumo Real)
+            $receitaOnline = $vendasOnline;
+            $receitaBalcao = $vendasBalcaoTotal;
+            $receitaBruta  = $receitaVendasBruta;
         }
 
         // 4. Deduções e Abatimentos (Estornos)
@@ -180,16 +203,18 @@ class Dre extends Model
         $stmtEstornoO->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $estornosOnline = (float)$stmtEstornoO->fetchColumn();
 
-        $totalDeducoes = $estornosBalcao + $estornosOnline;
+        $totalDeducoes = round($estornosBalcao + $estornosOnline, 2);
 
-        // 5. Receita Líquida de Vendas
-        $receitaLiquida = max(0.00, $receitaBruta - $totalDeducoes);
+        // 5. Receita Líquida de Vendas e Arrecadação Líquida em Conta
+        $receitaLiquida     = max(0.00, round($receitaBruta - $totalDeducoes, 2));
+        $receitaVendasLiq   = max(0.00, round($receitaVendasBruta - $totalDeducoes, 2));
+        $arrecadacaoLiquida = max(0.00, round($arrecadacaoBruta - $totalDeducoes, 2));
 
         // 6. Custo das Mercadorias Vendidas (CMV)
         $cmv = $this->calcularCmvPeriodo($dataInicio, $dataFim, $receitaLiquida);
 
-        // 7. Lucro Bruto
-        $lucroBruto = $receitaLiquida - $cmv;
+        // 7. Lucro Bruto Operacional
+        $lucroBruto = round($receitaLiquida - $cmv, 2);
         $margemBrutaPercent = $receitaLiquida > 0 ? ($lucroBruto / $receitaLiquida) * 100 : 0.0;
 
         // 8. Despesas Operacionais por Categoria
@@ -212,12 +237,26 @@ class Dre extends Model
         $despesasFinanceiras = (float)($despPorCat[DespesaOperacional::CATEGORIA_FINANCEIRA] ?? 0.00);
         $despesasOutras      = (float)($despPorCat[DespesaOperacional::CATEGORIA_OUTRAS] ?? 0.00);
 
-        $totalDespesasOperacionais = $despesasVendas + $despesasAdmin + $despesasPessoal + 
-                                     $despesasManutencao + $despesasFinanceiras + $despesasOutras;
+        $totalDespesasOperacionais = round(
+            $despesasVendas + $despesasAdmin + $despesasPessoal + 
+            $despesasManutencao + $despesasFinanceiras + $despesasOutras,
+            2
+        );
 
-        // 9. Resultado Líquido do Exercício (Lucro Líquido Real)
-        $resultadoLiquido = $lucroBruto - $totalDespesasOperacionais;
+        // 9. Resultado Líquido Operacional (Vendas & Consumo)
+        $resultadoLiquido = round($lucroBruto - $totalDespesasOperacionais, 2);
         $margemLiquidaPercent = $receitaLiquida > 0 ? ($resultadoLiquido / $receitaLiquida) * 100 : 0.0;
+
+        // 10. Ponte de Conciliação da Carteira Pré-Paga e Resultado Financeiro em Conta (Caixa Real)
+        // Variação Líquida de Saldo em Conta = (+) Recargas Recebidas - (-) Consumo de Saldo em Vendas
+        $diferencaRecargaConsumo = round($totalRecargas - $consumoSaldoTotal, 2);
+
+        // Resultado Operacional de Vendas puro (independente do filtro de regime legado)
+        $lucroVendasPuro = round(($receitaVendasLiq - $cmv) - $totalDespesasOperacionais, 2);
+        // Resultado Financeiro Líquido em Conta = Lucro Operacional de Vendas + Variação Líquida de Saldo em Carteira
+        // Matematicamente idêntico a: (Recargas + Vendas Diretas - Deduções) - CMV - Despesas Operacionais (ZERO duplicação)
+        $resultadoCaixa = round($lucroVendasPuro + $diferencaRecargaConsumo, 2);
+        $margemCaixaPercent = $arrecadacaoLiquida > 0 ? ($resultadoCaixa / $arrecadacaoLiquida) * 100 : 0.0;
 
         return [
             'competencia'              => $competencia,
@@ -229,21 +268,29 @@ class Dre extends Model
             'data_inicio'              => $dataInicio,
             'data_fim'                 => $dataFim,
             
-            // (+) RECEITA BRUTA
+            // (+) RECEITA BRUTA (Vendas & Consumo no modo Unificado/Competência)
             'receita_online'           => $receitaOnline,
             'receita_balcao'           => $receitaBalcao,
             'receita_bruta'            => $receitaBruta,
+            'receita_vendas_bruta'     => $receitaVendasBruta,
+            'receita_vendas_liquida'   => $receitaVendasLiq,
 
-            // Dados Complementares de Recargas e Consumo Saldo
+            // Conciliação de Carteira Pré-Paga (Recargas na Conta vs Gasto do Saldo em Vendas)
+            'recargas_pix_online'      => $recargasPixOnline,
+            'recargas_pix_pdv'         => $recargasPixPdv,
             'recargas_pix'             => $recargasPix,
             'recargas_dinheiro'        => $recargasDinheiro,
+            'recargas_balcao'          => $recargasBalcao,
             'total_recargas'           => $totalRecargas,
             'vendas_dinheiro'          => $vendasBalcaoDinheiro,
             'vendas_pix'               => $vendasBalcaoPix,
-            'consumo_saldo_online'     => (float)($resOnline['total'] ?? 0.00),
+            'vendas_diretas_balcao'    => $vendasDiretasBalcao,
+            'consumo_saldo_online'     => $consumoSaldoOnline,
             'consumo_saldo_balcao'     => $consumoSaldoBalcao,
             'consumo_saldo_total'      => $consumoSaldoTotal,
-            'diferenca_recarga_consumo'=> round($totalRecargas - $consumoSaldoTotal, 2),
+            'diferenca_recarga_consumo'=> $diferencaRecargaConsumo,
+            'arrecadacao_bruta'        => $arrecadacaoBruta,
+            'arrecadacao_liquida'      => $arrecadacaoLiquida,
             
             // (-) DEDUÇÕES
             'estornos_balcao'          => $estornosBalcao,
@@ -271,22 +318,26 @@ class Dre extends Model
             'total_despesas'           => $totalDespesasOperacionais,
             'despesas_percent'         => $receitaLiquida > 0 ? ($totalDespesasOperacionais / $receitaLiquida) * 100 : 0.0,
             
-            // (=) RESULTADO LÍQUIDO
+            // (=) RESULTADO LÍQUIDO OPERACIONAL (VENDAS) & RESULTADO FINANCEIRO EM CONTA (CAIXA REAL)
             'resultado_liquido'        => $resultadoLiquido,
             'margem_liquida_percent'   => $margemLiquidaPercent,
             'lucro_positivo'           => $resultadoLiquido >= 0,
+            'resultado_caixa'          => $resultadoCaixa,
+            'margem_caixa_percent'     => $margemCaixaPercent,
+            'caixa_positivo'           => $resultadoCaixa >= 0,
         ];
     }
 
     /**
      * Calcula o DRE consolidado para um intervalo arbitrário de datas (data_inicio a data_fim).
-     * Suporta regime de 'competencia' (vendas de lanches) ou 'caixa' (recargas de saldo + vendas avulsas).
+     * Opera por padrão no Modelo Contábil Unificado (Apuração de Vendas/Consumo + Conciliação de Recargas/Custódia + Resultado em Conta).
+     * Mantém suporte retrocompatível aos parâmetros 'competencia' e 'caixa'.
      */
-    public function calcularPeriodo(string $dataInicio, string $dataFim, string $regime = 'competencia'): array
+    public function calcularPeriodo(string $dataInicio, string $dataFim, string $regime = 'unificado'): array
     {
         $pdo = self::getConnection();
 
-        // 1. Receita Bruta de Vendas Online (Pedidos) e Consumo Saldo
+        // 1. Receita Bruta de Vendas Online (Pedidos) — 100% via Saldo da Carteira
         $sqlOnline = "SELECT 
                         COALESCE(SUM(p.valor_total), 0.00) as total,
                         COUNT(p.id) as qtd_pedidos
@@ -296,7 +347,7 @@ class Dre extends Model
         $stmtOnline = $pdo->prepare($sqlOnline);
         $stmtOnline->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $resOnline = $stmtOnline->fetch(\PDO::FETCH_ASSOC);
-        $receitaOnline = (float)($resOnline['total'] ?? 0.00);
+        $vendasOnline = (float)($resOnline['total'] ?? 0.00);
 
         // 2. Receita Bruta de Vendas Presenciais (Balcão)
         $sqlBalcao = "SELECT 
@@ -309,9 +360,9 @@ class Dre extends Model
         $stmtBalcao = $pdo->prepare($sqlBalcao);
         $stmtBalcao->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $resBalcao = $stmtBalcao->fetch(\PDO::FETCH_ASSOC);
-        $receitaBalcao = (float)($resBalcao['total'] ?? 0.00);
+        $vendasBalcaoTotal = (float)($resBalcao['total'] ?? 0.00);
 
-        // Vendas Balcão em Saldo (Consumo)
+        // Vendas Balcão em Saldo (Consumo de Carteira no PDV)
         $sqlBalcaoSaldo = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
                            FROM `vendas_balcao` vb
                            WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
@@ -321,9 +372,10 @@ class Dre extends Model
         $stmtBS = $pdo->prepare($sqlBalcaoSaldo);
         $stmtBS->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $consumoSaldoBalcao = (float)$stmtBS->fetchColumn();
-        $consumoSaldoTotal = $receitaOnline + $consumoSaldoBalcao;
+        $consumoSaldoOnline = $vendasOnline;
+        $consumoSaldoTotal  = round($consumoSaldoOnline + $consumoSaldoBalcao, 2);
 
-        // Vendas Balcão em Dinheiro e Pix
+        // Vendas Diretas no Balcão (Dinheiro e Pix — Entrada Direta sem passar por Recarga)
         $sqlBalcaoDinheiro = "SELECT COALESCE(SUM(vb.valor_total), 0.00)
                               FROM `vendas_balcao` vb
                               WHERE DATE(vb.created_at) BETWEEN :dt_inicio AND :dt_fim
@@ -344,7 +396,9 @@ class Dre extends Model
         $stmtBP->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $vendasBalcaoPix = (float)$stmtBP->fetchColumn();
 
-        // Recargas da Carteira no Período (Cash-In)
+        $vendasDiretasBalcao = round($vendasBalcaoDinheiro + $vendasBalcaoPix, 2);
+
+        // Recargas da Carteira no Período (Cash-In Real Depositado na Conta/Caixa)
         $sqlRecargasPix = "SELECT COALESCE(SUM(tc.valor), 0.00)
                            FROM `transacoes_carteira` tc
                            WHERE tc.tipo_transacao = 'recarga_pix'
@@ -352,6 +406,17 @@ class Dre extends Model
         $stmtRP = $pdo->prepare($sqlRecargasPix);
         $stmtRP->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $recargasPix = (float)$stmtRP->fetchColumn();
+
+        // Segregação de Recargas Pix: Online (Portal da Família) vs Presencial (Balcão/PDV)
+        $sqlRecargasPixPdv = "SELECT COALESCE(SUM(tc.valor), 0.00)
+                              FROM `transacoes_carteira` tc
+                              WHERE tc.tipo_transacao = 'recarga_pix'
+                                AND (tc.operador_id IS NOT NULL OR tc.descricao LIKE '%Balcão%' OR tc.descricao LIKE '%PDV%')
+                                AND DATE(tc.created_at) BETWEEN :dt_inicio AND :dt_fim";
+        $stmtRPPdv = $pdo->prepare($sqlRecargasPixPdv);
+        $stmtRPPdv->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
+        $recargasPixPdv = (float)$stmtRPPdv->fetchColumn();
+        $recargasPixOnline = max(0.00, round($recargasPix - $recargasPixPdv, 2));
 
         $sqlRecargasDinheiro = "SELECT COALESCE(SUM(tc.valor), 0.00)
                                 FROM `transacoes_carteira` tc
@@ -361,18 +426,24 @@ class Dre extends Model
         $stmtRD->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $recargasDinheiro = (float)$stmtRD->fetchColumn();
 
-        $totalRecargas = $recargasPix + $recargasDinheiro;
+        $recargasBalcao = round($recargasPixPdv + $recargasDinheiro, 2);
+        $totalRecargas  = round($recargasPix + $recargasDinheiro, 2);
+
+        // Arrecadação Real na Conta (Cash-In Bruto: Recargas de Saldo + Vendas Diretas no Balcão)
+        $arrecadacaoBruta = round($totalRecargas + $vendasDiretasBalcao, 2);
+
+        // Faturamento Bruto de Vendas e Consumo (Lanches Entregues: Consumo de Saldo + Vendas Diretas)
+        $receitaVendasBruta = round($vendasOnline + $vendasBalcaoTotal, 2);
 
         if ($regime === 'caixa') {
-            // No Regime de Caixa:
-            // Receita Online = Recargas Pix (Portal da Família)
-            // Receita Balcão = Recargas Balcão Dinheiro + Vendas Balcão Dinheiro + Vendas Balcão Pix
             $receitaOnline = $recargasPix;
-            $receitaBalcao = $recargasDinheiro + $vendasBalcaoDinheiro + $vendasBalcaoPix;
-            $receitaBruta = $receitaOnline + $receitaBalcao;
+            $receitaBalcao = round($recargasDinheiro + $vendasDiretasBalcao, 2);
+            $receitaBruta  = $arrecadacaoBruta;
         } else {
-            // No Regime de Competência (Padrão): Vendas totais de alimentos entregues
-            $receitaBruta = $receitaOnline + $receitaBalcao;
+            // No DRE Unificado (e Competência): Receita Bruta do Bloco 1 são as Vendas de Lanches
+            $receitaOnline = $vendasOnline;
+            $receitaBalcao = $vendasBalcaoTotal;
+            $receitaBruta  = $receitaVendasBruta;
         }
 
         // 3. Deduções e Abatimentos (Estornos)
@@ -397,12 +468,14 @@ class Dre extends Model
         $stmtEstornoO->execute([':dt_inicio' => $dataInicio, ':dt_fim' => $dataFim]);
         $estornosOnline = (float)$stmtEstornoO->fetchColumn();
 
-        $totalDeducoes = $estornosBalcao + $estornosOnline;
-        $receitaLiquida = max(0.00, $receitaBruta - $totalDeducoes);
+        $totalDeducoes      = round($estornosBalcao + $estornosOnline, 2);
+        $receitaLiquida     = max(0.00, round($receitaBruta - $totalDeducoes, 2));
+        $receitaVendasLiq   = max(0.00, round($receitaVendasBruta - $totalDeducoes, 2));
+        $arrecadacaoLiquida = max(0.00, round($arrecadacaoBruta - $totalDeducoes, 2));
 
         // 4. CMV do Período
         $cmv = $this->calcularCmvPeriodo($dataInicio, $dataFim, $receitaLiquida);
-        $lucroBruto = $receitaLiquida - $cmv;
+        $lucroBruto = round($receitaLiquida - $cmv, 2);
         $margemBrutaPercent = $receitaLiquida > 0 ? ($lucroBruto / $receitaLiquida) * 100 : 0.0;
 
         // 5. Despesas Operacionais por Categoria no Período
@@ -438,11 +511,20 @@ class Dre extends Model
         $despesasFinanceiras = (float)($despPorCat[DespesaOperacional::CATEGORIA_FINANCEIRA] ?? 0.00);
         $despesasOutras      = (float)($despPorCat[DespesaOperacional::CATEGORIA_OUTRAS] ?? 0.00);
 
-        $totalDespesasOperacionais = $despesasVendas + $despesasAdmin + $despesasPessoal + 
-                                     $despesasManutencao + $despesasFinanceiras + $despesasOutras;
+        $totalDespesasOperacionais = round(
+            $despesasVendas + $despesasAdmin + $despesasPessoal + 
+            $despesasManutencao + $despesasFinanceiras + $despesasOutras,
+            2
+        );
 
-        $resultadoLiquido = $lucroBruto - $totalDespesasOperacionais;
+        $resultadoLiquido = round($lucroBruto - $totalDespesasOperacionais, 2);
         $margemLiquidaPercent = $receitaLiquida > 0 ? ($resultadoLiquido / $receitaLiquida) * 100 : 0.0;
+
+        // 6. Ponte de Conciliação da Carteira Pré-Paga e Resultado Financeiro em Conta (Caixa Real)
+        $diferencaRecargaConsumo = round($totalRecargas - $consumoSaldoTotal, 2);
+        $lucroVendasPuro = round(($receitaVendasLiq - $cmv) - $totalDespesasOperacionais, 2);
+        $resultadoCaixa = round($lucroVendasPuro + $diferencaRecargaConsumo, 2);
+        $margemCaixaPercent = $arrecadacaoLiquida > 0 ? ($resultadoCaixa / $arrecadacaoLiquida) * 100 : 0.0;
 
         // Identifica os meses participantes do período
         $mesesParticipantes = [];
@@ -479,17 +561,25 @@ class Dre extends Model
             'receita_online'           => $receitaOnline,
             'receita_balcao'           => $receitaBalcao,
             'receita_bruta'            => $receitaBruta,
+            'receita_vendas_bruta'     => $receitaVendasBruta,
+            'receita_vendas_liquida'   => $receitaVendasLiq,
 
-            // Dados Complementares de Recargas e Consumo Saldo
+            // Conciliação de Carteira Pré-Paga (Recargas na Conta vs Gasto do Saldo em Vendas)
+            'recargas_pix_online'      => $recargasPixOnline,
+            'recargas_pix_pdv'         => $recargasPixPdv,
             'recargas_pix'             => $recargasPix,
             'recargas_dinheiro'        => $recargasDinheiro,
+            'recargas_balcao'          => $recargasBalcao,
             'total_recargas'           => $totalRecargas,
             'vendas_dinheiro'          => $vendasBalcaoDinheiro,
             'vendas_pix'               => $vendasBalcaoPix,
-            'consumo_saldo_online'     => (float)($resOnline['total'] ?? 0.00),
+            'vendas_diretas_balcao'    => $vendasDiretasBalcao,
+            'consumo_saldo_online'     => $consumoSaldoOnline,
             'consumo_saldo_balcao'     => $consumoSaldoBalcao,
             'consumo_saldo_total'      => $consumoSaldoTotal,
-            'diferenca_recarga_consumo'=> round($totalRecargas - $consumoSaldoTotal, 2),
+            'diferenca_recarga_consumo'=> $diferencaRecargaConsumo,
+            'arrecadacao_bruta'        => $arrecadacaoBruta,
+            'arrecadacao_liquida'      => $arrecadacaoLiquida,
 
             // (-) DEDUÇÕES
             'estornos_balcao'          => $estornosBalcao,
@@ -517,33 +607,44 @@ class Dre extends Model
             'total_despesas'           => $totalDespesasOperacionais,
             'despesas_percent'         => $receitaLiquida > 0 ? ($totalDespesasOperacionais / $receitaLiquida) * 100 : 0.0,
 
-            // (=) RESULTADO LÍQUIDO
+            // (=) RESULTADO LÍQUIDO OPERACIONAL (VENDAS) & RESULTADO FINANCEIRO EM CONTA (CAIXA REAL)
             'resultado_liquido'        => $resultadoLiquido,
             'margem_liquida_percent'   => $margemLiquidaPercent,
             'lucro_positivo'           => $resultadoLiquido >= 0,
+            'resultado_caixa'          => $resultadoCaixa,
+            'margem_caixa_percent'     => $margemCaixaPercent,
+            'caixa_positivo'           => $resultadoCaixa >= 0,
         ];
     }
 
     /**
      * Calcula o DRE anual comparativo mês a mês (Janeiro a Dezembro + Total Consolidado do Ano).
-     * Suporta regime de 'competencia' ou 'caixa'.
+     * Opera por padrão no Modelo Contábil Unificado.
      */
-    public function calcularAnoComparativo(int $ano, string $regime = 'competencia'): array
+    public function calcularAnoComparativo(int $ano, string $regime = 'unificado'): array
     {
         $meses = [];
         $totais = [
             'receita_online'           => 0.00,
             'receita_balcao'           => 0.00,
             'receita_bruta'            => 0.00,
+            'receita_vendas_bruta'     => 0.00,
+            'receita_vendas_liquida'   => 0.00,
+            'recargas_pix_online'      => 0.00,
+            'recargas_pix_pdv'         => 0.00,
             'recargas_pix'             => 0.00,
             'recargas_dinheiro'        => 0.00,
+            'recargas_balcao'          => 0.00,
             'total_recargas'           => 0.00,
             'vendas_dinheiro'          => 0.00,
             'vendas_pix'               => 0.00,
+            'vendas_diretas_balcao'    => 0.00,
             'consumo_saldo_online'     => 0.00,
             'consumo_saldo_balcao'     => 0.00,
             'consumo_saldo_total'      => 0.00,
             'diferenca_recarga_consumo'=> 0.00,
+            'arrecadacao_bruta'        => 0.00,
+            'arrecadacao_liquida'      => 0.00,
             'estornos_balcao'          => 0.00,
             'estornos_online'          => 0.00,
             'total_deducoes'           => 0.00,
@@ -558,6 +659,7 @@ class Dre extends Model
             'despesas_outras'          => 0.00,
             'total_despesas'           => 0.00,
             'resultado_liquido'        => 0.00,
+            'resultado_caixa'          => 0.00,
         ];
 
         for ($m = 1; $m <= 12; $m++) {
@@ -568,7 +670,7 @@ class Dre extends Model
             // Acumula totais do ano
             foreach ($totais as $k => $v) {
                 if (isset($dadosMes[$k])) {
-                    $totais[$k] += $dadosMes[$k];
+                    $totais[$k] = round($totais[$k] + $dadosMes[$k], 2);
                 }
             }
         }
@@ -580,6 +682,9 @@ class Dre extends Model
         $totais['margem_liquida_percent'] = $totais['receita_liquida'] > 0 
             ? ($totais['resultado_liquido'] / $totais['receita_liquida']) * 100 
             : 0.0;
+        $totais['margem_caixa_percent'] = $totais['arrecadacao_liquida'] > 0
+            ? ($totais['resultado_caixa'] / $totais['arrecadacao_liquida']) * 100
+            : 0.0;
         $totais['cmv_percent'] = $totais['receita_liquida'] > 0 
             ? ($totais['cmv'] / $totais['receita_liquida']) * 100 
             : 0.0;
@@ -587,6 +692,7 @@ class Dre extends Model
             ? ($totais['total_despesas'] / $totais['receita_liquida']) * 100 
             : 0.0;
         $totais['lucro_positivo'] = $totais['resultado_liquido'] >= 0;
+        $totais['caixa_positivo'] = $totais['resultado_caixa'] >= 0;
 
         return [
             'ano'    => $ano,
@@ -663,26 +769,36 @@ class Dre extends Model
 
     /**
      * Retorna os dados analíticos formatados para os gráficos interativos da tela de DRE.
-     * Suporta agregação por ano ou por período personalizado (data_inicio a data_fim) e regime.
+     * Suporta agregação por ano ou por período personalizado (data_inicio a data_fim) no modelo unificado.
      */
-    public function obterDadosGraficos(int $ano, ?string $dataInicio = null, ?string $dataFim = null, string $regime = 'competencia'): array
+    public function obterDadosGraficos(int $ano, ?string $dataInicio = null, ?string $dataFim = null, string $regime = 'unificado'): array
     {
         $dreAno = $this->calcularAnoComparativo($ano, $regime);
         
         $labels = [];
         $receitas = [];
+        $arrecadacoes = [];
         $despesas = [];
         $lucros = [];
+        $resultadosCaixa = [];
+        $recargas = [];
+        $consumoSaldo = [];
+        $vendasDiretas = [];
         $online = [];
         $balcao = [];
 
         foreach ($dreAno['meses'] as $m => $d) {
-            $labels[]   = $d['mes_abrev'];
-            $receitas[] = round($d['receita_liquida'], 2);
-            $despesas[] = round($d['total_despesas'] + $d['cmv'], 2); // Custo total (CMV + Despesas)
-            $lucros[]   = round($d['resultado_liquido'], 2);
-            $online[]   = round($d['receita_online'], 2);
-            $balcao[]   = round($d['receita_balcao'], 2);
+            $labels[]          = $d['mes_abrev'];
+            $receitas[]        = round($d['receita_liquida'], 2);
+            $arrecadacoes[]    = round($d['arrecadacao_liquida'] ?? 0.00, 2);
+            $despesas[]        = round($d['total_despesas'] + $d['cmv'], 2); // Custo total (CMV + Despesas)
+            $lucros[]          = round($d['resultado_liquido'], 2);
+            $resultadosCaixa[] = round($d['resultado_caixa'] ?? 0.00, 2);
+            $recargas[]        = round($d['total_recargas'] ?? 0.00, 2);
+            $consumoSaldo[]    = round($d['consumo_saldo_total'] ?? 0.00, 2);
+            $vendasDiretas[]   = round($d['vendas_diretas_balcao'] ?? 0.00, 2);
+            $online[]          = round($d['receita_online'], 2);
+            $balcao[]          = round($d['receita_balcao'], 2);
         }
 
         // Se datas foram fornecidas, apura os totais específicos do período selecionado
@@ -783,8 +899,13 @@ class Dre extends Model
             'ano'               => $ano,
             'labels'            => $labels,
             'receitas'          => $receitas,
+            'arrecadacoes'      => $arrecadacoes,
             'despesas'          => $despesas,
             'lucros'            => $lucros,
+            'resultados_caixa'  => $resultadosCaixa,
+            'recargas'          => $recargas,
+            'consumo_saldo'     => $consumoSaldo,
+            'vendas_diretas'    => $vendasDiretas,
             'online'            => $online,
             'balcao'            => $balcao,
             'despesas_por_cat'  => $totaisDespesas,

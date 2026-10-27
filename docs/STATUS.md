@@ -2010,6 +2010,34 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Sustentação — DRE Gerencial Unificado ("Magnum Opus Financeiro": Vendas, Custódia de Carteira & Caixa Real Sem Duplicidade) (2026-10-27)
+* [x] **Unificação Contábil de Duplo Estágio com Ponte de Conciliação (`app/models/Dre.php` e `app/controllers/DreController.php`):**
+  * Unificados os antigos modos separados (`Regime de Competência` e `Regime de Caixa`) em um único **DRE Gerencial Unificado** (`regime = 'unificado'` por padrão, preservando retrocompatibilidade com chamadas legadas);
+  * **Eliminação Matemática de Duplicidade (IFRS 15 / CPC 47 — Custódia de Carteira Pré-Paga):**
+    - **Bloco 1 — Apuração Operacional de Vendas & Consumo (Competência Econômica):** Contabiliza o faturamento de lanches entregues (`Consumo de Saldo Online` + `Consumo de Saldo no Balcão PDV` + `Vendas Diretas no Balcão em Dinheiro e Pix`), deduções/estornos, `Receita Líquida de Vendas`, `CMV`, `Lucro Bruto Operacional`, `Despesas Operacionais` e `Resultado Líquido do Exercício (Vendas)`;
+    - **Bloco 2 — Conciliação de Carteira Pré-Paga & Resultado Financeiro Real em Conta (Ponte Competência -> Caixa Real):** Apura as entradas de saldo na conta (`Recargas Pix Online`, `Recargas Pix no Balcão PDV` e `Recargas em Dinheiro no Balcão PDV`) e aplica a linha de **Abatimento do Saldo Gasto em Vendas (`- consumo_saldo_total`)**, anulando 100% da duplicidade com o Bloco 1 para apurar a `Variação Líquida de Saldo em Conta`, a `Arrecadação Líquida Real na Conta (Cash-In)` e o `Resultado Financeiro Líquido em Conta (Caixa Real)`;
+  * Exportação CSV (`DreController::csv()`) atualizada para incluir os dois blocos integrados com marcadores seguros `[+]`, `[-]`, `[=]` para Microsoft Excel.
+* [x] **Repaginação da Tela Web Sob Demanda e dos Dois Espelhos A4 (Texto Contábil + DRE Visual Gráfico):**
+  * **Tela Principal Sob Demanda (`app/views/financeiro/dre.php`):**
+    - Removidos da tela principal os gráficos que estavam marcados para exclusão (`chartEvolucaoMensal` e `chartProdutosRentaveis`) e toda a carga visual fixa;
+    - A tela agora funciona 100% sob demanda no filtro de período: o botão `Filtrar / Atualizar` foi substituído pelo botão **`Imprimir / Salvar PDF (A4)`** (`#btnImprimirDre`), que ao ser clicado exibe o seletor com as 3 opções oficiais:
+      1. **Relatório Texto (DRE Contábil A4)** (`/financeiro/dre/imprimir`);
+      2. **Relatório Gráfico (DRE Visual + Produtos Rentáveis A4)** (`/financeiro/dre/grafico`);
+      3. **Exportar Planilha (CSV)** (`/financeiro/dre/csv`).
+  * **Relatório Gráfico Unificado (`app/views/financeiro/dre_grafico_pdf.php` e rota `/financeiro/dre/grafico`):**
+    - Espelho A4 Paisagem (`Print to PDF` nativo com `window.print()`, controles de zoom `+`/`-`/`100%` e `Ctrl + Scroll`, e atalho de alternância direta para o Relatório Texto);
+    - **Seção 1 — DRE Visual Unificado:** 6 cartões executivos conciliados + Painel Visual Unificado combinando à esquerda o **Gráfico Circular/Rosca (`#chartCanaisVenda`) de Vendas Online vs Presencial (Saldo PDV e Dinheiro/Pix) + Quadro de Conciliação de Carteira Pré-Paga**, e à direita a **Estrutura Visual do DRE & Despesas Operacionais por Categoria** (barras horizontais proporcionais de Arrecadação, Receita Líquida, CMV, Lucro Bruto, Despesas por Categoria, Resultado Operacional e Resultado Financeiro em Conta + Régua 100% de destinação da receita);
+    - **Seção 2 — Detalhamento dos Produtos Mais Rentáveis do Período:** Tabela completa posicionada logo abaixo do DRE Visual com `#`, `Produto / Lanche`, `Qtd. Vendida`, `Receita Bruta`, `Custo Estimado`, `Lucro Estimado` e linha consolidada de totais.
+  * **Relatório Texto Contábil (`app/views/financeiro/dre_pdf.php` e rota `/financeiro/dre/imprimir`):**
+    - Grade anual comparativa de 12 meses (`Jan` a `Dez` + `Total`) exibindo os Blocos 1 e 2 unificados em folha A4 Paisagem com botão de alternância direta para o Relatório Gráfico.
+* [x] **Execução e Validação das Baterias de Testes:**
+  * `tests/arrecadacao_dre_regimes_test.php`: 134/134 asserções aprovadas com 100% de sucesso;
+  * `tests/fase24_test.php`: 104/104 asserções aprovadas com 100% de sucesso;
+  * `tests/teste_dre_estoque_design.php`: 100% aprovado;
+  * `tests/teste_validacao_relatorios_design.php`: 13/13 relatórios aprovados com 0 erros.
+
+---
+
 ## Próximo Passo Recomendado
 
 1. **Homologação Externa pela Equipe da Escola:** Equipe da cantina, secretaria e direção realizam testes remotos nas telas operacionais (tickets, corte de turno, PDV) e no Portal da Família a partir de seus computadores e celulares.

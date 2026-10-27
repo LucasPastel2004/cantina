@@ -703,6 +703,9 @@ $router->get('/financeiro/dre/graficos-json', [\App\Controllers\DreController::c
 $router->get('/financeiro/dre/imprimir', [\App\Controllers\DreController::class, 'imprimir'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
+$router->get('/financeiro/dre/grafico', [\App\Controllers\DreController::class, 'grafico'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
 $router->get('/financeiro/dre/pdf', [\App\Controllers\DreController::class, 'pdf'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
@@ -717,6 +720,9 @@ $router->get('/relatorios/dre/pdf', [\App\Controllers\DreController::class, 'pdf
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 $router->get('/relatorios/dre/imprimir', [\App\Controllers\DreController::class, 'imprimir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/relatorios/dre/grafico', [\App\Controllers\DreController::class, 'grafico'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
 $router->get('/relatorios/dre/csv', [\App\Controllers\DreController::class, 'csv'], [

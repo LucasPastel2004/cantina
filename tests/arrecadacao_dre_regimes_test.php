@@ -124,7 +124,36 @@ class ArrecadacaoDreRegimesTest
             "Diferença entre Recargas e Consumo é matematicamente exata no Regime de Caixa"
         );
 
-        // 1.3 Ano comparativo nos dois regimes
+        // 1.3 DRE Unificado (Padrão Oficial — Vendas + Conciliação de Carteira + Caixa Real Sem Duplicidade)
+        $dreUnif = $dreModel->calcularPeriodo($inicio, $fim);
+        $this->assert($dreUnif['regime'] === 'unificado', "DRE opera por padrão no regime unificado");
+        $this->assert(isset($dreUnif['arrecadacao_bruta']), "DRE Unificado apura arrecadacao_bruta");
+        $this->assert(isset($dreUnif['arrecadacao_liquida']), "DRE Unificado apura arrecadacao_liquida");
+        $this->assert(isset($dreUnif['resultado_caixa']), "DRE Unificado apura resultado_caixa (Resultado Real em Conta)");
+        $this->assert(isset($dreUnif['recargas_pix_online']), "DRE Unificado segrega recargas_pix_online");
+        $this->assert(isset($dreUnif['recargas_pix_pdv']), "DRE Unificado segrega recargas_pix_pdv");
+
+        // Prova Matemática Anti-Duplicidade:
+        // Receita Bruta de Vendas + Variação Líquida de Carteira (Recargas - Gasto Saldo) == Arrecadação Bruta na Conta
+        $ponteConciliacao = round((float)$dreUnif['receita_bruta'] + (float)$dreUnif['diferenca_recarga_consumo'], 2);
+        $this->assert(
+            abs($ponteConciliacao - (float)$dreUnif['arrecadacao_bruta']) < 0.01,
+            "Ponte Contábil Unificada: Receita de Vendas + (Recargas - Gasto Saldo) fecha exatamente com Arrecadação Real na Conta (Zero Duplicidade)"
+        );
+
+        // Resultado Financeiro em Conta == Resultado Operacional (Vendas) + Variação Líquida de Carteira
+        $caixaEsperado = round((float)$dreUnif['resultado_liquido'] + (float)$dreUnif['diferenca_recarga_consumo'], 2);
+        $this->assert(
+            abs($caixaEsperado - (float)$dreUnif['resultado_caixa']) < 0.01,
+            "Fechamento Unificado: Resultado Financeiro em Conta = Lucro Operacional de Vendas + Variação de Saldo em Carteira"
+        );
+
+        // 1.4 Ano comparativo nos regimes
+        $anoUnif = $dreModel->calcularAnoComparativo(2026);
+        $this->assert(count($anoUnif['meses']) === 12, "DRE Anual Unificado possui 12 meses");
+        $this->assert(isset($anoUnif['totais']['arrecadacao_liquida']), "DRE Anual Unificado totaliza arrecadacao_liquida");
+        $this->assert(isset($anoUnif['totais']['resultado_caixa']), "DRE Anual Unificado totaliza resultado_caixa");
+
         $anoComp = $dreModel->calcularAnoComparativo(2026, 'competencia');
         $this->assert(count($anoComp['meses']) === 12, "DRE Anual Competência possui 12 meses");
 
@@ -133,13 +162,11 @@ class ArrecadacaoDreRegimesTest
         $this->assert(isset($anoCaixa['totais']['total_recargas']), "DRE Anual Caixa totaliza total_recargas");
         $this->assert(isset($anoCaixa['totais']['consumo_saldo_total']), "DRE Anual Caixa totaliza consumo_saldo_total");
 
-        // 1.4 Dados de Gráficos nos dois regimes
-        $grafComp = $dreModel->obterDadosGraficos(2026, $inicio, $fim, 'competencia');
-        $this->assert(count($grafComp['labels']) === 12, "Gráficos Competência possuem 12 rótulos");
-
-        $grafCaixa = $dreModel->obterDadosGraficos(2026, $inicio, $fim, 'caixa');
-        $this->assert(count($grafCaixa['labels']) === 12, "Gráficos Caixa possuem 12 rótulos");
-        $this->assert(count($grafCaixa['receitas']) === 12, "Gráficos Caixa alimentam série de receitas");
+        // 1.5 Dados de Gráficos no modelo unificado
+        $grafUnif = $dreModel->obterDadosGraficos(2026, $inicio, $fim);
+        $this->assert(count($grafUnif['labels']) === 12, "Gráficos Unificados possuem 12 rótulos");
+        $this->assert(count($grafUnif['arrecadacoes']) === 12, "Gráficos Unificados incluem série de arrecadações em conta");
+        $this->assert(count($grafUnif['resultados_caixa']) === 12, "Gráficos Unificados incluem série de resultado real em conta");
     }
 
     /**
@@ -253,47 +280,54 @@ class ArrecadacaoDreRegimesTest
         $_SESSION['_auth_role'] = 'administrador';
         $_SESSION['_auth_nome'] = 'Administrador de Teste';
 
-        // 4.1 DreController - index com regimes
+        // 4.1 DreController - index no Modelo Unificado Sob Demanda (Sem gráficos fixos na tela)
+        unset($_GET['regime']);
         $_GET['ano'] = '2026';
         $_GET['data_inicio'] = '2026-10-01';
         $_GET['data_fim'] = '2026-10-31';
 
         $dreCtrl = new DreController();
 
-        // Modo Competência
-        $_GET['regime'] = 'competencia';
         ob_start();
         $dreCtrl->index();
-        $htmlComp = ob_get_clean();
-        $this->assert(str_contains($htmlComp, 'DRE Gerencial'), "DreController::index renderiza tela DRE");
-        $this->assert(str_contains($htmlComp, 'Regime de Competência'), "View DRE exibe opção Regime de Competência");
-        $this->assert(str_contains($htmlComp, 'Regime de Caixa'), "View DRE exibe opção Regime de Caixa");
+        $htmlDre = ob_get_clean();
+        $this->assert(str_contains($htmlDre, 'Painel Financeiro & DRE Gerencial Unificado'), "DreController::index renderiza tela do DRE Gerencial Unificado");
+        $this->assert(!str_contains($htmlDre, 'Seletor de Regime Contábil'), "View DRE unificou os dois métodos e removeu o seletor manual de regimes");
+        $this->assert(str_contains($htmlDre, 'Imprimir / Salvar PDF (A4)'), "View DRE substituiu botão filtrar pelo botão Imprimir / Salvar PDF (A4) no filtro");
+        $this->assert(str_contains($htmlDre, 'Relatório Texto (DRE Contábil A4)'), "Menu do botão Imprimir oferece opção de Relatório Texto");
+        $this->assert(str_contains($htmlDre, 'Relatório Gráfico (DRE Visual + Produtos Rentáveis A4)'), "Menu do botão Imprimir oferece opção de Relatório Gráfico");
+        $this->assert(str_contains($htmlDre, 'Exportar Planilha (CSV)'), "Menu do botão Imprimir oferece opção de Exportar Planilha (CSV)");
+        $this->assert(!str_contains($htmlDre, 'chartEvolucaoMensal'), "Gráfico em X vermelho (Evolução Mensal) excluído conforme solicitado");
+        $this->assert(!str_contains($htmlDre, 'chartProdutosRentaveis'), "Gráfico em X vermelho (Curva de Produtos) excluído conforme solicitado");
 
-        // Modo Caixa
-        $_GET['regime'] = 'caixa';
-        ob_start();
-        $dreCtrl->index();
-        $htmlCaixa = ob_get_clean();
-        $this->assert(str_contains($htmlCaixa, 'Demonstrativo sob Regime de Caixa'), "View DRE no modo caixa exibe alerta informativo de regime");
-        $this->assert(str_contains($htmlCaixa, 'Recargas:'), "View DRE no modo caixa exibe métricas de recarga");
-
-        // 4.2 DreController::graficosJson com regime
-        $_GET['regime'] = 'caixa';
+        // 4.2 DreController::graficosJson no modelo unificado
         ob_start();
         $dreCtrl->graficosJson();
         $jsonStr = ob_get_clean();
         $json = json_decode($jsonStr, true);
         $this->assert($json['sucesso'] === true, "DreController::graficosJson retorna sucesso = true");
-        $this->assert($json['regime'] === 'caixa', "DreController::graficosJson retorna regime = caixa");
+        $this->assert($json['regime'] === 'unificado', "DreController::graficosJson retorna regime = unificado por padrão");
 
-        // 4.3 DreController::imprimir com regime caixa
-        $_GET['regime'] = 'caixa';
+        // 4.3 DreController::imprimir (Relatório Texto A4 Paisagem)
         ob_start();
         $dreCtrl->imprimir();
         $htmlPrint = ob_get_clean();
-        $this->assert(str_contains($htmlPrint, 'Regime de Caixa'), "DRE Impressão exibe título Regime de Caixa no cabeçalho");
-        $this->assert(str_contains($htmlPrint, 'Recargas Pix Online (Carteira Familiar)'), "DRE Impressão exibe linha de Recargas Pix Online");
-        $this->assert(str_contains($htmlPrint, 'INFORMATIVO DE CONTROLE DA CARTEIRA'), "DRE Impressão exibe subseção informativa de confronto com consumo");
+        $this->assert(str_contains($htmlPrint, 'DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO UNIFICADO (DRE)'), "DRE Impressão Texto exibe título do DRE Unificado no cabeçalho");
+        $this->assert(str_contains($htmlPrint, 'Consumo de Saldo Online (Pedidos Web)'), "DRE Impressão Texto exibe linha de Consumo de Saldo Online");
+        $this->assert(str_contains($htmlPrint, 'Recargas Pix Online (Portal Família)'), "DRE Impressão Texto exibe linha de Recargas Pix Online");
+        $this->assert(str_contains($htmlPrint, 'Abatimento do Saldo Gasto em Vendas'), "DRE Impressão Texto exibe linha de abatimento anti-duplicidade do saldo gasto");
+        $this->assert(str_contains($htmlPrint, 'RESULTADO FINANCEIRO EM CONTA'), "DRE Impressão Texto exibe linha final de Resultado Financeiro em Conta");
+
+        // 4.4 DreController::grafico (Relatório Gráfico — DRE Visual Unificado + Lista dos Produtos Mais Rentáveis)
+        ob_start();
+        $dreCtrl->grafico();
+        $htmlGrafico = ob_get_clean();
+        $this->assert(str_contains($htmlGrafico, 'DEMONSTRAÇÃO VISUAL DO RESULTADO DO EXERCÍCIO (DRE GRÁFICO UNIFICADO)'), "Relatório Gráfico exibe título oficial do DRE Visual");
+        $this->assert(str_contains($htmlGrafico, 'chartCanaisVenda'), "Relatório Gráfico inclui gráfico circular de Vendas Online vs Presencial");
+        $this->assert(str_contains($htmlGrafico, 'Estrutura Visual do DRE & Despesas por Categoria'), "Relatório Gráfico une canais de venda e despesas operacionais no DRE Visual");
+        $this->assert(str_contains($htmlGrafico, '2. Detalhamento dos Produtos Mais Rentáveis do Período'), "Relatório Gráfico exibe embaixo a lista de Detalhamento dos Produtos Mais Rentáveis");
+        $this->assert(!str_contains($htmlGrafico, 'chartEvolucaoMensal'), "Relatório Gráfico não contém gráfico de evolução mensal excluído");
+        $this->assert(!str_contains($htmlGrafico, 'chartProdutosRentaveis'), "Relatório Gráfico não contém gráfico de barras de produtos excluído (apenas a lista detalhada embaixo)");
 
         // 4.4 RelatoriosController::arrecadacao tela web
         $relCtrl = new RelatoriosController();

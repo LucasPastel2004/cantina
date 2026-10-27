@@ -67,14 +67,24 @@ class DreController extends Controller
     }
 
     /**
+     * Resolve o regime contábil (padrão 'unificado', mantendo suporte retrocompatível).
+     */
+    private function resolverRegime(): string
+    {
+        if (isset($_GET['regime']) && in_array($_GET['regime'], ['unificado', 'competencia', 'caixa'], true)) {
+            return $_GET['regime'];
+        }
+        return 'unificado';
+    }
+
+    /**
      * Tela principal: Painel Visual & Gráficos Interativos sempre abertos, com seletor de período por datas.
-     * O demonstrativo formal do DRE é gerado sob demanda via Visualizar/Imprimir ou Baixar PDF.
-     * Suporta regime de 'competencia' (vendas de lanches) ou 'caixa' (recargas de saldo + vendas avulsas).
+     * Opera no Modelo Contábil Unificado Integrado (Vendas/Consumo + Recargas/Custódia + Resultado em Conta sem duplicação).
      */
     public function index(): void
     {
         [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
-        $regime = (isset($_GET['regime']) && $_GET['regime'] === 'caixa') ? 'caixa' : 'competencia';
+        $regime = $this->resolverRegime();
 
         $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim, $regime);
         $dreAno = $this->dreModel->calcularAnoComparativo($ano, $regime);
@@ -82,7 +92,7 @@ class DreController extends Controller
         $config = Configuracao::obter();
 
         $this->render('financeiro/dre', [
-            'title'         => "Painel Financeiro & DRE Gerencial — Colégio Monteiro Lobato",
+            'title'         => "Painel Financeiro & DRE Gerencial Unificado — Colégio Monteiro Lobato",
             'activeMenu'    => 'dre',
             'ano'           => $ano,
             'dataInicio'    => $dataInicio,
@@ -105,7 +115,7 @@ class DreController extends Controller
     public function graficosJson(): void
     {
         [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
-        $regime = (isset($_GET['regime']) && $_GET['regime'] === 'caixa') ? 'caixa' : 'competencia';
+        $regime = $this->resolverRegime();
         $dados = $this->dreModel->obterDadosGraficos($ano, $dataInicio, $dataFim, $regime);
 
         $this->json([
@@ -119,12 +129,17 @@ class DreController extends Controller
     }
 
     /**
-     * Gera e despacha o espelho HTML oficial do DRE para impressão via navegador para o período selecionado.
+     * Gera e despacha o espelho HTML oficial do DRE Unificado (Texto / Grade Contábil) para impressão via navegador.
      */
     public function imprimir(): void
     {
+        if (isset($_GET['formato']) && $_GET['formato'] === 'grafico') {
+            $this->grafico();
+            return;
+        }
+
         [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
-        $regime = (isset($_GET['regime']) && $_GET['regime'] === 'caixa') ? 'caixa' : 'competencia';
+        $regime = $this->resolverRegime();
         $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim, $regime);
         $dreAno = $this->dreModel->calcularAnoComparativo($ano, $regime);
         $config = Configuracao::obter();
@@ -152,6 +167,37 @@ class DreController extends Controller
     }
 
     /**
+     * Gera e despacha o Relatório Gráfico do DRE (DRE Visual Unificado + Lista dos Produtos Mais Rentáveis)
+     * em espelho HTML oficial A4 para impressão e Print to PDF nativo.
+     */
+    public function grafico(): void
+    {
+        [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
+        $regime = $this->resolverRegime();
+        $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim, $regime);
+        $dadosGraficos = $this->dreModel->obterDadosGraficos($ano, $dataInicio, $dataFim, $regime);
+        $config = Configuracao::obter();
+        $logoBase64 = $this->obterLogoBase64();
+
+        $this->renderViewDireto('financeiro/dre_grafico_pdf', [
+            'ano'         => $ano,
+            'dataInicio'  => $dataInicio,
+            'dataFim'     => $dataFim,
+            'regime'      => $regime,
+            'drePeriodo'  => $drePeriodo,
+            'totais'      => $drePeriodo,
+            'graficos'    => $dadosGraficos,
+            'config'      => $config,
+            'logoBase64'  => $logoBase64,
+            'dataEmissao' => date('d/m/Y H:i:s'),
+            'mesesAbrev'  => Dre::MESES_ABREV,
+            'mesesPt'     => Dre::MESES_PT,
+            'isPdf'       => false,
+            'baseUrl'     => $this->getBaseUrl(),
+        ]);
+    }
+
+    /**
      * Emissão do relatório DRE para impressão e Print to PDF Nativo
      */
     public function pdf(): void
@@ -160,16 +206,16 @@ class DreController extends Controller
     }
 
     /**
-     * Exporta o DRE para planilha no formato CSV com BOM UTF-8 e delimitador ';'.
+     * Exporta o DRE Unificado para planilha no formato CSV com BOM UTF-8 e delimitador ';'.
      */
     public function csv(): void
     {
         [$dataInicio, $dataFim, $ano] = $this->resolverPeriodo();
-        $regime = (isset($_GET['regime']) && $_GET['regime'] === 'caixa') ? 'caixa' : 'competencia';
+        $regime = $this->resolverRegime();
         $drePeriodo = $this->dreModel->calcularPeriodo($dataInicio, $dataFim, $regime);
         $dreAno = $this->dreModel->calcularAnoComparativo($ano, $regime);
 
-        $nomeArquivo = "dre_gerencial_{$regime}_{$dataInicio}_a_{$dataFim}_" . date('Ymd_His') . ".csv";
+        $nomeArquivo = "dre_gerencial_unificado_{$dataInicio}_a_{$dataFim}_" . date('Ymd_His') . ".csv";
 
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
@@ -181,15 +227,14 @@ class DreController extends Controller
         fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
         // Cabeçalho da Empresa
-        $rotuloRegime = ($regime === 'caixa') ? 'REGIME DE CAIXA (RECARGAS & ARRECADAÇÃO)' : 'REGIME DE COMPETÊNCIA (VENDAS & CONSUMO)';
         fputcsv($output, ['COLÉGIO MONTEIRO LOBATO - CANTINA WEB'], ';', '"', "\\");
-        fputcsv($output, ["DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE) - {$rotuloRegime}"], ';', '"', "\\");
+        fputcsv($output, ['DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE UNIFICADO — VENDAS, CONSUMO DE SALDO & CAIXA REAL EM CONTA)'], ';', '"', "\\");
         fputcsv($output, ["PERÍODO: " . date('d/m/Y', strtotime($dataInicio)) . " A " . date('d/m/Y', strtotime($dataFim)) . " (Exercício {$ano})"], ';', '"', "\\");
         fputcsv($output, ['Emissão: ' . date('d/m/Y H:i:s')], ';', '"', "\\");
         fputcsv($output, [], ';', '"', "\\");
 
         // Linha de Cabeçalho dos Meses
-        $cabecalho = ['ESTRUTURA DRE'];
+        $cabecalho = ['ESTRUTURA DRE UNIFICADO'];
         for ($m = 1; $m <= 12; $m++) {
             $cabecalho[] = Dre::MESES_ABREV[$m] . '/' . substr((string)$ano, 2);
         }
@@ -208,31 +253,33 @@ class DreController extends Controller
             fputcsv($output, $linha, ';', '"', "\\");
         };
 
-        // 1. Receitas
-        $escreverLinha('[+] RECEITA BRUTA DE VENDAS', 'receita_bruta');
-        $escreverLinha('    Vendas Cantina Web (Online)', 'receita_online');
-        $escreverLinha('    Vendas Presenciais no Balcão', 'receita_balcao');
+        // BLOCO 1: APURAÇÃO OPERACIONAL DE VENDAS E CONSUMO (COMPETÊNCIA)
+        $escreverLinha('[+] RECEITA BRUTA DE VENDAS E CONSUMO (LANCHES ENTREGUES)', 'receita_bruta');
+        $escreverLinha('    Consumo de Saldo em Pedidos Online (Cantina Web)', 'consumo_saldo_online');
+        $escreverLinha('    Consumo de Saldo no Balcão (PDV Carteira)', 'consumo_saldo_balcao');
+        $escreverLinha('    Vendas Diretas no Balcão em Dinheiro', 'vendas_dinheiro');
+        $escreverLinha('    Vendas Diretas no Balcão em Pix', 'vendas_pix');
         
         // 2. Deduções
-        $escreverLinha('[-] DEDUÇÕES E ABATIMENTOS', 'total_deducoes');
+        $escreverLinha('[-] DEDUÇÕES E ABATIMENTOS (ESTORNOS)', 'total_deducoes');
         $escreverLinha('    Estornos de Balcão', 'estornos_balcao');
         $escreverLinha('    Estornos Pedidos Online', 'estornos_online');
         
         // 3. Receita Líquida
-        $escreverLinha('[=] RECEITA LÍQUIDA DE VENDAS', 'receita_liquida');
+        $escreverLinha('[=] RECEITA LÍQUIDA DE VENDAS (FATURAMENTO REALIZADO)', 'receita_liquida');
         
         // 4. CMV
         $escreverLinha('[-] CUSTO DAS MERCADORIAS VENDIDAS (CMV)', 'cmv');
         
         // 5. Lucro Bruto
-        $escreverLinha('[=] LUCRO BRUTO', 'lucro_bruto');
+        $escreverLinha('[=] LUCRO BRUTO OPERACIONAL', 'lucro_bruto');
         
         // Margem Bruta
-        $linhaMargemBruta = ['    Margem Bruta (%)'];
+        $linhaMargemBruta = ['    Margem Bruta Operacional (%)'];
         for ($m = 1; $m <= 12; $m++) {
             $linhaMargemBruta[] = number_format((float)($dreAno['meses'][$m]['margem_bruta_percent'] ?? 0), 1, ',', '.') . '%';
         }
-        $linhaMargemBruta[] = number_format((float)($dreAno['totais']['margem_bruta_percent'] ?? 0), 1, ',', '.') . '%';
+        $linhaMargemBruta[] = number_format((float)($drePeriodo['margem_bruta_percent'] ?? 0), 1, ',', '.') . '%';
         fputcsv($output, $linhaMargemBruta, ';', '"', "\\");
 
         // 6. Despesas Operacionais
@@ -244,16 +291,36 @@ class DreController extends Controller
         $escreverLinha('    Despesas Financeiras & Tarifas', 'despesas_financeiras');
         $escreverLinha('    Outras Despesas Operacionais', 'despesas_outras');
 
-        // 7. Resultado Líquido
-        $escreverLinha('[=] RESULTADO LÍQUIDO DO EXERCÍCIO (LUCRO LÍQUIDO)', 'resultado_liquido');
+        // 7. Resultado Líquido Operacional (Vendas)
+        $escreverLinha('[=] RESULTADO LÍQUIDO OPERACIONAL (LUCRO DAS VENDAS)', 'resultado_liquido');
 
-        // Margem Líquida
-        $linhaMargemLiq = ['    Margem Líquida (%)'];
+        // Margem Líquida Operacional
+        $linhaMargemLiq = ['    Margem Líquida Operacional (%)'];
         for ($m = 1; $m <= 12; $m++) {
             $linhaMargemLiq[] = number_format((float)($dreAno['meses'][$m]['margem_liquida_percent'] ?? 0), 1, ',', '.') . '%';
         }
-        $linhaMargemLiq[] = number_format((float)($dreAno['totais']['margem_liquida_percent'] ?? 0), 1, ',', '.') . '%';
+        $linhaMargemLiq[] = number_format((float)($drePeriodo['margem_liquida_percent'] ?? 0), 1, ',', '.') . '%';
         fputcsv($output, $linhaMargemLiq, ';', '"', "\\");
+
+        // BLOCO 2: CONCILIAÇÃO DE CARTEIRA PRÉ-PAGA & RESULTADO REAL EM CONTA (SEM DUPLICIDADE)
+        fputcsv($output, [], ';', '"', "\\");
+        fputcsv($output, ['CONCILIAÇÃO DE CARTEIRA PRÉ-PAGA & RESULTADO FINANCEIRO EM CONTA (PONTE COMPETÊNCIA -> CAIXA REAL)'], ';', '"', "\\");
+        $escreverLinha('[+] RECARGAS DE SALDO RECEBIDAS NA CONTA (ENTRADA DE CARTEIRAS)', 'total_recargas');
+        $escreverLinha('    Recargas Pix Online (Portal da Família)', 'recargas_pix_online');
+        $escreverLinha('    Recargas Pix no Balcão (PDV)', 'recargas_pix_pdv');
+        $escreverLinha('    Recargas em Dinheiro no Balcão (PDV)', 'recargas_dinheiro');
+        $escreverLinha('[-] ABATIMENTO DO SALDO CONSUMIDO EM VENDAS (JÁ COMPUTADO NA RECEITA ACIMA)', 'consumo_saldo_total');
+        $escreverLinha('[=] VARIAÇÃO LÍQUIDA DE SALDO EM CUSTÓDIA (RECARGAS - CONSUMO DE SALDO)', 'diferenca_recarga_consumo');
+        $escreverLinha('[=] ARRECADAÇÃO LÍQUIDA REAL NA CONTA (RECARGAS + VENDAS DIRETAS - ESTORNOS)', 'arrecadacao_liquida');
+        $escreverLinha('[=] RESULTADO FINANCEIRO LÍQUIDO EM CONTA (CAIXA REAL DO EXERCÍCIO)', 'resultado_caixa');
+
+        // Margem Financeira de Caixa
+        $linhaMargemCaixa = ['    Margem Financeira em Conta (%)'];
+        for ($m = 1; $m <= 12; $m++) {
+            $linhaMargemCaixa[] = number_format((float)($dreAno['meses'][$m]['margem_caixa_percent'] ?? 0), 1, ',', '.') . '%';
+        }
+        $linhaMargemCaixa[] = number_format((float)($drePeriodo['margem_caixa_percent'] ?? 0), 1, ',', '.') . '%';
+        fputcsv($output, $linhaMargemCaixa, ';', '"', "\\");
 
         fclose($output);
         exit;

@@ -12,19 +12,18 @@ defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 $baseUrl = $baseUrl ?? '';
 $anoAtual = $ano ?? (int)date('Y');
 $meses = $dre['meses'] ?? [];
-$totais = $dre['totais'] ?? [];
+$totais = $totais ?? ($drePeriodo ?? ($dre['totais'] ?? []));
 $razaoSocial = $config->razao_social ?? 'COLÉGIO MONTEIRO LOBATO';
 $cnpj = $config->cnpj ?? '';
 $isPdf = $isPdf ?? false;
-$regime = $regime ?? 'competencia';
-$isCaixa = ($regime === 'caixa');
+$regime = $regime ?? 'unificado';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DRE Gerencial <?php echo $anoAtual; ?> (<?php echo $isCaixa ? 'Regime de Caixa' : 'Regime de Competência'; ?>) — Colégio Monteiro Lobato</title>
+    <title>DRE Gerencial Unificado <?php echo $anoAtual; ?> — Colégio Monteiro Lobato</title>
     <style>
         /* ==========================================================================
            1. Diretivas Oficiais de Página A4 Paisagem (Landscape)
@@ -294,15 +293,15 @@ $isCaixa = ($regime === 'caixa');
             width: 100% !important;
             border-collapse: collapse !important;
             table-layout: fixed !important;
-            font-size: 7.4pt;
+            font-size: 6.9pt;
             border: 1px solid #000000 !important;
-            margin-top: 4px;
+            margin-top: 3px;
         }
 
         table.table-dre-doc th,
         table.table-dre-doc td {
             border: 1px solid #000000 !important;
-            padding: 3px 4px !important;
+            padding: 2px 3.5px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
         }
@@ -310,7 +309,7 @@ $isCaixa = ($regime === 'caixa');
         table.table-dre-doc thead th {
             font-weight: 700 !important;
             text-align: center;
-            font-size: 7.2pt;
+            font-size: 6.8pt;
             text-transform: uppercase;
             background-color: #f8fafc !important;
             color: #000000 !important;
@@ -331,37 +330,37 @@ $isCaixa = ($regime === 'caixa');
         }
 
         .col-desc {
-            width: 14.5%;
+            width: 16.5%;
             text-align: left !important;
-            padding: 3px 5px !important;
-            font-size: 7.2pt;
+            padding: 2px 4px !important;
+            font-size: 6.7pt;
             word-break: break-word;
         }
         .col-mes {
-            width: 6.4%;
+            width: 6.25%;
             text-align: right !important;
-            padding: 2.5px 2px !important;
+            padding: 2px 2px !important;
             white-space: nowrap !important;
-            font-size: 6.6pt !important;
+            font-size: 6.35pt !important;
             letter-spacing: -0.015em;
         }
         .col-total {
-            width: 8.7%;
+            width: 8.5%;
             font-weight: 700 !important;
-            font-size: 6.7pt !important;
+            font-size: 6.45pt !important;
         }
         th.col-total {
             text-align: center !important;
             white-space: normal !important;
-            line-height: 1.15 !important;
-            font-size: 6.7pt !important;
+            line-height: 1.1 !important;
+            font-size: 6.45pt !important;
             padding: 2px 2px !important;
         }
         td.col-total {
             text-align: right !important;
             white-space: nowrap !important;
-            padding: 2.5px 3px !important;
-            font-size: 6.7pt !important;
+            padding: 2px 3px !important;
+            font-size: 6.45pt !important;
             letter-spacing: -0.015em;
         }
 
@@ -372,14 +371,14 @@ $isCaixa = ($regime === 'caixa');
             border-bottom: 1px solid #000000 !important;
         }
         .row-subitem td.col-desc {
-            padding-left: 14px !important;
+            padding-left: 11px !important;
         }
         .row-total-destaque td {
             font-weight: 700 !important;
         }
         .row-total-destaque td.col-mes,
         .row-total-destaque td.col-total {
-            font-size: 6.7pt !important;
+            font-size: 6.5pt !important;
         }
         .row-resultado-final td {
             font-weight: 700 !important;
@@ -388,35 +387,35 @@ $isCaixa = ($regime === 'caixa');
         }
         .row-resultado-final td.col-mes,
         .row-resultado-final td.col-total {
-            font-size: 6.7pt !important;
+            font-size: 6.5pt !important;
         }
 
         /* ==========================================================================
            6. Bloco de Assinaturas e Rodapé
            ========================================================================== */
         .footer-signatures {
-            margin-top: 20px;
+            margin-top: 8px;
             display: flex;
             justify-content: space-between;
-            padding-top: 25px;
+            padding-top: 14px;
             page-break-inside: avoid;
         }
         .signature-line {
             width: 42%;
             border-top: 1px solid #000000;
             text-align: center;
-            font-size: 8pt;
+            font-size: 7.5pt;
             color: #000000;
-            padding-top: 4px;
+            padding-top: 3px;
         }
         .footer-doc {
-            margin-top: 12px;
+            margin-top: 6px;
             display: flex;
             justify-content: space-between;
-            font-size: 7.5pt;
+            font-size: 7pt;
             color: #475569;
             border-top: 1px solid #cbd5e1;
-            padding-top: 4px;
+            padding-top: 3px;
         }
     </style>
 </head>
@@ -425,7 +424,7 @@ $isCaixa = ($regime === 'caixa');
 <?php if (!$isPdf): ?>
 <div class="no-print">
     <div style="font-size: 11.5px; line-height: 1.35; font-weight: 600; min-width: 0; flex-shrink: 1;">
-        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff; font-weight: 700; font-size: 12px;">Cantina Web — Relatório Oficial DRE (<?php echo $isCaixa ? 'Regime de Caixa' : 'Regime de Competência'; ?>)</div>
+        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff; font-weight: 700; font-size: 12px;">Cantina Web — Relatório Oficial DRE Unificado (Vendas, Custódia de Carteira & Caixa Real)</div>
         <div style="font-size: 11px; color: #cbd5e1; font-weight: 500; margin-top: 1px;">Período: <?php echo date('d/m/Y', strtotime($dataInicio ?? date('Y-01-01'))); ?> a <?php echo date('d/m/Y', strtotime($dataFim ?? date('Y-m-d'))); ?> &bull; Formato A4 Paisagem</div>
     </div>
     <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
@@ -444,7 +443,7 @@ $isCaixa = ($regime === 'caixa');
         <button type="button" class="btn-print-action" onclick="window.print()" title="Imprimir documento ou Salvar como PDF pelo navegador">
             🖨 Imprimir / Salvar PDF (A4)
         </button>
-        <button type="button" class="btn-close-action" onclick="window.close()">
+        <button type="button" class="btn-close-action" onclick="fecharJanela()">
             ✕ Fechar
         </button>
     </div>
@@ -462,8 +461,8 @@ $isCaixa = ($regime === 'caixa');
         <?php endif; ?>
         <div class="school-title-col">
             <div class="school-name">COLÉGIO MONTEIRO LOBATO</div>
-            <div class="report-title-main">DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE) — EXERCÍCIO <?php echo $anoAtual; ?></div>
-            <div class="report-subtitle">Sistema de Gestão Cantina Web • Módulo Financeiro & Contabilidade Gerencial</div>
+            <div class="report-title-main">DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO UNIFICADO (DRE) — EXERCÍCIO <?php echo $anoAtual; ?></div>
+            <div class="report-subtitle">Sistema de Gestão Cantina Web • Apuração Integrada de Vendas, Consumo de Saldo & Caixa Real (Zero Duplicidade)</div>
         </div>
         <div class="school-meta-col">
             <?php if (!empty($cnpj)): ?>
@@ -478,20 +477,20 @@ $isCaixa = ($regime === 'caixa');
     <!-- Faixa de Parâmetros e Filtros -->
     <div class="param-bar">
         <div><strong>Período Apurado:</strong> <?php echo date('d/m/Y', strtotime($dataInicio ?? date('Y-01-01'))); ?> a <?php echo date('d/m/Y', strtotime($dataFim ?? date('Y-m-d'))); ?> (Exercício <?php echo $anoAtual; ?>)</div>
-        <div><strong>Regime Contábil:</strong> <?php echo $isCaixa ? 'Regime de Caixa (Recargas & Vendas Presenciais Diretas)' : 'Regime de Competência (Faturamento Bruto & Consumo Real)'; ?></div>
+        <div><strong>Regime Contábil:</strong> Unificado Integrado (Competência de Vendas + Conciliação de Carteira & Caixa Real)</div>
         <div><strong>Formato:</strong> A4 Paisagem Oficial</div>
     </div>
 
     <!-- Banner de Seção Oficial -->
     <div class="section-banner">
-        1. Demonstrativo Comparativo Mensal — DRE (Ano <?php echo $anoAtual; ?>)
+        1. Demonstrativo Comparativo Mensal — DRE Unificado: Vendas, Consumo de Saldo & Caixa Real (Ano <?php echo $anoAtual; ?>)
     </div>
 
-    <!-- Tabela Comparativa DRE (Grade Estilo Excel) -->
+    <!-- Tabela Comparativa DRE Unificado (Grade Estilo Excel) -->
     <table class="table-dre-doc">
         <thead>
             <tr>
-                <th class="col-desc">Estrutura DRE</th>
+                <th class="col-desc">Estrutura DRE Unificado</th>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
                     <th class="col-mes font-tabular"><?php echo $mesesAbrev[$m]; ?>/<?php echo substr((string)$anoAtual, 2); ?></th>
                 <?php endfor; ?>
@@ -499,66 +498,35 @@ $isCaixa = ($regime === 'caixa');
             </tr>
         </thead>
         <tbody>
-            <!-- 1. RECEITA BRUTA -->
-            <?php if ($isCaixa): ?>
+            <!-- BLOCO 1: APURAÇÃO OPERACIONAL DE VENDAS E CONSUMO -->
             <tr class="row-secao">
-                <td class="col-desc">(+) RECEITA ARRECADADA / CASH-IN (RECARGAS & VENDAS DIRETAS)</td>
+                <td class="col-desc">(+) RECEITA BRUTA DE VENDAS (LANCHES)</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
                     <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['receita_bruta'] ?? 0), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['receita_bruta'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr class="row-subitem">
-                <td class="col-desc">Recargas Pix Online (Carteira Familiar)</td>
+                <td class="col-desc">Consumo de Saldo Online (Pedidos Web)</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['recargas_pix'] ?? 0), 2, ',', '.'); ?></td>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['consumo_saldo_online'] ?? 0), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['recargas_pix'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="col-total font-tabular"><?php echo number_format((float)($totais['consumo_saldo_online'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr class="row-subitem">
-                <td class="col-desc">Recargas no Balcão (Dinheiro)</td>
+                <td class="col-desc">Consumo de Saldo no Balcão (PDV)</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['recargas_dinheiro'] ?? 0), 2, ',', '.'); ?></td>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['consumo_saldo_balcao'] ?? 0), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['recargas_dinheiro'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="col-total font-tabular"><?php echo number_format((float)($totais['consumo_saldo_balcao'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr class="row-subitem">
-                <td class="col-desc">Vendas Balcão em Dinheiro</td>
+                <td class="col-desc">Vendas Diretas Balcão (Dinheiro + Pix)</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['vendas_dinheiro'] ?? 0), 2, ',', '.'); ?></td>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['vendas_diretas_balcao'] ?? (($meses[$m]['vendas_dinheiro'] ?? 0) + ($meses[$m]['vendas_pix'] ?? 0))), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['vendas_dinheiro'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="col-total font-tabular"><?php echo number_format((float)($totais['vendas_diretas_balcao'] ?? (($totais['vendas_dinheiro'] ?? 0) + ($totais['vendas_pix'] ?? 0))), 2, ',', '.'); ?></td>
             </tr>
-            <tr class="row-subitem">
-                <td class="col-desc">Vendas Balcão em Pix</td>
-                <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['vendas_pix'] ?? 0), 2, ',', '.'); ?></td>
-                <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['vendas_pix'] ?? 0), 2, ',', '.'); ?></td>
-            </tr>
-            <?php else: ?>
-            <tr class="row-secao">
-                <td class="col-desc">(+) RECEITA BRUTA DE VENDAS</td>
-                <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['receita_bruta'] ?? 0), 2, ',', '.'); ?></td>
-                <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['receita_bruta'] ?? 0), 2, ',', '.'); ?></td>
-            </tr>
-            <tr class="row-subitem">
-                <td class="col-desc">Vendas Cantina Web (Online)</td>
-                <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['receita_online'] ?? 0), 2, ',', '.'); ?></td>
-                <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['receita_online'] ?? 0), 2, ',', '.'); ?></td>
-            </tr>
-            <tr class="row-subitem">
-                <td class="col-desc">Vendas Presenciais no Balcão</td>
-                <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['receita_balcao'] ?? 0), 2, ',', '.'); ?></td>
-                <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['receita_balcao'] ?? 0), 2, ',', '.'); ?></td>
-            </tr>
-            <?php endif; ?>
 
             <!-- 2. DEDUÇÕES -->
             <tr class="row-secao">
@@ -569,18 +537,11 @@ $isCaixa = ($regime === 'caixa');
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['total_deducoes'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr class="row-subitem">
-                <td class="col-desc">Estornos de Balcão</td>
+                <td class="col-desc">Estornos Balcão & Pedidos Online</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['estornos_balcao'] ?? 0), 2, ',', '.'); ?></td>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)(($meses[$m]['estornos_balcao'] ?? 0) + ($meses[$m]['estornos_online'] ?? 0)), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['estornos_balcao'] ?? 0), 2, ',', '.'); ?></td>
-            </tr>
-            <tr class="row-subitem">
-                <td class="col-desc">Estornos Pedidos Online</td>
-                <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['estornos_online'] ?? 0), 2, ',', '.'); ?></td>
-                <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['estornos_online'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="col-total font-tabular"><?php echo number_format((float)(($totais['estornos_balcao'] ?? 0) + ($totais['estornos_online'] ?? 0)), 2, ',', '.'); ?></td>
             </tr>
 
             <!-- 3. RECEITA LÍQUIDA -->
@@ -603,14 +564,14 @@ $isCaixa = ($regime === 'caixa');
 
             <!-- 5. LUCRO BRUTO -->
             <tr class="row-total-destaque">
-                <td class="col-desc">(=) LUCRO BRUTO</td>
+                <td class="col-desc">(=) LUCRO BRUTO OPERACIONAL</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
                     <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['lucro_bruto'] ?? 0), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['lucro_bruto'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
-            <tr class="row-subitem" style="font-size: 7.2pt; color: #475569;">
-                <td class="col-desc">Margem Bruta (%)</td>
+            <tr class="row-subitem" style="font-size: 6.5pt;">
+                <td class="col-desc">Margem Bruta Operacional (%)</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
                     <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['margem_bruta_percent'] ?? 0), 1, ',', '.'); ?>%</td>
                 <?php endfor; ?>
@@ -654,59 +615,65 @@ $isCaixa = ($regime === 'caixa');
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['despesas_manutencao'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr class="row-subitem">
-                <td class="col-desc">Despesas Financeiras & Tarifas</td>
+                <td class="col-desc">Financeiras, Tarifas & Outras Despesas</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['despesas_financeiras'] ?? 0), 2, ',', '.'); ?></td>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)(($meses[$m]['despesas_financeiras'] ?? 0) + ($meses[$m]['despesas_outras'] ?? 0)), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['despesas_financeiras'] ?? 0), 2, ',', '.'); ?></td>
-            </tr>
-            <tr class="row-subitem">
-                <td class="col-desc">Outras Despesas</td>
-                <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['despesas_outras'] ?? 0), 2, ',', '.'); ?></td>
-                <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['despesas_outras'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="col-total font-tabular"><?php echo number_format((float)(($totais['despesas_financeiras'] ?? 0) + ($totais['despesas_outras'] ?? 0)), 2, ',', '.'); ?></td>
             </tr>
 
-            <!-- 7. RESULTADO LÍQUIDO DO EXERCÍCIO -->
+            <!-- 7. RESULTADO LÍQUIDO OPERACIONAL (VENDAS) -->
             <tr class="row-resultado-final">
-                <td class="col-desc">(=) RESULTADO LÍQUIDO DO EXERCÍCIO</td>
+                <td class="col-desc">(=) RESULTADO LÍQUIDO DO EXERCÍCIO (VENDAS)</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
                     <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['resultado_liquido'] ?? 0), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['resultado_liquido'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
-            <tr class="row-subitem" style="font-size: 7.2pt; color: #000000; font-weight: 700;">
-                <td class="col-desc">Margem Líquida Real (%)</td>
+            <tr class="row-subitem" style="font-size: 6.5pt; color: #000000; font-weight: 700;">
+                <td class="col-desc">Margem Líquida Operacional (%)</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
                     <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['margem_liquida_percent'] ?? 0), 1, ',', '.'); ?>%</td>
                 <?php endfor; ?>
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['margem_liquida_percent'] ?? 0), 1, ',', '.'); ?>%</td>
             </tr>
 
-            <?php if ($isCaixa): ?>
-            <!-- SUBSEÇÃO INFORMATIVA: CONTROLE DE CARTEIRA (RECARGAS VS CONSUMO) -->
+            <!-- BLOCO 2: CONCILIAÇÃO DE CARTEIRA PRÉ-PAGA & RESULTADO REAL EM CONTA (SEM DUPLICIDADE) -->
             <tr class="row-secao">
-                <td class="col-desc" colspan="14" style="font-weight: 700; text-transform: uppercase; font-size: 7.2pt; color: #ffffff !important; background-color: #0f172a !important; border-top: 2px solid #000000 !important;">
-                    INFORMATIVO DE CONTROLE DA CARTEIRA: RECARGAS VS CONSUMO REAL DE LANCHES POR SALDO
+                <td class="col-desc" colspan="14" style="font-weight: 700; text-transform: uppercase; font-size: 6.7pt; color: #ffffff !important; background-color: #0f172a !important; border-top: 2px solid #000000 !important;">
+                    2. CONCILIAÇÃO DE CARTEIRA PRÉ-PAGA & RESULTADO FINANCEIRO REAL EM CONTA (RECARGAS RECEBIDAS − SALDO GASTO EM VENDAS = ZERO DUPLICIDADE)
                 </td>
             </tr>
-            <tr class="row-subitem">
-                <td class="col-desc">Total de Recargas da Carteira (Entrada Nova)</td>
+            <tr class="row-secao">
+                <td class="col-desc">(+) RECARGAS RECEBIDAS NA CONTA</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
                     <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['total_recargas'] ?? 0), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['total_recargas'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr class="row-subitem">
-                <td class="col-desc">(-) Total Consumido em Saldo (Pedidos + Balcão)</td>
+                <td class="col-desc">Recargas Pix Online (Portal Família)</td>
+                <?php for ($m = 1; $m <= 12; $m++): ?>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['recargas_pix_online'] ?? ($meses[$m]['recargas_pix'] ?? 0)), 2, ',', '.'); ?></td>
+                <?php endfor; ?>
+                <td class="col-total font-tabular"><?php echo number_format((float)($totais['recargas_pix_online'] ?? ($totais['recargas_pix'] ?? 0)), 2, ',', '.'); ?></td>
+            </tr>
+            <tr class="row-subitem">
+                <td class="col-desc">Recargas no Balcão PDV (Pix + Dinheiro)</td>
+                <?php for ($m = 1; $m <= 12; $m++): ?>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['recargas_balcao'] ?? (($meses[$m]['recargas_pix_pdv'] ?? 0) + ($meses[$m]['recargas_dinheiro'] ?? 0))), 2, ',', '.'); ?></td>
+                <?php endfor; ?>
+                <td class="col-total font-tabular"><?php echo number_format((float)($totais['recargas_balcao'] ?? (($totais['recargas_pix_pdv'] ?? 0) + ($totais['recargas_dinheiro'] ?? 0))), 2, ',', '.'); ?></td>
+            </tr>
+            <tr class="row-subitem">
+                <td class="col-desc">(-) Abatimento do Saldo Gasto em Vendas</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
                     <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['consumo_saldo_total'] ?? 0), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['consumo_saldo_total'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr class="row-subitem" style="font-weight: 700;">
-                <td class="col-desc">(=) Variação Líquida de Saldo (Recargas - Consumo)</td>
+                <td class="col-desc">(=) Variação Líquida de Saldo em Conta</td>
                 <?php for ($m = 1; $m <= 12; $m++): 
                     $difM = (float)($meses[$m]['diferenca_recarga_consumo'] ?? 0);
                 ?>
@@ -720,7 +687,20 @@ $isCaixa = ($regime === 'caixa');
                     <?php echo ($difT > 0 ? '+' : '') . number_format($difT, 2, ',', '.'); ?>
                 </td>
             </tr>
-            <?php endif; ?>
+            <tr class="row-total-destaque">
+                <td class="col-desc">(=) ARRECADAÇÃO LÍQUIDA NA CONTA</td>
+                <?php for ($m = 1; $m <= 12; $m++): ?>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['arrecadacao_liquida'] ?? 0), 2, ',', '.'); ?></td>
+                <?php endfor; ?>
+                <td class="col-total font-tabular"><?php echo number_format((float)($totais['arrecadacao_liquida'] ?? 0), 2, ',', '.'); ?></td>
+            </tr>
+            <tr class="row-resultado-final">
+                <td class="col-desc">(=) RESULTADO FINANCEIRO EM CONTA</td>
+                <?php for ($m = 1; $m <= 12; $m++): ?>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['resultado_caixa'] ?? 0), 2, ',', '.'); ?></td>
+                <?php endfor; ?>
+                <td class="col-total font-tabular"><?php echo number_format((float)($totais['resultado_caixa'] ?? 0), 2, ',', '.'); ?></td>
+            </tr>
         </tbody>
     </table>
 
@@ -737,7 +717,7 @@ $isCaixa = ($regime === 'caixa');
     </div>
 
     <div class="footer-doc">
-        <div>Colégio Monteiro Lobato • Sistema Integrado Cantina Web • Módulo Financeiro & DRE</div>
+        <div>Colégio Monteiro Lobato • Sistema Integrado Cantina Web • Módulo Financeiro & DRE Unificado</div>
     </div>
 </div> <!-- /#document-zoom-area -->
 
