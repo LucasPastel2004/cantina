@@ -31,7 +31,7 @@ $canais = $dados['canais'] ?? [];
             </div>
             <h1 class="h4 font-weight-bold mb-0 text-dark">Entradas</h1>
             <p class="text-secondary text-microcopy mb-0 mt-1">
-                Consolidação contábil de todo o dinheiro real que entrou na cantina (Recargas Pix Online, Recargas Balcão e Vendas Presenciais) no período.
+                Consolidação contábil de todo o dinheiro real que entrou na cantina (Recargas Pix Online, Recargas Balcão em Dinheiro e Vendas Avulsas no Balcão) no período.
             </p>
         </div>
 

@@ -101,8 +101,8 @@ $viewPdf = file_get_contents(__DIR__ . '/../app/views/relatorios/arrecadacao_pdf
 assertCustom(str_contains($viewPdf, '<title>Relatório de Entradas — Colégio Monteiro Lobato</title>') || str_contains($viewPdf, 'Entradas'), "View PDF possui title de Entradas");
 assertCustom(str_contains($viewPdf, 'DEMONSTRATIVO FINANCEIRO - CANAIS DE ENTRADA'), "View PDF possui cabeçalho 'DEMONSTRATIVO FINANCEIRO - CANAIS DE ENTRADA'");
 assertCustom(str_contains($viewPdf, 'Total Arrecadado (Cash-In Real)'), "View PDF possui indicador 'Total Arrecadado (Cash-In Real)'");
-assertCustom(str_contains($viewPdf, 'Vendas Presenciais Pix'), "View PDF possui linha 'Vendas Presenciais Pix'");
-assertCustom(str_contains($viewPdf, 'Vendas Presenciais Dinheiro'), "View PDF possui linha 'Vendas Presenciais Dinheiro'");
+assertCustom(str_contains($viewPdf, 'Vendas PDV Pix'), "View PDF possui linha 'Vendas PDV Pix'");
+assertCustom(str_contains($viewPdf, 'Vendas PDV Dinheiro'), "View PDF possui linha 'Vendas PDV Dinheiro'");
 assertCustom(str_contains($viewPdf, 'TOTAL GERAL DE ENTRADAS (CASH-IN LÍQUIDO)'), "View PDF possui totalizador 'TOTAL GERAL DE ENTRADAS (CASH-IN LÍQUIDO)'");
 assertCustom(str_contains($viewPdf, 'Entradas do Dia'), "View PDF possui coluna 'Entradas do Dia'");
 

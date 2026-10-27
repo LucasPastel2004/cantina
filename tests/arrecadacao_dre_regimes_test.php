@@ -172,6 +172,14 @@ class ArrecadacaoDreRegimesTest
             abs((float)$dados['total_arrecadado_bruto'] - $somaBruta) < 0.01,
             "Total Arrecadado Bruto é exatamente a soma de Recargas Pix + Recargas Dinheiro + Vendas Dinheiro + Vendas Pix"
         );
+        $this->assert(
+            !in_array('Vendas PDV Saldo', array_column($dados['canais'], 'canal')),
+            "Vendas PDV com saldo NÃO entram nos canais de arrecadação (sem duplicidade com recargas)"
+        );
+        $this->assert(
+            abs((float)$dados['total_arrecadado_bruto'] - ($somaBruta + (float)$dados['total_consumo_saldo'])) > 0.001 || (float)$dados['total_consumo_saldo'] == 0.0,
+            "Total Arrecadado (Cash-In) exclui rigorosamente consumo de lanches com saldo"
+        );
 
         $varEsperada = (float)$dados['total_recargas'] - (float)$dados['total_consumo_saldo'];
         $this->assert(
@@ -224,8 +232,8 @@ class ArrecadacaoDreRegimesTest
         $this->assert(str_contains($html, 'COLÉGIO MONTEIRO LOBATO'), "HTML gerado contém razão social da instituição");
         $this->assert(str_contains($html, 'DEMONSTRATIVO FINANCEIRO - CANAIS DE ENTRADA'), "HTML gerado contém título oficial do relatório");
         $this->assert(str_contains($html, 'table-doc-excel'), "HTML gerado utiliza classe de tabela Excel homologada");
-        $this->assert(str_contains($html, 'Vendas Presenciais Pix'), "HTML gerado contém linha de Vendas Presenciais Pix");
-        $this->assert(str_contains($html, 'Vendas Presenciais Dinheiro'), "HTML gerado contém linha de Vendas Presenciais Dinheiro");
+        $this->assert(str_contains($html, 'Vendas PDV Pix'), "HTML gerado contém linha de Vendas PDV Pix");
+        $this->assert(str_contains($html, 'Vendas PDV Dinheiro'), "HTML gerado contém linha de Vendas PDV Dinheiro");
         $this->assert(strlen($html) > 10000, "Espelho HTML gerado possui conteúdo substancial (> 10 KB): " . strlen($html) . " bytes");
         $this->assert(PdfService::htmlToPdf($html) === null, "PdfService::htmlToPdf retorna null garantindo emissão nativa Print to PDF do navegador");
     }
@@ -307,8 +315,8 @@ class ArrecadacaoDreRegimesTest
         $this->assert(str_contains($htmlArrecImp, 'DEMONSTRATIVO FINANCEIRO - CANAIS DE ENTRADA'), "RelatoriosController::arrecadacaoImprimir renderiza espelho A4 oficial");
         $this->assert(str_contains($htmlArrecImp, 'Síntese dos Indicadores Financeiros do Período'), "Relatório A4 oficial contém tabela própria de síntese dos indicadores");
         $this->assert(str_contains($htmlArrecImp, 'Total Arrecadado (Cash-In Real)'), "Relatório A4 oficial exibe métrica de Total Arrecadado na tabela de síntese");
-        $this->assert(str_contains($htmlArrecImp, 'Vendas Presenciais Pix'), "Relatório A4 oficial exibe Vendas Presenciais Pix na tabela de síntese");
-        $this->assert(str_contains($htmlArrecImp, 'Vendas Presenciais Dinheiro'), "Relatório A4 oficial exibe Vendas Presenciais Dinheiro na tabela de síntese");
+        $this->assert(str_contains($htmlArrecImp, 'Vendas PDV Pix'), "Relatório A4 oficial exibe Vendas PDV Pix na tabela de síntese");
+        $this->assert(str_contains($htmlArrecImp, 'Vendas PDV Dinheiro'), "Relatório A4 oficial exibe Vendas PDV Dinheiro na tabela de síntese");
         $this->assert(str_contains($htmlArrecImp, 'Resumo por Canais de Entrada Financeira'), "Relatório A4 oficial preserva discriminação por canais");
         $this->assert(str_contains($htmlArrecImp, 'Detalhamento Cronológico Diário'), "Relatório A4 oficial preserva listagem diária detalhada");
     }

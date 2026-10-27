@@ -124,7 +124,7 @@ $baseUrl = $baseUrl ?? '';
                     </div>
                     <h2 class="card-report-title fw-bold text-dark mb-2" style="font-size: 16px; font-weight: 700 !important; color: #0f172a; line-height: 1.35;">Entradas</h2>
                     <p class="text-secondary text-microcopy mb-3" style="line-height: 1.55;">
-                        Todo o dinheiro real que entrou na cantina no período (Recargas Pix Online do Portal, Recargas Balcão em Dinheiro e Vendas Presenciais) com detalhamento diário e confronto de carteira.
+                        Todo o dinheiro real que entrou na cantina no período (Recargas Pix Online do Portal, Recargas Balcão em Dinheiro e Vendas Avulsas no Balcão) com detalhamento diário e confronto de carteira.
                     </p>
                 </div>
                 <div class="d-flex gap-2 pt-3 border-top mt-auto flex-wrap">

@@ -2639,16 +2639,16 @@ class RelatoriosController extends Controller
                 'percentual'        => $totalArrecadadoBruto > 0 ? ($recargasDinheiroTotal / $totalArrecadadoBruto) * 100 : 0
             ],
             [
-                'canal'             => 'Vendas no Balcão em Pix',
-                'descricao'         => 'Recebimento presencial instantâneo via Pix',
+                'canal'             => 'Vendas PDV Pix',
+                'descricao'         => 'Recebimento presencial instantâneo via Pix (sem saldo)',
                 'tipo'              => 'Balcão',
                 'quantidade'        => $vendasPixQtd,
                 'total'             => $vendasPixTotal,
                 'percentual'        => $totalArrecadadoBruto > 0 ? ($vendasPixTotal / $totalArrecadadoBruto) * 100 : 0
             ],
             [
-                'canal'             => 'Vendas no Balcão em Dinheiro',
-                'descricao'         => 'Recebimento presencial em espécie / troco',
+                'canal'             => 'Vendas PDV Dinheiro',
+                'descricao'         => 'Recebimento presencial em espécie / troco (sem saldo)',
                 'tipo'              => 'Balcão',
                 'quantidade'        => $vendasDinheiroQtd,
                 'total'             => $vendasDinheiroTotal,
@@ -2853,8 +2853,8 @@ class RelatoriosController extends Controller
             'Dia da Semana',
             'Recargas Pix Online (R$)',
             'Recargas Balcão Dinheiro (R$)',
-            'Vendas Balcão Dinheiro (R$)',
-            'Vendas Balcão Pix (R$)',
+            'Vendas PDV Dinheiro (R$)',
+            'Vendas PDV Pix (R$)',
             'Total de Entradas do Dia (R$)',
             'Consumo em Saldo (R$)',
             'Variação Saldo (R$)'

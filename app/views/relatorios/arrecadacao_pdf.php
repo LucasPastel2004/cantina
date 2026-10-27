@@ -519,10 +519,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             </tr>
             <tr>
                 <td class="text-start">
-                    <strong>Vendas Presenciais Pix</strong>
+                    <strong>Vendas PDV Pix</strong>
                 </td>
                 <td class="text-start" style="font-size: 7.2pt; color: #334155;">
-                    Vendas diretas no PDV balcão pagas via QR Code / Pix
+                    Vendas no PDV pagas via QR Code / Pix na hora (vendas com saldo de carteira NÃO entram aqui)
                 </td>
                 <td class="text-end font-tabular">
                     <?php echo number_format((int)($dados['vendas_pix_qtd'] ?? 0), 0, ',', '.'); ?> vendas
@@ -533,10 +533,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             </tr>
             <tr>
                 <td class="text-start">
-                    <strong>Vendas Presenciais Dinheiro</strong>
+                    <strong>Vendas PDV Dinheiro</strong>
                 </td>
                 <td class="text-start" style="font-size: 7.2pt; color: #334155;">
-                    Vendas diretas no PDV balcão pagas em espécie (dinheiro físico)
+                    Vendas no PDV pagas em espécie na hora (vendas com saldo de carteira NÃO entram aqui)
                 </td>
                 <td class="text-end font-tabular">
                     <?php echo number_format((int)($dados['vendas_dinheiro_qtd'] ?? 0), 0, ',', '.'); ?> vendas
@@ -547,10 +547,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             </tr>
             <tr style="background-color: #f8fafc !important;">
                 <td class="text-start">
-                    <strong>Consumo de Saldo (Lanches no Período)</strong>
+                    <strong>Consumo de Saldo da Carteira (Lanches Entregues)</strong>
                 </td>
                 <td class="text-start" style="font-size: 7.2pt; color: #334155;">
-                    Total de lanches entregues debitados de carteiras (Variação líquida: <strong><?php echo (($dados['variacao_carteira'] ?? 0) >= 0 ? '+' : '') . 'R$ ' . number_format((float)($dados['variacao_carteira'] ?? 0), 2, ',', '.'); ?></strong>)
+                    Total de lanches debitados de saldo pré-pago (NÃO entra no Total Arrecadado acima; variação líquida: <strong><?php echo (($dados['variacao_carteira'] ?? 0) >= 0 ? '+' : '') . 'R$ ' . number_format((float)($dados['variacao_carteira'] ?? 0), 2, ',', '.'); ?></strong>)
                 </td>
                 <td class="text-end font-tabular" style="color: #64748b;">
                     -
@@ -678,10 +678,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 <th style="width: 10%; text-align: left;">Dia</th>
                 <th style="width: 13%; text-align: right;">Recarga Pix</th>
                 <th style="width: 12%; text-align: right;">Recarga Din</th>
-                <th style="width: 12%; text-align: right;">Venda Din</th>
-                <th style="width: 12%; text-align: right;">Venda Pix</th>
-                <th style="width: 15%; text-align: right; background-color: #f1f5f9 !important;">Entradas do Dia</th>
-                <th style="width: 15%; text-align: right;">Consumo Saldo</th>
+                <th style="width: 13%; text-align: right;">PDV Dinheiro</th>
+                <th style="width: 13%; text-align: right;">PDV Pix</th>
+                <th style="width: 14%; text-align: right; background-color: #f1f5f9 !important;">Entradas do Dia</th>
+                <th style="width: 14%; text-align: right;">Consumo Saldo</th>
             </tr>
         </thead>
         <tbody>
