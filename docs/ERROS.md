@@ -2347,6 +2347,20 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Adicionada bateria de testes automatizados na suíte `tests/livro_caixa_e_recibos_test.php` garantindo que a rota do Livro Caixa sempre renderize com a casca do layout admin (`app-admin-wrapper`, `sidebar-dock`, CSSs locais e `stat-strip`).
 - Como evitar no futuro: Em qualquer novo método de controller que renderize telas do painel administrativo ou financeiro, nunca omitir o terceiro parâmetro `'admin'` na invocação de `$this->render()`.
 
+---
+
+## 2026-10-27 - Falha no atalho de zoom com Ctrl + Scroll do mouse por ausência de interceptação do evento wheel não passivo
+
+- Sintoma: Ao abrir o espelho de impressão A4 do Livro Caixa Diário (`/financeiro/livro-caixa/imprimir`), o zoom na folha só funcionava ao clicar nos botões da barra superior (`−`, `100%`, `+`). Segurar a tecla `Ctrl` e rolar o scroll do mouse (`Ctrl + Wheel`) causava o scroll nativo da página inteira sem alterar a escala do documento contábil.
+- Causa: O container do espelho A4 não possuía ouvinte para o evento `wheel`. Além disso, em navegadores modernos baseados em Chromium/WebKit/Gecko, o evento de scroll da janela é registrado como passivo por padrão (`passive: true`). Tentar invocar `e.preventDefault()` em listeners passivos é ignorado pelo navegador e gera alertas no console, impedindo o cancelamento do scroll nativo da janela durante o zoom.
+- Solução aplicada:
+  1. Implementado listener global `window.addEventListener('wheel', function(e) { if (e.ctrlKey) { e.preventDefault(); ... } }, { passive: false });` em `app/views/relatorios/livro_caixa_pdf.php`, espelhando o padrão já homologado de `arrecadacao_pdf.php`.
+  2. Implementados atalhos de teclado `Ctrl +` (aumentar zoom), `Ctrl -` (diminuir zoom) e `Ctrl 0` (redefinir para 100%).
+  3. Adicionada sincronização e persistência de escala no `localStorage` sob a chave `cantina_report_zoom`.
+  4. Adicionada restauração automática de escala para 1.0 (100%) no evento nativo `beforeprint` e retorno à escala customizada em `afterprint`.
+- Como evitar no futuro: Em qualquer espelho ou visualizador de impressão A4 onde seja necessário suportar zoom com `Ctrl + Wheel`, sempre registrar o ouvinte do evento com `{ passive: false }` para permitir que `e.preventDefault()` intercepte e anule o scroll nativo da janela.
+
+
 
 
 
