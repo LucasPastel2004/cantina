@@ -56,25 +56,41 @@ $htmlAdmin = ob_get_clean();
 $assertCustom(str_contains($htmlAdmin, 'data-category="operacional"'), "Dock contém botão da categoria Operacional");
 $assertCustom(str_contains($htmlAdmin, 'data-category="estoque"'), "Dock contém botão da categoria Estoque");
 $assertCustom(str_contains($htmlAdmin, 'data-category="financeiro"'), "Dock contém botão da categoria Financeiro (Saco de dinheiro)");
-$assertCustom(str_contains($htmlAdmin, 'id="btnDirectProdutos"') && str_contains($htmlAdmin, 'href="/admin/produtos"'), "Cardápio & Preços possui ícone próprio com link direto para /admin/produtos");
+$assertCustom(str_contains($htmlAdmin, 'data-category="cardapio"'), "Dock contém botão da categoria Cardápio & Produtos");
 $assertCustom(str_contains($htmlAdmin, 'data-category="admin"'), "Dock contém botão da categoria Administração");
 $assertCustom(str_contains($htmlAdmin, 'data-category="relatorios"'), "Dock contém botão da categoria Relatórios");
 
 // Validação dos conteúdos dos Flyouts (Rigorosamente Desduplicados - 1 item por categoria)
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutOperacional"'), "Flyout Operacional presente");
-$assertCustom(str_contains($htmlAdmin, '/operacional/corte') && str_contains($htmlAdmin, '/operacional/pdv'), "Flyout Operacional contém Corte e PDV");
-$assertCustom(str_contains($htmlAdmin, '/operacional/caixa') && str_contains($htmlAdmin, '/operacional/estornos'), "Flyout Operacional contém Caixa do Turno e Estorno de Vendas");
+$operacionalBloco = explode('<!-- Flyout 2:', explode('id="flyoutOperacional"', $htmlAdmin)[1] ?? '')[0] ?? '';
+$assertCustom(str_contains($operacionalBloco, '/operacional/corte') && str_contains($operacionalBloco, '/operacional/recebimento') && str_contains($operacionalBloco, '/operacional/tickets'), "Flyout Operacional contém Corte, Recebimento e Tickets");
+$assertCustom(!str_contains($operacionalBloco, '/operacional/pdv'), "Flyout Operacional NÃO contém PDV Balcão (movido para Financeiro)");
+$assertCustom(!str_contains($operacionalBloco, '/operacional/caixa'), "Flyout Operacional NÃO contém Caixa do Turno (movido para Financeiro)");
+$assertCustom(!str_contains($operacionalBloco, '/operacional/estornos'), "Flyout Operacional NÃO contém Estorno de Vendas (movido para Financeiro)");
+
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutEstoque"'), "Flyout Estoque presente");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutEstoque"') && str_contains($htmlAdmin, '/estoque/perdas'), "Flyout Estoque contém Lançamento de Perdas");
+
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"'), "Flyout Financeiro presente");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"') && str_contains($htmlAdmin, '/operacional/caixa'), "Flyout Financeiro contém Caixa do Turno");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"') && str_contains($htmlAdmin, '/operacional/estornos'), "Flyout Financeiro contém Estorno de Vendas");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"') && str_contains($htmlAdmin, '/operacional/pdv'), "Flyout Financeiro contém PDV Balcão");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"') && str_contains($htmlAdmin, '/relatorios/fechamento-caixa'), "Flyout Financeiro contém Fechamento de Caixa");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutFinanceiro"') && str_contains($htmlAdmin, 'Entradas'), "Flyout Financeiro contém Entradas");
 $assertCustom(str_contains($htmlAdmin, '/financeiro/despesas') && str_contains($htmlAdmin, '/financeiro/dre'), "Flyout Financeiro contém Despesas e DRE");
+
+$relatoriosBloco = explode('<!-- Flyout 6:', explode('id="flyoutRelatorios"', $htmlAdmin)[1] ?? '')[0] ?? '';
 $assertCustom(str_contains($htmlAdmin, 'id="navSectionAdmin"') && str_contains($htmlAdmin, '/admin/turmas'), "Flyout Administração contém Turmas Escolares");
-$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/vendas-filtros'), "Flyout Relatórios contém Vendas por Alimento");
-$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/extrato-aluno'), "Flyout Relatórios contém Extrato do Aluno");
-$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/fechamento-caixa'), "Flyout Relatórios contém Fechamento de Caixa");
-$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/arrecadacao'), "Flyout Relatórios contém Arrecadação & Entradas");
+$assertCustom(str_contains($relatoriosBloco, '/relatorios/vendas-filtros'), "Flyout Relatórios contém Vendas por Alimento");
+$assertCustom(str_contains($relatoriosBloco, '/relatorios/extrato-aluno'), "Flyout Relatórios contém Extrato do Aluno");
+$assertCustom(!str_contains($relatoriosBloco, '/relatorios/fechamento-caixa'), "Flyout Relatórios NÃO contém Fechamento de Caixa (movido para Financeiro)");
+$assertCustom(!str_contains($relatoriosBloco, '/relatorios/arrecadacao'), "Flyout Relatórios NÃO contém Arrecadação/Entradas (movido para Financeiro)");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/devedores'), "Flyout Relatórios contém Inadimplência & MED");
-$assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && str_contains($htmlAdmin, '/relatorios/estoque-filtros'), "Flyout Relatórios contém Movimentações de Estoque");
+$assertCustom(!str_contains($relatoriosBloco, '/relatorios/estoque-filtros'), "Flyout Relatórios NÃO contém Movimentações de Estoque (movido para Estoque)");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutEstoque"') && str_contains($htmlAdmin, '/relatorios/estoque-filtros'), "Flyout Estoque contém Movimentações de Estoque");
+$assertCustom(str_contains($htmlAdmin, 'id="flyoutEstoque"') && str_contains($htmlAdmin, '/admin/fornecedores'), "Flyout Estoque contém Fornecedores");
+$assertCustom(!str_contains($relatoriosBloco, '/admin/fornecedores'), "Flyout Relatórios NÃO contém Fornecedores");
+$assertCustom(!str_contains(explode('id="navSectionAdmin"', $htmlAdmin)[1] ?? '', '/admin/fornecedores'), "Flyout Administração NÃO contém Fornecedores (movido para Estoque)");
 $assertCustom(str_contains($htmlAdmin, 'id="flyoutRelatorios"') && !str_contains($htmlAdmin, '/relatorios/desconto-folha'), "Flyout Relatórios NÃO contém Desconto em Folha (descontinuado do sistema)");
 
 // Verificação explícita de ausência de duplicidade entre categorias
@@ -85,10 +101,7 @@ $financeiroCorpo = explode('</div>', $financeiroHtml)[0] ?? '';
 $relatoriosHtml = explode('id="flyoutRelatorios"', $htmlAdmin)[1] ?? '';
 $relatoriosCorpo = explode('</div>', $relatoriosHtml)[0] ?? '';
 
-$assertCustom(!str_contains($estoqueCorpo, '/relatorios/estoque-filtros'), "Flyout Estoque NÃO duplica Movimentações (movido para Relatórios)");
-$assertCustom(!str_contains($financeiroCorpo, '/operacional/caixa'), "Flyout Financeiro NÃO duplica Caixa do Turno");
-$assertCustom(!str_contains($financeiroCorpo, '/operacional/estornos'), "Flyout Financeiro NÃO duplica Estorno de Vendas");
-$assertCustom(!str_contains($relatoriosCorpo, '/operacional/corte'), "Flyout Relatórios NÃO duplica Corte do Turno");
+$assertCustom(!str_contains($relatoriosCorpo, '/operacional/caixa'), "Flyout Relatórios NÃO duplica Caixa do Turno");
 $assertCustom(!str_contains($relatoriosCorpo, '/financeiro/dre'), "Flyout Relatórios NÃO duplica DRE Gerencial");
 
 // 4. Renderização com perfil Operador (Sanitização e RBAC)

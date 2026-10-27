@@ -20,11 +20,11 @@ $userRole = $user['role'] ?? $user['perfil'] ?? (\App\Core\Auth::role() ?? 'oper
 $isAdmin = ($userRole === 'administrador');
 
 // Mapeamento de menus ativos para cada categoria do Dock (rigorosamente desduplicado - 1 item por categoria)
-$isOperacionalActive = in_array($activeMenu, ['corte', 'recebimento', 'tickets', 'pdv', 'caixa', 'estornos'], true);
-$isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'entrada_estoque', 'importar_xml'], true);
-$isFinanceiroActive = in_array($activeMenu, ['despesas', 'dre', 'contestacoes'], true);
-$isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'fornecedores', 'calendario', 'configuracoes'], true);
-$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'fechamento_caixa_relatorio', 'fechamento_caixa', 'devedores', 'arrecadacao', 'movimentacoes_estoque', 'corte_relatorio'], true);
+$isOperacionalActive = in_array($activeMenu, ['corte', 'recebimento', 'tickets'], true);
+$isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'entrada_estoque', 'movimentacoes_estoque', 'fornecedores', 'importar_xml'], true);
+$isFinanceiroActive = in_array($activeMenu, ['caixa', 'estornos', 'pdv', 'fechamento_caixa_relatorio', 'fechamento_caixa', 'arrecadacao', 'entradas', 'despesas', 'dre', 'contestacoes'], true);
+$isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'calendario', 'configuracoes'], true);
+$isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'devedores', 'corte_relatorio'], true);
 $isCardapioActive = in_array($activeMenu, ['produtos', 'categorias', 'cardapio'], true);
 $isProdutosActive = $isCardapioActive;
 ?>
@@ -197,24 +197,6 @@ $isProdutosActive = $isCardapioActive;
                     <span class="nav-label">Tickets Térmicos</span>
                 </a>
             </li>
-            <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="nav-link <?php echo ($activeMenu === 'pdv') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">PDV Balcão</span>
-                </a>
-            </li>
-            <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/operacional/caixa" class="nav-link <?php echo ($activeMenu === 'caixa') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Caixa do Turno</span>
-                </a>
-            </li>
-            <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/operacional/estornos" class="nav-link <?php echo ($activeMenu === 'estornos') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Estorno de Vendas</span>
-                </a>
-            </li>
         </ul>
     </div>
 
@@ -243,6 +225,20 @@ $isProdutosActive = $isCardapioActive;
                     <span class="nav-label">Entrada de Estoque</span>
                 </a>
             </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="nav-link <?php echo ($activeMenu === 'movimentacoes_estoque') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Movimentações de Estoque</span>
+                </a>
+            </li>
+            <?php if ($isAdmin): ?>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/admin/fornecedores" class="nav-link <?php echo ($activeMenu === 'fornecedores') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Fornecedores</span>
+                </a>
+            </li>
+            <?php endif; ?>
         </ul>
     </div>
 
@@ -253,6 +249,37 @@ $isProdutosActive = $isCardapioActive;
             <button type="button" class="btn-flyout-close" onclick="fecharFlyouts()" aria-label="Fechar menu">✕</button>
         </div>
         <ul class="flyout-list nav-list">
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/operacional/caixa" class="nav-link <?php echo ($activeMenu === 'caixa') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Caixa do Turno</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/operacional/estornos" class="nav-link <?php echo ($activeMenu === 'estornos') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Estorno de Vendas</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/operacional/pdv" class="nav-link <?php echo ($activeMenu === 'pdv') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">PDV Balcão</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" class="nav-link <?php echo ($activeMenu === 'fechamento_caixa_relatorio' || $activeMenu === 'fechamento_caixa') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Fechamento de Caixa</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao" class="nav-link <?php echo ($activeMenu === 'arrecadacao' || $activeMenu === 'entradas') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Entradas</span>
+                </a>
+            </li>
+            <?php if ($isAdmin): ?>
             <li class="flyout-item nav-item">
                 <a href="<?php echo $baseUrl; ?>/financeiro/despesas" class="nav-link <?php echo ($activeMenu === 'despesas') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
@@ -265,7 +292,6 @@ $isProdutosActive = $isCardapioActive;
                     <span class="nav-label">DRE Gerencial</span>
                 </a>
             </li>
-            <?php if ($isAdmin): ?>
             <li class="flyout-item nav-item">
                 <a href="<?php echo $baseUrl; ?>/admin/contestacoes" class="nav-link <?php echo ($activeMenu === 'contestacoes') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
@@ -309,12 +335,6 @@ $isProdutosActive = $isCardapioActive;
                 </a>
             </li>
             <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/admin/fornecedores" class="nav-link <?php echo ($activeMenu === 'fornecedores') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Fornecedores</span>
-                </a>
-            </li>
-            <li class="flyout-item nav-item">
                 <a href="<?php echo $baseUrl; ?>/admin/calendario" class="nav-link <?php echo ($activeMenu === 'calendario') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Calendário Escolar</span>
@@ -349,27 +369,9 @@ $isProdutosActive = $isCardapioActive;
                 </a>
             </li>
             <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao" class="nav-link <?php echo ($activeMenu === 'arrecadacao') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Arrecadação & Entradas</span>
-                </a>
-            </li>
-            <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/fechamento-caixa" class="nav-link <?php echo ($activeMenu === 'fechamento_caixa_relatorio' || $activeMenu === 'fechamento_caixa') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Fechamento de Caixa</span>
-                </a>
-            </li>
-            <li class="flyout-item nav-item">
                 <a href="<?php echo $baseUrl; ?>/relatorios/devedores" class="nav-link <?php echo ($activeMenu === 'devedores') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Histórico MED & Quitações</span>
-                </a>
-            </li>
-            <li class="flyout-item nav-item">
-                <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros" class="nav-link <?php echo ($activeMenu === 'movimentacoes_estoque') ? 'active' : ''; ?>">
-                    <span class="nav-bullet">●</span>
-                    <span class="nav-label">Movimentações de Estoque</span>
                 </a>
             </li>
             <li class="flyout-item nav-item">

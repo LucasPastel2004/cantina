@@ -61,7 +61,7 @@ assertTeste(
     "RelatoriosController::fechamentoCaixa define 'activeMenu' => 'fechamento_caixa_relatorio'"
 );
 
-// 2. Renderização do sidebar com cada um dos 7 relatórios
+// 2. Renderização do sidebar com cada um dos relatórios da aba Relatórios
 $relatorios = [
     'extrato_aluno' => [
         'nome' => 'Extrato do Aluno',
@@ -71,21 +71,9 @@ $relatorios = [
         'nome' => 'Vendas por Alimento',
         'href' => '/relatorios/vendas-filtros'
     ],
-    'arrecadacao' => [
-        'nome' => 'Arrecadação & Entradas',
-        'href' => '/relatorios/arrecadacao'
-    ],
-    'fechamento_caixa_relatorio' => [
-        'nome' => 'Fechamento de Caixa',
-        'href' => '/relatorios/fechamento-caixa'
-    ],
     'devedores' => [
         'nome' => 'Histórico MED & Quitações',
         'href' => '/relatorios/devedores'
-    ],
-    'movimentacoes_estoque' => [
-        'nome' => 'Movimentações de Estoque',
-        'href' => '/relatorios/estoque-filtros'
     ],
     'corte_relatorio' => [
         'nome' => 'Corte do Turno',
@@ -107,7 +95,7 @@ foreach ($relatorios as $menuKey => $info) {
     $html = $renderSidebar($menuKey);
     
     // O botão principal do dock para a categoria 'relatorios' deve estar com 'is-current'
-    $temDockAtivo = preg_match('/<button[^>]*class="[^"]*is-current[^"]*"[^>]*id="btnCategoryRelatorios"|<button[^>]*id="btnCategoryRelatorios"[^>]*class="[^"]*is-current[^"]*"/', $html);
+    $temDockAtivo = preg_match('/<button[^>]*class="[^"]*is-current[^"]*"[^>]*id="btnCategoryRelatorios"|<button[^>]*id="btnCategoryRelatorios"[^>]*class="[^"]*is-current[^"]*"/s', $html);
     assertTeste($temDockAtivo === 1, "Dock: Botão de Relatórios tem classe 'is-current' quando activeMenu='{$menuKey}'");
 
     // O item específico no flyout deve ter 'nav-link active'
@@ -116,11 +104,60 @@ foreach ($relatorios as $menuKey => $info) {
     assertTeste($temLinkAtivo === 1, "Flyout: Item '{$info['nome']}' tem classe 'nav-link active' com contorno azul");
 }
 
-// 3. Validação de alias defensivos (fechamento_caixa e relatorio_alimento)
+// 3. Validação dos itens movidos para a aba Financeira
+$itensFinanceiro = [
+    'caixa' => [
+        'nome' => 'Caixa do Turno',
+        'href' => '/operacional/caixa'
+    ],
+    'estornos' => [
+        'nome' => 'Estorno de Vendas',
+        'href' => '/operacional/estornos'
+    ],
+    'pdv' => [
+        'nome' => 'PDV Balcão',
+        'href' => '/operacional/pdv'
+    ],
+    'fechamento_caixa_relatorio' => [
+        'nome' => 'Fechamento de Caixa',
+        'href' => '/relatorios/fechamento-caixa'
+    ],
+    'arrecadacao' => [
+        'nome' => 'Entradas',
+        'href' => '/relatorios/arrecadacao'
+    ],
+    'despesas' => [
+        'nome' => 'Despesas da Cantina',
+        'href' => '/financeiro/despesas'
+    ],
+    'dre' => [
+        'nome' => 'DRE Gerencial',
+        'href' => '/financeiro/dre'
+    ]
+];
+
+foreach ($itensFinanceiro as $menuKey => $info) {
+    $html = $renderSidebar($menuKey);
+
+    $temDockAtivo = preg_match('/<button[^>]*class="[^"]*is-current[^"]*"[^>]*id="btnCategoryFinanceiro"|<button[^>]*id="btnCategoryFinanceiro"[^>]*class="[^"]*is-current[^"]*"/s', $html);
+    assertTeste($temDockAtivo === 1, "Dock: Botão de Financeiro tem classe 'is-current' quando activeMenu='{$menuKey}'");
+
+    $padraoLinkAtivo = '/<a\s+href="[^"]*' . preg_quote($info['href'], '/') . '"\s+class="nav-link\s+active"/';
+    $temLinkAtivo = preg_match($padraoLinkAtivo, $html);
+    assertTeste($temLinkAtivo === 1, "Flyout Financeiro: Item '{$info['nome']}' tem classe 'nav-link active' com contorno azul");
+}
+
+// 4. Validação de alias defensivos (fechamento_caixa, entradas e relatorio_alimento)
 $htmlAliasCaixa = $renderSidebar('fechamento_caixa');
 assertTeste(
     (bool)preg_match('/<a\s+href="[^"]*\/relatorios\/fechamento-caixa"\s+class="nav-link\s+active"/', $htmlAliasCaixa),
-    "Flyout: Alias 'fechamento_caixa' ativa corretamente o link Fechamento de Caixa"
+    "Flyout: Alias 'fechamento_caixa' ativa corretamente o link Fechamento de Caixa no Financeiro"
+);
+
+$htmlAliasEntradas = $renderSidebar('entradas');
+assertTeste(
+    (bool)preg_match('/<a\s+href="[^"]*\/relatorios\/arrecadacao"\s+class="nav-link\s+active"/', $htmlAliasEntradas),
+    "Flyout: Alias 'entradas' ativa corretamente o link Entradas no Financeiro"
 );
 
 $htmlAliasAlimento = $renderSidebar('relatorio_alimento');
