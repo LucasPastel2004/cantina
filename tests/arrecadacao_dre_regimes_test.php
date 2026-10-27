@@ -188,7 +188,7 @@ class ArrecadacaoDreRegimesTest
         );
 
         // Validação dos Canais
-        $this->assert(count($dados['canais']) === 4, "Relatório contém os 4 canais oficiais de arrecadação");
+        $this->assert(count($dados['canais']) === 5, "Relatório contém os 5 canais oficiais de arrecadação");
         $somaPerc = 0.0;
         foreach ($dados['canais'] as $canal) {
             $somaPerc += (float)$canal['percentual'];
@@ -232,6 +232,9 @@ class ArrecadacaoDreRegimesTest
         $this->assert(str_contains($html, 'COLÉGIO MONTEIRO LOBATO'), "HTML gerado contém razão social da instituição");
         $this->assert(str_contains($html, 'DEMONSTRATIVO FINANCEIRO - CANAIS DE ENTRADA'), "HTML gerado contém título oficial do relatório");
         $this->assert(str_contains($html, 'table-doc-excel'), "HTML gerado utiliza classe de tabela Excel homologada");
+        $this->assert(str_contains($html, 'Recargas Pix Online (Portal da Família)'), "HTML gerado contém linha de Recargas Pix Online");
+        $this->assert(str_contains($html, 'Recarga PDV Pix'), "HTML gerado contém linha de Recarga PDV Pix");
+        $this->assert(str_contains($html, 'Recarga PDV Dinheiro'), "HTML gerado contém linha de Recarga PDV Dinheiro");
         $this->assert(str_contains($html, 'Vendas PDV Pix'), "HTML gerado contém linha de Vendas PDV Pix");
         $this->assert(str_contains($html, 'Vendas PDV Dinheiro'), "HTML gerado contém linha de Vendas PDV Dinheiro");
         $this->assert(strlen($html) > 10000, "Espelho HTML gerado possui conteúdo substancial (> 10 KB): " . strlen($html) . " bytes");
@@ -315,6 +318,9 @@ class ArrecadacaoDreRegimesTest
         $this->assert(str_contains($htmlArrecImp, 'DEMONSTRATIVO FINANCEIRO - CANAIS DE ENTRADA'), "RelatoriosController::arrecadacaoImprimir renderiza espelho A4 oficial");
         $this->assert(str_contains($htmlArrecImp, 'Síntese dos Indicadores Financeiros do Período'), "Relatório A4 oficial contém tabela própria de síntese dos indicadores");
         $this->assert(str_contains($htmlArrecImp, 'Total Arrecadado (Cash-In Real)'), "Relatório A4 oficial exibe métrica de Total Arrecadado na tabela de síntese");
+        $this->assert(str_contains($htmlArrecImp, 'Recargas Pix Online (Portal da Família)'), "Relatório A4 oficial exibe Recargas Pix Online na tabela de síntese");
+        $this->assert(str_contains($htmlArrecImp, 'Recarga PDV Pix'), "Relatório A4 oficial exibe Recarga PDV Pix na tabela de síntese");
+        $this->assert(str_contains($htmlArrecImp, 'Recarga PDV Dinheiro'), "Relatório A4 oficial exibe Recarga PDV Dinheiro na tabela de síntese");
         $this->assert(str_contains($htmlArrecImp, 'Vendas PDV Pix'), "Relatório A4 oficial exibe Vendas PDV Pix na tabela de síntese");
         $this->assert(str_contains($htmlArrecImp, 'Vendas PDV Dinheiro'), "Relatório A4 oficial exibe Vendas PDV Dinheiro na tabela de síntese");
         $this->assert(str_contains($htmlArrecImp, 'Resumo por Canais de Entrada Financeira'), "Relatório A4 oficial preserva discriminação por canais");

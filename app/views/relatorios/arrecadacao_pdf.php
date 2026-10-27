@@ -497,18 +497,32 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                     Recargas de carteira efetuadas pelas famílias via QR Code dinâmico no Portal
                 </td>
                 <td class="text-end font-tabular">
-                    <?php echo number_format((int)($dados['recargas_pix_qtd'] ?? 0), 0, ',', '.'); ?> recargas
+                    <?php echo number_format((int)($dados['recargas_pix_online_qtd'] ?? 0), 0, ',', '.'); ?> recargas
                 </td>
                 <td class="text-end font-tabular">
-                    R$ <?php echo number_format((float)($dados['recargas_pix_total'] ?? 0), 2, ',', '.'); ?>
+                    R$ <?php echo number_format((float)($dados['recargas_pix_online_total'] ?? 0), 2, ',', '.'); ?>
                 </td>
             </tr>
             <tr>
                 <td class="text-start">
-                    <strong>Recargas Balcão (Dinheiro Físico)</strong>
+                    <strong>Recarga PDV Pix</strong>
                 </td>
                 <td class="text-start" style="font-size: 7.2pt; color: #334155;">
-                    Inserções manuais de saldo na carteira familiar pagas em espécie diretamente na cantina
+                    Inserções de saldo na carteira familiar pagas presencialmente no balcão via Pix / QR Code
+                </td>
+                <td class="text-end font-tabular">
+                    <?php echo number_format((int)($dados['recargas_pix_pdv_qtd'] ?? 0), 0, ',', '.'); ?> inserções
+                </td>
+                <td class="text-end font-tabular">
+                    R$ <?php echo number_format((float)($dados['recargas_pix_pdv_total'] ?? 0), 2, ',', '.'); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-start">
+                    <strong>Recarga PDV Dinheiro</strong>
+                </td>
+                <td class="text-start" style="font-size: 7.2pt; color: #334155;">
+                    Inserções de saldo na carteira familiar pagas presencialmente no balcão em espécie
                 </td>
                 <td class="text-end font-tabular">
                     <?php echo number_format((int)($dados['recargas_dinheiro_qtd'] ?? 0), 0, ',', '.'); ?> inserções
@@ -630,11 +644,15 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         </thead>
         <tbody>
             <tr>
-                <td class="text-start">(+) Recargas Pix no Portal da Família (Entrada via Banco)</td>
-                <td class="text-end font-tabular">R$ <?php echo number_format((float)($dados['recargas_pix_total'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="text-start">(+) Recargas Pix Online no Portal da Família (Entrada via Banco)</td>
+                <td class="text-end font-tabular">R$ <?php echo number_format((float)($dados['recargas_pix_online_total'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr>
-                <td class="text-start">(+) Recargas no Balcão em Dinheiro (Entrada Física na Gaveta)</td>
+                <td class="text-start">(+) Recargas PDV Pix no Balcão (Entrada via Banco / Maquininha)</td>
+                <td class="text-end font-tabular">R$ <?php echo number_format((float)($dados['recargas_pix_pdv_total'] ?? 0), 2, ',', '.'); ?></td>
+            </tr>
+            <tr>
+                <td class="text-start">(+) Recargas PDV Dinheiro no Balcão (Entrada Física na Gaveta)</td>
                 <td class="text-end font-tabular">R$ <?php echo number_format((float)($dados['recargas_dinheiro_total'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
             <tr style="font-weight: 700; background-color: #f8fafc !important;">
@@ -674,34 +692,36 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <table class="table-doc-excel">
         <thead>
             <tr>
-                <th style="width: 11%; text-align: center;">Data</th>
-                <th style="width: 10%; text-align: left;">Dia</th>
-                <th style="width: 13%; text-align: right;">Recarga Pix</th>
-                <th style="width: 12%; text-align: right;">Recarga Din</th>
-                <th style="width: 13%; text-align: right;">PDV Dinheiro</th>
-                <th style="width: 13%; text-align: right;">PDV Pix</th>
+                <th style="width: 10%; text-align: center;">Data</th>
+                <th style="width: 8%; text-align: left;">Dia</th>
+                <th style="width: 11%; text-align: right;">Pix Online</th>
+                <th style="width: 11%; text-align: right;">Rec. PDV Pix</th>
+                <th style="width: 11%; text-align: right;">Rec. PDV Din</th>
+                <th style="width: 11%; text-align: right;">PDV Dinheiro</th>
+                <th style="width: 11%; text-align: right;">PDV Pix</th>
                 <th style="width: 14%; text-align: right; background-color: #f1f5f9 !important;">Entradas do Dia</th>
-                <th style="width: 14%; text-align: right;">Consumo Saldo</th>
+                <th style="width: 13%; text-align: right;">Consumo Saldo</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($dias)): ?>
             <tr>
-                <td colspan="8" class="text-center" style="padding: 10px;">Sem movimentações registradas no período.</td>
+                <td colspan="9" class="text-center" style="padding: 10px;">Sem movimentações registradas no período.</td>
             </tr>
             <?php else: ?>
                 <?php foreach ($dias as $d): ?>
                 <tr>
                     <td class="text-center font-tabular"><?php echo htmlspecialchars($d['data_formatada'], ENT_QUOTES, 'UTF-8'); ?></td>
                     <td class="text-start" style="font-size: 7.2pt;"><?php echo htmlspecialchars($d['dia_semana'], ENT_QUOTES, 'UTF-8'); ?></td>
-                    <td class="text-end font-tabular"><?php echo $d['recargas_pix'] > 0 ? number_format((float)$d['recargas_pix'], 2, ',', '.') : '-'; ?></td>
-                    <td class="text-end font-tabular"><?php echo $d['recargas_dinheiro'] > 0 ? number_format((float)$d['recargas_dinheiro'], 2, ',', '.') : '-'; ?></td>
-                    <td class="text-end font-tabular"><?php echo $d['vendas_dinheiro'] > 0 ? number_format((float)$d['vendas_dinheiro'], 2, ',', '.') : '-'; ?></td>
-                    <td class="text-end font-tabular"><?php echo $d['vendas_pix'] > 0 ? number_format((float)$d['vendas_pix'], 2, ',', '.') : '-'; ?></td>
+                    <td class="text-end font-tabular"><?php echo ($d['recargas_pix_online'] ?? 0) > 0 ? number_format((float)$d['recargas_pix_online'], 2, ',', '.') : '-'; ?></td>
+                    <td class="text-end font-tabular"><?php echo ($d['recargas_pix_pdv'] ?? 0) > 0 ? number_format((float)$d['recargas_pix_pdv'], 2, ',', '.') : '-'; ?></td>
+                    <td class="text-end font-tabular"><?php echo ($d['recargas_dinheiro'] ?? 0) > 0 ? number_format((float)$d['recargas_dinheiro'], 2, ',', '.') : '-'; ?></td>
+                    <td class="text-end font-tabular"><?php echo ($d['vendas_dinheiro'] ?? 0) > 0 ? number_format((float)$d['vendas_dinheiro'], 2, ',', '.') : '-'; ?></td>
+                    <td class="text-end font-tabular"><?php echo ($d['vendas_pix'] ?? 0) > 0 ? number_format((float)$d['vendas_pix'], 2, ',', '.') : '-'; ?></td>
                     <td class="text-end font-tabular" style="font-weight: 700; background-color: #f8fafc !important;">
                         <?php echo number_format((float)$d['total_arrecadado'], 2, ',', '.'); ?>
                     </td>
-                    <td class="text-end font-tabular"><?php echo $d['consumo_saldo'] > 0 ? number_format((float)$d['consumo_saldo'], 2, ',', '.') : '-'; ?></td>
+                    <td class="text-end font-tabular"><?php echo ($d['consumo_saldo'] ?? 0) > 0 ? number_format((float)$d['consumo_saldo'], 2, ',', '.') : '-'; ?></td>
                 </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -709,7 +729,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         <tfoot>
             <tr>
                 <td colspan="2" class="text-start text-uppercase">TOTAIS DO PERÍODO</td>
-                <td class="text-end font-tabular"><?php echo number_format((float)($dados['recargas_pix_total'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular"><?php echo number_format((float)($dados['recargas_pix_online_total'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="text-end font-tabular"><?php echo number_format((float)($dados['recargas_pix_pdv_total'] ?? 0), 2, ',', '.'); ?></td>
                 <td class="text-end font-tabular"><?php echo number_format((float)($dados['recargas_dinheiro_total'] ?? 0), 2, ',', '.'); ?></td>
                 <td class="text-end font-tabular"><?php echo number_format((float)($dados['vendas_dinheiro_total'] ?? 0), 2, ',', '.'); ?></td>
                 <td class="text-end font-tabular"><?php echo number_format((float)($dados['vendas_pix_total'] ?? 0), 2, ',', '.'); ?></td>

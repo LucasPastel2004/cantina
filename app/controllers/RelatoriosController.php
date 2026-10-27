@@ -2372,22 +2372,43 @@ class RelatoriosController extends Controller
     {
         $pdo = \App\Core\Model::getPdo();
 
-        // 1. Recargas Pix Online (Portal da Família / Webhook Pix)
-        $sqlRecPix = "
+        // 1. Recargas Pix Online (Portal da Família / Gateway Pix)
+        $sqlRecPixOnline = "
             SELECT 
                 COUNT(*) AS qtd,
                 COALESCE(SUM(valor), 0) AS total
             FROM transacoes_carteira
             WHERE tipo_transacao = 'recarga_pix'
+              AND (operador_id IS NULL AND descricao NOT LIKE '%Balcão%' AND descricao NOT LIKE '%PDV%')
               AND DATE(created_at) BETWEEN :ini AND :fim
         ";
-        $stmt = $pdo->prepare($sqlRecPix);
+        $stmt = $pdo->prepare($sqlRecPixOnline);
         $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
-        $recPix = $stmt->fetch(\PDO::FETCH_ASSOC);
-        $recargasPixTotal = (float)($recPix['total'] ?? 0);
-        $recargasPixQtd   = (int)($recPix['qtd'] ?? 0);
+        $recPixOnline = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $recargasPixOnlineTotal = (float)($recPixOnline['total'] ?? 0);
+        $recargasPixOnlineQtd   = (int)($recPixOnline['qtd'] ?? 0);
 
-        // 2. Recargas no Balcão em Dinheiro Físico
+        // 2. Recargas PDV Pix (Inserções manuais no balcão via Pix)
+        $sqlRecPixPdv = "
+            SELECT 
+                COUNT(*) AS qtd,
+                COALESCE(SUM(valor), 0) AS total
+            FROM transacoes_carteira
+            WHERE tipo_transacao = 'recarga_pix'
+              AND (operador_id IS NOT NULL OR descricao LIKE '%Balcão%' OR descricao LIKE '%PDV%')
+              AND DATE(created_at) BETWEEN :ini AND :fim
+        ";
+        $stmt = $pdo->prepare($sqlRecPixPdv);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        $recPixPdv = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $recargasPixPdvTotal = (float)($recPixPdv['total'] ?? 0);
+        $recargasPixPdvQtd   = (int)($recPixPdv['qtd'] ?? 0);
+
+        // Recargas Pix Totais (retrocompatibilidade)
+        $recargasPixTotal = $recargasPixOnlineTotal + $recargasPixPdvTotal;
+        $recargasPixQtd   = $recargasPixOnlineQtd + $recargasPixPdvQtd;
+
+        // 3. Recargas PDV Dinheiro (Inserções presenciais no balcão em espécie)
         $sqlRecDin = "
             SELECT 
                 COUNT(*) AS qtd,
@@ -2500,21 +2521,39 @@ class RelatoriosController extends Controller
         $fimObj->modify('+1 day');
         $intervalo = new \DatePeriod($inicioObj, new \DateInterval('P1D'), $fimObj);
 
-        // a) Recargas Pix Diárias
-        $mapRecPix = [];
-        $sqlMapRecPix = "
+        // a) Recargas Pix Online Diárias
+        $mapRecPixOnline = [];
+        $sqlMapRecPixOnline = "
             SELECT DATE(created_at) as dia, COALESCE(SUM(valor), 0) as total, COUNT(*) as qtd
             FROM transacoes_carteira
-            WHERE tipo_transacao = 'recarga_pix' AND DATE(created_at) BETWEEN :ini AND :fim
+            WHERE tipo_transacao = 'recarga_pix'
+              AND (operador_id IS NULL AND descricao NOT LIKE '%Balcão%' AND descricao NOT LIKE '%PDV%')
+              AND DATE(created_at) BETWEEN :ini AND :fim
             GROUP BY DATE(created_at)
         ";
-        $stmt = $pdo->prepare($sqlMapRecPix);
+        $stmt = $pdo->prepare($sqlMapRecPixOnline);
         $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
         foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
-            $mapRecPix[$r['dia']] = (float)$r['total'];
+            $mapRecPixOnline[$r['dia']] = (float)$r['total'];
         }
 
-        // b) Recargas Dinheiro Diárias
+        // b) Recargas PDV Pix Diárias
+        $mapRecPixPdv = [];
+        $sqlMapRecPixPdv = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor), 0) as total, COUNT(*) as qtd
+            FROM transacoes_carteira
+            WHERE tipo_transacao = 'recarga_pix'
+              AND (operador_id IS NOT NULL OR descricao LIKE '%Balcão%' OR descricao LIKE '%PDV%')
+              AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlMapRecPixPdv);
+        $stmt->execute(['ini' => $dataInicio, 'fim' => $dataFim]);
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapRecPixPdv[$r['dia']] = (float)$r['total'];
+        }
+
+        // c) Recargas PDV Dinheiro Diárias
         $mapRecDin = [];
         $sqlMapRecDin = "
             SELECT DATE(created_at) as dia, COALESCE(SUM(valor), 0) as total, COUNT(*) as qtd
@@ -2528,7 +2567,7 @@ class RelatoriosController extends Controller
             $mapRecDin[$r['dia']] = (float)$r['total'];
         }
 
-        // c) Vendas Balcão Dinheiro Diárias
+        // d) Vendas Balcão Dinheiro Diárias
         $mapVbDin = [];
         $sqlMapVbDin = "
             SELECT DATE(created_at) as dia, COALESCE(SUM(valor_total), 0) as total, COUNT(*) as qtd
@@ -2542,7 +2581,7 @@ class RelatoriosController extends Controller
             $mapVbDin[$r['dia']] = (float)$r['total'];
         }
 
-        // d) Vendas Balcão Pix Diárias
+        // e) Vendas Balcão Pix Diárias
         $mapVbPix = [];
         $sqlMapVbPix = "
             SELECT DATE(created_at) as dia, COALESCE(SUM(valor_total), 0) as total, COUNT(*) as qtd
@@ -2556,7 +2595,7 @@ class RelatoriosController extends Controller
             $mapVbPix[$r['dia']] = (float)$r['total'];
         }
 
-        // e) Consumo de Saldo Diário (Vendas Balcão Saldo + Pedidos)
+        // f) Consumo de Saldo Diário (Vendas Balcão Saldo + Pedidos)
         $mapConsumoSaldo = [];
         $sqlMapVbSaldo = "
             SELECT DATE(created_at) as dia, COALESCE(SUM(valor_total), 0) as total
@@ -2597,26 +2636,29 @@ class RelatoriosController extends Controller
             $diaSemanaIngles = $dt->format('l');
             $diaSemana = $diasSemanaPt[$diaSemanaIngles] ?? $diaSemanaIngles;
 
-            $rPix = $mapRecPix[$diaIso] ?? 0.0;
-            $rDin = $mapRecDin[$diaIso] ?? 0.0;
-            $vDin = $mapVbDin[$diaIso] ?? 0.0;
-            $vPix = $mapVbPix[$diaIso] ?? 0.0;
-            $totalDia = $rPix + $rDin + $vDin + $vPix;
+            $rPixOnline = $mapRecPixOnline[$diaIso] ?? 0.0;
+            $rPixPdv    = $mapRecPixPdv[$diaIso] ?? 0.0;
+            $rDin       = $mapRecDin[$diaIso] ?? 0.0;
+            $vDin       = $mapVbDin[$diaIso] ?? 0.0;
+            $vPix       = $mapVbPix[$diaIso] ?? 0.0;
+            $totalDia   = $rPixOnline + $rPixPdv + $rDin + $vDin + $vPix;
 
-            $cSaldo = $mapConsumoSaldo[$diaIso] ?? 0.0;
-            $varSaldoDia = ($rPix + $rDin) - $cSaldo;
+            $cSaldo     = $mapConsumoSaldo[$diaIso] ?? 0.0;
+            $varSaldoDia= ($rPixOnline + $rPixPdv + $rDin) - $cSaldo;
 
             $diasPeriodo[] = [
-                'data_iso'           => $diaIso,
-                'data_formatada'     => $dt->format('d/m/Y'),
-                'dia_semana'         => $diaSemana,
-                'recargas_pix'       => $rPix,
-                'recargas_dinheiro'  => $rDin,
-                'vendas_dinheiro'    => $vDin,
-                'vendas_pix'         => $vPix,
-                'total_arrecadado'   => $totalDia,
-                'consumo_saldo'      => $cSaldo,
-                'variacao_saldo'     => $varSaldoDia,
+                'data_iso'            => $diaIso,
+                'data_formatada'      => $dt->format('d/m/Y'),
+                'dia_semana'          => $diaSemana,
+                'recargas_pix'        => $rPixOnline + $rPixPdv,
+                'recargas_pix_online' => $rPixOnline,
+                'recargas_pix_pdv'    => $rPixPdv,
+                'recargas_dinheiro'   => $rDin,
+                'vendas_dinheiro'     => $vDin,
+                'vendas_pix'          => $vPix,
+                'total_arrecadado'    => $totalDia,
+                'consumo_saldo'       => $cSaldo,
+                'variacao_saldo'      => $varSaldoDia,
             ];
         }
 
@@ -2626,13 +2668,21 @@ class RelatoriosController extends Controller
                 'canal'             => 'Recargas Pix Online',
                 'descricao'         => 'Portal da Família / Gateway Pix Dinâmico',
                 'tipo'              => 'Online',
-                'quantidade'        => $recargasPixQtd,
-                'total'             => $recargasPixTotal,
-                'percentual'        => $totalArrecadadoBruto > 0 ? ($recargasPixTotal / $totalArrecadadoBruto) * 100 : 0
+                'quantidade'        => $recargasPixOnlineQtd,
+                'total'             => $recargasPixOnlineTotal,
+                'percentual'        => $totalArrecadadoBruto > 0 ? ($recargasPixOnlineTotal / $totalArrecadadoBruto) * 100 : 0
             ],
             [
-                'canal'             => 'Recargas no Balcão em Dinheiro',
-                'descricao'         => 'Inserção física de créditos na carteira do aluno',
+                'canal'             => 'Recargas PDV Pix',
+                'descricao'         => 'Inserção presencial de créditos na carteira via Pix no balcão',
+                'tipo'              => 'Balcão',
+                'quantidade'        => $recargasPixPdvQtd,
+                'total'             => $recargasPixPdvTotal,
+                'percentual'        => $totalArrecadadoBruto > 0 ? ($recargasPixPdvTotal / $totalArrecadadoBruto) * 100 : 0
+            ],
+            [
+                'canal'             => 'Recargas PDV Dinheiro',
+                'descricao'         => 'Inserção física de créditos na carteira em espécie',
                 'tipo'              => 'Balcão',
                 'quantidade'        => $recargasDinheiroQtd,
                 'total'             => $recargasDinheiroTotal,
@@ -2662,6 +2712,10 @@ class RelatoriosController extends Controller
             'data_fim'                     => $dataFim,
             'recargas_pix_total'           => $recargasPixTotal,
             'recargas_pix_qtd'             => $recargasPixQtd,
+            'recargas_pix_online_total'    => $recargasPixOnlineTotal,
+            'recargas_pix_online_qtd'      => $recargasPixOnlineQtd,
+            'recargas_pix_pdv_total'       => $recargasPixPdvTotal,
+            'recargas_pix_pdv_qtd'         => $recargasPixPdvQtd,
             'recargas_dinheiro_total'      => $recargasDinheiroTotal,
             'recargas_dinheiro_qtd'        => $recargasDinheiroQtd,
             'vendas_dinheiro_total'        => $vendasDinheiroTotal,
@@ -2852,7 +2906,8 @@ class RelatoriosController extends Controller
             'Data',
             'Dia da Semana',
             'Recargas Pix Online (R$)',
-            'Recargas Balcão Dinheiro (R$)',
+            'Recargas PDV Pix (R$)',
+            'Recargas PDV Dinheiro (R$)',
             'Vendas PDV Dinheiro (R$)',
             'Vendas PDV Pix (R$)',
             'Total de Entradas do Dia (R$)',
@@ -2864,13 +2919,14 @@ class RelatoriosController extends Controller
             fputcsv($output, self::sanitizarCsvLinha([
                 $d['data_formatada'],
                 $d['dia_semana'],
-                number_format($d['recargas_pix'], 2, ',', '.'),
-                number_format($d['recargas_dinheiro'], 2, ',', '.'),
-                number_format($d['vendas_dinheiro'], 2, ',', '.'),
-                number_format($d['vendas_pix'], 2, ',', '.'),
-                number_format($d['total_arrecadado'], 2, ',', '.'),
-                number_format($d['consumo_saldo'], 2, ',', '.'),
-                number_format($d['variacao_saldo'], 2, ',', '.')
+                number_format($d['recargas_pix_online'] ?? 0, 2, ',', '.'),
+                number_format($d['recargas_pix_pdv'] ?? 0, 2, ',', '.'),
+                number_format($d['recargas_dinheiro'] ?? 0, 2, ',', '.'),
+                number_format($d['vendas_dinheiro'] ?? 0, 2, ',', '.'),
+                number_format($d['vendas_pix'] ?? 0, 2, ',', '.'),
+                number_format($d['total_arrecadado'] ?? 0, 2, ',', '.'),
+                number_format($d['consumo_saldo'] ?? 0, 2, ',', '.'),
+                number_format($d['variacao_saldo'] ?? 0, 2, ',', '.')
             ]), ';', '"', "\\");
         }
 
@@ -2878,13 +2934,14 @@ class RelatoriosController extends Controller
         fputcsv($output, self::sanitizarCsvLinha([
             'TOTAIS CONSOLIDADOS DO PERÍODO',
             '',
-            number_format($dados['recargas_pix_total'], 2, ',', '.'),
-            number_format($dados['recargas_dinheiro_total'], 2, ',', '.'),
-            number_format($dados['vendas_dinheiro_total'], 2, ',', '.'),
-            number_format($dados['vendas_pix_total'], 2, ',', '.'),
-            number_format($dados['total_arrecadado_bruto'], 2, ',', '.'),
-            number_format($dados['total_consumo_saldo'], 2, ',', '.'),
-            number_format($dados['variacao_carteira'], 2, ',', '.')
+            number_format($dados['recargas_pix_online_total'] ?? 0, 2, ',', '.'),
+            number_format($dados['recargas_pix_pdv_total'] ?? 0, 2, ',', '.'),
+            number_format($dados['recargas_dinheiro_total'] ?? 0, 2, ',', '.'),
+            number_format($dados['vendas_dinheiro_total'] ?? 0, 2, ',', '.'),
+            number_format($dados['vendas_pix_total'] ?? 0, 2, ',', '.'),
+            number_format($dados['total_arrecadado_bruto'] ?? 0, 2, ',', '.'),
+            number_format($dados['total_consumo_saldo'] ?? 0, 2, ',', '.'),
+            (($dados['variacao_carteira'] >= 0 ? '+' : '') . number_format($dados['variacao_carteira'] ?? 0, 2, ',', '.'))
         ]), ';', '"', "\\");
 
         fclose($output);
