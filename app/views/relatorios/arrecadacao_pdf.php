@@ -684,64 +684,6 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         </tfoot>
     </table>
 
-    <!-- SEÇÃO 4: DETALHAMENTO DIÁRIO -->
-    <div class="section-banner">
-        4. Detalhamento Cronológico Diário de Entradas e Consumo
-    </div>
-
-    <table class="table-doc-excel">
-        <thead>
-            <tr>
-                <th style="width: 10%; text-align: center;">Data</th>
-                <th style="width: 8%; text-align: left;">Dia</th>
-                <th style="width: 11%; text-align: right;">Pix Online</th>
-                <th style="width: 11%; text-align: right;">Rec. PDV Pix</th>
-                <th style="width: 11%; text-align: right;">Rec. PDV Din</th>
-                <th style="width: 11%; text-align: right;">PDV Dinheiro</th>
-                <th style="width: 11%; text-align: right;">PDV Pix</th>
-                <th style="width: 14%; text-align: right; background-color: #f1f5f9 !important;">Entradas do Dia</th>
-                <th style="width: 13%; text-align: right;">Consumo Saldo</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($dias)): ?>
-            <tr>
-                <td colspan="9" class="text-center" style="padding: 10px;">Sem movimentações registradas no período.</td>
-            </tr>
-            <?php else: ?>
-                <?php foreach ($dias as $d): ?>
-                <tr>
-                    <td class="text-center font-tabular"><?php echo htmlspecialchars($d['data_formatada'], ENT_QUOTES, 'UTF-8'); ?></td>
-                    <td class="text-start" style="font-size: 7.2pt;"><?php echo htmlspecialchars($d['dia_semana'], ENT_QUOTES, 'UTF-8'); ?></td>
-                    <td class="text-end font-tabular"><?php echo ($d['recargas_pix_online'] ?? 0) > 0 ? number_format((float)$d['recargas_pix_online'], 2, ',', '.') : '-'; ?></td>
-                    <td class="text-end font-tabular"><?php echo ($d['recargas_pix_pdv'] ?? 0) > 0 ? number_format((float)$d['recargas_pix_pdv'], 2, ',', '.') : '-'; ?></td>
-                    <td class="text-end font-tabular"><?php echo ($d['recargas_dinheiro'] ?? 0) > 0 ? number_format((float)$d['recargas_dinheiro'], 2, ',', '.') : '-'; ?></td>
-                    <td class="text-end font-tabular"><?php echo ($d['vendas_dinheiro'] ?? 0) > 0 ? number_format((float)$d['vendas_dinheiro'], 2, ',', '.') : '-'; ?></td>
-                    <td class="text-end font-tabular"><?php echo ($d['vendas_pix'] ?? 0) > 0 ? number_format((float)$d['vendas_pix'], 2, ',', '.') : '-'; ?></td>
-                    <td class="text-end font-tabular" style="font-weight: 700; background-color: #f8fafc !important;">
-                        <?php echo number_format((float)$d['total_arrecadado'], 2, ',', '.'); ?>
-                    </td>
-                    <td class="text-end font-tabular"><?php echo ($d['consumo_saldo'] ?? 0) > 0 ? number_format((float)$d['consumo_saldo'], 2, ',', '.') : '-'; ?></td>
-                </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="2" class="text-start text-uppercase">TOTAIS DO PERÍODO</td>
-                <td class="text-end font-tabular"><?php echo number_format((float)($dados['recargas_pix_online_total'] ?? 0), 2, ',', '.'); ?></td>
-                <td class="text-end font-tabular"><?php echo number_format((float)($dados['recargas_pix_pdv_total'] ?? 0), 2, ',', '.'); ?></td>
-                <td class="text-end font-tabular"><?php echo number_format((float)($dados['recargas_dinheiro_total'] ?? 0), 2, ',', '.'); ?></td>
-                <td class="text-end font-tabular"><?php echo number_format((float)($dados['vendas_dinheiro_total'] ?? 0), 2, ',', '.'); ?></td>
-                <td class="text-end font-tabular"><?php echo number_format((float)($dados['vendas_pix_total'] ?? 0), 2, ',', '.'); ?></td>
-                <td class="text-end font-tabular" style="font-size: 8.5pt;">
-                    R$ <?php echo number_format((float)($dados['total_arrecadado_bruto'] ?? 0), 2, ',', '.'); ?>
-                </td>
-                <td class="text-end font-tabular"><?php echo number_format((float)($dados['total_consumo_saldo'] ?? 0), 2, ',', '.'); ?></td>
-            </tr>
-        </tfoot>
-    </table>
-
     <!-- Assinaturas Formais -->
     <div class="footer-assinaturas-box">
         <div class="signature-line">

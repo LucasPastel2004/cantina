@@ -22,7 +22,7 @@ $isAdmin = ($userRole === 'administrador');
 // Mapeamento de menus ativos para cada categoria do Dock (rigorosamente desduplicado - 1 item por categoria)
 $isOperacionalActive = in_array($activeMenu, ['corte', 'recebimento', 'tickets'], true);
 $isEstoqueActive = in_array($activeMenu, ['estoque', 'perdas', 'entrada_estoque', 'movimentacoes_estoque', 'fornecedores', 'importar_xml'], true);
-$isFinanceiroActive = in_array($activeMenu, ['caixa', 'estornos', 'pdv', 'fechamento_caixa_relatorio', 'fechamento_caixa', 'arrecadacao', 'entradas', 'despesas', 'dre', 'contestacoes'], true);
+$isFinanceiroActive = in_array($activeMenu, ['caixa', 'estornos', 'pdv', 'fechamento_caixa_relatorio', 'fechamento_caixa', 'arrecadacao', 'entradas', 'despesas', 'dre', 'contestacoes', 'livro_caixa'], true);
 $isAdminActive = in_array($activeMenu, ['importacao', 'alunos', 'turmas', 'colaboradores', 'calendario', 'configuracoes'], true);
 $isRelatoriosActive = in_array($activeMenu, ['relatorios', 'extrato_aluno', 'vendas_filtros', 'relatorio_alimento', 'devedores', 'corte_relatorio'], true);
 $isCardapioActive = in_array($activeMenu, ['produtos', 'categorias', 'cardapio'], true);
@@ -277,6 +277,12 @@ $isProdutosActive = $isCardapioActive;
                 <a href="<?php echo $baseUrl; ?>/relatorios/arrecadacao" class="nav-link <?php echo ($activeMenu === 'arrecadacao' || $activeMenu === 'entradas') ? 'active' : ''; ?>">
                     <span class="nav-bullet">●</span>
                     <span class="nav-label">Entradas</span>
+                </a>
+            </li>
+            <li class="flyout-item nav-item">
+                <a href="<?php echo $baseUrl; ?>/financeiro/livro-caixa" class="nav-link <?php echo ($activeMenu === 'livro_caixa') ? 'active' : ''; ?>">
+                    <span class="nav-bullet">●</span>
+                    <span class="nav-label">Livro Caixa Diário</span>
                 </a>
             </li>
             <?php if ($isAdmin): ?>

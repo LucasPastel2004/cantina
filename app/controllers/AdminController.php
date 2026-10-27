@@ -694,6 +694,144 @@ class AdminController extends Controller
         $this->redirect('/admin/fornecedores?filtrar=1');
     }
 
+    /**
+     * Emite e salva um recibo de pagamento para fornecedor
+     */
+    public function fornecedoresReciboSalvar(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/fornecedores?filtrar=1');
+            return;
+        }
+
+        $fornecedorId = (int)$this->input('fornecedor_id', 0);
+        $fornecedor = \App\Models\Fornecedor::buscarPorId($fornecedorId);
+
+        if (!$fornecedor) {
+            Session::setFlash('danger', 'Fornecedor parceiro não localizado.');
+            $this->redirect('/admin/fornecedores?filtrar=1');
+            return;
+        }
+
+        $valorRaw = (string)$this->input('valor', '0');
+        $valorLimpo = str_replace(['R$', ' ', '.'], '', $valorRaw);
+        $valorLimpo = str_replace(',', '.', $valorLimpo);
+        $valor = (float)$valorLimpo;
+
+        if ($valor <= 0) {
+            Session::setFlash('danger', 'O valor do pagamento deve ser maior que zero.');
+            $this->redirect('/admin/fornecedores?filtrar=1');
+            return;
+        }
+
+        $dataPagamento = trim((string)$this->input('data_pagamento', date('Y-m-d')));
+        $formaPagamento = strtolower(trim((string)$this->input('forma_pagamento', 'pix')));
+        if (!in_array($formaPagamento, ['pix', 'dinheiro'], true)) {
+            $formaPagamento = 'pix';
+        }
+
+        $descricao = trim((string)$this->input('descricao', ''));
+        if (empty($descricao)) {
+            $descricao = 'Pagamento a Fornecedor — ' . $fornecedor['nome_fantasia'];
+        }
+
+        $observacoes = trim((string)$this->input('observacoes', ''));
+
+        try {
+            $reciboId = \App\Models\FornecedorRecibo::criar([
+                'fornecedor_id'   => $fornecedorId,
+                'valor'           => $valor,
+                'data_pagamento'  => $dataPagamento,
+                'forma_pagamento' => $formaPagamento,
+                'descricao'       => $descricao,
+                'observacoes'     => $observacoes,
+            ], Auth::id());
+
+            $recibo = \App\Models\FornecedorRecibo::buscarPorId($reciboId);
+            $numRecibo = $recibo['numero_recibo'] ?? "REC-{$reciboId}";
+
+            Session::setFlash('success', "Recibo {$numRecibo} emitido com sucesso! Valor: R$ " . number_format($valor, 2, ',', '.') . " ({$fornecedor['nome_fantasia']}).");
+
+            $imprimirDireto = (bool)$this->input('imprimir_direto', false);
+            if ($imprimirDireto) {
+                $this->redirect("/admin/fornecedores/recibo/{$reciboId}/imprimir");
+                return;
+            }
+
+            $this->redirect('/admin/fornecedores?filtrar=1');
+        } catch (\Throwable $e) {
+            Session::setFlash('danger', 'Erro ao emitir recibo: ' . $e->getMessage());
+            $this->redirect('/admin/fornecedores?filtrar=1');
+        }
+    }
+
+    /**
+     * Renderiza o espelho A4 de impressão oficial do recibo de fornecedor
+     */
+    public function fornecedoresReciboImprimir(int $id): void
+    {
+        $recibo = \App\Models\FornecedorRecibo::buscarPorId($id);
+
+        if (!$recibo) {
+            Session::setFlash('danger', 'Recibo de pagamento não encontrado.');
+            $this->redirect('/admin/fornecedores?filtrar=1');
+            return;
+        }
+
+        $fornecedor = \App\Models\Fornecedor::buscarPorId((int)$recibo['fornecedor_id']);
+        $valorExtenso = \App\Models\FornecedorRecibo::valorPorExtenso((float)$recibo['valor']);
+
+        $this->render('admin/recibo_fornecedor_pdf', [
+            'recibo'       => $recibo,
+            'fornecedor'   => $fornecedor,
+            'valorExtenso' => $valorExtenso,
+            'isPdf'        => false,
+        ], null);
+    }
+
+    /**
+     * Retorna lista de recibos de um fornecedor em formato JSON para o modal de histórico
+     */
+    public function fornecedoresRecibosJson(): void
+    {
+        $fornecedorId = (int)$this->input('fornecedor_id', 0);
+        $recibos = \App\Models\FornecedorRecibo::listar([
+            'fornecedor_id' => $fornecedorId > 0 ? $fornecedorId : null,
+            'limit'         => 50
+        ]);
+
+        $this->json([
+            'sucesso' => true,
+            'recibos' => $recibos
+        ]);
+    }
+
+    /**
+     * Exclui (soft delete) um recibo de fornecedor
+     */
+    public function fornecedoresReciboExcluir(): void
+    {
+        if (!Session::validateCsrfToken((string)$this->input('csrf_token'))) {
+            Session::setFlash('danger', 'Validação de segurança expirou. Tente novamente.');
+            $this->redirect('/admin/fornecedores?filtrar=1');
+            return;
+        }
+
+        $id = (int)$this->input('id', 0);
+        $recibo = \App\Models\FornecedorRecibo::buscarPorId($id);
+
+        if (!$recibo) {
+            Session::setFlash('danger', 'Recibo não encontrado.');
+            $this->redirect('/admin/fornecedores?filtrar=1');
+            return;
+        }
+
+        \App\Models\FornecedorRecibo::excluir($id, Auth::id());
+        Session::setFlash('success', "Recibo [{$recibo['numero_recibo']}] cancelado/estornado com sucesso.");
+        $this->redirect('/admin/fornecedores?filtrar=1');
+    }
+
     // =========================================================================
     // TURMAS ESCOLARES
     // =========================================================================

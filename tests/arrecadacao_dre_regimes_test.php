@@ -324,7 +324,7 @@ class ArrecadacaoDreRegimesTest
         $this->assert(str_contains($htmlArrecImp, 'Vendas PDV Pix'), "Relatório A4 oficial exibe Vendas PDV Pix na tabela de síntese");
         $this->assert(str_contains($htmlArrecImp, 'Vendas PDV Dinheiro'), "Relatório A4 oficial exibe Vendas PDV Dinheiro na tabela de síntese");
         $this->assert(str_contains($htmlArrecImp, 'Resumo por Canais de Entrada Financeira'), "Relatório A4 oficial preserva discriminação por canais");
-        $this->assert(str_contains($htmlArrecImp, 'Detalhamento Cronológico Diário'), "Relatório A4 oficial preserva listagem diária detalhada");
+        $this->assert(!str_contains($htmlArrecImp, 'Detalhamento Cronológico Diário'), "Relatório A4 oficial retirou a Seção 4 focando exclusivamente nos canais de entrada e carteira");
     }
 }
 

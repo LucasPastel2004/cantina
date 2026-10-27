@@ -2323,6 +2323,18 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   5. Criada a suíte `tests/teste_movimentacao_itens_financeiro.php` (37/37 aprovados) e atualizadas as suítes `tests/dock_sidebar_flyout_test.php` (50/50), `tests/teste_destaque_relatorios_dock.php` (28/28) e `tests/arrecadacao_dre_regimes_test.php` (101/101), todas validadas com 100% de sucesso.
 - Como evitar no futuro: Ao remanejar rotas entre categorias de menus com diferentes níveis de visibilidade de perfis (RBAC), sempre revisar os privilégios da rota no roteador e sincronizar os seletores de menu ativo no layout pai.
 
+---
+
+## 2026-10-27 - Falha de integridade referencial (FK) ao criar recibo de fornecedor com usuario_id inexistente em testes e seeders
+
+- Sintoma: `SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (fornecedor_recibos, CONSTRAINT fk_fornecedor_recibos_usuario FOREIGN KEY (created_by) REFERENCES usuarios (id))` ao invocar `FornecedorRecibo::criar()` em ambientes de teste, scripts CLI ou seeders.
+- Causa: A migração `034_create_fornecedor_recibos_table.php` definiu a chave estrangeira `CONSTRAINT fk_fornecedor_recibos_usuario FOREIGN KEY (created_by) REFERENCES usuarios (id) ON DELETE SET NULL`. Quando um teste automatizado ou script CLI fornecia um `usuario_id` arbitrário (ex: 1) em um banco onde o usuário 1 não existia ou o ID era diferente, a inserção falhava por violação de integridade referencial estrita do MySQL.
+- Solução aplicada:
+  1. No método `FornecedorRecibo::criar()`, adicionada verificação defensiva de existência do ID na tabela `usuarios`. Se o ID não for informado ou não existir na tabela `usuarios`, o campo `created_by` é automaticamente gravado como `NULL`, respeitando a integridade referencial sem abortar a operação.
+  2. No bootstrap de testes de impressão (`tests/livro_caixa_e_recibos_test.php`), adicionado carregamento defensivo `require_once __DIR__ . '/../app/services/PdfService.php'` para evitar erro de classe não encontrada ao invocar espelhos de impressão diretamente em runtime CLI.
+  3. Suíte de testes `tests/livro_caixa_e_recibos_test.php` executada e aprovada com 69/69 asserções com 100% de sucesso.
+- Como evitar no futuro: Em colunas de auditoria que possuem chave estrangeira com `ON DELETE SET NULL` para a tabela `usuarios`, sempre verificar a existência prévia do ID ou garantir fallback gracioso para `NULL` caso o ID referenciado não exista na base.
+
 
 
 

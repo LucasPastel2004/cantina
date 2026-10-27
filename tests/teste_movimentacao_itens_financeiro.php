@@ -106,7 +106,7 @@ assertCustom(str_contains($viewPdf, 'Recarga PDV Dinheiro'), "View PDF possui li
 assertCustom(str_contains($viewPdf, 'Vendas PDV Pix'), "View PDF possui linha 'Vendas PDV Pix'");
 assertCustom(str_contains($viewPdf, 'Vendas PDV Dinheiro'), "View PDF possui linha 'Vendas PDV Dinheiro'");
 assertCustom(str_contains($viewPdf, 'TOTAL GERAL DE ENTRADAS (CASH-IN LÍQUIDO)'), "View PDF possui totalizador 'TOTAL GERAL DE ENTRADAS (CASH-IN LÍQUIDO)'");
-assertCustom(str_contains($viewPdf, 'Entradas do Dia'), "View PDF possui coluna 'Entradas do Dia'");
+assertCustom(!str_contains($viewPdf, 'Entradas do Dia'), "View PDF removeu Seção 4 (Entradas do Dia) conforme solicitado");
 
 // 4. Validação do RelatoriosController
 $controllerCode = file_get_contents(__DIR__ . '/../app/controllers/RelatoriosController.php');

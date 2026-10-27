@@ -404,6 +404,18 @@ $router->post('/admin/fornecedores/salvar', [\App\Controllers\AdminController::c
 $router->post('/admin/fornecedores/excluir', [\App\Controllers\AdminController::class, 'fornecedoresExcluir'], [
     \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
 ]);
+$router->post('/admin/fornecedores/recibo/salvar', [\App\Controllers\AdminController::class, 'fornecedoresReciboSalvar'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/admin/fornecedores/recibo/{id}/imprimir', [\App\Controllers\AdminController::class, 'fornecedoresReciboImprimir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->get('/admin/fornecedores/recibos/json', [\App\Controllers\AdminController::class, 'fornecedoresRecibosJson'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
+$router->post('/admin/fornecedores/recibo/excluir', [\App\Controllers\AdminController::class, 'fornecedoresReciboExcluir'], [
+    \App\Core\RBAC::requireRole(\App\Core\RBAC::ROLE_ADMINISTRADOR)
+]);
 
 // 3.5. Turmas Escolares (Acesso exclusivo para 'administrador')
 $router->get('/admin/turmas', [\App\Controllers\AdminController::class, 'turmas'], [
@@ -615,6 +627,26 @@ $router->get('/financeiro/entradas/imprimir', [\App\Controllers\RelatoriosContro
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
 $router->get('/financeiro/entradas/csv', [\App\Controllers\RelatoriosController::class, 'entradasCsv'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+
+// 4.6. Livro Caixa Diário
+$router->get('/financeiro/livro-caixa', [\App\Controllers\RelatoriosController::class, 'livroCaixa'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/financeiro/livro-caixa/imprimir', [\App\Controllers\RelatoriosController::class, 'livroCaixaImprimir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/financeiro/livro-caixa/csv', [\App\Controllers\RelatoriosController::class, 'livroCaixaCsv'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/relatorios/livro-caixa', [\App\Controllers\RelatoriosController::class, 'livroCaixa'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/relatorios/livro-caixa/imprimir', [\App\Controllers\RelatoriosController::class, 'livroCaixaImprimir'], [
+    \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
+]);
+$router->get('/relatorios/livro-caixa/csv', [\App\Controllers\RelatoriosController::class, 'livroCaixaCsv'], [
     \App\Core\RBAC::requireRole([\App\Core\RBAC::ROLE_ADMINISTRADOR, \App\Core\RBAC::ROLE_OPERADOR])
 ]);
 

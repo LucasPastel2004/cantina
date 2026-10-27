@@ -2951,6 +2951,465 @@ class RelatoriosController extends Controller
     }
 
     /**
+     * Tela Interativa do Livro Caixa Diário com Carga Sob Demanda
+     */
+    public function livroCaixa(): void
+    {
+        $hoje = date('Y-m-d');
+        $dataInicio = (string)$this->input('data_inicio', date('Y-m-01'));
+        $dataFim = (string)$this->input('data_fim', $hoje);
+
+        $filtrar = (bool)($this->input('filtrar', false) || isset($_GET['filtrar']));
+        $jaFiltrado = $filtrar || !empty($_GET['data_inicio']);
+
+        $dadosLivroCaixa = null;
+        if ($jaFiltrado) {
+            $dadosLivroCaixa = $this->obterDadosLivroCaixa($dataInicio, $dataFim);
+        }
+
+        $usuario = \App\Core\Auth::user();
+
+        $this->render('relatorios/livro_caixa', [
+            'pageTitle'       => 'Livro Caixa Diário',
+            'pageHeading'     => 'Livro Caixa Diário',
+            'activeMenu'      => 'livro_caixa',
+            'dataInicio'      => $dataInicio,
+            'dataFim'         => $dataFim,
+            'jaFiltrado'      => $jaFiltrado,
+            'dadosLivroCaixa' => $dadosLivroCaixa,
+            'usuario'         => $usuario,
+            'user'            => $usuario
+        ]);
+    }
+
+    /**
+     * Espelho Oficial A4 Landscape para Impressão Nativa (Print to PDF) do Livro Caixa
+     */
+    public function livroCaixaImprimir(): void
+    {
+        $hoje = date('Y-m-d');
+        $dataInicio = (string)$this->input('data_inicio', date('Y-m-01'));
+        $dataFim = (string)$this->input('data_fim', $hoje);
+
+        $dados = $this->obterDadosLivroCaixa($dataInicio, $dataFim);
+
+        $logoPath = dirname(__DIR__, 2) . '/assets/img/logo-colegio.jpg';
+        $logoDataUri = '';
+        if (file_exists($logoPath)) {
+            $logoDataUri = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoPath));
+        }
+
+        $this->render('relatorios/livro_caixa_pdf', [
+            'dados'          => $dados,
+            'linhas'         => $dados['linhas'] ?? [],
+            'totais'         => $dados['totais'] ?? [],
+            'periodoOficial' => $dados['periodo_oficial'],
+            'saldoAnterior'  => $dados['saldo_anterior'] ?? 0.0,
+            'saldoFinal'     => $dados['saldo_final'] ?? 0.0,
+            'logoDataUri'    => $logoDataUri,
+            'isPdf'          => false,
+        ], null);
+    }
+
+    /**
+     * Exportação em Planilha Excel (CSV) do Livro Caixa Diário
+     */
+    public function livroCaixaCsv(): void
+    {
+        $hoje = date('Y-m-d');
+        $dataInicio = (string)$this->input('data_inicio', date('Y-m-01'));
+        $dataFim = (string)$this->input('data_fim', $hoje);
+
+        $dados = $this->obterDadosLivroCaixa($dataInicio, $dataFim);
+        $linhas = $dados['linhas'] ?? [];
+        $totais = $dados['totais'] ?? [];
+
+        $nomeArquivo = 'livro_caixa_' . str_replace('-', '', $dataInicio) . '_' . str_replace('-', '', $dataFim) . '.csv';
+
+        if (!defined('CANTINA_TEST_MODE')) {
+            header('Content-Type: text/csv; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+        }
+
+        $output = fopen('php://output', 'w');
+        fputs($output, "\xEF\xBB\xBF"); // BOM UTF-8
+
+        fputcsv($output, self::sanitizarCsvLinha(['COLÉGIO MONTEIRO LOBATO — LIVRO CAIXA DIÁRIO']), ';', '"', "\\");
+        fputcsv($output, self::sanitizarCsvLinha(['Período:', $dados['periodo_oficial']]), ';', '"', "\\");
+        fputcsv($output, self::sanitizarCsvLinha(['Saldo Anterior:', number_format($dados['saldo_anterior'], 2, ',', '.')]), ';', '"', "\\");
+        fputcsv($output, self::sanitizarCsvLinha(['Saldo Final:', number_format($dados['saldo_final'], 2, ',', '.')]), ';', '"', "\\");
+        fputcsv($output, [], ';', '"', "\\");
+
+        // Cabeçalho com as 13 colunas
+        fputcsv($output, self::sanitizarCsvLinha([
+            'DATA', 'DIA', 'DESCRIÇÃO',
+            'RECARGA PIX ONLINE', 'RECARGA PIX PDV', 'RECARGA DH PDV',
+            'VENDA PIX PDV', 'VENDA DH PDV',
+            'PAGAMENTO PIX', 'PAGAMENTO DINHEIRO',
+            'CRÉDITO', 'DÉBITO', 'SALDO'
+        ]), ';', '"', "\\");
+
+        foreach ($linhas as $l) {
+            fputcsv($output, self::sanitizarCsvLinha([
+                $l['data'],
+                $l['dia_semana'],
+                $l['descricao'],
+                $l['recargas_pix_online'] > 0 ? number_format($l['recargas_pix_online'], 2, ',', '.') : '-',
+                $l['recargas_pix_pdv'] > 0 ? number_format($l['recargas_pix_pdv'], 2, ',', '.') : '-',
+                $l['recargas_dinheiro'] > 0 ? number_format($l['recargas_dinheiro'], 2, ',', '.') : '-',
+                $l['vendas_pix_pdv'] > 0 ? number_format($l['vendas_pix_pdv'], 2, ',', '.') : '-',
+                $l['vendas_dinheiro_pdv'] > 0 ? number_format($l['vendas_dinheiro_pdv'], 2, ',', '.') : '-',
+                $l['pagamento_pix'] > 0 ? number_format($l['pagamento_pix'], 2, ',', '.') : '-',
+                $l['pagamento_dinheiro'] > 0 ? number_format($l['pagamento_dinheiro'], 2, ',', '.') : '-',
+                $l['credito'] > 0 ? number_format($l['credito'], 2, ',', '.') : '-',
+                $l['debito'] > 0 ? number_format($l['debito'], 2, ',', '.') : '-',
+                number_format($l['saldo'], 2, ',', '.')
+            ]), ';', '"', "\\");
+        }
+
+        fputcsv($output, [], ';', '"', "\\");
+        fputcsv($output, self::sanitizarCsvLinha([
+            'TOTAIS DO PERÍODO', '', '',
+            number_format($totais['recargas_pix_online'] ?? 0, 2, ',', '.'),
+            number_format($totais['recargas_pix_pdv'] ?? 0, 2, ',', '.'),
+            number_format($totais['recargas_dinheiro'] ?? 0, 2, ',', '.'),
+            number_format($totais['vendas_pix_pdv'] ?? 0, 2, ',', '.'),
+            number_format($totais['vendas_dinheiro_pdv'] ?? 0, 2, ',', '.'),
+            number_format($totais['pagamento_pix'] ?? 0, 2, ',', '.'),
+            number_format($totais['pagamento_dinheiro'] ?? 0, 2, ',', '.'),
+            number_format($totais['credito'] ?? 0, 2, ',', '.'),
+            number_format($totais['debito'] ?? 0, 2, ',', '.'),
+            number_format($dados['saldo_final'] ?? 0, 2, ',', '.')
+        ]), ';', '"', "\\");
+
+        fclose($output);
+        if (!defined('CANTINA_TEST_MODE')) {
+            exit;
+        }
+    }
+
+    /**
+     * Apuração Contábil das 13 Colunas do Livro Caixa Diário
+     */
+    public function obterDadosLivroCaixa(string $dataInicio, string $dataFim): array
+    {
+        $pdo = \App\Core\Model::getPdo();
+
+        // 1. Saldo Anterior (Entradas Anteriores - Saídas Anteriores)
+        $sqlEntradasAnt = "
+            SELECT 
+                (SELECT COALESCE(SUM(valor), 0) FROM transacoes_carteira WHERE tipo_transacao = 'recarga_pix' AND DATE(created_at) < :ini1) +
+                (SELECT COALESCE(SUM(valor), 0) FROM transacoes_carteira WHERE tipo_transacao = 'recarga_dinheiro' AND DATE(created_at) < :ini2) +
+                (SELECT COALESCE(SUM(valor_total), 0) FROM vendas_balcao WHERE forma_pagamento IN ('dinheiro', 'pix', 'pix_balcao') AND status != 'estornada' AND DATE(created_at) < :ini3)
+            AS total_entradas_ant
+        ";
+        $stmtAnt = $pdo->prepare($sqlEntradasAnt);
+        $stmtAnt->execute([
+            ':ini1' => $dataInicio,
+            ':ini2' => $dataInicio,
+            ':ini3' => $dataInicio,
+        ]);
+        $totalEntradasAnt = (float)$stmtAnt->fetchColumn();
+
+        $sqlSaidasAnt = "
+            SELECT 
+                (SELECT COALESCE(SUM(valor), 0) FROM fornecedor_recibos WHERE deleted_at IS NULL AND data_pagamento < :ini1) +
+                (SELECT COALESCE(SUM(valor), 0) FROM despesas_operacionais WHERE deleted_at IS NULL AND status = 'pago' AND data_pagamento < :ini2)
+            AS total_saidas_ant
+        ";
+        $stmtSaidasAnt = $pdo->prepare($sqlSaidasAnt);
+        $stmtSaidasAnt->execute([
+            ':ini1' => $dataInicio,
+            ':ini2' => $dataInicio,
+        ]);
+        $totalSaidasAnt = (float)$stmtSaidasAnt->fetchColumn();
+
+        $saldoAnterior = $totalEntradasAnt - $totalSaidasAnt;
+        $saldoCorrente = $saldoAnterior;
+
+        // 2. Entradas no Período
+        // a) Recargas Pix Online
+        $sqlRecOnline = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor), 0) as total
+            FROM transacoes_carteira
+            WHERE tipo_transacao = 'recarga_pix'
+              AND (operador_id IS NULL AND descricao NOT LIKE '%Balcão%' AND descricao NOT LIKE '%PDV%')
+              AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlRecOnline);
+        $stmt->execute([':ini' => $dataInicio, ':fim' => $dataFim]);
+        $mapRecPixOnline = [];
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapRecPixOnline[$r['dia']] = (float)$r['total'];
+        }
+
+        // b) Recargas Pix PDV
+        $sqlRecPixPdv = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor), 0) as total
+            FROM transacoes_carteira
+            WHERE tipo_transacao = 'recarga_pix'
+              AND (operador_id IS NOT NULL OR descricao LIKE '%Balcão%' OR descricao LIKE '%PDV%')
+              AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlRecPixPdv);
+        $stmt->execute([':ini' => $dataInicio, ':fim' => $dataFim]);
+        $mapRecPixPdv = [];
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapRecPixPdv[$r['dia']] = (float)$r['total'];
+        }
+
+        // c) Recargas Dinheiro PDV
+        $sqlRecDin = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor), 0) as total
+            FROM transacoes_carteira
+            WHERE tipo_transacao = 'recarga_dinheiro'
+              AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlRecDin);
+        $stmt->execute([':ini' => $dataInicio, ':fim' => $dataFim]);
+        $mapRecDin = [];
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapRecDin[$r['dia']] = (float)$r['total'];
+        }
+
+        // d) Vendas Dinheiro PDV
+        $sqlVbDin = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor_total), 0) as total
+            FROM vendas_balcao
+            WHERE forma_pagamento = 'dinheiro'
+              AND status != 'estornada'
+              AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlVbDin);
+        $stmt->execute([':ini' => $dataInicio, ':fim' => $dataFim]);
+        $mapVbDin = [];
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapVbDin[$r['dia']] = (float)$r['total'];
+        }
+
+        // e) Vendas Pix PDV
+        $sqlVbPix = "
+            SELECT DATE(created_at) as dia, COALESCE(SUM(valor_total), 0) as total
+            FROM vendas_balcao
+            WHERE forma_pagamento IN ('pix', 'pix_balcao')
+              AND status != 'estornada'
+              AND DATE(created_at) BETWEEN :ini AND :fim
+            GROUP BY DATE(created_at)
+        ";
+        $stmt = $pdo->prepare($sqlVbPix);
+        $stmt->execute([':ini' => $dataInicio, ':fim' => $dataFim]);
+        $mapVbPix = [];
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $mapVbPix[$r['dia']] = (float)$r['total'];
+        }
+
+        // 3. Recibos de Pagamento a Fornecedores
+        $sqlRecibos = "
+            SELECT r.*, f.nome_fantasia as fornecedor_nome
+            FROM fornecedor_recibos r
+            JOIN fornecedores f ON f.id = r.fornecedor_id
+            WHERE r.deleted_at IS NULL
+              AND r.data_pagamento BETWEEN :ini AND :fim
+            ORDER BY r.data_pagamento ASC, r.id ASC
+        ";
+        $stmt = $pdo->prepare($sqlRecibos);
+        $stmt->execute([':ini' => $dataInicio, ':fim' => $dataFim]);
+        $recibosPeriodo = [];
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $rec) {
+            $recibosPeriodo[$rec['data_pagamento']][] = $rec;
+        }
+
+        // 4. Despesas Operacionais Pagas
+        $sqlDespesas = "
+            SELECT *
+            FROM despesas_operacionais
+            WHERE deleted_at IS NULL
+              AND status = 'pago'
+              AND data_pagamento BETWEEN :ini AND :fim
+            ORDER BY data_pagamento ASC, id ASC
+        ";
+        $stmt = $pdo->prepare($sqlDespesas);
+        $stmt->execute([':ini' => $dataInicio, ':fim' => $dataFim]);
+        $despesasPeriodo = [];
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $desp) {
+            $despesasPeriodo[$desp['data_pagamento']][] = $desp;
+        }
+
+        // 5. Linhas do Livro Caixa
+        $diasSemanaPt = [
+            'Sunday'    => 'Domingo',
+            'Monday'    => 'Segunda',
+            'Tuesday'   => 'Terça',
+            'Wednesday' => 'Quarta',
+            'Thursday'  => 'Quinta',
+            'Friday'    => 'Sexta',
+            'Saturday'  => 'Sábado'
+        ];
+
+        $inicioObj = new \DateTime($dataInicio);
+        $fimObj    = new \DateTime($dataFim);
+        $fimObj->modify('+1 day');
+        $intervalo = new \DatePeriod($inicioObj, new \DateInterval('P1D'), $fimObj);
+
+        $linhas = [];
+        $totais = [
+            'recargas_pix_online' => 0.0,
+            'recargas_pix_pdv'    => 0.0,
+            'recargas_dinheiro'   => 0.0,
+            'vendas_pix_pdv'      => 0.0,
+            'vendas_dinheiro_pdv' => 0.0,
+            'pagamento_pix'       => 0.0,
+            'pagamento_dinheiro'  => 0.0,
+            'credito'             => 0.0,
+            'debito'              => 0.0,
+        ];
+
+        foreach ($intervalo as $dt) {
+            $diaIso = $dt->format('Y-m-d');
+            $diaSemanaIng = $dt->format('l');
+            $diaSemana = $diasSemanaPt[$diaSemanaIng] ?? $diaSemanaIng;
+            $dataFormatada = $dt->format('d/m/Y');
+
+            $rPixOnline = $mapRecPixOnline[$diaIso] ?? 0.0;
+            $rPixPdv    = $mapRecPixPdv[$diaIso] ?? 0.0;
+            $rDin       = $mapRecDin[$diaIso] ?? 0.0;
+            $vPix       = $mapVbPix[$diaIso] ?? 0.0;
+            $vDin       = $mapVbDin[$diaIso] ?? 0.0;
+            $creditoDia = $rPixOnline + $rPixPdv + $rDin + $vPix + $vDin;
+
+            $recibosDia  = $recibosPeriodo[$diaIso] ?? [];
+            $despesasDia = $despesasPeriodo[$diaIso] ?? [];
+
+            // Linha de Crédito (Entradas) do Dia
+            if ($creditoDia > 0) {
+                $saldoCorrente += $creditoDia;
+                $linhas[] = [
+                    'data'                 => $dataFormatada,
+                    'dia_semana'           => $diaSemana,
+                    'descricao'            => 'Entradas do Dia (Vendas & Recargas)',
+                    'tipo'                 => 'credito',
+                    'recargas_pix_online'  => $rPixOnline,
+                    'recargas_pix_pdv'     => $rPixPdv,
+                    'recargas_dinheiro'    => $rDin,
+                    'vendas_pix_pdv'       => $vPix,
+                    'vendas_dinheiro_pdv'  => $vDin,
+                    'pagamento_pix'        => 0.0,
+                    'pagamento_dinheiro'   => 0.0,
+                    'credito'              => $creditoDia,
+                    'debito'               => 0.0,
+                    'saldo'                => $saldoCorrente,
+                ];
+
+                $totais['recargas_pix_online'] += $rPixOnline;
+                $totais['recargas_pix_pdv']    += $rPixPdv;
+                $totais['recargas_dinheiro']   += $rDin;
+                $totais['vendas_pix_pdv']      += $vPix;
+                $totais['vendas_dinheiro_pdv'] += $vDin;
+                $totais['credito']             += $creditoDia;
+            }
+
+            // Débitos: Recibos de Pagamento a Fornecedores
+            foreach ($recibosDia as $rec) {
+                $vlr = (float)$rec['valor'];
+                $isPix = ($rec['forma_pagamento'] === 'pix');
+                $pagtoPix = $isPix ? $vlr : 0.0;
+                $pagtoDin = !$isPix ? $vlr : 0.0;
+
+                $saldoCorrente -= $vlr;
+
+                $linhas[] = [
+                    'data'                 => $dataFormatada,
+                    'dia_semana'           => $diaSemana,
+                    'descricao'            => $rec['descricao'] . ' — ' . $rec['fornecedor_nome'],
+                    'tipo'                 => 'debito_recibo',
+                    'recargas_pix_online'  => 0.0,
+                    'recargas_pix_pdv'     => 0.0,
+                    'recargas_dinheiro'    => 0.0,
+                    'vendas_pix_pdv'       => 0.0,
+                    'vendas_dinheiro_pdv'  => 0.0,
+                    'pagamento_pix'        => $pagtoPix,
+                    'pagamento_dinheiro'   => $pagtoDin,
+                    'credito'              => 0.0,
+                    'debito'               => $vlr,
+                    'saldo'                => $saldoCorrente,
+                ];
+
+                $totais['pagamento_pix']      += $pagtoPix;
+                $totais['pagamento_dinheiro'] += $pagtoDin;
+                $totais['debito']             += $vlr;
+            }
+
+            // Débitos: Despesas Operacionais
+            foreach ($despesasDia as $desp) {
+                $vlr = (float)$desp['valor'];
+                $forma = strtolower(trim((string)($desp['forma_pagamento'] ?? '')));
+                $isPix = ($forma === 'pix' || strpos($forma, 'pix') !== false || strpos($forma, 'transf') !== false);
+                $pagtoPix = $isPix ? $vlr : 0.0;
+                $pagtoDin = !$isPix ? $vlr : 0.0;
+
+                $saldoCorrente -= $vlr;
+
+                $linhas[] = [
+                    'data'                 => $dataFormatada,
+                    'dia_semana'           => $diaSemana,
+                    'descricao'            => 'Despesa: ' . $desp['descricao'],
+                    'tipo'                 => 'debito_despesa',
+                    'recargas_pix_online'  => 0.0,
+                    'recargas_pix_pdv'     => 0.0,
+                    'recargas_dinheiro'    => 0.0,
+                    'vendas_pix_pdv'       => 0.0,
+                    'vendas_dinheiro_pdv'  => 0.0,
+                    'pagamento_pix'        => $pagtoPix,
+                    'pagamento_dinheiro'   => $pagtoDin,
+                    'credito'              => 0.0,
+                    'debito'               => $vlr,
+                    'saldo'                => $saldoCorrente,
+                ];
+
+                $totais['pagamento_pix']      += $pagtoPix;
+                $totais['pagamento_dinheiro'] += $pagtoDin;
+                $totais['debito']             += $vlr;
+            }
+
+            // Se o dia não teve nenhuma movimentação
+            if ($creditoDia == 0 && empty($recibosDia) && empty($despesasDia)) {
+                $linhas[] = [
+                    'data'                 => $dataFormatada,
+                    'dia_semana'           => $diaSemana,
+                    'descricao'            => 'Sem movimentações financeiras',
+                    'tipo'                 => 'neutro',
+                    'recargas_pix_online'  => 0.0,
+                    'recargas_pix_pdv'     => 0.0,
+                    'recargas_dinheiro'    => 0.0,
+                    'vendas_pix_pdv'       => 0.0,
+                    'vendas_dinheiro_pdv'  => 0.0,
+                    'pagamento_pix'        => 0.0,
+                    'pagamento_dinheiro'   => 0.0,
+                    'credito'              => 0.0,
+                    'debito'               => 0.0,
+                    'saldo'                => $saldoCorrente,
+                ];
+            }
+        }
+
+        return [
+            'periodo_oficial' => date('d/m/Y', strtotime($dataInicio)) . ' a ' . date('d/m/Y', strtotime($dataFim)),
+            'data_inicio'     => $dataInicio,
+            'data_fim'        => $dataFim,
+            'saldo_anterior'  => $saldoAnterior,
+            'saldo_final'     => $saldoCorrente,
+            'linhas'          => $linhas,
+            'totais'          => $totais,
+        ];
+    }
+
+    /**
      * Retorna a URL base normalizada da aplicação
      */
     protected function getBaseUrl(): string
