@@ -238,6 +238,28 @@ assertTest(str_contains($htmlRecibo, '2ª Via — Fornecedor Parceiro'), "Espelh
 assertTest(str_contains($htmlRecibo, 'sessenta reais'), "Espelho do recibo contém valor por extenso ('sessenta reais')");
 assertTest(str_contains($htmlRecibo, 'Salgados da Vovó'), "Espelho do recibo identifica o fornecedor favorecido");
 
+// -------------------------------------------------------------------------
+// 8. Teste de Renderização da View com Layout Admin Completo (Anti-Quebra)
+// -------------------------------------------------------------------------
+echo "\n>> 8. Testando Renderização com Layout Mestre Admin...\n";
+$_GET['data_inicio'] = '2026-10-01';
+$_GET['data_fim'] = '2026-10-27';
+$_GET['filtrar'] = '1';
+
+ob_start();
+$relCtrl->livroCaixa();
+$htmlLivroWeb = ob_get_clean();
+
+assertTest(str_contains($htmlLivroWeb, '<!DOCTYPE html>'), "View do Livro Caixa renderiza com <!DOCTYPE html> do layout admin");
+assertTest(str_contains($htmlLivroWeb, 'bootstrap.min.css'), "View inclui CSS do Bootstrap local");
+assertTest(str_contains($htmlLivroWeb, 'custom.css'), "View inclui CSS corporativo custom.css");
+assertTest(str_contains($htmlLivroWeb, 'app-admin-wrapper'), "View está encapsulada no wrapper do layout admin");
+assertTest(str_contains($htmlLivroWeb, 'sidebar-dock'), "View renderiza a barra lateral dock de navegação");
+assertTest(str_contains($htmlLivroWeb, 'app-page-content'), "View renderiza o container principal app-page-content");
+assertTest(str_contains($htmlLivroWeb, 'Livro Caixa Diário'), "View exibe o título oficial Livro Caixa Diário");
+assertTest(str_contains($htmlLivroWeb, 'stat-strip'), "View filtrada renderiza os indicadores stat-strip");
+assertTest(str_contains($htmlLivroWeb, 'table-enterprise'), "View filtrada renderiza a tabela corporativa de 13 colunas");
+
 echo "\n----------------------------------------------------------------------\n";
 echo " RESUMO FINAL: {$testesPassados} / {$totalTestes} asserções aprovadas\n";
 echo "======================================================================\n";

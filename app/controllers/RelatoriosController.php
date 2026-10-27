@@ -2979,7 +2979,7 @@ class RelatoriosController extends Controller
             'dadosLivroCaixa' => $dadosLivroCaixa,
             'usuario'         => $usuario,
             'user'            => $usuario
-        ]);
+        ], 'admin');
     }
 
     /**

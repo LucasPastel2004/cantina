@@ -2335,6 +2335,19 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   3. Suíte de testes `tests/livro_caixa_e_recibos_test.php` executada e aprovada com 69/69 asserções com 100% de sucesso.
 - Como evitar no futuro: Em colunas de auditoria que possuem chave estrangeira com `ON DELETE SET NULL` para a tabela `usuarios`, sempre verificar a existência prévia do ID ou garantir fallback gracioso para `NULL` caso o ID referenciado não exista na base.
 
+---
+
+## 2026-10-27 - Ausência do parâmetro de layout 'admin' na renderização do Livro Caixa causando exibição de HTML bruto sem CSS nem dock lateral
+
+- Sintoma: A tela `/financeiro/livro-caixa` renderizava texto puro sem formatação visual (fonte padrão serifada, botões nativos, inputs sem borda corporativa e ausência total da barra lateral dock e rodapé operacional).
+- Causa: Em `RelatoriosController::livroCaixa()`, a chamada `$this->render('relatorios/livro_caixa', [...])` omitiu o terceiro parâmetro `$layout`, assumindo o valor padrão `null`. No método `Controller::render()`, quando `$layout === null`, a view é renderizada diretamente (`require $viewPath`) sem encapsulamento no layout mestre (`layouts/admin.php`), deixando a página sem os links de Bootstrap, `custom.css` e a barra de navegação do sistema.
+- Solução aplicada:
+  1. Corrigida a chamada para `$this->render('relatorios/livro_caixa', [...], 'admin');` em `app/controllers/RelatoriosController.php`.
+  2. Atualizada a view `app/views/relatorios/livro_caixa.php` com identificadores `btnCsv` e `btnPdf` e script dinâmico de sincronização instantânea das datas nos botões de exportação e impressão nativa.
+  3. Adicionada bateria de testes automatizados na suíte `tests/livro_caixa_e_recibos_test.php` garantindo que a rota do Livro Caixa sempre renderize com a casca do layout admin (`app-admin-wrapper`, `sidebar-dock`, CSSs locais e `stat-strip`).
+- Como evitar no futuro: Em qualquer novo método de controller que renderize telas do painel administrativo ou financeiro, nunca omitir o terceiro parâmetro `'admin'` na invocação de `$this->render()`.
+
+
 
 
 

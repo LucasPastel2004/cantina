@@ -43,12 +43,14 @@ $saldoFinal = (float)($dadosLivroCaixa['saldo_final'] ?? 0.0);
         <!-- Ações de Exportação e Emissão -->
         <div class="d-flex flex-wrap gap-2">
             <a href="<?php echo $baseUrl; ?>/financeiro/livro-caixa/csv?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
+               id="btnCsv"
                class="btn btn-sm btn-enterprise btn-secondary d-flex align-items-center gap-2"
                title="Exportar dados do Livro Caixa para planilha Microsoft Excel">
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/><path d="M4.5 12.5A.5.5 0 0 1 5 12h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 10h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 8h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5z"/></svg>
                 <span>Exportar Planilha (CSV)</span>
             </a>
             <a href="<?php echo $baseUrl; ?>/financeiro/livro-caixa/imprimir?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>" 
+               id="btnPdf"
                target="_blank"
                class="btn btn-sm btn-enterprise btn-primary d-inline-flex align-items-center gap-2" 
                title="Imprimir ou Salvar documento oficial em PDF no padrão A4">
@@ -287,9 +289,48 @@ $saldoFinal = (float)($dadosLivroCaixa['saldo_final'] ?? 0.0);
 </div>
 
 <script>
-function definirDatas(e, inicio, fim) {
-    if (e) e.preventDefault();
-    document.getElementById('dataInicio').value = inicio;
-    document.getElementById('dataFim').value = fim;
+function atualizarLinksExportacao() {
+    var dataInicio = document.getElementById('dataInicio');
+    var dataFim = document.getElementById('dataFim');
+    if (!dataInicio || !dataFim) return;
+    
+    var valInicio = encodeURIComponent(dataInicio.value);
+    var valFim = encodeURIComponent(dataFim.value);
+    
+    var btnCsv = document.getElementById('btnCsv');
+    var btnPdf = document.getElementById('btnPdf');
+    
+    if (btnCsv) {
+        btnCsv.href = '<?php echo $baseUrl; ?>/financeiro/livro-caixa/csv?data_inicio=' + valInicio + '&data_fim=' + valFim;
+    }
+    if (btnPdf) {
+        btnPdf.href = '<?php echo $baseUrl; ?>/financeiro/livro-caixa/imprimir?data_inicio=' + valInicio + '&data_fim=' + valFim;
+    }
 }
+
+function definirDatas(e, inicio, fim) {
+    if (e && e.preventDefault) e.preventDefault();
+    var inputInicio = document.getElementById('dataInicio');
+    var inputFim = document.getElementById('dataFim');
+    if (inputInicio) inputInicio.value = inicio;
+    if (inputFim) inputFim.value = fim;
+    atualizarLinksExportacao();
+}
+
+window.definirDatas = definirDatas;
+window.atualizarLinksExportacao = atualizarLinksExportacao;
+
+document.addEventListener('DOMContentLoaded', function() {
+    var inputInicio = document.getElementById('dataInicio');
+    var inputFim = document.getElementById('dataFim');
+    if (inputInicio) {
+        inputInicio.addEventListener('change', atualizarLinksExportacao);
+        inputInicio.addEventListener('input', atualizarLinksExportacao);
+    }
+    if (inputFim) {
+        inputFim.addEventListener('change', atualizarLinksExportacao);
+        inputFim.addEventListener('input', atualizarLinksExportacao);
+    }
+    atualizarLinksExportacao();
+});
 </script>
