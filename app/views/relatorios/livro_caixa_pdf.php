@@ -364,9 +364,9 @@ $isPdf = $isPdf ?? false;
                 <th style="width: 6.8%; text-align: right;">Venda Din</th>
                 <th style="width: 6.8%; text-align: right;">Pgto Pix</th>
                 <th style="width: 6.8%; text-align: right;">Pgto Din</th>
-                <th style="width: 7.2%; text-align: right; background-color: #e2e8f0 !important;">Crédito</th>
-                <th style="width: 7.2%; text-align: right; background-color: #fee2e2 !important;">Débito</th>
-                <th style="width: 8.0%; text-align: right; background-color: #f1f5f9 !important;">Saldo</th>
+                <th style="width: 7.2%; text-align: right;">Crédito</th>
+                <th style="width: 7.2%; text-align: right;">Débito</th>
+                <th style="width: 8.0%; text-align: right;">Saldo</th>
             </tr>
         </thead>
         <tbody>
@@ -389,22 +389,18 @@ $isPdf = $isPdf ?? false;
 
             <?php if (empty($linhas)): ?>
                 <tr>
-                    <td colspan="13" class="text-center" style="padding: 10px;">Sem movimentações registradas no período informado.</td>
+                    <td colspan="13" class="text-center" style="padding: 10px;">Sem movimentações financeiras registradas no período informado.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($linhas as $l): ?>
-                    <tr style="<?php echo ($l['tipo'] === 'debito_recibo' || $l['tipo'] === 'debito_despesa') ? 'background-color: #fffbeb !important;' : ''; ?>">
+                    <tr>
                         <td class="text-center font-tabular"><?php echo htmlspecialchars($l['data'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td class="text-start"><?php echo htmlspecialchars($l['dia_semana'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td class="text-start">
                             <?php if ($l['tipo'] === 'credito'): ?>
                                 <strong><?php echo htmlspecialchars($l['descricao'], ENT_QUOTES, 'UTF-8'); ?></strong>
-                            <?php elseif ($l['tipo'] === 'debito_recibo'): ?>
-                                <span>🧾 <?php echo htmlspecialchars($l['descricao'], ENT_QUOTES, 'UTF-8'); ?></span>
-                            <?php elseif ($l['tipo'] === 'debito_despesa'): ?>
-                                <span>💳 <?php echo htmlspecialchars($l['descricao'], ENT_QUOTES, 'UTF-8'); ?></span>
                             <?php else: ?>
-                                <span style="color: #64748b;"><?php echo htmlspecialchars($l['descricao'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                <span><?php echo htmlspecialchars($l['descricao'], ENT_QUOTES, 'UTF-8'); ?></span>
                             <?php endif; ?>
                         </td>
 
@@ -420,10 +416,10 @@ $isPdf = $isPdf ?? false;
                         <td class="text-end font-tabular"><?php echo $l['pagamento_dinheiro'] > 0 ? number_format($l['pagamento_dinheiro'], 2, ',', '.') : '-'; ?></td>
 
                         <!-- Crédito / Débito / Saldo -->
-                        <td class="text-end font-tabular" style="font-weight: 700; background-color: #f8fafc !important;">
+                        <td class="text-end font-tabular" style="font-weight: 700;">
                             <?php echo $l['credito'] > 0 ? number_format($l['credito'], 2, ',', '.') : '-'; ?>
                         </td>
-                        <td class="text-end font-tabular" style="font-weight: 700; background-color: #fff1f2 !important;">
+                        <td class="text-end font-tabular" style="font-weight: 700;">
                             <?php echo $l['debito'] > 0 ? number_format($l['debito'], 2, ',', '.') : '-'; ?>
                         </td>
                         <td class="text-end font-tabular" style="font-weight: 700;">

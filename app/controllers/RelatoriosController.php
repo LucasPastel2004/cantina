@@ -3297,7 +3297,7 @@ class RelatoriosController extends Controller
                 $linhas[] = [
                     'data'                 => $dataFormatada,
                     'dia_semana'           => $diaSemana,
-                    'descricao'            => 'Entradas do Dia (Vendas & Recargas)',
+                    'descricao'            => 'Vendas e Recargas',
                     'tipo'                 => 'credito',
                     'recargas_pix_online'  => $rPixOnline,
                     'recargas_pix_pdv'     => $rPixPdv,
@@ -3328,10 +3328,15 @@ class RelatoriosController extends Controller
 
                 $saldoCorrente -= $vlr;
 
+                $descRecibo = trim($rec['descricao']);
+                if (!empty($rec['fornecedor_nome']) && stripos($descRecibo, $rec['fornecedor_nome']) === false) {
+                    $descRecibo .= ' — ' . $rec['fornecedor_nome'];
+                }
+
                 $linhas[] = [
                     'data'                 => $dataFormatada,
                     'dia_semana'           => $diaSemana,
-                    'descricao'            => $rec['descricao'] . ' — ' . $rec['fornecedor_nome'],
+                    'descricao'            => $descRecibo,
                     'tipo'                 => 'debito_recibo',
                     'recargas_pix_online'  => 0.0,
                     'recargas_pix_pdv'     => 0.0,
@@ -3363,7 +3368,7 @@ class RelatoriosController extends Controller
                 $linhas[] = [
                     'data'                 => $dataFormatada,
                     'dia_semana'           => $diaSemana,
-                    'descricao'            => 'Despesa: ' . $desp['descricao'],
+                    'descricao'            => $desp['descricao'],
                     'tipo'                 => 'debito_despesa',
                     'recargas_pix_online'  => 0.0,
                     'recargas_pix_pdv'     => 0.0,
@@ -3380,26 +3385,6 @@ class RelatoriosController extends Controller
                 $totais['pagamento_pix']      += $pagtoPix;
                 $totais['pagamento_dinheiro'] += $pagtoDin;
                 $totais['debito']             += $vlr;
-            }
-
-            // Se o dia não teve nenhuma movimentação
-            if ($creditoDia == 0 && empty($recibosDia) && empty($despesasDia)) {
-                $linhas[] = [
-                    'data'                 => $dataFormatada,
-                    'dia_semana'           => $diaSemana,
-                    'descricao'            => 'Sem movimentações financeiras',
-                    'tipo'                 => 'neutro',
-                    'recargas_pix_online'  => 0.0,
-                    'recargas_pix_pdv'     => 0.0,
-                    'recargas_dinheiro'    => 0.0,
-                    'vendas_pix_pdv'       => 0.0,
-                    'vendas_dinheiro_pdv'  => 0.0,
-                    'pagamento_pix'        => 0.0,
-                    'pagamento_dinheiro'   => 0.0,
-                    'credito'              => 0.0,
-                    'debito'               => 0.0,
-                    'saldo'                => $saldoCorrente,
-                ];
             }
         }
 
