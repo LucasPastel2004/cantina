@@ -239,12 +239,11 @@ assertTest(str_contains($htmlRecibo, 'sessenta reais'), "Espelho do recibo cont�
 assertTest(str_contains($htmlRecibo, 'Salgados da Vovó'), "Espelho do recibo identifica o fornecedor favorecido");
 
 // -------------------------------------------------------------------------
-// 8. Teste de Renderização da View com Layout Admin Completo (Anti-Quebra)
+// 8. Teste de Renderização da Tela de Emissão sob Demanda (Layout Admin)
 // -------------------------------------------------------------------------
-echo "\n>> 8. Testando Renderização com Layout Mestre Admin...\n";
+echo "\n>> 8. Testando Renderização com Layout Mestre Admin & Emissão sob Demanda...\n";
 $_GET['data_inicio'] = '2026-10-01';
 $_GET['data_fim'] = '2026-10-27';
-$_GET['filtrar'] = '1';
 
 ob_start();
 $relCtrl->livroCaixa();
@@ -257,8 +256,10 @@ assertTest(str_contains($htmlLivroWeb, 'app-admin-wrapper'), "View está encapsu
 assertTest(str_contains($htmlLivroWeb, 'sidebar-dock'), "View renderiza a barra lateral dock de navegação");
 assertTest(str_contains($htmlLivroWeb, 'app-page-content'), "View renderiza o container principal app-page-content");
 assertTest(str_contains($htmlLivroWeb, 'Livro Caixa Diário'), "View exibe o título oficial Livro Caixa Diário");
-assertTest(str_contains($htmlLivroWeb, 'stat-strip'), "View filtrada renderiza os indicadores stat-strip");
-assertTest(str_contains($htmlLivroWeb, 'table-enterprise'), "View filtrada renderiza a tabela corporativa de 13 colunas");
+assertTest(str_contains($htmlLivroWeb, 'btnImprimirA4'), "Formulário contém o botão de Imprimir / Salvar PDF (A4)");
+assertTest(str_contains($htmlLivroWeb, 'btnCsv'), "Formulário contém o botão de Exportar Planilha (CSV)");
+assertTest(!str_contains($htmlLivroWeb, '>Filtrar<'), "Botão 'Filtrar' foi removido em favor da emissão direta sob demanda");
+assertTest(str_contains($htmlLivroWeb, 'Emissão Contábil do Livro Caixa sob Demanda'), "View exibe o card de orientação sob demanda");
 
 echo "\n----------------------------------------------------------------------\n";
 echo " RESUMO FINAL: {$testesPassados} / {$totalTestes} asserções aprovadas\n";

@@ -2956,27 +2956,32 @@ class RelatoriosController extends Controller
     public function livroCaixa(): void
     {
         $hoje = date('Y-m-d');
-        $dataInicio = (string)$this->input('data_inicio', date('Y-m-01'));
-        $dataFim = (string)$this->input('data_fim', $hoje);
+        $primeiroDiaMes = date('Y-m-01');
 
-        $filtrar = (bool)($this->input('filtrar', false) || isset($_GET['filtrar']));
-        $jaFiltrado = $filtrar || !empty($_GET['data_inicio']);
+        $dataInicio = (string)$this->input('data_inicio', $primeiroDiaMes);
+        $dataFim    = (string)$this->input('data_fim', $hoje);
 
-        $dadosLivroCaixa = null;
-        if ($jaFiltrado) {
-            $dadosLivroCaixa = $this->obterDadosLivroCaixa($dataInicio, $dataFim);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataInicio)) {
+            $dataInicio = $primeiroDiaMes;
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataFim)) {
+            $dataFim = $hoje;
+        }
+        if ($dataInicio > $dataFim) {
+            $tmp = $dataInicio;
+            $dataInicio = $dataFim;
+            $dataFim = $tmp;
         }
 
         $usuario = \App\Core\Auth::user();
 
         $this->render('relatorios/livro_caixa', [
+            'title'           => 'Livro Caixa Diário - Colégio Monteiro Lobato',
             'pageTitle'       => 'Livro Caixa Diário',
             'pageHeading'     => 'Livro Caixa Diário',
             'activeMenu'      => 'livro_caixa',
             'dataInicio'      => $dataInicio,
             'dataFim'         => $dataFim,
-            'jaFiltrado'      => $jaFiltrado,
-            'dadosLivroCaixa' => $dadosLivroCaixa,
             'usuario'         => $usuario,
             'user'            => $usuario
         ], 'admin');
