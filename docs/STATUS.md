@@ -2020,7 +2020,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 * [x] **Repaginação da Tela Web Sob Demanda e dos Dois Espelhos A4 (Texto Contábil + DRE Visual Gráfico):**
   * **Tela Principal Sob Demanda (`app/views/financeiro/dre.php`):**
     - Removidos da tela principal os gráficos que estavam marcados para exclusão (`chartEvolucaoMensal` e `chartProdutosRentaveis`) e toda a carga visual fixa;
-    - A tela agora funciona 100% sob demanda no filtro de período: o botão `Filtrar / Atualizar` foi substituído pelo botão **`Imprimir / Salvar PDF (A4)`** (`#btnImprimirDre`), que ao ser clicado exibe o seletor com as 3 opções oficiais:
+    - A tela agora funciona 100% sob demanda no filtro de período: o botão `Filtrar / Atualizar` foi substituído pelo botão **`Imprimir / Salvar PDF (A4)`** (`#btnImprimirDre`), sem botões redundantes no topo ou na caixa informativa inferior, exibindo ao ser clicado o seletor com as 3 opções oficiais:
       1. **Relatório Texto (DRE Contábil A4)** (`/financeiro/dre/imprimir`);
       2. **Relatório Gráfico (DRE Visual + Produtos Rentáveis A4)** (`/financeiro/dre/grafico`);
       3. **Exportar Planilha (CSV)** (`/financeiro/dre/csv`).
@@ -2031,7 +2031,7 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * **Relatório Texto Contábil (`app/views/financeiro/dre_pdf.php` e rota `/financeiro/dre/imprimir`):**
     - Grade anual comparativa de 12 meses (`Jan` a `Dez` + `Total`) exibindo os Blocos 1 e 2 unificados em folha A4 Paisagem com botão de alternância direta para o Relatório Gráfico.
 * [x] **Execução e Validação das Baterias de Testes:**
-  * `tests/arrecadacao_dre_regimes_test.php`: 134/134 asserções aprovadas com 100% de sucesso;
+  * `tests/arrecadacao_dre_regimes_test.php`: 136/136 asserções aprovadas com 100% de sucesso;
   * `tests/fase24_test.php`: 104/104 asserções aprovadas com 100% de sucesso;
   * `tests/teste_dre_estoque_design.php`: 100% aprovado;
   * `tests/teste_validacao_relatorios_design.php`: 13/13 relatórios aprovados com 0 erros.

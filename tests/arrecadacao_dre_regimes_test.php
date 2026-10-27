@@ -299,6 +299,8 @@ class ArrecadacaoDreRegimesTest
         $this->assert(str_contains($htmlDre, 'Exportar Planilha (CSV)'), "Menu do botão Imprimir oferece opção de Exportar Planilha (CSV)");
         $this->assert(!str_contains($htmlDre, 'chartEvolucaoMensal'), "Gráfico em X vermelho (Evolução Mensal) excluído conforme solicitado");
         $this->assert(!str_contains($htmlDre, 'chartProdutosRentaveis'), "Gráfico em X vermelho (Curva de Produtos) excluído conforme solicitado");
+        $this->assert(!str_contains($htmlDre, 'btnCsvTopo'), "Botão extra de CSV no topo removido conforme solicitado");
+        $this->assert(!str_contains($htmlDre, 'Gerar Relatório Texto (A4)'), "Botões duplicados no rodapé informativo removidos conforme solicitado");
 
         // 4.2 DreController::graficosJson no modelo unificado
         ob_start();

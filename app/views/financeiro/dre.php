@@ -42,18 +42,6 @@ $fimAno            = date('Y-12-31');
                 Apuração unificada sem duplicidade: contabiliza recargas reais na conta, consumo de saldo em lanches, vendas diretas no balcão, custos (CMV) e despesas operacionais.
             </p>
         </div>
-
-        <!-- Atalho superior de Exportação CSV -->
-        <div class="d-flex flex-wrap gap-2">
-            <a href="<?php echo $baseUrl; ?>/financeiro/dre/csv?data_inicio=<?php echo urlencode($dataInicio); ?>&data_fim=<?php echo urlencode($dataFim); ?>"
-               id="btnCsvTopo"
-               onclick="emitirDre('csv', event)"
-               class="btn btn-sm btn-enterprise btn-secondary d-inline-flex align-items-center gap-2"
-               title="Exportar dados completos do DRE Unificado para planilha Microsoft Excel">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H9V3.5h.5zM3 11.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-1zm4.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-2z"/></svg>
-                <span>Exportar Planilha (CSV)</span>
-            </a>
-        </div>
     </div>
 
     <!-- Bloco de Filtro de Período & Botão de Emissão com Escolha de Formato (Texto / Gráfico / CSV) -->
@@ -170,23 +158,9 @@ $fimAno            = date('Y-12-31');
                 </svg>
             </div>
             <h2 class="h6 font-weight-bold text-dark mb-1">Geração do DRE Gerencial sob Demanda</h2>
-            <p class="text-secondary text-microcopy mb-3 mx-auto" style="max-width: 640px;">
+            <p class="text-secondary text-microcopy mb-0 mx-auto" style="max-width: 640px;">
                 Selecione o período desejado acima e clique em <strong>Imprimir / Salvar PDF (A4)</strong> para escolher entre o <strong>Relatório Texto (Grade Contábil A4)</strong>, o <strong>Relatório Gráfico (DRE Visual Unificado + Lista dos Produtos Mais Rentáveis)</strong> ou a <strong>Planilha Excel (CSV)</strong>.
             </p>
-            <div class="d-flex justify-content-center gap-2 flex-wrap">
-                <button type="button" onclick="emitirDre('texto', event)" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5">
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/></svg>
-                    <span>Gerar Relatório Texto (A4)</span>
-                </button>
-                <button type="button" onclick="emitirDre('grafico', event)" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5">
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M7.5 1.018a7 7 0 0 0-4.79 11.566L7.5 7.793V1.018zm1 0V7.5h6.482A7.001 7.001 0 0 0 8.5 1.018zM14.982 8.5H8.207l-4.79 4.79A7 7 0 0 0 14.982 8.5zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z"/></svg>
-                    <span>Gerar Relatório Gráfico (DRE Visual A4)</span>
-                </button>
-                <button type="button" onclick="emitirDre('csv', event)" class="btn btn-enterprise btn-secondary btn-sm d-inline-flex align-items-center gap-1.5">
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H9V3.5h.5z"/></svg>
-                    <span>Exportar Planilha (CSV)</span>
-                </button>
-            </div>
         </div>
     </div>
 
