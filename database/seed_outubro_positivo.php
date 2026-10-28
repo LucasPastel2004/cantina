@@ -37,8 +37,15 @@ try {
     echo "[1/7] Carregando cadastros mestres...\n";
 
     // Operador e Administrador
-    $operadorId = (int)$pdo->query("SELECT id FROM usuarios WHERE perfil = 'operador' AND deleted_at IS NULL LIMIT 1")->fetchColumn() ?: 178;
-    $adminId    = (int)$pdo->query("SELECT id FROM usuarios WHERE perfil = 'administrador' AND deleted_at IS NULL LIMIT 1")->fetchColumn() ?: 244;
+    $operadorId = (int)$pdo->query("SELECT id FROM usuarios WHERE perfil = 'operador' AND deleted_at IS NULL ORDER BY id ASC LIMIT 1")->fetchColumn();
+    if (!$operadorId) {
+        $operadorId = (int)$pdo->query("SELECT id FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1")->fetchColumn() ?: 1;
+    }
+
+    $adminId = (int)$pdo->query("SELECT id FROM usuarios WHERE perfil = 'administrador' AND deleted_at IS NULL ORDER BY id ASC LIMIT 1")->fetchColumn();
+    if (!$adminId) {
+        $adminId = $operadorId;
+    }
 
     // Alunos com seus respectivos responsáveis
     $alunosStmt = $pdo->query("
@@ -70,10 +77,38 @@ try {
     echo "  - Produtos disponíveis: " . count($produtos) . "\n";
 
     // Fornecedores
-    $fornecedorSalgadoId = (int)$pdo->query("SELECT id FROM fornecedores WHERE nome_fantasia LIKE '%Salgado%' AND deleted_at IS NULL LIMIT 1")->fetchColumn();
-    $fornecedorCupcakeId = (int)$pdo->query("SELECT id FROM fornecedores WHERE nome_fantasia LIKE '%Cupcake%' AND deleted_at IS NULL LIMIT 1")->fetchColumn();
-    $fornecedorLacteaId  = (int)$pdo->query("SELECT id FROM fornecedores WHERE nome_fantasia LIKE '%Láctea%' AND deleted_at IS NULL LIMIT 1")->fetchColumn();
-    $fornecedorGeralId   = (int)$pdo->query("SELECT id FROM fornecedores WHERE id NOT IN ({$fornecedorSalgadoId}, {$fornecedorCupcakeId}, {$fornecedorLacteaId}) AND deleted_at IS NULL LIMIT 1")->fetchColumn() ?: 17;
+    $fornecedoresExistentes = $pdo->query("SELECT id, nome_fantasia FROM fornecedores WHERE deleted_at IS NULL ORDER BY id ASC")->fetchAll(\PDO::FETCH_ASSOC);
+    if (empty($fornecedoresExistentes)) {
+        $stmtCriaForn = $pdo->prepare("INSERT INTO fornecedores (razao_social, nome_fantasia, created_at) VALUES (:razao, :fantasia, NOW())");
+        $stmtCriaForn->execute([':razao' => 'Distribuidora de Salgados Ltda', ':fantasia' => 'Salgados & Cia']);
+        $id1 = (int)$pdo->lastInsertId();
+        $stmtCriaForn->execute([':razao' => 'Doceria Cupcake Sonhos Ltda', ':fantasia' => 'Cupcake & Doces']);
+        $id2 = (int)$pdo->lastInsertId();
+        $stmtCriaForn->execute([':razao' => 'Indústria Láctea Mineira Ltda', ':fantasia' => 'Láctea']);
+        $id3 = (int)$pdo->lastInsertId();
+        $fornecedoresExistentes = [
+            ['id' => $id1, 'nome_fantasia' => 'Salgados & Cia'],
+            ['id' => $id2, 'nome_fantasia' => 'Cupcake & Doces'],
+            ['id' => $id3, 'nome_fantasia' => 'Láctea'],
+        ];
+    }
+
+    $primeiroFornId = (int)$fornecedoresExistentes[0]['id'];
+    $segundoFornId  = isset($fornecedoresExistentes[1]) ? (int)$fornecedoresExistentes[1]['id'] : $primeiroFornId;
+    $terceiroFornId = isset($fornecedoresExistentes[2]) ? (int)$fornecedoresExistentes[2]['id'] : $primeiroFornId;
+
+    $fornecedorSalgadoId = 0;
+    $fornecedorCupcakeId = 0;
+    $fornecedorLacteaId  = 0;
+    foreach ($fornecedoresExistentes as $f) {
+        if (!$fornecedorSalgadoId && stripos($f['nome_fantasia'], 'salgado') !== false) $fornecedorSalgadoId = (int)$f['id'];
+        if (!$fornecedorCupcakeId && stripos($f['nome_fantasia'], 'cupcake') !== false) $fornecedorCupcakeId = (int)$f['id'];
+        if (!$fornecedorLacteaId && (stripos($f['nome_fantasia'], 'láctea') !== false || stripos($f['nome_fantasia'], 'lactea') !== false)) $fornecedorLacteaId = (int)$f['id'];
+    }
+    $fornecedorSalgadoId = $fornecedorSalgadoId ?: $primeiroFornId;
+    $fornecedorCupcakeId = $fornecedorCupcakeId ?: $segundoFornId;
+    $fornecedorLacteaId  = $fornecedorLacteaId ?: $terceiroFornId;
+    $fornecedorGeralId   = $primeiroFornId;
 
     // -------------------------------------------------------------------------
     // 2. HIGIENIZAÇÃO DE DADOS DE TESTE DE OUTUBRO & EQUILÍBRIO DO SALDO ANTERIOR
@@ -496,15 +531,15 @@ try {
     echo "[5/7] Semeando recibos de quitação a fornecedores...\n";
 
     $recibosModel = [
-        ['data' => '2026-10-02', 'forn' => $fornecedorSalgadoId ?: 26, 'desc' => 'Pagamento Salgado', 'valor' => 450.00, 'forma' => 'pix'],
-        ['data' => '2026-10-06', 'forn' => $fornecedorCupcakeId ?: 27, 'desc' => 'Pagamento Cupcake', 'valor' => 280.00, 'forma' => 'dinheiro'],
-        ['data' => '2026-10-09', 'forn' => $fornecedorLacteaId  ?: 1,  'desc' => 'Pagamento Laticínios e Sucos', 'valor' => 620.00, 'forma' => 'pix'],
-        ['data' => '2026-10-14', 'forn' => $fornecedorSalgadoId ?: 26, 'desc' => 'Pagamento Salgado', 'valor' => 510.00, 'forma' => 'pix'],
-        ['data' => '2026-10-16', 'forn' => $fornecedorCupcakeId ?: 27, 'desc' => 'Pagamento Cupcake', 'valor' => 320.00, 'forma' => 'dinheiro'],
-        ['data' => '2026-10-20', 'forn' => $fornecedorSalgadoId ?: 26, 'desc' => 'Pagamento Salgado', 'valor' => 480.00, 'forma' => 'pix'],
-        ['data' => '2026-10-23', 'forn' => $fornecedorGeralId   ?: 17, 'desc' => 'Pagamento Panificação & Pães', 'valor' => 580.00, 'forma' => 'pix'],
-        ['data' => '2026-10-27', 'forn' => $fornecedorCupcakeId ?: 27, 'desc' => 'Pagamento Cupcake', 'valor' => 350.00, 'forma' => 'dinheiro'],
-        ['data' => '2026-10-30', 'forn' => $fornecedorSalgadoId ?: 26, 'desc' => 'Pagamento Salgado', 'valor' => 520.00, 'forma' => 'pix'],
+        ['data' => '2026-10-02', 'forn' => $fornecedorSalgadoId, 'desc' => 'Pagamento Salgado', 'valor' => 450.00, 'forma' => 'pix'],
+        ['data' => '2026-10-06', 'forn' => $fornecedorCupcakeId, 'desc' => 'Pagamento Cupcake', 'valor' => 280.00, 'forma' => 'dinheiro'],
+        ['data' => '2026-10-09', 'forn' => $fornecedorLacteaId,  'desc' => 'Pagamento Laticínios e Sucos', 'valor' => 620.00, 'forma' => 'pix'],
+        ['data' => '2026-10-14', 'forn' => $fornecedorSalgadoId, 'desc' => 'Pagamento Salgado', 'valor' => 510.00, 'forma' => 'pix'],
+        ['data' => '2026-10-16', 'forn' => $fornecedorCupcakeId, 'desc' => 'Pagamento Cupcake', 'valor' => 320.00, 'forma' => 'dinheiro'],
+        ['data' => '2026-10-20', 'forn' => $fornecedorSalgadoId, 'desc' => 'Pagamento Salgado', 'valor' => 480.00, 'forma' => 'pix'],
+        ['data' => '2026-10-23', 'forn' => $fornecedorGeralId,   'desc' => 'Pagamento Panificação & Pães', 'valor' => 580.00, 'forma' => 'pix'],
+        ['data' => '2026-10-27', 'forn' => $fornecedorCupcakeId, 'desc' => 'Pagamento Cupcake', 'valor' => 350.00, 'forma' => 'dinheiro'],
+        ['data' => '2026-10-30', 'forn' => $fornecedorSalgadoId, 'desc' => 'Pagamento Salgado', 'valor' => 520.00, 'forma' => 'pix'],
     ];
 
     $stmtRecibo = $pdo->prepare("

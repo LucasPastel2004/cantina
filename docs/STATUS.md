@@ -2038,6 +2038,22 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Sustentação — Automação de Deploy na Hostnet, Execução de Migrações e Seeder Especial de Outubro (2026-10-28)
+* [x] **Aprimoramento do Workflow de Deploy (`.github/workflows/deploy-hostnet.yml`):**
+  * Adicionado parâmetro opcional `executar_seeder` em `workflow_dispatch` (padrão: `true`);
+  * O script remoto de SSH na Hostnet agora executa automaticamente:
+    1. Resolução do caminho da aplicação e do interpretador PHP 8.2+;
+    2. Aplicação de migrações pendentes via `database/runner.php`;
+    3. Verificação do status de migrações via `database/runner.php --status`;
+    4. Execução do seeder `database/seed_outubro_positivo.php` para semear o banco com dados contábeis e operacionais consistentes.
+* [x] **Blindagem de Foreign Keys e Robustez do Seeder (`database/seed_outubro_positivo.php`):**
+  * Busca dinâmica de usuários ativos com perfis `operador` e `administrador`, eliminando referências a IDs estáticos e evitando quebras de Foreign Key em bases remotas;
+  * Busca dinâmica e auto-criação defensiva de fornecedores padrão, blindando a inserção de recibos de quitação e movimentações de estoque contra foreign key constraint errors;
+  * Semeados dados completos para todo o mês de Outubro/2026: 283 pedidos de encomendas com tickets para os 22 dias úteis, recargas presenciais e online, recibos de quitação a fornecedores, despesas operacionais do mês e sincronização dos saldos de 191 responsáveis.
+* [x] **Testes Automatizados:** Suítes `tests/arrecadacao_dre_regimes_test.php` (136/136) e `tests/fase24_test.php` (104/104) 100% aprovadas.
+
+---
+
 ## Próximo Passo Recomendado
 
 1. **Homologação Externa pela Equipe da Escola:** Equipe da cantina, secretaria e direção realizam testes remotos nas telas operacionais (tickets, corte de turno, PDV) e no Portal da Família a partir de seus computadores e celulares.
