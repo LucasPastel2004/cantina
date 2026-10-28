@@ -223,7 +223,8 @@ class EstoqueController extends Controller
             'mapaFornecedores' => $mapaFornecedores,
             'produtoPreSel'    => $produtoPreSel,
             'activeMenu'       => 'entrada_estoque',
-            'title'            => 'Entrada de Estoque & Mercadorias'
+            'pageTitle'        => 'Entrada de Mercadorias',
+            'title'            => 'Entrada de Mercadorias'
         ], 'admin');
     }
 

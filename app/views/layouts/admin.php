@@ -9,9 +9,11 @@
 defined('CANTINA_SISTEMA') or die('Acesso direto não permitido.');
 
 $baseUrl = $baseUrl ?? '';
-$title = !empty($pageTitle) 
-    ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') . ' — Painel da Cantina' 
-    : 'Painel da Cantina — Colégio Monteiro Lobato';
+$title = !empty($title)
+    ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8')
+    : (!empty($pageTitle) 
+        ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') . ' — Painel da Cantina' 
+        : 'Painel da Cantina — Colégio Monteiro Lobato');
 if (!isset($turnoAtivo) || !isset($statusCaixa)) {
     try {
         if (class_exists(\App\Models\SessaoCaixa::class)) {

@@ -26,7 +26,7 @@ $produtoPreSel = $produtoPreSel ?? null;
                     Voltar ao Estoque
                 </a>
             </div>
-            <h1 class="h5 fw-bold text-slate-900 mb-0">Registro Operacional de Entrada de Mercadorias</h1>
+            <h1 class="h5 fw-bold text-slate-900 mb-0">Entrada de Mercadorias</h1>
         </div>
         <div class="d-flex gap-2">
             <a href="<?php echo $baseUrl; ?>/relatorios/estoque-filtros?tipo_movimentacao=entrada" class="btn btn-enterprise btn-primary btn-sm d-inline-flex align-items-center gap-1.5" title="Abrir Relatório de Movimentações de Estoque">
