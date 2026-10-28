@@ -2056,6 +2056,12 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Implementado retry e reconexão automática resiliente contra erros `2006` e `2013` em `app/core/Model.php` (`Model::query()` e `Model::reconnect()`);
   * Criada suíte `tests/teste_fornecedor_resiliencia.php` com 6/6 asserções aprovadas.
 * [x] **Testes Automatizados:** Suítes `tests/arrecadacao_dre_regimes_test.php` (136/136), `tests/fase24_test.php` (104/104) e `tests/test_fornecedores_crud.php` (9/9) 100% aprovadas.
+* [x] **Correção da Dupla Confirmação em Formulários com `data-confirm` e Estorno de Recibos de Fornecedores (2026-10-28):**
+  * **Causa Raiz Resolvida:** O interceptor universal de `click` em `assets/js/app.js` capturava cliques em botões dentro de `<form data-confirm="...">` porque `e.target.closest('[data-confirm]')` retornava o elemento `<form>`. O listener de `click` exibia um modal amarelo preliminar ("Confirmação"), mas não submetia o formulário por esperar links `<a>` ou botões. Ao clicar uma segunda vez, a flag temporária era apagada e o formulário finalmente disparava o evento `submit`, acionando um segundo modal vermelho ("Confirmação Operacional");
+  * **Solução Aplicada em `assets/js/app.js`:** Adicionadas guardas estritas no listener de `click`: ignora se `trigger.tagName === 'FORM'`, se `e.target.closest('form[data-confirm]')` for verdadeiro, ou se for botão de submit associado a form com `data-confirm`. Formulários agora são delegados com exclusividade ao interceptor de `submit`;
+  * **Padronização Visual em `app/views/admin/fornecedores.php`:** Adicionados atributos declarativos de título, criticidade e botão corporativo no estorno de recibos (`data-confirm-title="Estornar Recibo"`, `data-confirm-type="danger"`, `data-confirm-btn="Sim, Estornar"`) e na exclusão de fornecedores (`data-confirm-title="Remover Fornecedor"`, `data-confirm-type="danger"`, `data-confirm-btn="Sim, Remover"`);
+  * **Cache Busting nos Assets:** Incrementado `$assetVersion` de `'7.2.0'` para `'7.2.1'` em `app/core/Controller.php` e nos layouts (`admin.php`, `auth.php`, `footer.php`, `header.php`, `portal.php`);
+  * **Testes Automatizados:** Bateria completa de testes executada com 100% de sucesso (`tests/teste_modais_confirmacao.php` 35/35, `tests/teste_alerta_corporativo.php`, `tests/test_fornecedores_crud.php` 9/9, `tests/teste_fornecedor_resiliencia.php` 6/6, `tests/arrecadacao_dre_regimes_test.php` 136/136, `tests/fase24_test.php` 104/104).
 
 ---
 

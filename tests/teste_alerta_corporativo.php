@@ -30,10 +30,10 @@ $temAlertaAcaoView = strpos($view, 'window.alertaAcao') !== false;
 echo "5. View extrato_aluno - Sem alert() nativo: " . (!$temAlertNativo ? "OK" : "FALHA") . "\n";
 echo "6. View extrato_aluno - Com window.alertaAcao: " . ($temAlertaAcaoView ? "OK" : "FALHA") . "\n";
 
-// 3. Validar assetVersion = 7.2.0 em Controller.php
+// 3. Validar assetVersion >= 7.2.0 em Controller.php
 $ctrl = file_get_contents(__DIR__ . '/../app/core/Controller.php');
-$temVersion = strpos($ctrl, "'7.2.0'") !== false;
-echo "7. Controller - assetVersion 7.2.0: " . ($temVersion ? "OK" : "FALHA") . "\n";
+$temVersion = preg_match("/'7\.2\.[0-9]+'/", $ctrl) === 1;
+echo "7. Controller - assetVersion 7.2.x: " . ($temVersion ? "OK" : "FALHA") . "\n";
 
 $sucesso = $temModal && $temAlertaAcao && $temOverrideAlert && $temDataAlert && !$temAlertNativo && $temAlertaAcaoView && $temVersion;
 echo "\nResultado: " . ($sucesso ? "TODOS OS TESTES APROVADOS!" : "FALHAS ENCONTRADAS!") . "\n";

@@ -1120,6 +1120,18 @@ function inicializarConfirmacaoCorporativa() {
   document.addEventListener('click', function (e) {
     const trigger = e.target.closest('[data-confirm]');
     if (!trigger) return;
+
+    // Se o elemento com data-confirm for um formulário, ignorar: formulários são gerenciados pelo evento 'submit'
+    if (trigger.tagName === 'FORM') {
+      return;
+    }
+
+    // Se o clique estiver dentro de um formulário que já possui data-confirm, ignorar no evento de clique
+    if (e.target.closest('form[data-confirm]')) {
+      return;
+    }
+
+    // Se for um botão de submit cujo formulário pai possui data-confirm, ignorar
     if (trigger.tagName === 'BUTTON' && trigger.type === 'submit' && trigger.form && trigger.form.hasAttribute('data-confirm')) {
       return;
     }
@@ -1148,7 +1160,11 @@ function inicializarConfirmacaoCorporativa() {
           if (trigger.tagName === 'A' && trigger.href) {
             window.location.href = trigger.href;
           } else if (trigger.tagName === 'BUTTON' && trigger.type === 'submit' && trigger.form) {
-            trigger.form.submit();
+            if (typeof trigger.form.requestSubmit === 'function') {
+              trigger.form.requestSubmit(trigger);
+            } else {
+              trigger.form.submit();
+            }
           }
         }
       });

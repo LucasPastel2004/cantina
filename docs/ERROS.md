@@ -2362,6 +2362,26 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
   4. Criada a suíte de testes automatizados `tests/teste_fornecedor_resiliencia.php` validando cadastro, atualização e exclusão com ID de usuário inexistente e reconexão (6/6 asserções aprovadas com 100% de sucesso).
 - Como evitar no futuro: Em colunas de auditoria referenciadas por chave estrangeira (`created_by`, `updated_by`), sempre validar a existência do ID antes de realizar o binding no Prepared Statement, garantindo fallback gracioso para `NULL`. Assegurar que a camada de persistência possua reconexão automática resiliente contra timeouts da rede de hospedagem.
 
+---
+
+## 2026-10-28 - Dupla confirmação e necessidade de clicar duas vezes para estornar recibos ou submeter formulários com data-confirm
+
+- Sintoma: Ao clicar no ícone de lixeira para estornar um recibo em `/admin/fornecedores`, abria um primeiro modal de confirmação amarelo ("Confirmação"). Ao clicar em "Confirmar", nada era excluído. O usuário precisava clicar pela segunda vez na lixeira, abrindo então um segundo modal vermelho ("Confirmação Operacional"), e somente após confirmar esse segundo modal o estorno era efetuado.
+- Causa:
+  1. Em `assets/js/app.js`, existiam dois listeners universais independentes: um escutando o evento `submit` (linhas 1084-1117) e outro escutando o evento `click` (linhas 1120-1156).
+  2. No HTML dos botões de ação destrutiva gerados como formulário (`<form action="..." method="POST" data-confirm="..."> <button type="submit">...</button> </form>`), o atributo `data-confirm` residia no `<form>`.
+  3. Quando o usuário clicava no botão (ou no ícone SVG dentro dele), o listener de `click` executava `trigger = e.target.closest('[data-confirm]')`, retornando o elemento `<form>`.
+  4. A guarda de bypass do listener de `click` verificava apenas se `trigger.tagName === 'BUTTON'`. Como `trigger.tagName` era `'FORM'`, a guarda não atuava: o listener de `click` interceptava o evento com `e.preventDefault()`, impedia o submit nativo e abria o primeiro modal amarelo preliminar ("Confirmação").
+  5. Ao confirmar no modal amarelo, a flag `trigger.dataset.confirmed = 'true'` era marcada, mas o listener de `click` não sabia submeter formulários quando `trigger.tagName === 'FORM'` (apenas tratava `trigger.tagName === 'A'` e `trigger.tagName === 'BUTTON'`). Portanto, o formulário não era enviado e a tela permanecia inalterada.
+  6. Ao clicar novamente na lixeira, o listener de `click` via a flag `dataset.confirmed === 'true'`, a deletava e retornava, permitindo que o clique propagasse e acionasse o `submit`.
+  7. O listener de `submit` capturava a submissão e, como a flag havia acabado de ser deletada pelo ouvinte de clique, interceptava e abria o segundo modal vermelho ("Confirmação Operacional"). Apenas ao confirmar esse segundo modal é que `form.requestSubmit()` era chamado e o estorno concluído.
+- Solução aplicada:
+  1. Em `assets/js/app.js`, adicionadas guardas explícitas no listener universal de `click`: se `trigger.tagName === 'FORM'`, se `e.target.closest('form[data-confirm]')` for verdadeiro, ou se for botão de submit associado a um form com `data-confirm`, o listener de `click` retorna imediatamente sem interceptar nem chamar `e.preventDefault()`. Formulários são gerenciados com exclusividade pelo listener de `submit`.
+  2. Além disso, para botões com `data-confirm` próprio pertencentes a formulários normais, o callback de confirmação agora invoca `trigger.form.requestSubmit(trigger)` com fallback para `trigger.form.submit()`.
+  3. Em `app/views/admin/fornecedores.php`, padronizados os formulários de estorno de recibos e exclusão de fornecedor com atributos corporativos explícitos (`data-confirm-title="Estornar Recibo"`, `data-confirm-type="danger"`, `data-confirm-btn="Sim, Estornar"`).
+  4. Incrementado o `$assetVersion` de `'7.2.0'` para `'7.2.1'` em `app/core/Controller.php` e nos layouts para forçar renovação imediata do cache do navegador.
+- Como evitar no futuro: Em arquiteturas com múltiplos listeners globais de eventos (`click` vs `submit`), isolar estritamente o escopo de cada evento. Formulários devem ser interceptados exclusivamente no evento `submit`, evitando que eventos de clique em botões internos impeçam o disparo do ciclo nativo de submissão do formulário.
+
 
 
 
