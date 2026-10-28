@@ -2050,7 +2050,12 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Busca dinâmica de usuários ativos com perfis `operador` e `administrador`, eliminando referências a IDs estáticos e evitando quebras de Foreign Key em bases remotas;
   * Busca dinâmica e auto-criação defensiva de fornecedores padrão, blindando a inserção de recibos de quitação e movimentações de estoque contra foreign key constraint errors;
   * Semeados dados completos para todo o mês de Outubro/2026: 283 pedidos de encomendas com tickets para os 22 dias úteis, recargas presenciais e online, recibos de quitação a fornecedores, despesas operacionais do mês e sincronização dos saldos de 191 responsáveis.
-* [x] **Testes Automatizados:** Suítes `tests/arrecadacao_dre_regimes_test.php` (136/136) e `tests/fase24_test.php` (104/104) 100% aprovadas.
+* [x] **Resiliência de Banco de Dados e Blindagem contra 'MySQL server has gone away' e FK em Fornecedores:**
+  * Implementada validação defensiva `validarUsuarioId` em `app/models/Fornecedor.php`, prevenindo violação de FK (`fk_fornecedores_updated_by`) caso a sessão de administração possua um ID não mais presente na tabela `usuarios`;
+  * Adicionado timeout de 30 segundos e método `Database::reconnect()` em `config/database.php`;
+  * Implementado retry e reconexão automática resiliente contra erros `2006` e `2013` em `app/core/Model.php` (`Model::query()` e `Model::reconnect()`);
+  * Criada suíte `tests/teste_fornecedor_resiliencia.php` com 6/6 asserções aprovadas.
+* [x] **Testes Automatizados:** Suítes `tests/arrecadacao_dre_regimes_test.php` (136/136), `tests/fase24_test.php` (104/104) e `tests/test_fornecedores_crud.php` (9/9) 100% aprovadas.
 
 ---
 

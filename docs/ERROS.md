@@ -2349,16 +2349,18 @@ Ao encontrar qualquer erro ou comportamento inesperado durante uma etapa de dese
 
 ---
 
-## 2026-10-27 - Falha no atalho de zoom com Ctrl + Scroll do mouse por ausência de interceptação do evento wheel não passivo
+## 2026-10-28 - Erro ao salvar edição de fornecedor: violação de Foreign Key em updated_by e queda de conexão MySQL (2006 MySQL server has gone away)
 
-- Sintoma: Ao abrir o espelho de impressão A4 do Livro Caixa Diário (`/financeiro/livro-caixa/imprimir`), o zoom na folha só funcionava ao clicar nos botões da barra superior (`−`, `100%`, `+`). Segurar a tecla `Ctrl` e rolar o scroll do mouse (`Ctrl + Wheel`) causava o scroll nativo da página inteira sem alterar a escala do documento contábil.
-- Causa: O container do espelho A4 não possuía ouvinte para o evento `wheel`. Além disso, em navegadores modernos baseados em Chromium/WebKit/Gecko, o evento de scroll da janela é registrado como passivo por padrão (`passive: true`). Tentar invocar `e.preventDefault()` em listeners passivos é ignorado pelo navegador e gera alertas no console, impedindo o cancelamento do scroll nativo da janela durante o zoom.
+- Sintoma: Ao tentar salvar a edição de um fornecedor em `/admin/fornecedores/salvar`, a requisição falhava com tela vermelha de incidente operacional exibindo `SQLSTATE[HY000]: General error: 2006 MySQL server has gone away` ou `SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (fornecedores, CONSTRAINT fk_fornecedores_updated_by FOREIGN KEY (updated_by) REFERENCES usuarios (id))` em `app/core/Model.php:164`.
+- Causa:
+  1. Em `AdminController::fornecedoresSalvar()`, a chamada `Fornecedor::salvar($dados, Auth::id())` passava o ID do usuário autenticado na sessão (`Auth::id()`) diretamente para o UPDATE no campo `updated_by`. Em bancos onde o usuário ativo possuía um ID não cadastrado na tabela `usuarios` (por exemplo, após testes ou execução de seeders), o MySQL rejeitava a instrução por violação da chave estrangeira `fk_fornecedores_updated_by`. Em ambientes com proxy ou pool de conexões (como a Hostnet), o cancelamento bruto do statement encerrava a conexão TCP, disparando o erro `2006 MySQL server has gone away`.
+  2. A classe base `App\Core\Model` e a fábrica `Database` não possuíam mecanismo de auto-reconexão (`reconnect`) nem retry automático quando o MySQL derrubava a conexão por inatividade ou timeout.
 - Solução aplicada:
-  1. Implementado listener global `window.addEventListener('wheel', function(e) { if (e.ctrlKey) { e.preventDefault(); ... } }, { passive: false });` em `app/views/relatorios/livro_caixa_pdf.php`, espelhando o padrão já homologado de `arrecadacao_pdf.php`.
-  2. Implementados atalhos de teclado `Ctrl +` (aumentar zoom), `Ctrl -` (diminuir zoom) e `Ctrl 0` (redefinir para 100%).
-  3. Adicionada sincronização e persistência de escala no `localStorage` sob a chave `cantina_report_zoom`.
-  4. Adicionada restauração automática de escala para 1.0 (100%) no evento nativo `beforeprint` e retorno à escala customizada em `afterprint`.
-- Como evitar no futuro: Em qualquer espelho ou visualizador de impressão A4 onde seja necessário suportar zoom com `Ctrl + Wheel`, sempre registrar o ouvinte do evento com `{ passive: false }` para permitir que `e.preventDefault()` intercepte e anule o scroll nativo da janela.
+  1. Em `app/models/Fornecedor.php`, implementado o método defensivo `validarUsuarioId(?int $usuarioId): ?int`, que verifica se o ID de usuário realmente existe ativo na tabela `usuarios`. Se não existir ou for nulo, faz fallback seguro para `NULL` (permitido pela coluna com `ON DELETE SET NULL`), impedindo qualquer violação de Foreign Key tanto na gravação/atualização quanto na exclusão.
+  2. Em `config/database.php`, adicionado timeout de conexão de 30 segundos (`\PDO::ATTR_TIMEOUT => 30`) e o método `Database::reconnect()`.
+  3. Em `app/core/Model.php`, implementado `Model::reconnect()` e encapsulado o método `Model::query()` em bloco `try/catch` que detecta erros transitórios de queda de conexão (`2006`, `2013`, `server has gone away`, `Lost connection`) fora de transações ativas e reestabelece a conexão automaticamente, executando a consulta com sucesso.
+  4. Criada a suíte de testes automatizados `tests/teste_fornecedor_resiliencia.php` validando cadastro, atualização e exclusão com ID de usuário inexistente e reconexão (6/6 asserções aprovadas com 100% de sucesso).
+- Como evitar no futuro: Em colunas de auditoria referenciadas por chave estrangeira (`created_by`, `updated_by`), sempre validar a existência do ID antes de realizar o binding no Prepared Statement, garantindo fallback gracioso para `NULL`. Assegurar que a camada de persistência possua reconexão automática resiliente contra timeouts da rede de hospedagem.
 
 
 

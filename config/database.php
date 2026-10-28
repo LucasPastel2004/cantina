@@ -69,6 +69,7 @@ if (!class_exists('Database')) {
                 \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
                 \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
                 \PDO::ATTR_EMULATE_PREPARES   => false, // Prepared Statements nativos obrigatórios
+                \PDO::ATTR_TIMEOUT            => 30,    // Timeout de conexão generoso (evita interrupção prematura na Hostnet)
                 \PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset} COLLATE {$collation}, time_zone = '-03:00'"
             ];
 
@@ -112,6 +113,15 @@ if (!class_exists('Database')) {
         public static function disconnect(): void
         {
             self::$instance = null;
+        }
+
+        /**
+         * Força a renovação da conexão com o banco de dados (resiliência contra quedas)
+         */
+        public static function reconnect(): \PDO
+        {
+            self::$instance = null;
+            return self::getInstance();
         }
     }
 }

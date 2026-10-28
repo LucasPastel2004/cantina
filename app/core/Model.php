@@ -109,6 +109,18 @@ abstract class Model
     }
 
     /**
+     * Força a renovação da conexão com o banco de dados caso tenha ocorrido timeout
+     */
+    public static function reconnect(): \PDO
+    {
+        self::$pdo = null;
+        if (class_exists('Database')) {
+            \Database::disconnect();
+        }
+        return self::getConnection();
+    }
+
+    /**
      * Inicia uma transação com o banco de dados
      */
     public static function beginTransaction(): bool
@@ -154,15 +166,36 @@ abstract class Model
 
     /**
      * Executa uma consulta preparada com parâmetros e retorna o PDOStatement
+     * Conta com reconexão automática resiliente contra timeouts (MySQL server has gone away)
      *
      * @param string $sql Consulta SQL com marcadores nomeados ou posicionais
      * @param array $params Parâmetros para binding
      */
     public static function query(string $sql, array $params = []): \PDOStatement
     {
-        $stmt = self::getConnection()->prepare($sql);
-        $stmt->execute($params);
-        return $stmt;
+        try {
+            $stmt = self::getConnection()->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        } catch (\PDOException $e) {
+            $msg = $e->getMessage();
+            $ehQuedaConexao = (
+                str_contains($msg, '2006') ||
+                str_contains($msg, '2013') ||
+                stripos($msg, 'server has gone away') !== false ||
+                stripos($msg, 'Lost connection') !== false
+            );
+
+            // Se for queda transitória de conexão e não estivermos no meio de transação, tenta reconectar uma vez
+            if ($ehQuedaConexao && !self::inTransaction()) {
+                self::reconnect();
+                $stmt = self::getConnection()->prepare($sql);
+                $stmt->execute($params);
+                return $stmt;
+            }
+
+            throw $e;
+        }
     }
 
     /**
@@ -176,6 +209,15 @@ abstract class Model
             return null;
         }
         return Sanitizer::repararUtf8($result);
+    }
+
+    /**
+     * Executa uma consulta e retorna o valor de uma única coluna
+     */
+    public static function fetchColumn(string $sql, array $params = [], int $columnNumber = 0): mixed
+    {
+        $stmt = self::query($sql, $params);
+        return $stmt->fetchColumn($columnNumber);
     }
 
     /**

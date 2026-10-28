@@ -119,6 +119,28 @@ class Fornecedor extends Model
     }
 
     /**
+     * Valida defensivamente se o ID de usuário existe na tabela usuarios
+     * para evitar falhas de Foreign Key (fk_fornecedores_created_by / fk_fornecedores_updated_by)
+     */
+    private static function validarUsuarioId(?int $usuarioId): ?int
+    {
+        if ($usuarioId === null || $usuarioId <= 0) {
+            return null;
+        }
+
+        try {
+            $user = self::fetchOne("SELECT id FROM usuarios WHERE id = :id AND deleted_at IS NULL LIMIT 1", [':id' => $usuarioId]);
+            if (!empty($user['id'])) {
+                return (int)$user['id'];
+            }
+        } catch (\Throwable $e) {
+            // Fallback seguro em caso de exceção de leitura
+        }
+
+        return null;
+    }
+
+    /**
      * Salva ou atualiza um fornecedor
      */
     public static function salvar(array $dados, ?int $usuarioId = null): int
@@ -140,7 +162,7 @@ class Fornecedor extends Model
         }
 
         $now = date('Y-m-d H:i:s');
-        $uid = ($usuarioId !== null && $usuarioId > 0) ? $usuarioId : null;
+        $uid = self::validarUsuarioId($usuarioId);
 
         if ($id > 0) {
             $sql = "UPDATE fornecedores 
@@ -210,7 +232,7 @@ class Fornecedor extends Model
     public static function excluir(int $id, ?int $usuarioId = null): bool
     {
         $now = date('Y-m-d H:i:s');
-        $uid = ($usuarioId !== null && $usuarioId > 0) ? $usuarioId : null;
+        $uid = self::validarUsuarioId($usuarioId);
         $sql = "UPDATE fornecedores 
                 SET deleted_at = :deleted_at, 
                     ativo = 0, 
