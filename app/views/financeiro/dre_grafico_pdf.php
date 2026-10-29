@@ -80,12 +80,11 @@ $pctBalcaoTotal  = $receitaBruta > 0 ? ($receitaBalcao / $receitaBruta) * 100 : 
 $despesasVendasFinOutras = $despesasVendas + $despesasFinanceiras + $despesasOutras;
 $saldoRetidoPositivo     = max(0.0, $diferencaRecargaConsumo);
 
-// Volume financeiro total movimentado nas fatias do Gráfico Circular Completo do DRE
+// Volume financeiro total movimentado nas fatias do Gráfico Circular Completo do DRE (Zero Duplicidade: Fornecedores substitui CMV teórico)
 $somaFatiasDreCircular = $consumoSaldoOnline
     + $consumoSaldoBalcao
     + $vendasDiretasBalcao
     + $saldoRetidoPositivo
-    + $cmv
     + $despesasFornecedores
     + $despesasPessoal
     + $despesasAdmin
@@ -679,14 +678,14 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
             <div class="kpi-sub font-tabular">Gasto de Saldo: R$ <?php echo number_format($consumoSaldoTotal, 2, ',', '.'); ?></div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-title">4. Lucro Bruto (Após CMV)</div>
+            <div class="kpi-title">4. Lucro Bruto (Após Fornecedores)</div>
             <div class="kpi-val font-tabular">R$ <?php echo number_format($lucroBruto, 2, ',', '.'); ?></div>
-            <div class="kpi-sub font-tabular">CMV: R$ <?php echo number_format($cmv, 2, ',', '.'); ?> | Margem Bruta: <?php echo number_format($margemBrutaPercent, 1, ',', '.'); ?>%</div>
+            <div class="kpi-sub font-tabular">Fornecedores: R$ <?php echo number_format($despesasFornecedores, 2, ',', '.'); ?> | Margem: <?php echo number_format($margemBrutaPercent, 1, ',', '.'); ?>%</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-title">5. Despesas & Pagto. Fornecedores</div>
+            <div class="kpi-title">5. Despesas Operacionais Totais</div>
             <div class="kpi-val font-tabular">- R$ <?php echo number_format($totalDespesas, 2, ',', '.'); ?></div>
-            <div class="kpi-sub font-tabular">Fornec.: R$ <?php echo number_format($despesasFornecedores, 2, ',', '.'); ?> | Desp.: R$ <?php echo number_format($despesasOperacionaisPuras, 2, ',', '.'); ?></div>
+            <div class="kpi-sub font-tabular">Fixas + Variáveis das 6 categorias</div>
         </div>
         <div class="kpi-card kpi-card-highlight">
             <div class="kpi-title">6. Resultado Final em Conta & Vendas</div>
@@ -795,28 +794,19 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
                     </tbody>
                 </table>
 
-                <!-- GRUPO 2 DA LEGENDA: CUSTOS (CMV) E PAGAMENTO DE FORNECEDORES (RECIBOS SEPARADOS DO BLOCO DE DESPESAS) -->
+                <!-- GRUPO 2 DA LEGENDA: DESPESA SEPARADA DE PAGAMENTO DE FORNECEDORES (RECIBOS EMITIDOS — ZERO DUPLICIDADE) -->
                 <div class="legend-section-title">
-                    <span>2. Custos (CMV) & Pagamento de Fornecedores (Recibos)</span>
+                    <span>2. Despesa Separada: Pagamento de Fornecedores (Recibos)</span>
                     <span class="font-tabular">Valor (R$) | % Giro</span>
                 </div>
                 <table class="legend-table">
                     <tbody>
                         <tr>
                             <td>
-                                <span class="legend-dot" style="background: #d97706;"></span>
-                                (-) Custo das Mercadorias Vendidas (CMV — <?php echo number_format($pctCmv, 1, ',', '.'); ?>% das vendas)
+                                <span class="legend-dot" style="background: #9f1239;"></span>
+                                (-) Despesa: Pagamento de Fornecedores (Recibos Emitidos — <?php echo number_format($pctCmv, 1, ',', '.'); ?>% das vendas)
                             </td>
                             <td style="text-align: center; width: 34%;" class="font-tabular">
-                                - R$ <?php echo number_format($cmv, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($cmv), 1, ',', '.'); ?>%)
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <span class="legend-dot" style="background: #9f1239;"></span>
-                                (-) Despesa: Pagamento de Fornecedores (Recibos Emitidos)
-                            </td>
-                            <td style="text-align: center;" class="font-tabular">
                                 - R$ <?php echo number_format($despesasFornecedores, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($despesasFornecedores), 1, ',', '.'); ?>%)
                             </td>
                         </tr>
@@ -887,11 +877,11 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
                     <span>R$ <?php echo number_format($receitaLiquida, 2, ',', '.'); ?></span>
                 </div>
                 <div class="legend-explain-row font-tabular">
-                    <span>(=) Lucro Bruto Operacional (Vendas Líquidas − CMV | Margem <?php echo number_format($margemBrutaPercent, 1, ',', '.'); ?>%):</span>
+                    <span>(=) Lucro Bruto Operacional (Vendas Líquidas − Pagto. Fornecedores | Margem <?php echo number_format($margemBrutaPercent, 1, ',', '.'); ?>%):</span>
                     <span>R$ <?php echo number_format($lucroBruto, 2, ',', '.'); ?></span>
                 </div>
                 <div class="legend-explain-row font-tabular">
-                    <span>(=) Resultado Líquido Vendas (Lucro Bruto − Fornec. R$ <?php echo number_format($despesasFornecedores, 2, ',', '.'); ?> − Desp. R$ <?php echo number_format($despesasOperacionaisPuras, 2, ',', '.'); ?>):</span>
+                    <span>(=) Resultado Líquido das Vendas (Lucro Bruto − Despesas R$ <?php echo number_format($totalDespesas, 2, ',', '.'); ?> | <?php echo number_format($margemLiquidaPercent, 1, ',', '.'); ?>%):</span>
                     <span>R$ <?php echo number_format($resultadoLiquido, 2, ',', '.'); ?></span>
                 </div>
                 <div class="legend-explain-row font-tabular" style="padding-top: 2px;">
@@ -1053,7 +1043,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const valBalcaoSaldo  = <?php echo $consumoSaldoBalcao; ?>;
         const valBalcaoDir    = <?php echo $vendasDiretasBalcao; ?>;
         const valSaldoRetido  = <?php echo $saldoRetidoPositivo; ?>;
-        const valCmv          = <?php echo $cmv; ?>;
         const valDespFornec   = <?php echo $despesasFornecedores; ?>;
         const valDespPessoal  = <?php echo $despesasPessoal; ?>;
         const valDespAdmin    = <?php echo $despesasAdmin; ?>;
@@ -1065,7 +1054,6 @@ document.addEventListener('DOMContentLoaded', function() {
             valBalcaoSaldo,
             valBalcaoDir,
             valSaldoRetido,
-            valCmv,
             valDespFornec,
             valDespPessoal,
             valDespAdmin,
@@ -1083,7 +1071,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     '(+) Vendas Balcão (Saldo PDV)',
                     '(+) Vendas Diretas Balcão (Din/Pix)',
                     '(+) Saldo Retido em Carteiras',
-                    '(-) Custo das Mercadorias (CMV)',
                     '(-) Despesa: Pagamento de Fornecedores (Recibos)',
                     '(-) Despesa: Pessoal & Salários',
                     '(-) Despesa: Administrativas',
@@ -1091,13 +1078,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     '(-) Despesa: Vendas, Embalagens, Fin. & Outras'
                 ],
                 datasets: [{
-                    data: somaTotal > 0 ? valoresDre : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    data: somaTotal > 0 ? valoresDre : [1, 1, 1, 1, 1, 1, 1, 1, 1],
                     backgroundColor: [
                         '#1d4ed8',
                         '#0284c7',
                         '#0d9488',
                         '#15803d',
-                        '#d97706',
                         '#9f1239',
                         '#dc2626',
                         '#475569',

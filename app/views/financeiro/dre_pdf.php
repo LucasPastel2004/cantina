@@ -589,13 +589,13 @@ $regime = $regime ?? 'unificado';
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['receita_liquida'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
 
-            <!-- 4. CMV -->
-            <tr class="row-subitem">
-                <td class="col-desc">(-) CUSTO DAS MERCADORIAS VENDIDAS (CMV)</td>
+            <!-- 4. PAGAMENTO DE FORNECEDORES (RECIBOS) — CUSTO DAS MERCADORIAS VENDIDAS (CMV) -->
+            <tr class="row-secao">
+                <td class="col-desc">(-) PAGAMENTO DE FORNECEDORES (RECIBOS)</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['cmv'] ?? 0), 2, ',', '.'); ?></td>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['despesas_fornecedores'] ?? ($meses[$m]['cmv'] ?? 0)), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['cmv'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="col-total font-tabular"><?php echo number_format((float)($totais['despesas_fornecedores'] ?? ($totais['cmv'] ?? 0)), 2, ',', '.'); ?></td>
             </tr>
 
             <!-- 5. LUCRO BRUTO -->
@@ -612,15 +612,6 @@ $regime = $regime ?? 'unificado';
                     <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['margem_bruta_percent'] ?? 0), 1, ',', '.'); ?>%</td>
                 <?php endfor; ?>
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['margem_bruta_percent'] ?? 0), 1, ',', '.'); ?>%</td>
-            </tr>
-
-            <!-- 5.1 PAGAMENTO DE FORNECEDORES (RECIBOS EMITIDOS — SEPARADO DO BLOCO DE DESPESAS) -->
-            <tr class="row-secao">
-                <td class="col-desc">(-) PAGAMENTO DE FORNECEDORES (RECIBOS)</td>
-                <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['despesas_fornecedores'] ?? 0), 2, ',', '.'); ?></td>
-                <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['despesas_fornecedores'] ?? 0), 2, ',', '.'); ?></td>
             </tr>
 
             <!-- 6. DESPESAS OPERACIONAIS -->

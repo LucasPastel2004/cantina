@@ -268,8 +268,8 @@ class DreController extends Controller
         // 3. Receita Líquida
         $escreverLinha('[=] RECEITA LÍQUIDA DE VENDAS (FATURAMENTO REALIZADO)', 'receita_liquida');
         
-        // 4. CMV
-        $escreverLinha('[-] CUSTO DAS MERCADORIAS VENDIDAS (CMV)', 'cmv');
+        // 4. Pagamento de Fornecedores (Recibos Emitidos — Substitui CMV teórico sem duplicidade)
+        $escreverLinha('[-] PAGAMENTO DE FORNECEDORES (RECIBOS EMITIDOS)', 'despesas_fornecedores');
         
         // 5. Lucro Bruto
         $escreverLinha('[=] LUCRO BRUTO OPERACIONAL', 'lucro_bruto');
@@ -282,11 +282,8 @@ class DreController extends Controller
         $linhaMargemBruta[] = number_format((float)($drePeriodo['margem_bruta_percent'] ?? 0), 1, ',', '.') . '%';
         fputcsv($output, $linhaMargemBruta, ';', '"', "\\");
 
-        // 5.1 Pagamento de Fornecedores (Recibos Emitidos) — Separado do bloco de Despesas Operacionais
-        $escreverLinha('[-] PAGAMENTO DE FORNECEDORES (RECIBOS EMITIDOS)', 'despesas_fornecedores');
-
         // 6. Despesas Operacionais
-        $escreverLinha('[-] DESPESAS OPERACIONAIS', 'despesas_operacionais_puras');
+        $escreverLinha('[-] DESPESAS OPERACIONAIS', 'total_despesas');
         $escreverLinha('    Despesas Administrativas', 'despesas_administrativas');
         $escreverLinha('    Despesas com Pessoal & Salários', 'despesas_pessoal');
         $escreverLinha('    Despesas com Vendas & Embalagens', 'despesas_vendas');

@@ -210,14 +210,15 @@ class Dre extends Model
         $receitaVendasLiq   = max(0.00, round($receitaVendasBruta - $totalDeducoes, 2));
         $arrecadacaoLiquida = max(0.00, round($arrecadacaoBruta - $totalDeducoes, 2));
 
-        // 6. Custo das Mercadorias Vendidas (CMV)
-        $cmv = $this->calcularCmvPeriodo($dataInicio, $dataFim, $receitaLiquida);
+        // 6. Pagamento de Fornecedores (Recibos Emitidos em fornecedor_recibos) — Substitui o CMV teórico (Zero Duplicidade)
+        $despesasFornecedores = $this->calcularRecibosFornecedoresPeriodo($dataInicio, $dataFim);
+        $cmv = $despesasFornecedores;
 
-        // 7. Lucro Bruto Operacional
+        // 7. Lucro Bruto Operacional (Receita Líquida - Pagamento de Fornecedores)
         $lucroBruto = round($receitaLiquida - $cmv, 2);
         $margemBrutaPercent = $receitaLiquida > 0 ? ($lucroBruto / $receitaLiquida) * 100 : 0.0;
 
-        // 8. Despesas Operacionais por Categoria
+        // 8. Despesas Operacionais por Categoria (Bloco separado de Pagamento de Fornecedores)
         $sqlDespesas = "SELECT 
                             d.categoria,
                             COALESCE(SUM(d.valor), 0.00) as total
@@ -237,19 +238,14 @@ class Dre extends Model
         $despesasFinanceiras  = (float)($despPorCat[DespesaOperacional::CATEGORIA_FINANCEIRA] ?? 0.00);
         $despesasOutras       = (float)($despPorCat[DespesaOperacional::CATEGORIA_OUTRAS] ?? 0.00);
 
-        // 8.1 Pagamento de Fornecedores (Recibos emitidos em fornecedor_recibos) — Separado do bloco de despesas gerais
-        $despesasFornecedores = $this->calcularRecibosFornecedoresPeriodo($dataInicio, $dataFim);
-
         $subtotalDespesasBloco = round(
             $despesasVendas + $despesasAdmin + $despesasPessoal + 
             $despesasManutencao + $despesasFinanceiras + $despesasOutras,
             2
         );
 
-        $totalDespesasOperacionais = round(
-            $subtotalDespesasBloco + $despesasFornecedores,
-            2
-        );
+        // Total do bloco de despesas operacionais (sem duplicar fornecedores, que já foi abatido no Lucro Bruto)
+        $totalDespesasOperacionais = $subtotalDespesasBloco;
 
         // 9. Resultado Líquido Operacional (Vendas & Consumo)
         $resultadoLiquido = round($lucroBruto - $totalDespesasOperacionais, 2);
@@ -483,12 +479,13 @@ class Dre extends Model
         $receitaVendasLiq   = max(0.00, round($receitaVendasBruta - $totalDeducoes, 2));
         $arrecadacaoLiquida = max(0.00, round($arrecadacaoBruta - $totalDeducoes, 2));
 
-        // 4. CMV do Período
-        $cmv = $this->calcularCmvPeriodo($dataInicio, $dataFim, $receitaLiquida);
+        // 4. Pagamento de Fornecedores (Recibos Emitidos em fornecedor_recibos) — Substitui o CMV teórico (Zero Duplicidade)
+        $despesasFornecedores = $this->calcularRecibosFornecedoresPeriodo($dataInicio, $dataFim);
+        $cmv = $despesasFornecedores;
         $lucroBruto = round($receitaLiquida - $cmv, 2);
         $margemBrutaPercent = $receitaLiquida > 0 ? ($lucroBruto / $receitaLiquida) * 100 : 0.0;
 
-        // 5. Despesas Operacionais por Categoria no Período
+        // 5. Despesas Operacionais por Categoria no Período (Bloco separado de Pagamento de Fornecedores)
         $compIni = substr($dataInicio, 0, 7);
         $compFim = substr($dataFim, 0, 7);
         $sqlDespesas = "SELECT 
@@ -521,19 +518,14 @@ class Dre extends Model
         $despesasFinanceiras  = (float)($despPorCat[DespesaOperacional::CATEGORIA_FINANCEIRA] ?? 0.00);
         $despesasOutras       = (float)($despPorCat[DespesaOperacional::CATEGORIA_OUTRAS] ?? 0.00);
 
-        // 8.1 Pagamento de Fornecedores (Recibos emitidos em fornecedor_recibos) — Separado do bloco de despesas gerais
-        $despesasFornecedores = $this->calcularRecibosFornecedoresPeriodo($dataInicio, $dataFim);
-
         $subtotalDespesasBloco = round(
             $despesasVendas + $despesasAdmin + $despesasPessoal + 
             $despesasManutencao + $despesasFinanceiras + $despesasOutras,
             2
         );
 
-        $totalDespesasOperacionais = round(
-            $subtotalDespesasBloco + $despesasFornecedores,
-            2
-        );
+        // Total do bloco de despesas operacionais (sem duplicar fornecedores, que já foi abatido no Lucro Bruto)
+        $totalDespesasOperacionais = $subtotalDespesasBloco;
 
         $resultadoLiquido = round($lucroBruto - $totalDespesasOperacionais, 2);
         $margemLiquidaPercent = $receitaLiquida > 0 ? ($resultadoLiquido / $receitaLiquida) * 100 : 0.0;
