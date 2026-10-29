@@ -395,8 +395,9 @@ $totalPaginas = count($paginas);
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             font-size: <?php echo $isPaisagem ? '9.5px' : '9px'; ?>;
+            font-weight: 700;
             line-height: 1.35;
-            color: #0f172a;
+            color: #000000;
             background-color: #cbd5e1;
             margin: 0;
             padding: 20px 0 40px 0;
@@ -654,7 +655,7 @@ $totalPaginas = count($paginas);
             letter-spacing: -0.01em;
             padding: 3px 4px !important;
             border: 1px solid #000000 !important;
-            text-align: left;
+            text-align: center;
             word-break: break-word;
         }
         .table-estoque th:first-child,
@@ -668,6 +669,7 @@ $totalPaginas = count($paginas);
         .table-estoque td {
             background-color: #ffffff !important;
             padding: 3px 5px;
+            font-weight: 700 !important;
             border: 1px solid #000000 !important; /* Linhas pretas estilo Excel */
             vertical-align: middle;
             color: #000000 !important;
@@ -685,13 +687,13 @@ $totalPaginas = count($paginas);
         }
 
         .text-center { text-align: center !important; }
-        .text-right  { text-align: right !important; }
+        .text-right  { text-align: center !important; }
 
         /* Colunas de Quantidade Numérica com Blindagem Anti-Quebra */
         .table-estoque th.col-qtd,
         .table-estoque td.col-qtd {
             white-space: nowrap !important;
-            text-align: right !important;
+            text-align: center !important;
             padding-left: 3px !important;
             padding-right: 4px !important;
         }
@@ -801,6 +803,12 @@ $totalPaginas = count($paginas);
                 background: #ffffff !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, table, th, td, div, span, p {
+                font-weight: 700 !important;
+                color: #000000 !important;
             }
             .no-print-bar {
                 display: none !important;

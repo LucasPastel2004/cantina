@@ -90,6 +90,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         html, body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             font-size: 8.5pt;
+            font-weight: 700;
             color: #000000;
             background: #ffffff;
             margin: 0;
@@ -242,6 +243,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 padding: 0 !important;
                 margin: 0 !important;
                 font-size: 8pt;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, table, th, td, div, span, p {
+                font-weight: 700 !important;
                 color: #000000 !important;
             }
             .no-print {
@@ -392,6 +398,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             margin-top: 2px;
             margin-bottom: 6px;
             font-size: 7.8pt;
+            font-weight: 700 !important;
             border: 1px solid #000000 !important;
         }
         table.table-doc-excel th,
@@ -400,15 +407,17 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             padding: 2.5px 3.5px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
+            font-weight: 700 !important;
             word-break: break-word;
         }
         table.table-doc-excel thead th {
             font-weight: 700 !important;
-            text-align: center;
+            text-align: center !important;
             font-size: 7.0pt;
             letter-spacing: -0.015em;
             text-transform: uppercase;
             background-color: #f8fafc !important;
+            color: #000000 !important;
         }
         table.table-doc-excel tfoot td,
         table.table-doc-excel tr.group-subtotal td {
@@ -421,7 +430,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         .text-start { text-align: left !important; }
         .text-center { text-align: center !important; }
-        .text-end { text-align: right !important; }
+        .text-end { text-align: center !important; }
 
         /* Tags Discretas de Origem em Preto/Sóbrio */
         .tag-origem {
@@ -443,6 +452,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             margin-top: 4px;
             padding: 4px 6px;
             font-size: 7.8pt;
+            font-weight: 700;
             background-color: #ffffff;
         }
         .resumo-table {
@@ -463,23 +473,25 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             border: none;
             padding: 2.5px 6px;
             font-size: 7.8pt;
+            font-weight: 700;
             color: #000000;
         }
 
         /* Assinaturas */
         .footer-assinaturas-box {
-            margin-top: 18px;
-            padding-top: 12px;
-            border-top: 1px solid #000000;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1.5px solid #000000;
             display: flex;
             justify-content: space-between;
         }
         .signature-line {
             width: 44%;
-            border-top: 1px solid #000000;
+            border-top: 1.5px solid #000000;
             padding-top: 4px;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.8pt;
+            font-weight: 700 !important;
             line-height: 1.25;
             color: #000000;
         }

@@ -41,6 +41,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         html, body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: #000000;
+            font-weight: 700;
             margin: 0;
             padding: 0;
             font-size: 8.5pt;
@@ -192,6 +193,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 padding: 0 !important;
                 margin: 0 !important;
                 font-size: 8pt;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, table, th, td, div, span, p, strong {
+                font-weight: 700 !important;
                 color: #000000 !important;
             }
             .no-print {
@@ -299,7 +305,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         .school-meta-col {
             text-align: right;
             font-size: 7.5pt;
-            color: #334155;
+            font-weight: 700;
+            color: #000000;
             line-height: 1.3;
             padding-right: 2px;
         }
@@ -307,8 +314,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         /* Faixa de Parâmetros */
         .param-bar {
             font-size: 8pt;
+            font-weight: 700;
+            color: #000000;
             background: #f8fafc;
-            border: 1px solid #000000;
+            border: 1.5px solid #000000;
             padding: 4px 8px;
             margin-bottom: 8px;
             display: flex;
@@ -324,6 +333,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             margin-top: 4px;
             margin-bottom: 8px;
             font-size: 7.8pt;
+            font-weight: 700 !important;
             border: 1px solid #000000 !important;
         }
         table.table-doc-excel th,
@@ -332,11 +342,12 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             padding: 3px 4px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
+            font-weight: 700 !important;
             word-break: break-word;
         }
         table.table-doc-excel thead th {
             font-weight: 700 !important;
-            text-align: center;
+            text-align: center !important;
             font-size: 7.2pt;
             letter-spacing: -0.01em;
             text-transform: uppercase;
@@ -350,7 +361,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         .text-start { text-align: left !important; }
         .text-center { text-align: center !important; }
-        .text-end { text-align: right !important; }
+        .text-end { text-align: center !important; }
 
         /* Banners de Seção */
         .section-banner {
@@ -367,24 +378,27 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         /* Assinaturas */
         .footer-assinaturas-box {
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid #000000;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1.5px solid #000000;
             display: flex;
             justify-content: space-between;
         }
         .signature-line {
             width: 44%;
-            border-top: 1px solid #000000;
-            padding-top: 4px;
+            border-top: 1.5px solid #000000;
+            padding-top: 6px;
             text-align: center;
             font-size: 7.5pt;
+            font-weight: 700;
+            color: #000000;
             line-height: 1.25;
         }
         .doc-footer-meta {
             margin-top: 10px;
             font-size: 7pt;
-            color: #64748b;
+            font-weight: 700;
+            color: #000000;
             display: flex;
             justify-content: space-between;
             border-top: 1px solid #cbd5e1;
@@ -474,7 +488,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 <th style="width: 14%;" class="text-center">Contato</th>
                 <th style="width: 22%;" class="text-start">Estudante(s) Vinculado(s)</th>
                 <th style="width: 12%;" class="text-center">Status</th>
-                <th style="width: 15%;" class="text-end">Saldo Devedor</th>
+                <th style="width: 15%;" class="text-center">Saldo Devedor</th>
             </tr>
         </thead>
         <tbody>
@@ -505,7 +519,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                         <td class="text-center font-tabular">
                             <strong><?php echo $statusDesc; ?></strong>
                         </td>
-                        <td class="text-end font-tabular">
+                        <td class="text-center font-tabular">
                             <strong>R$ <?php echo number_format($saldo, 2, ',', '.'); ?></strong>
                         </td>
                     </tr>
@@ -514,8 +528,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         </tbody>
         <tfoot>
             <tr class="row-geral-total">
-                <td colspan="5" class="text-end">TOTAL CONSOLIDADO EM ABERTO (SALDO DEVEDOR):</td>
-                <td class="text-end font-tabular">R$ <?php echo number_format($totalDevedor, 2, ',', '.'); ?></td>
+                <td colspan="5" class="text-center">TOTAL CONSOLIDADO EM ABERTO (SALDO DEVEDOR):</td>
+                <td class="text-center font-tabular">R$ <?php echo number_format($totalDevedor, 2, ',', '.'); ?></td>
             </tr>
         </tfoot>
     </table>

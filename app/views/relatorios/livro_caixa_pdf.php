@@ -42,6 +42,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             margin: 0;
             padding: 0;
             font-size: 8pt;
+            font-weight: 700;
             line-height: 1.35;
             background: #ffffff;
             width: 100%;
@@ -190,6 +191,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 padding: 0 !important;
                 margin: 0 !important;
                 font-size: 7.2pt;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, table, th, td, div, span, p {
+                font-weight: 700 !important;
                 color: #000000 !important;
             }
             .no-print {
@@ -337,6 +343,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             margin-top: 2px;
             margin-bottom: 8px;
             font-size: 7.2pt;
+            font-weight: 700 !important;
             border: 1px solid #000000 !important;
         }
         table.table-doc-excel th,
@@ -345,44 +352,57 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             padding: 2.5px 3.5px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
+            font-weight: 700 !important;
             word-break: break-word;
         }
         table.table-doc-excel thead th {
             font-weight: 700 !important;
-            text-align: center;
+            text-align: center !important;
             font-size: 6.8pt;
             letter-spacing: -0.01em;
             text-transform: uppercase;
             background-color: #f8fafc !important;
+            color: #000000 !important;
         }
         table.table-doc-excel tfoot td {
             font-weight: 700 !important;
             background-color: #f8fafc !important;
+            color: #000000 !important;
             border-top: 2px solid #000000 !important;
         }
 
         .text-start { text-align: left !important; }
         .text-center { text-align: center !important; }
-        .text-end { text-align: right !important; }
+        .text-end { text-align: center !important; }
 
         /* Assinaturas */
         .footer-assinaturas-box {
-            margin-top: 14px;
-            padding-top: 10px;
-            border-top: 1px solid #000000;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1.5px solid #000000;
             display: flex;
             justify-content: space-between;
         }
         .signature-line {
             width: 42%;
-            border-top: 1px solid #000000;
+            border-top: 1.5px solid #000000;
             padding-top: 4px;
             text-align: center;
-            font-size: 7.2pt;
+            font-size: 7.5pt;
+            font-weight: 700 !important;
+            color: #000000;
             line-height: 1.25;
         }
         .doc-footer-meta {
-            margin-top: 8px;
+            margin-top: 10px;
+            font-size: 7pt;
+            font-weight: 700;
+            color: #000000;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #000000;
+            padding-top: 3px;
+        }
             font-size: 6.8pt;
             color: #64748b;
             display: flex;
@@ -462,19 +482,19 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
     <table class="table-doc-excel">
         <thead>
             <tr>
-                <th style="width: 6.5%;">Data</th>
-                <th style="width: 5.5%;">Dia</th>
-                <th style="width: 23%;">Descrição / Histórico</th>
-                <th style="width: 7.0%;" class="text-end">Pix Online</th>
-                <th style="width: 6.8%;" class="text-end">Rec. PDV Pix</th>
-                <th style="width: 6.8%;" class="text-end">Rec. PDV Din</th>
-                <th style="width: 6.8%;" class="text-end">Venda Pix</th>
-                <th style="width: 6.8%;" class="text-end">Venda Din</th>
-                <th style="width: 6.8%;" class="text-end">Pgto Pix</th>
-                <th style="width: 6.8%;" class="text-end">Pgto Din</th>
-                <th style="width: 7.2%;" class="text-end">Crédito</th>
-                <th style="width: 7.2%;" class="text-end">Débito</th>
-                <th style="width: 8.6%;" class="text-end">Saldo</th>
+                <th style="width: 6.5%;" class="text-center">Data</th>
+                <th style="width: 5.5%;" class="text-center">Dia</th>
+                <th style="width: 23%;" class="text-start">Descrição / Histórico</th>
+                <th style="width: 7.0%;" class="text-center">Pix Online</th>
+                <th style="width: 6.8%;" class="text-center">Rec. PDV Pix</th>
+                <th style="width: 6.8%;" class="text-center">Rec. PDV Din</th>
+                <th style="width: 6.8%;" class="text-center">Venda Pix</th>
+                <th style="width: 6.8%;" class="text-center">Venda Din</th>
+                <th style="width: 6.8%;" class="text-center">Pgto Pix</th>
+                <th style="width: 6.8%;" class="text-center">Pgto Din</th>
+                <th style="width: 7.2%;" class="text-center">Crédito</th>
+                <th style="width: 7.2%;" class="text-center">Débito</th>
+                <th style="width: 8.6%;" class="text-center">Saldo</th>
             </tr>
         </thead>
         <tbody>

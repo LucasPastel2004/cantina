@@ -78,6 +78,7 @@ if ($emitirAlim && $emitirAluno) {
         html, body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: #000000;
+            font-weight: 700;
             margin: 0;
             padding: 0;
             font-size: 8.5pt;
@@ -238,6 +239,11 @@ if ($emitirAlim && $emitirAluno) {
                 padding: 0 !important;
                 margin: 0 !important;
                 font-size: 8pt;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, table, th, td, div, span, p, strong {
+                font-weight: 700 !important;
                 color: #000000 !important;
             }
             .no-print {
@@ -359,13 +365,15 @@ if ($emitirAlim && $emitirAluno) {
         }
         .report-subtitle {
             font-size: 7.8pt;
-            color: #334155;
+            color: #000000;
+            font-weight: 700;
             margin-top: 1px;
         }
         .school-meta-col {
             text-align: right;
             font-size: 7.5pt;
-            color: #334155;
+            color: #000000;
+            font-weight: 700;
             line-height: 1.35;
             padding-right: 2px;
         }
@@ -373,8 +381,10 @@ if ($emitirAlim && $emitirAluno) {
         /* Faixa de Parâmetros */
         .param-bar {
             font-size: 8pt;
+            font-weight: 700;
+            color: #000000;
             background: #f8fafc;
-            border: 1px solid #000000;
+            border: 1.5px solid #000000;
             padding: 4px 8px;
             margin-bottom: 8px;
             display: flex;
@@ -405,6 +415,7 @@ if ($emitirAlim && $emitirAluno) {
             margin-top: 4px;
             margin-bottom: 8px;
             font-size: 7.8pt;
+            font-weight: 700 !important;
             border: 1px solid #000000 !important;
         }
         table.tabela-relatorio th,
@@ -412,7 +423,7 @@ if ($emitirAlim && $emitirAluno) {
             border: 1px solid #000000 !important;
             padding: 3px 4px !important;
             font-weight: 700 !important;
-            text-align: left;
+            text-align: center;
             color: #000000;
             font-size: 7.2pt !important;
             letter-spacing: -0.01em;
@@ -438,6 +449,7 @@ if ($emitirAlim && $emitirAluno) {
             vertical-align: middle;
             border: 1px solid #000000 !important;
             color: #000000;
+            font-weight: 700 !important;
             background: #ffffff !important;
             overflow-wrap: break-word;
             word-break: break-word;
@@ -448,7 +460,7 @@ if ($emitirAlim && $emitirAluno) {
         }
 
         .text-center { text-align: center !important; }
-        .text-right, .text-end { text-align: right !important; }
+        .text-right, .text-end { text-align: center !important; }
         .text-left, .text-start { text-align: left !important; }
 
         /* Linhas de Totalização Oficial */
@@ -547,24 +559,27 @@ if ($emitirAlim && $emitirAluno) {
 
         /* Assinaturas e Rodapé Oficial */
         .footer-assinaturas-box {
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid #000000;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1.5px solid #000000;
             display: flex;
             justify-content: space-between;
         }
         .signature-line {
             width: 44%;
-            border-top: 1px solid #000000;
-            padding-top: 4px;
+            border-top: 1.5px solid #000000;
+            padding-top: 6px;
             text-align: center;
             font-size: 7.5pt;
+            font-weight: 700;
+            color: #000000;
             line-height: 1.25;
         }
         .doc-footer-meta {
             margin-top: 10px;
             font-size: 7pt;
-            color: #64748b;
+            font-weight: 700;
+            color: #000000;
             display: flex;
             justify-content: space-between;
             border-top: 1px solid #cbd5e1;
@@ -682,9 +697,9 @@ if ($emitirAlim && $emitirAluno) {
                             <th style="width: <?php echo $wTipo; ?>%;">Tipo Pessoa</th>
                         <?php endif; ?>
                         <th style="width: <?php echo $wAlim; ?>%;">Alimento</th>
-                        <th style="width: <?php echo $wQtd; ?>%;" class="text-right">Quantidade</th>
-                        <th style="width: <?php echo $wUnit; ?>%;" class="text-right">Valor Unitário</th>
-                        <th style="width: <?php echo $wTot; ?>%;" class="text-right">Valor Total</th>
+                        <th style="width: <?php echo $wQtd; ?>%;" class="text-center">Quantidade</th>
+                        <th style="width: <?php echo $wUnit; ?>%;" class="text-center">Valor Unitário</th>
+                        <th style="width: <?php echo $wTot; ?>%;" class="text-center">Valor Total</th>
                         <?php if ($emitirForma): ?>
                             <th style="width: <?php echo $wForma; ?>%;">Forma Pagto</th>
                         <?php endif; ?>
@@ -757,9 +772,9 @@ if ($emitirAlim && $emitirAluno) {
                         <th style="width: 11%;">Código</th>
                         <th style="width: 33%;">Alimento</th>
                         <th style="width: 15%;">Categoria</th>
-                        <th style="width: 11%;" class="text-right">Qtd Total</th>
-                        <th style="width: 15%;" class="text-right">Preço Médio</th>
-                        <th style="width: 15%;" class="text-right">Valor Total</th>
+                        <th style="width: 11%;" class="text-center">Qtd Total</th>
+                        <th style="width: 15%;" class="text-center">Preço Médio</th>
+                        <th style="width: 15%;" class="text-center">Valor Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -826,8 +841,8 @@ if ($emitirAlim && $emitirAluno) {
                                 <tr>
                                     <th style="width: 15%;">Matrícula</th>
                                     <th style="width: 50%;">Nome do Aluno</th>
-                                    <th style="width: 15%;" class="text-right">Quantidade</th>
-                                    <th style="width: 20%;" class="text-right">Total Consumo (R$)</th>
+                                    <th style="width: 15%;" class="text-center">Quantidade</th>
+                                    <th style="width: 20%;" class="text-center">Total Consumo (R$)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -863,9 +878,9 @@ if ($emitirAlim && $emitirAluno) {
                                                 <th style="width: 14%;">Data</th>
                                                 <th style="width: 11%;">Horário</th>
                                                 <th style="width: 41%;">Produto</th>
-                                                <th style="width: 8%;" class="text-right">Qtd</th>
-                                                <th style="width: 12%;" class="text-right">Preço</th>
-                                                <th style="width: 14%;" class="text-right">Subtotal</th>
+                                                <th style="width: 8%;" class="text-center">Qtd</th>
+                                                <th style="width: 12%;" class="text-center">Preço</th>
+                                                <th style="width: 14%;" class="text-center">Subtotal</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -902,8 +917,8 @@ if ($emitirAlim && $emitirAluno) {
                                 <th style="width: 14%;">Matrícula</th>
                                 <th style="width: 42%;">Nome do Aluno</th>
                                 <th style="width: 18%;">Série / Turma</th>
-                                <th style="width: 10%;" class="text-right">Qtd</th>
-                                <th style="width: 16%;" class="text-right">Total (R$)</th>
+                                <th style="width: 10%;" class="text-center">Qtd</th>
+                                <th style="width: 16%;" class="text-center">Total (R$)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -943,9 +958,9 @@ if ($emitirAlim && $emitirAluno) {
                                             <th style="width: 16%;">Data</th>
                                             <th style="width: 12%;">Horário</th>
                                             <th style="width: 44%;">Produto</th>
-                                            <th style="width: 8%;" class="text-right">Qtd</th>
-                                            <th style="width: 10%;" class="text-right">Preço</th>
-                                            <th style="width: 10%;" class="text-right">Subtotal</th>
+                                            <th style="width: 8%;" class="text-center">Qtd</th>
+                                            <th style="width: 10%;" class="text-center">Preço</th>
+                                            <th style="width: 10%;" class="text-center">Subtotal</th>
                                         </tr>
                                     </thead>
                                     <tbody>

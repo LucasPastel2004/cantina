@@ -50,6 +50,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             margin: 0;
             padding: 0;
             font-size: 8.5pt;
+            font-weight: 700;
             line-height: 1.35;
             background: #ffffff;
             width: 100%;
@@ -198,6 +199,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 padding: 0 !important;
                 margin: 0 !important;
                 font-size: 8pt;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, table, th, td, div, span, p {
+                font-weight: 700 !important;
                 color: #000000 !important;
             }
             .no-print {
@@ -361,6 +367,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             margin-top: 4px;
             margin-bottom: 8px;
             font-size: 7.8pt;
+            font-weight: 700 !important;
             border: 1px solid #000000 !important;
         }
         table.table-doc-excel th,
@@ -369,25 +376,28 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             padding: 3px 4px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
+            font-weight: 700 !important;
             word-break: break-word;
         }
         table.table-doc-excel thead th {
             font-weight: 700 !important;
-            text-align: center;
+            text-align: center !important;
             font-size: 7.2pt;
             letter-spacing: -0.01em;
             text-transform: uppercase;
             background-color: #f8fafc !important;
+            color: #000000 !important;
         }
         table.table-doc-excel tfoot td {
             font-weight: 700 !important;
             background-color: #f8fafc !important;
+            color: #000000 !important;
             border-top: 2px solid #000000 !important;
         }
 
         .text-start { text-align: left !important; }
         .text-center { text-align: center !important; }
-        .text-end { text-align: right !important; }
+        .text-end { text-align: center !important; }
 
         /* Banners de Seção */
         .section-banner {
@@ -407,27 +417,30 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         /* Assinaturas */
         .footer-assinaturas-box {
-            margin-top: 24px;
-            padding-top: 14px;
-            border-top: 1px solid #000000;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1.5px solid #000000;
             display: flex;
             justify-content: space-between;
         }
         .signature-line {
             width: 44%;
-            border-top: 1px solid #000000;
+            border-top: 1.5px solid #000000;
             padding-top: 4px;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.8pt;
+            font-weight: 700 !important;
+            color: #000000;
             line-height: 1.25;
         }
         .doc-footer-meta {
             margin-top: 10px;
             font-size: 7pt;
-            color: #64748b;
+            font-weight: 700;
+            color: #000000;
             display: flex;
             justify-content: space-between;
-            border-top: 1px solid #cbd5e1;
+            border-top: 1px solid #000000;
             padding-top: 3px;
         }
     </style>
@@ -534,8 +547,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 <th style="width: 14%;" class="text-center">Data / Hora</th>
                 <th style="width: 42%;" class="text-start">Descrição do Alimento / Produto</th>
                 <th style="width: 8%;" class="text-center">Qtd.</th>
-                <th style="width: 18%;" class="text-end">Valor Unitário</th>
-                <th style="width: 18%;" class="text-end">Subtotal</th>
+                <th style="width: 18%;" class="text-center">Valor Unitário</th>
+                <th style="width: 18%;" class="text-center">Subtotal</th>
             </tr>
         </thead>
         <tbody>
@@ -557,8 +570,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                         <td class="text-center font-tabular"><?php echo $dataFmt; ?></td>
                         <td class="text-start"><strong><?php echo $desc; ?></strong></td>
                         <td class="text-center font-tabular"><?php echo $qtd; ?> un</td>
-                        <td class="text-end font-tabular">R$ <?php echo number_format($unit, 2, ',', '.'); ?></td>
-                        <td class="text-end font-tabular">
+                        <td class="text-center font-tabular">R$ <?php echo number_format($unit, 2, ',', '.'); ?></td>
+                        <td class="text-center font-tabular">
                             <strong>R$ <?php echo number_format($sub, 2, ',', '.'); ?></strong>
                         </td>
                     </tr>
@@ -569,7 +582,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             <tr class="row-geral-total">
                 <td colspan="2" class="text-end">TOTAL DESTE DEMONSTRATIVO INDIVIDUAL:</td>
                 <td class="text-center font-tabular"><?php echo $totalLanches; ?> UN</td>
-                <td class="text-end font-tabular" colspan="2">R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?></td>
+                <td class="text-center font-tabular" colspan="2">R$ <?php echo number_format($totalDesconto, 2, ',', '.'); ?></td>
             </tr>
         </tfoot>
     </table>

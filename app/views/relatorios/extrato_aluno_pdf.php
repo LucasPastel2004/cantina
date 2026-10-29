@@ -67,6 +67,7 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
             margin: 0;
             padding: 0;
             font-size: 8.5pt;
+            font-weight: 700;
             line-height: 1.35;
             background: #ffffff;
             width: 100%;
@@ -215,6 +216,11 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
                 padding: 0 !important;
                 margin: 0 !important;
                 font-size: 8pt;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, table, th, td, div, span, p {
+                font-weight: 700 !important;
                 color: #000000 !important;
             }
             .no-print {
@@ -377,6 +383,7 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
             margin-top: 4px;
             margin-bottom: 8px;
             font-size: 7.8pt;
+            font-weight: 700 !important;
             border: 1px solid #000000 !important;
         }
         table.table-doc-excel th,
@@ -385,25 +392,28 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
             padding: 3px 4px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
+            font-weight: 700 !important;
             word-break: break-word;
         }
         table.table-doc-excel thead th {
             font-weight: 700 !important;
-            text-align: center;
+            text-align: center !important;
             font-size: 7.2pt;
             letter-spacing: -0.01em;
             text-transform: uppercase;
             background-color: #f8fafc !important;
+            color: #000000 !important;
         }
         table.table-doc-excel tfoot td {
             font-weight: 700 !important;
             background-color: #f8fafc !important;
+            color: #000000 !important;
             border-top: 2px solid #000000 !important;
         }
 
         .text-start { text-align: left !important; }
         .text-center { text-align: center !important; }
-        .text-end { text-align: right !important; }
+        .text-end { text-align: center !important; }
 
         /* Banners de Seção */
         .section-banner {
@@ -423,24 +433,32 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
 
         /* Assinaturas */
         .footer-assinaturas-box {
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid #000000;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1.5px solid #000000;
             display: flex;
             justify-content: space-between;
         }
         .signature-line {
             width: 44%;
-            border-top: 1px solid #000000;
+            border-top: 1.5px solid #000000;
             padding-top: 4px;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.8pt;
+            font-weight: 700 !important;
+            color: #000000;
             line-height: 1.25;
         }
         .doc-footer-meta {
             margin-top: 10px;
             font-size: 7pt;
-            color: #64748b;
+            font-weight: 700;
+            color: #000000;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #000000;
+            padding-top: 3px;
+        }
             display: flex;
             justify-content: space-between;
             border-top: 1px solid #cbd5e1;
@@ -562,10 +580,10 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
                     <th style="width: 10%;" class="text-center">Data</th>
                     <th style="width: 33%;" class="text-start">Descrição do Item / Operação</th>
                     <th style="width: 6.5%;" class="text-center">Qtd.</th>
-                    <th style="width: 12%;" class="text-end">V. Unitário</th>
-                    <th style="width: 11.5%;" class="text-end">V. Total</th>
+                    <th style="width: 12%;" class="text-center">V. Unitário</th>
+                    <th style="width: 11.5%;" class="text-center">V. Total</th>
                     <th style="width: 12%;" class="text-center">Forma Pgto.</th>
-                    <th style="width: 15%;" class="text-end">Saldo Result.</th>
+                    <th style="width: 15%;" class="text-center">Saldo Result.</th>
                 </tr>
             </thead>
             <tbody>
@@ -574,10 +592,10 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
                     <td class="text-center font-tabular">-</td>
                     <td class="text-start"><strong>SALDO INICIAL DO PERÍODO</strong> <!-- Saldo inicial --></td>
                     <td class="text-center font-tabular">-</td>
-                    <td class="text-end font-tabular">-</td>
-                    <td class="text-end font-tabular">-</td>
                     <td class="text-center font-tabular">-</td>
-                    <td class="text-end font-tabular"><strong>R$ <?php echo number_format($saldoInicial, 2, ',', '.'); ?></strong></td>
+                    <td class="text-center font-tabular">-</td>
+                    <td class="text-center font-tabular">-</td>
+                    <td class="text-center font-tabular"><strong>R$ <?php echo number_format($saldoInicial, 2, ',', '.'); ?></strong></td>
                 </tr>
 
                 <?php if (empty($linhas)): ?>
@@ -602,16 +620,16 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
                             <td class="text-center font-tabular">
                                 <?php echo htmlspecialchars((string)($l['quantidade'] ?? '1'), ENT_QUOTES, 'UTF-8'); ?>
                             </td>
-                            <td class="text-end font-tabular">
+                            <td class="text-center font-tabular">
                                 <?php echo is_numeric($l['valor_unitario'] ?? null) ? 'R$ ' . $valUnit : $valUnit; ?>
                             </td>
-                            <td class="text-end font-tabular">
+                            <td class="text-center font-tabular">
                                 <strong>R$ <?php echo number_format($valTot, 2, ',', '.'); ?></strong>
                             </td>
                             <td class="text-center font-tabular">
                                 <?php echo htmlspecialchars($l['forma_pagamento'] ?? 'Saldo', ENT_QUOTES, 'UTF-8'); ?>
                             </td>
-                            <td class="text-end font-tabular">
+                            <td class="text-center font-tabular">
                                 <strong>R$ <?php echo number_format($saldoLinha, 2, ',', '.'); ?></strong>
                             </td>
                         </tr>
@@ -621,8 +639,8 @@ $responsavelWhatsapp = $aluno['responsavel_whatsapp'] ?? '';
             <tfoot>
                 <tr class="row-geral-total">
                     <td colspan="4" class="text-end">TOTAIS DO PERÍODO: <!-- Total gasto no período --></td>
-                    <td class="text-end font-tabular">R$ <?php echo number_format($totalGasto, 2, ',', '.'); ?></td>
-                    <td colspan="2" class="text-end font-tabular">
+                    <td class="text-center font-tabular">R$ <?php echo number_format($totalGasto, 2, ',', '.'); ?></td>
+                    <td colspan="2" class="text-center font-tabular">
                         Saldo Atual: R$ <?php echo number_format($saldoAtual, 2, ',', '.'); ?>
                     </td>
                 </tr>

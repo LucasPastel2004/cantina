@@ -41,7 +41,8 @@ $formaPagamentoNome = ($recibo['forma_pagamento'] === 'pix') ? 'Transferência I
         body {
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
             background-color: #f1f5f9;
-            color: #0f172a;
+            color: #000000;
+            font-weight: 700;
             font-size: 10pt;
             line-height: 1.4;
             padding: 20px;
@@ -145,14 +146,14 @@ $formaPagamentoNome = ($recibo['forma_pagamento'] === 'pix') ? 'Transferência I
         .header-title-box h1 {
             font-size: 13pt;
             font-weight: 800;
-            color: #0f172a;
+            color: #000000;
             letter-spacing: -0.01em;
             text-transform: uppercase;
         }
         .header-title-box .sub {
             font-size: 8.5pt;
-            color: #475569;
-            font-weight: 500;
+            color: #000000;
+            font-weight: 700;
         }
 
         .header-meta {
@@ -161,17 +162,18 @@ $formaPagamentoNome = ($recibo['forma_pagamento'] === 'pix') ? 'Transferência I
         .num-recibo {
             font-size: 12pt;
             font-weight: 800;
-            color: #1d4ed8;
+            color: #000000;
             font-family: monospace;
         }
         .data-emissao {
             font-size: 8.5pt;
-            color: #64748b;
+            color: #000000;
+            font-weight: 700;
         }
 
         .valor-destaque-box {
             background: #f8fafc;
-            border: 1.5px solid #0f172a;
+            border: 1.5px solid #000000;
             padding: 10px 16px;
             display: flex;
             justify-content: space-between;
@@ -180,43 +182,47 @@ $formaPagamentoNome = ($recibo['forma_pagamento'] === 'pix') ? 'Transferência I
         }
         .valor-label {
             font-size: 9pt;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
-            color: #475569;
+            color: #000000;
         }
         .valor-num {
             font-size: 16pt;
             font-weight: 800;
-            color: #0f172a;
+            color: #000000;
             font-family: 'Segoe UI', monospace;
         }
 
         .corpo-texto {
             font-size: 9.5pt;
+            font-weight: 700;
             line-height: 1.6;
             text-align: justify;
-            color: #1e293b;
+            color: #000000;
             margin-bottom: 16px;
         }
 
         .corpo-texto strong {
-            color: #0f172a;
+            color: #000000;
         }
 
         .dados-grid {
             width: 100%;
             border-collapse: collapse;
             font-size: 8.5pt;
+            font-weight: 700;
             margin-bottom: 20px;
         }
         .dados-grid td {
-            padding: 5px 8px;
-            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+            border: 1.5px solid #000000;
+            color: #000000;
+            font-weight: 700;
         }
         .dados-grid .bg-label {
             background-color: #f1f5f9;
-            font-weight: 700;
-            color: #334155;
+            font-weight: 800;
+            color: #000000;
             width: 25%;
             text-transform: uppercase;
             font-size: 7.5pt;
@@ -226,21 +232,22 @@ $formaPagamentoNome = ($recibo['forma_pagamento'] === 'pix') ? 'Transferência I
             display: flex;
             justify-content: space-between;
             gap: 30px;
-            margin-top: 35px;
-            padding-top: 10px;
+            margin-top: 55px;
+            padding-top: 15px;
         }
         .assinatura-box {
             flex: 1;
             text-align: center;
-            border-top: 1px solid #0f172a;
+            border-top: 1.5px solid #000000;
             padding-top: 6px;
             font-size: 8pt;
-            color: #334155;
+            font-weight: 700;
+            color: #000000;
         }
         .assinatura-box strong {
             display: block;
             font-size: 8.5pt;
-            color: #0f172a;
+            color: #000000;
             margin-bottom: 2px;
         }
 
@@ -268,6 +275,12 @@ $formaPagamentoNome = ($recibo['forma_pagamento'] === 'pix') ? 'Transferência I
                 background: #ffffff !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, div, p, span, table, td, strong, em, h1 {
+                font-weight: 700 !important;
+                color: #000000 !important;
             }
             .no-print {
                 display: none !important;

@@ -103,6 +103,7 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 8.5pt;
+            font-weight: 700;
             line-height: 1.3;
             color: #000000;
             margin: 0;
@@ -134,6 +135,12 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
                 background: #ffffff !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, table, th, td, div, span, p {
+                font-weight: 700 !important;
+                color: #000000 !important;
             }
             .no-print {
                 display: none !important;
@@ -484,6 +491,7 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
             width: 100% !important;
             border-collapse: collapse !important;
             font-size: 7.6pt;
+            font-weight: 700 !important;
             border: 1px solid #000000 !important;
             margin-top: 2px;
         }
@@ -493,6 +501,7 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
             padding: 3.5px 6px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
+            font-weight: 700 !important;
         }
         table.table-doc-excel thead th {
             background-color: #f8fafc !important;
@@ -506,42 +515,46 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
             border-top: 1.5px solid #000000 !important;
         }
 
-        .mini- wallet-table {
+        .mini-wallet-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 7pt;
+            font-weight: 700;
             margin-top: 6px;
         }
         .mini-wallet-table td {
             padding: 2.5px 4px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #000000;
+            color: #000000;
         }
 
         /* ==========================================================================
            7. Assinaturas e Rodapé
            ========================================================================== */
         .footer-signatures {
-            margin-top: 14px;
+            margin-top: 50px;
             display: flex;
             justify-content: space-between;
-            padding-top: 18px;
+            padding-top: 20px;
             page-break-inside: avoid;
         }
         .signature-line {
             width: 42%;
-            border-top: 1px solid #000000;
+            border-top: 1.5px solid #000000;
             text-align: center;
             font-size: 7.8pt;
+            font-weight: 700 !important;
             color: #000000;
-            padding-top: 3px;
+            padding-top: 4px;
         }
         .footer-doc {
             margin-top: 8px;
             display: flex;
             justify-content: space-between;
             font-size: 7pt;
-            color: #475569;
-            border-top: 1px solid #cbd5e1;
+            font-weight: 700;
+            color: #000000;
+            border-top: 1px solid #000000;
             padding-top: 3px;
         }
     </style>
@@ -836,10 +849,10 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
             <tr>
                 <th style="width: 6%; text-align: center;">#</th>
                 <th style="width: 34%; text-align: left;">Produto / Lanche</th>
-                <th style="width: 12%; text-align: right;">Qtd. Vendida</th>
-                <th style="width: 15%; text-align: right;">Receita Bruta</th>
-                <th style="width: 15%; text-align: right;">Custo Estimado</th>
-                <th style="width: 18%; text-align: right;">Lucro Estimado</th>
+                <th style="width: 12%; text-align: center;">Qtd. Vendida</th>
+                <th style="width: 15%; text-align: center;">Receita Bruta</th>
+                <th style="width: 15%; text-align: center;">Custo Estimado</th>
+                <th style="width: 18%; text-align: center;">Lucro Estimado</th>
             </tr>
         </thead>
         <tbody>
@@ -861,11 +874,11 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
                 ?>
                 <tr>
                     <td style="text-align: center;" class="font-tabular"><?php echo $idx + 1; ?>º</td>
-                    <td style="font-weight: 600;"><?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?></td>
-                    <td style="text-align: right;" class="font-tabular"><?php echo number_format($qtdP, 0, ',', '.'); ?> un</td>
-                    <td style="text-align: right;" class="font-tabular">R$ <?php echo number_format($recP, 2, ',', '.'); ?></td>
-                    <td style="text-align: right;" class="font-tabular">R$ <?php echo number_format($custoP, 2, ',', '.'); ?></td>
-                    <td style="text-align: right; font-weight: 700;" class="font-tabular">R$ <?php echo number_format($lucroP, 2, ',', '.'); ?></td>
+                    <td style="font-weight: 700;"><?php echo htmlspecialchars($prod['descricao'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td style="text-align: center;" class="font-tabular"><?php echo number_format($qtdP, 0, ',', '.'); ?> un</td>
+                    <td style="text-align: center;" class="font-tabular">R$ <?php echo number_format($recP, 2, ',', '.'); ?></td>
+                    <td style="text-align: center;" class="font-tabular">R$ <?php echo number_format($custoP, 2, ',', '.'); ?></td>
+                    <td style="text-align: center; font-weight: 700;" class="font-tabular">R$ <?php echo number_format($lucroP, 2, ',', '.'); ?></td>
                 </tr>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -878,10 +891,10 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
         <tfoot>
             <tr>
                 <td colspan="2" style="text-align: right;">TOTAL DOS PRODUTOS MAIS RENTÁVEIS LISTADOS:</td>
-                <td style="text-align: right;" class="font-tabular"><?php echo number_format($somaQtd, 0, ',', '.'); ?> un</td>
-                <td style="text-align: right;" class="font-tabular">R$ <?php echo number_format($somaRecProd, 2, ',', '.'); ?></td>
-                <td style="text-align: right;" class="font-tabular">R$ <?php echo number_format($somaCustoProd, 2, ',', '.'); ?></td>
-                <td style="text-align: right;" class="font-tabular">R$ <?php echo number_format($somaLucroProd, 2, ',', '.'); ?></td>
+                <td style="text-align: center;" class="font-tabular"><?php echo number_format($somaQtd, 0, ',', '.'); ?> un</td>
+                <td style="text-align: center;" class="font-tabular">R$ <?php echo number_format($somaRecProd, 2, ',', '.'); ?></td>
+                <td style="text-align: center;" class="font-tabular">R$ <?php echo number_format($somaCustoProd, 2, ',', '.'); ?></td>
+                <td style="text-align: center;" class="font-tabular">R$ <?php echo number_format($somaLucroProd, 2, ',', '.'); ?></td>
             </tr>
         </tfoot>
         <?php endif; ?>

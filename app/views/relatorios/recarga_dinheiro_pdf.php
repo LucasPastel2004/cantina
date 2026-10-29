@@ -39,17 +39,18 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
         .wrapper {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 8.5pt;
+            font-weight: 700;
             color: #000000;
             line-height: 1.25;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .logo-img { width: 34px; height: 34px; border-radius: 50%; display: block; margin: 0 auto 3px auto; }
-        .divider { border-top: 1px dashed #000000; margin: 4px 0; }
+        .divider { border-top: 1.5px dashed #000000; margin: 4px 0; }
         .font-tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "zero" 1; }
         .line { display: flex; justify-content: space-between; margin-bottom: 2px; }
-        .highlight { font-size: 11pt; font-weight: bold; border-top: 1px solid #000000; border-bottom: 1px solid #000000; padding: 4px 0; margin: 4px 0; }
-        .footer-text { font-size: 6.5pt; color: #444444; margin-top: 8px; text-align: center; }
+        .highlight { font-size: 11pt; font-weight: 800; border-top: 1.5px solid #000000; border-bottom: 1.5px solid #000000; padding: 4px 0; margin: 4px 0; }
+        .footer-text { font-size: 7pt; font-weight: 700; color: #000000; margin-top: 8px; text-align: center; }
 
         /* Estilos na Tela do Computador (Visualizador de Comprovante) */
         @media screen {
@@ -210,6 +211,12 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 80mm !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            html, body, .wrapper, div, span, p, strong {
+                font-weight: 700 !important;
+                color: #000000 !important;
             }
             .receipt-screen-wrapper {
                 display: block !important;
@@ -223,6 +230,8 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
                 box-shadow: none !important;
                 border-radius: 0 !important;
                 border: none !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
             }
         }
     </style>
@@ -265,12 +274,12 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
                 <img src="<?php echo $logoDataUri; ?>" alt="Logo" class="logo-img">
             <?php endif; ?>
             <div style="font-weight: bold; font-size: 9pt;">COLÉGIO MONTEIRO LOBATO</div>
-            <div style="font-size: 7.5pt; color: #333; font-weight: bold;">COMPROVANTE DE RECARGA — Carteira Familiar</div>
+            <div style="font-size: 7.5pt; color: #000000; font-weight: bold;">COMPROVANTE DE RECARGA — Carteira Familiar</div>
         </div>
 
         <div class="divider"></div>
 
-        <div style="font-size: 7.5pt;">
+        <div style="font-size: 7.5pt; font-weight: 700; color: #000000;">
             <div><strong>Transação:</strong> #<?php echo $transacaoId; ?> &bull; <strong>Sessão:</strong> #<?php echo $sessaoId; ?></div>
             <div><strong>Data/Hora:</strong> <?php echo $dataHora; ?></div>
             <div><strong>Operador:</strong> <?php echo htmlspecialchars($operador); ?></div>
@@ -280,7 +289,7 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
 
         <?php if (!empty($dependentes)): ?>
             <div class="divider"></div>
-            <div style="font-size: 7pt; color: #333;">
+            <div style="font-size: 7pt; color: #000000; font-weight: 700;">
                 <strong>Estudante(s) Vinculado(s):</strong><br>
                 <?php foreach ($dependentes as $dep): ?>
                     &bull; <?php echo htmlspecialchars($dep['nome'] ?? ''); ?> (<?php echo htmlspecialchars($dep['nome_turma'] ?? 'Turma'); ?>)<br>
@@ -295,7 +304,7 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
             <span class="font-tabular">R$ <?php echo number_format($valor, 2, ',', '.'); ?></span>
         </div>
 
-        <div style="font-size: 7.5pt;">
+        <div style="font-size: 7.5pt; font-weight: 700; color: #000000;">
             <div class="line font-tabular">
                 <span>Saldo Anterior:</span>
                 <span>R$ <?php echo number_format($saldoAnterior, 2, ',', '.'); ?></span>

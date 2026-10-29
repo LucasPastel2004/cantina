@@ -40,21 +40,22 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
         .wrapper {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 8.5pt;
+            font-weight: 700;
             color: #000000;
             line-height: 1.25;
         }
         .text-center { text-align: center; }
-        .text-right { text-align: right; }
+        .text-right { text-align: center; }
         .logo-img { width: 34px; height: 34px; border-radius: 50%; display: block; margin: 0 auto 3px auto; }
-        .divider { border-top: 1px dashed #000000; margin: 4px 0; }
+        .divider { border-top: 1.5px dashed #000000; margin: 4px 0; }
         .font-tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "zero" 1; }
-        table { width: 100%; border-collapse: collapse; font-size: 8pt; margin: 4px 0; }
-        th { border-bottom: 1px solid #000000; padding: 2px 0; text-align: left; font-size: 7.5pt; }
-        td { padding: 2px 0; border-bottom: 1px dotted #cccccc; }
-        .total-box { margin-top: 4px; font-size: 9pt; }
+        table { width: 100%; border-collapse: collapse; font-size: 8pt; font-weight: 700; margin: 4px 0; }
+        th { border-bottom: 1.5px solid #000000; padding: 2px 0; text-align: center; font-size: 7.5pt; font-weight: 800; color: #000000; }
+        td { padding: 2px 0; border-bottom: 1px dotted #000000; font-weight: 700; color: #000000; }
+        .total-box { margin-top: 4px; font-size: 9pt; font-weight: 700; color: #000000; }
         .total-line { display: flex; justify-content: space-between; margin-bottom: 2px; }
-        .total-destaque { font-size: 11pt; font-weight: bold; border-top: 1px solid #000000; padding-top: 3px; }
-        .footer-text { font-size: 6.5pt; color: #444444; margin-top: 8px; text-align: center; }
+        .total-destaque { font-size: 11pt; font-weight: 800; border-top: 1.5px solid #000000; padding-top: 3px; }
+        .footer-text { font-size: 7pt; font-weight: 700; color: #000000; margin-top: 8px; text-align: center; }
 
         /* Estilos na Tela do Computador (Visualizador de Comprovante) */
         @media screen {
@@ -196,6 +197,12 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 80mm !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            html, body, .wrapper, table, th, td, div, span, p, strong {
+                font-weight: 700 !important;
+                color: #000000 !important;
             }
             .receipt-screen-wrapper {
                 display: block !important;
@@ -209,6 +216,8 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
                 box-shadow: none !important;
                 border-radius: 0 !important;
                 border: none !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
             }
         }
     </style>
@@ -251,19 +260,19 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
             <img src="<?php echo $logoDataUri; ?>" alt="Logo" class="logo-img">
         <?php endif; ?>
         <div style="font-weight: bold; font-size: 9pt;">COLÉGIO MONTEIRO LOBATO</div>
-        <div style="font-size: 7.5pt; color: #333;">Comprovante de Venda #<?php echo $id; ?> — Balcão Cantina</div>
+        <div style="font-size: 7.5pt; color: #000000; font-weight: 700;">Comprovante de Venda #<?php echo $id; ?> — Balcão Cantina</div>
     </div>
 
     <div class="divider"></div>
 
-    <div style="font-size: 7.5pt;">
+    <div style="font-size: 7.5pt; font-weight: 700; color: #000000;">
         <div><strong>Venda:</strong> #<?php echo $id; ?> &bull; <strong>Data:</strong> <?php echo $dataHora; ?></div>
         <div><strong>Operador:</strong> <?php echo htmlspecialchars($operador); ?></div>
         <?php if (!empty($alunoNome)): ?>
             <div><strong>Estudante:</strong> <?php echo htmlspecialchars($alunoNome); ?><?php echo !empty($alunoTurma) ? ' (' . htmlspecialchars($alunoTurma) . ')' : ''; ?></div>
         <?php endif; ?>
         <?php if (!empty($colaboradorNome)): ?>
-            <div style="margin-top: 2px; padding: 2px 4px; background: #f8fafc; border: 1px solid #ccc;">
+            <div style="margin-top: 2px; padding: 2px 4px; background: #f8fafc; border: 1.5px solid #000000;">
                 <strong>Colaborador:</strong> <?php echo htmlspecialchars($colaboradorNome); ?><?php echo !empty($colaboradorMatricula) ? ' (Matr: ' . htmlspecialchars($colaboradorMatricula) . ')' : ''; ?>
             </div>
         <?php endif; ?>
@@ -274,10 +283,10 @@ $urlPdf = (defined('CANTINA_URL') ? rtrim(CANTINA_URL, '/') : '') . '/operaciona
     <table>
         <thead>
             <tr>
-                <th style="width: 50%;">Item</th>
-                <th style="width: 15%;" class="text-center">Qtd</th>
-                <th style="width: 15%;" class="text-right">Unit</th>
-                <th style="width: 20%;" class="text-right">Total</th>
+                <th style="width: 46%;">Item</th>
+                <th style="width: 16%;" class="text-center">Qtd</th>
+                <th style="width: 18%;" class="text-center">Unit</th>
+                <th style="width: 20%;" class="text-center">Total</th>
             </tr>
         </thead>
         <tbody>

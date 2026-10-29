@@ -42,6 +42,7 @@ $regime = $regime ?? 'unificado';
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 8.5pt;
+            font-weight: 700;
             line-height: 1.25;
             color: #000000;
             margin: 0;
@@ -73,6 +74,12 @@ $regime = $regime ?? 'unificado';
                 background: #ffffff !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, table, th, td, div, span, p {
+                font-weight: 700 !important;
+                color: #000000 !important;
             }
             .no-print {
                 display: none !important;
@@ -250,13 +257,15 @@ $regime = $regime ?? 'unificado';
         }
         .report-subtitle {
             font-size: 8pt;
-            color: #334155;
+            font-weight: 700;
+            color: #000000;
             margin-top: 1px;
         }
         .school-meta-col {
             text-align: right;
             font-size: 7.5pt;
-            color: #334155;
+            font-weight: 700;
+            color: #000000;
             line-height: 1.35;
             padding-right: 2px;
         }
@@ -294,6 +303,7 @@ $regime = $regime ?? 'unificado';
             border-collapse: collapse !important;
             table-layout: fixed !important;
             font-size: 6.9pt;
+            font-weight: 700 !important;
             border: 1px solid #000000 !important;
             margin-top: 3px;
         }
@@ -304,11 +314,12 @@ $regime = $regime ?? 'unificado';
             padding: 2px 3.5px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
+            font-weight: 700 !important;
         }
 
         table.table-dre-doc thead th {
             font-weight: 700 !important;
-            text-align: center;
+            text-align: center !important;
             font-size: 6.8pt;
             text-transform: uppercase;
             background-color: #f8fafc !important;
@@ -334,18 +345,21 @@ $regime = $regime ?? 'unificado';
             text-align: left !important;
             padding: 2px 4px !important;
             font-size: 6.7pt;
+            font-weight: 700 !important;
             word-break: break-word;
         }
         .col-mes {
             width: 6.25%;
-            text-align: right !important;
+            text-align: center !important;
             padding: 2px 2px !important;
             white-space: nowrap !important;
             font-size: 6.35pt !important;
+            font-weight: 700 !important;
             letter-spacing: -0.015em;
         }
         .col-total {
             width: 8.5%;
+            text-align: center !important;
             font-weight: 700 !important;
             font-size: 6.45pt !important;
         }
@@ -355,12 +369,14 @@ $regime = $regime ?? 'unificado';
             line-height: 1.1 !important;
             font-size: 6.45pt !important;
             padding: 2px 2px !important;
+            font-weight: 700 !important;
         }
         td.col-total {
-            text-align: right !important;
+            text-align: center !important;
             white-space: nowrap !important;
             padding: 2px 3px !important;
             font-size: 6.45pt !important;
+            font-weight: 700 !important;
             letter-spacing: -0.015em;
         }
 
@@ -379,6 +395,8 @@ $regime = $regime ?? 'unificado';
         .row-total-destaque td.col-mes,
         .row-total-destaque td.col-total {
             font-size: 6.5pt !important;
+            text-align: center !important;
+            font-weight: 700 !important;
         }
         .row-resultado-final td {
             font-weight: 700 !important;
@@ -388,33 +406,37 @@ $regime = $regime ?? 'unificado';
         .row-resultado-final td.col-mes,
         .row-resultado-final td.col-total {
             font-size: 6.5pt !important;
+            text-align: center !important;
+            font-weight: 700 !important;
         }
 
         /* ==========================================================================
            6. Bloco de Assinaturas e Rodapé
            ========================================================================== */
         .footer-signatures {
-            margin-top: 8px;
+            margin-top: 50px;
             display: flex;
             justify-content: space-between;
-            padding-top: 14px;
+            padding-top: 20px;
             page-break-inside: avoid;
         }
         .signature-line {
             width: 42%;
-            border-top: 1px solid #000000;
+            border-top: 1.5px solid #000000;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.8pt;
+            font-weight: 700 !important;
             color: #000000;
-            padding-top: 3px;
+            padding-top: 4px;
         }
         .footer-doc {
             margin-top: 6px;
             display: flex;
             justify-content: space-between;
             font-size: 7pt;
-            color: #475569;
-            border-top: 1px solid #cbd5e1;
+            font-weight: 700;
+            color: #000000;
+            border-top: 1px solid #000000;
             padding-top: 3px;
         }
     </style>

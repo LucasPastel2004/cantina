@@ -43,6 +43,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             margin: 0;
             padding: 0;
             font-size: 8.5pt;
+            font-weight: 700;
             line-height: 1.35;
             background: #ffffff;
             width: 100%;
@@ -200,6 +201,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
                 padding: 0 !important;
                 margin: 0 !important;
                 font-size: 8pt;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, table, th, td, div, span, p {
+                font-weight: 700 !important;
                 color: #000000 !important;
             }
             .no-print {
@@ -333,6 +339,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             margin-top: 4px;
             margin-bottom: 8px;
             font-size: 7.8pt;
+            font-weight: 700 !important;
             border: 1px solid #000000 !important;
         }
         table.table-doc-excel th,
@@ -341,25 +348,28 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             padding: 3px 4px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
+            font-weight: 700 !important;
             word-break: break-word;
         }
         table.table-doc-excel thead th {
             font-weight: 700 !important;
-            text-align: center;
+            text-align: center !important;
             font-size: 7.2pt;
             letter-spacing: -0.01em;
             text-transform: uppercase;
             background-color: #f8fafc !important;
+            color: #000000 !important;
         }
         table.table-doc-excel tfoot td {
             font-weight: 700 !important;
             background-color: #f8fafc !important;
+            color: #000000 !important;
             border-top: 2px solid #000000 !important;
         }
 
         .text-start { text-align: left !important; }
         .text-center { text-align: center !important; }
-        .text-end { text-align: right !important; }
+        .text-end { text-align: center !important; }
 
         /* Banners de Seção */
         .section-banner {
@@ -376,27 +386,30 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         /* Assinaturas */
         .footer-assinaturas-box {
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid #000000;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1.5px solid #000000;
             display: flex;
             justify-content: space-between;
         }
         .signature-line {
             width: 44%;
-            border-top: 1px solid #000000;
+            border-top: 1.5px solid #000000;
             padding-top: 4px;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7.8pt;
+            font-weight: 700 !important;
+            color: #000000;
             line-height: 1.25;
         }
         .doc-footer-meta {
             margin-top: 10px;
             font-size: 7pt;
-            color: #64748b;
+            font-weight: 700;
+            color: #000000;
             display: flex;
             justify-content: space-between;
-            border-top: 1px solid #cbd5e1;
+            border-top: 1px solid #000000;
             padding-top: 3px;
         }
     </style>
@@ -470,8 +483,8 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             <tr>
                 <th style="width: 30%; text-align: left;">Indicador Financeiro</th>
                 <th style="width: 40%; text-align: left;">Detalhamento / Discriminação</th>
-                <th style="width: 14%; text-align: right;">Movimentações</th>
-                <th style="width: 16%; text-align: right;">Total Consolidado</th>
+                <th style="width: 14%; text-align: center;">Movimentações</th>
+                <th style="width: 16%; text-align: center;">Total Consolidado</th>
             </tr>
         </thead>
         <tbody>
@@ -586,9 +599,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             <tr>
                 <th style="width: 30%; text-align: left;">Canal / Meio de Pagamento</th>
                 <th style="width: 27%; text-align: left;">Origem / Ambiente</th>
-                <th style="width: 12%; text-align: right;">Transações</th>
-                <th style="width: 16%; text-align: right;">Total de Entradas</th>
-                <th style="width: 15%; text-align: right;">Participação</th>
+                <th style="width: 12%; text-align: center;">Transações</th>
+                <th style="width: 16%; text-align: center;">Total de Entradas</th>
+                <th style="width: 15%; text-align: center;">Participação</th>
             </tr>
         </thead>
         <tbody>
@@ -639,7 +652,7 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
         <thead>
             <tr>
                 <th style="width: 70%; text-align: left;">Item de Conciliação Contábil</th>
-                <th style="width: 30%; text-align: right;">Valor Consolidado (R$)</th>
+                <th style="width: 30%; text-align: center;">Valor Consolidado (R$)</th>
             </tr>
         </thead>
         <tbody>

@@ -36,6 +36,7 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 8.5pt;
+            font-weight: 700;
             color: #000000;
             background-color: #f1f5f9;
             margin: 0;
@@ -156,6 +157,8 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
             width: 72mm;
             margin: 0 auto;
             padding: 3mm 2mm 2mm 2mm;
+            font-weight: 700;
+            color: #000000;
             page-break-inside: avoid;
             break-inside: avoid;
         }
@@ -172,35 +175,39 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
             margin: 0 auto 2px auto;
         }
         .school-name {
-            font-size: 8pt;
-            font-weight: bold;
+            font-size: 8.5pt;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.2px;
+            color: #000000;
         }
         .ticket-sub {
-            font-size: 7pt;
-            color: #333333;
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: #000000;
         }
         .divider {
-            border-top: 1px dashed #000000;
+            border-top: 1.5px dashed #000000;
             margin: 3px 0;
         }
         .ticket-code {
-            font-size: 8.5pt;
-            font-weight: bold;
+            font-size: 9pt;
+            font-weight: 800;
             text-align: center;
             font-family: monospace;
             letter-spacing: 0.5px;
+            color: #000000;
         }
         .via-badge {
             display: inline-block;
             font-size: 6.5pt;
-            font-weight: bold;
+            font-weight: 800;
             padding: 1px 4px;
-            border: 1px solid #000000;
+            border: 1.5px solid #000000;
             border-radius: 2px;
             text-transform: uppercase;
             margin-left: 4px;
+            color: #000000;
         }
         .student-box {
             margin: 3px 0;
@@ -208,37 +215,41 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
         }
         .student-label {
             font-size: 6.5pt;
+            font-weight: 700;
             text-transform: uppercase;
-            color: #444444;
+            color: #000000;
         }
         .student-name {
             font-size: 10pt;
-            font-weight: bold;
+            font-weight: 800;
             text-transform: uppercase;
             line-height: 1.15;
+            color: #000000;
         }
         .student-turma {
             font-size: 8pt;
-            font-weight: bold;
-            color: #222222;
+            font-weight: 700;
+            color: #000000;
         }
         .product-box {
             background: #f4f4f4;
-            border: 1px solid #000000;
+            border: 1.5px solid #000000;
             padding: 4px;
             margin: 4px 0;
             text-align: center;
         }
         .product-name {
             font-size: 9.5pt;
-            font-weight: bold;
+            font-weight: 800;
             text-transform: uppercase;
             line-height: 1.15;
+            color: #000000;
         }
         .product-qty {
             font-size: 8.5pt;
-            font-weight: bold;
+            font-weight: 800;
             margin-top: 2px;
+            color: #000000;
         }
         .alergeno-box {
             border: 1.5px solid #000000;
@@ -246,14 +257,16 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
             margin: 3px 0;
             text-align: center;
             font-size: 7pt;
-            font-weight: bold;
+            font-weight: 800;
             text-transform: uppercase;
             background: #fff;
+            color: #000000;
         }
         .footer-info {
             text-align: center;
             font-size: 6.5pt;
-            color: #555555;
+            font-weight: 700;
+            color: #000000;
             margin-top: 3px;
         }
         .cut-separator {
@@ -279,6 +292,12 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
                 width: 80mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, .ticket-wrapper, div, span, p, strong {
+                font-weight: 700 !important;
+                color: #000000 !important;
             }
             .receipt-roll {
                 width: 80mm !important;
@@ -294,6 +313,8 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
                 margin: 0 auto !important;
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
             }
         }
     </style>

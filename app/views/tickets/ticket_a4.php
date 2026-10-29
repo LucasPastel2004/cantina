@@ -37,7 +37,8 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 8pt;
-            color: #0f172a;
+            font-weight: 700;
+            color: #000000;
             background-color: #f1f5f9;
             margin: 0;
             padding: 0;
@@ -170,7 +171,7 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
         .ticket-card {
             width: 94mm;
             height: 66mm;
-            border: 1px dashed #64748b;
+            border: 1.5px dashed #000000;
             border-radius: 4px;
             padding: 3mm 4mm;
             background: #ffffff;
@@ -186,7 +187,8 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
             top: -6px;
             right: 8px;
             font-size: 8pt;
-            color: #94a3b8;
+            font-weight: 700;
+            color: #000000;
             background: #ffffff;
             padding: 0 4px;
             line-height: 1;
@@ -195,7 +197,7 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
             display: flex;
             align-items: center;
             gap: 6px;
-            border-bottom: 1px dashed #cbd5e1;
+            border-bottom: 1px dashed #000000;
             padding-bottom: 1.5mm;
         }
         .logo-img {
@@ -211,14 +213,15 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
         }
         .school-title {
             font-size: 7.5pt;
-            font-weight: bold;
-            color: #0f172a;
+            font-weight: 800;
+            color: #000000;
             text-transform: uppercase;
             letter-spacing: 0.2px;
         }
         .school-sub {
             font-size: 6.5pt;
-            color: #64748b;
+            font-weight: 700;
+            color: #000000;
         }
         .card-body {
             padding: 1.5mm 0;
@@ -234,26 +237,27 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
         .ticket-code {
             font-family: monospace;
             font-size: 8pt;
-            font-weight: bold;
-            color: #1e293b;
+            font-weight: 800;
+            color: #000000;
             letter-spacing: 0.5px;
         }
         .via-badge {
             display: inline-block;
             font-size: 6.5pt;
-            font-weight: bold;
+            font-weight: 800;
             padding: 1px 4px;
-            border: 1px solid #0f172a;
+            border: 1.5px solid #000000;
             border-radius: 2px;
             text-transform: uppercase;
+            color: #000000;
         }
         .student-row {
             line-height: 1.2;
         }
         .student-name {
             font-size: 9.5pt;
-            font-weight: bold;
-            color: #0f172a;
+            font-weight: 800;
+            color: #000000;
             text-transform: uppercase;
             white-space: nowrap;
             overflow: hidden;
@@ -261,12 +265,12 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
         }
         .student-turma {
             font-size: 7.5pt;
-            font-weight: 600;
-            color: #475569;
+            font-weight: 700;
+            color: #000000;
         }
         .product-box {
             background: #f8fafc;
-            border: 1px solid #cbd5e1;
+            border: 1.5px solid #000000;
             border-radius: 3px;
             padding: 1.5mm 3mm;
             display: flex;
@@ -276,8 +280,8 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
         }
         .product-name {
             font-size: 8.5pt;
-            font-weight: bold;
-            color: #0f172a;
+            font-weight: 800;
+            color: #000000;
             text-transform: uppercase;
             line-height: 1.15;
             white-space: nowrap;
@@ -286,31 +290,32 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
             flex: 1;
         }
         .product-qty {
-            font-size: 8pt;
-            font-weight: bold;
-            color: #1d4ed8;
+            font-size: 8.5pt;
+            font-weight: 800;
+            color: #000000;
             font-family: monospace;
             white-space: nowrap;
         }
         .alergeno-badge {
-            border: 1px solid #b45309;
+            border: 1.5px solid #000000;
             background: #fef3c7;
-            color: #92400e;
-            font-size: 6.5pt;
-            font-weight: bold;
+            color: #000000;
+            font-size: 7pt;
+            font-weight: 800;
             text-align: center;
             padding: 1px 3px;
             border-radius: 2px;
             text-transform: uppercase;
         }
         .card-footer {
-            border-top: 1px dashed #cbd5e1;
+            border-top: 1px dashed #000000;
             padding-top: 1.5mm;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 6pt;
-            color: #64748b;
+            font-size: 6.5pt;
+            font-weight: 700;
+            color: #000000;
         }
 
         /* Configurações Estritas de Impressão (@media print) */
@@ -326,6 +331,15 @@ $turnoFmt = ucfirst($parametros['turno'] ?? 'matutino');
                 background-color: #ffffff !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            body, .ticket-card, div, span, p, strong {
+                font-weight: 700 !important;
+                color: #000000 !important;
+            }
+            .ticket-card {
+                border: 1.5px dashed #000000 !important;
             }
             .a4-sheet {
                 width: 210mm !important;
