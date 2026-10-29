@@ -321,8 +321,8 @@ $regime = $regime ?? 'unificado';
         table.table-dre-doc th,
         table.table-dre-doc td {
             border: 1px solid #000000 !important;
-            padding: 1.2px 2.5px !important;
-            line-height: 1.15 !important;
+            padding: 1.0px 2.5px !important;
+            line-height: 1.12 !important;
             background-color: #ffffff !important;
             color: #000000 !important;
             font-weight: 700 !important;
@@ -614,13 +614,22 @@ $regime = $regime ?? 'unificado';
                 <td class="col-total font-tabular"><?php echo number_format((float)($totais['margem_bruta_percent'] ?? 0), 1, ',', '.'); ?>%</td>
             </tr>
 
+            <!-- 5.1 PAGAMENTO DE FORNECEDORES (RECIBOS EMITIDOS — SEPARADO DO BLOCO DE DESPESAS) -->
+            <tr class="row-secao">
+                <td class="col-desc">(-) PAGAMENTO DE FORNECEDORES (RECIBOS)</td>
+                <?php for ($m = 1; $m <= 12; $m++): ?>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['despesas_fornecedores'] ?? 0), 2, ',', '.'); ?></td>
+                <?php endfor; ?>
+                <td class="col-total font-tabular"><?php echo number_format((float)($totais['despesas_fornecedores'] ?? 0), 2, ',', '.'); ?></td>
+            </tr>
+
             <!-- 6. DESPESAS OPERACIONAIS -->
             <tr class="row-secao">
                 <td class="col-desc">(-) DESPESAS OPERACIONAIS</td>
                 <?php for ($m = 1; $m <= 12; $m++): ?>
-                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['total_despesas'] ?? 0), 2, ',', '.'); ?></td>
+                    <td class="col-mes font-tabular"><?php echo number_format((float)($meses[$m]['despesas_operacionais_puras'] ?? ($meses[$m]['total_despesas'] ?? 0)), 2, ',', '.'); ?></td>
                 <?php endfor; ?>
-                <td class="col-total font-tabular"><?php echo number_format((float)($totais['total_despesas'] ?? 0), 2, ',', '.'); ?></td>
+                <td class="col-total font-tabular"><?php echo number_format((float)($totais['despesas_operacionais_puras'] ?? ($totais['total_despesas'] ?? 0)), 2, ',', '.'); ?></td>
             </tr>
             <tr class="row-subitem">
                 <td class="col-desc">Despesas Administrativas</td>

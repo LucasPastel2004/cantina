@@ -230,16 +230,24 @@ class Dre extends Model
         $stmtDesp->execute([':comp' => $competencia]);
         $despPorCat = $stmtDesp->fetchAll(\PDO::FETCH_KEY_PAIR) ?: [];
 
-        $despesasVendas      = (float)($despPorCat[DespesaOperacional::CATEGORIA_VENDAS] ?? 0.00);
-        $despesasAdmin       = (float)($despPorCat[DespesaOperacional::CATEGORIA_ADMINISTRATIVA] ?? 0.00);
-        $despesasPessoal     = (float)($despPorCat[DespesaOperacional::CATEGORIA_PESSOAL] ?? 0.00);
-        $despesasManutencao  = (float)($despPorCat[DespesaOperacional::CATEGORIA_MANUTENCAO] ?? 0.00);
-        $despesasFinanceiras = (float)($despPorCat[DespesaOperacional::CATEGORIA_FINANCEIRA] ?? 0.00);
-        $despesasOutras      = (float)($despPorCat[DespesaOperacional::CATEGORIA_OUTRAS] ?? 0.00);
+        $despesasVendas       = (float)($despPorCat[DespesaOperacional::CATEGORIA_VENDAS] ?? 0.00);
+        $despesasAdmin        = (float)($despPorCat[DespesaOperacional::CATEGORIA_ADMINISTRATIVA] ?? 0.00);
+        $despesasPessoal      = (float)($despPorCat[DespesaOperacional::CATEGORIA_PESSOAL] ?? 0.00);
+        $despesasManutencao   = (float)($despPorCat[DespesaOperacional::CATEGORIA_MANUTENCAO] ?? 0.00);
+        $despesasFinanceiras  = (float)($despPorCat[DespesaOperacional::CATEGORIA_FINANCEIRA] ?? 0.00);
+        $despesasOutras       = (float)($despPorCat[DespesaOperacional::CATEGORIA_OUTRAS] ?? 0.00);
 
-        $totalDespesasOperacionais = round(
+        // 8.1 Pagamento de Fornecedores (Recibos emitidos em fornecedor_recibos) — Separado do bloco de despesas gerais
+        $despesasFornecedores = $this->calcularRecibosFornecedoresPeriodo($dataInicio, $dataFim);
+
+        $subtotalDespesasBloco = round(
             $despesasVendas + $despesasAdmin + $despesasPessoal + 
             $despesasManutencao + $despesasFinanceiras + $despesasOutras,
+            2
+        );
+
+        $totalDespesasOperacionais = round(
+            $subtotalDespesasBloco + $despesasFornecedores,
             2
         );
 
@@ -308,7 +316,9 @@ class Dre extends Model
             'lucro_bruto'              => $lucroBruto,
             'margem_bruta_percent'     => $margemBrutaPercent,
             
-            // (-) DESPESAS OPERACIONAIS
+            // (-) DESPESAS OPERACIONAIS & PAGAMENTO DE FORNECEDORES (RECIBOS)
+            'despesas_fornecedores'    => $despesasFornecedores,
+            'despesas_operacionais_puras' => $subtotalDespesasBloco,
             'despesas_vendas'          => $despesasVendas,
             'despesas_administrativas' => $despesasAdmin,
             'despesas_pessoal'         => $despesasPessoal,
@@ -504,16 +514,24 @@ class Dre extends Model
         ]);
         $despPorCat = $stmtDesp->fetchAll(\PDO::FETCH_KEY_PAIR) ?: [];
 
-        $despesasVendas      = (float)($despPorCat[DespesaOperacional::CATEGORIA_VENDAS] ?? 0.00);
-        $despesasAdmin       = (float)($despPorCat[DespesaOperacional::CATEGORIA_ADMINISTRATIVA] ?? 0.00);
-        $despesasPessoal     = (float)($despPorCat[DespesaOperacional::CATEGORIA_PESSOAL] ?? 0.00);
-        $despesasManutencao  = (float)($despPorCat[DespesaOperacional::CATEGORIA_MANUTENCAO] ?? 0.00);
-        $despesasFinanceiras = (float)($despPorCat[DespesaOperacional::CATEGORIA_FINANCEIRA] ?? 0.00);
-        $despesasOutras      = (float)($despPorCat[DespesaOperacional::CATEGORIA_OUTRAS] ?? 0.00);
+        $despesasVendas       = (float)($despPorCat[DespesaOperacional::CATEGORIA_VENDAS] ?? 0.00);
+        $despesasAdmin        = (float)($despPorCat[DespesaOperacional::CATEGORIA_ADMINISTRATIVA] ?? 0.00);
+        $despesasPessoal      = (float)($despPorCat[DespesaOperacional::CATEGORIA_PESSOAL] ?? 0.00);
+        $despesasManutencao   = (float)($despPorCat[DespesaOperacional::CATEGORIA_MANUTENCAO] ?? 0.00);
+        $despesasFinanceiras  = (float)($despPorCat[DespesaOperacional::CATEGORIA_FINANCEIRA] ?? 0.00);
+        $despesasOutras       = (float)($despPorCat[DespesaOperacional::CATEGORIA_OUTRAS] ?? 0.00);
 
-        $totalDespesasOperacionais = round(
+        // 8.1 Pagamento de Fornecedores (Recibos emitidos em fornecedor_recibos) — Separado do bloco de despesas gerais
+        $despesasFornecedores = $this->calcularRecibosFornecedoresPeriodo($dataInicio, $dataFim);
+
+        $subtotalDespesasBloco = round(
             $despesasVendas + $despesasAdmin + $despesasPessoal + 
             $despesasManutencao + $despesasFinanceiras + $despesasOutras,
+            2
+        );
+
+        $totalDespesasOperacionais = round(
+            $subtotalDespesasBloco + $despesasFornecedores,
             2
         );
 
@@ -597,7 +615,9 @@ class Dre extends Model
             'lucro_bruto'              => $lucroBruto,
             'margem_bruta_percent'     => $margemBrutaPercent,
 
-            // (-) DESPESAS OPERACIONAIS
+            // (-) DESPESAS OPERACIONAIS & PAGAMENTO DE FORNECEDORES (RECIBOS)
+            'despesas_fornecedores'    => $despesasFornecedores,
+            'despesas_operacionais_puras' => $subtotalDespesasBloco,
             'despesas_vendas'          => $despesasVendas,
             'despesas_administrativas' => $despesasAdmin,
             'despesas_pessoal'         => $despesasPessoal,
@@ -651,6 +671,8 @@ class Dre extends Model
             'receita_liquida'          => 0.00,
             'cmv'                      => 0.00,
             'lucro_bruto'              => 0.00,
+            'despesas_fornecedores'    => 0.00,
+            'despesas_operacionais_puras' => 0.00,
             'despesas_vendas'          => 0.00,
             'despesas_administrativas' => 0.00,
             'despesas_pessoal'         => 0.00,
@@ -700,6 +722,29 @@ class Dre extends Model
             'meses'  => $meses,
             'totais' => $totais,
         ];
+    }
+
+    /**
+     * Apura o valor total de recibos de pagamento a fornecedores (tabela fornecedor_recibos)
+     * emitidos e ativos no período especificado, mantendo essa despesa separada do bloco geral.
+     */
+    private function calcularRecibosFornecedoresPeriodo(string $dataInicio, string $dataFim): float
+    {
+        try {
+            $pdo = self::getConnection();
+            $sql = "SELECT COALESCE(SUM(r.valor), 0.00)
+                    FROM `fornecedor_recibos` r
+                    WHERE r.deleted_at IS NULL
+                      AND r.data_pagamento BETWEEN :dt_inicio AND :dt_fim";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':dt_inicio' => $dataInicio,
+                ':dt_fim'    => $dataFim,
+            ]);
+            return round((float)$stmt->fetchColumn(), 2);
+        } catch (\Throwable $e) {
+            return 0.00;
+        }
     }
 
     /**
@@ -811,6 +856,7 @@ class Dre extends Model
 
         // Totais por categoria de despesas no período selecionado
         $totaisDespesas = [
+            'Pagamento de Fornecedores' => $totais['despesas_fornecedores'] ?? 0.00,
             'Administrativas' => $totais['despesas_administrativas'] ?? 0.00,
             'Pessoal & Salários' => $totais['despesas_pessoal'] ?? 0.00,
             'Vendas & Embalagens' => $totais['despesas_vendas'] ?? 0.00,

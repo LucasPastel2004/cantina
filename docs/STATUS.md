@@ -2072,13 +2072,16 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
   * Centralizados cabeçalhos e colunas de valores numéricos/monetários em todas as tabelas de impressão (`.text-end` e `.text-right` convertidos para centralização tabular, preservando descrições alinhadas à esquerda);
   * Calibrado o bloco de assinaturas (`.footer-assinaturas-box` e `.footer-signatures`) removendo a borda superior dupla e definindo `margin-top: 26px` a `32px`, deixando amplo espaço livre para assinatura à caneta sem estourar página;
   * Compactados cabeçalho escolar, logotipo e espaçamento vertical da tabela em `app/views/financeiro/dre_pdf.php` para que o DRE Contábil A4 Paisagem e suas assinaturas caibam integralmente na **Página 1 de 1**.
-* [x] **Reformulação do DRE Gráfico com Gráfico Circular Gigante Unificado e Subtextos em Negrito (`app/views/financeiro/dre_grafico_pdf.php`):**
-  * Subtextos numéricos dos 6 cards superiores (`.kpi-sub`) configurados em **negrito forte** (`font-weight: 800 !important; color: #000000 !important;`);
-  * Unificados o antigo gráfico de canais e o gráfico de barras horizontais em um **Único e Gigantesco Gráfico Circular (`#chartCanaisVenda`, 245x245px)** contendo todo o DRE em 9 fatias proporcionais:
+* [x] **Reformulação do DRE Gráfico com Gráfico Circular Gigante Unificado, Subtextos em Negrito e Despesa Separada de Pagamento de Fornecedores (`app/models/Dre.php`, `app/views/financeiro/dre_grafico_pdf.php`, `app/views/financeiro/dre_pdf.php` e `app/controllers/DreController.php`):**
+  * Subtextos numéricos dos 6 cards superiores (`.kpi-sub`) configurados em **negrito forte** (`font-weight: 800 !important; color: #000000 !important;`), com o Card 5 detalhando separadamente `Fornec.: R$ ... | Desp.: R$ ...`;
+  * Apuração dedicada no motor `Dre.php` (`calcularRecibosFornecedoresPeriodo()`) para todos os recibos de pagamento a fornecedores emitidos na tabela `fornecedor_recibos` (`despesas_fornecedores`), mantendo-a separada do bloco de categorias de despesas gerais (`despesas_operacionais_puras`);
+  * Unificados o antigo gráfico de canais e o gráfico de barras horizontais em um **Único e Gigantesco Gráfico Circular (`#chartCanaisVenda`, 245x245px)** contendo todo o DRE em **10 fatias proporcionais**:
     - **Entradas:** Vendas Online (Web), Vendas Balcão via Saldo PDV, Vendas Diretas Balcão (Dinheiro + Pix) e Saldo Retido em Carteiras (Recarga − Gasto);
-    - **Saídas (CMV & Despesas por Categoria):** Custo das Mercadorias Vendidas (CMV), Despesa Pessoal & Salários, Despesa Administrativas, Despesa Manutenção & Equipamentos, e Despesa Vendas/Embalagens/Financeiras/Outras;
-  * Criada ao lado a **Legenda Analítica Completa do Gráfico Circular** dividida em 3 blocos: (1) Fatias de Entradas, (2) Fatias de Saídas/CMV/Despesas por Categoria, e (3) **Explicação da Legenda para Saldos, Subtrações e Equações Contábeis do DRE** (detalhando Arrecadação Real sem duplicidade, Receita Líquida de Vendas, Lucro Bruto, Resultado Líquido Operacional das Vendas — inclusive quando deficitário/negativo — e Resultado Financeiro Final em Conta).
-* [x] **Testes Automatizados:** Suíte `tests/arrecadacao_dre_regimes_test.php` executada com **136/136 asserções aprovadas (100%)** e validação de sintaxe (`php -l`) aprovada em todas as 15 views de relatórios PDF.
+    - **Custos e Pagamento de Fornecedores (Separado do Bloco de Despesas):** Custo das Mercadorias Vendidas (CMV) e **Pagamento de Fornecedores (Recibos Emitidos)**;
+    - **Bloco de Despesas Operacionais por Categoria:** Despesa Pessoal & Salários, Despesa Administrativas, Despesa Manutenção & Equipamentos, e Despesa Vendas/Embalagens/Financeiras/Outras;
+  * Criada ao lado a **Legenda Analítica Completa do Gráfico Circular** dividida em 4 blocos: (1) Fatias de Entradas, (2) Custos (CMV) & Pagamento de Fornecedores (Recibos), (3) Bloco de Despesas Operacionais por Categoria, e (4) **Explicação da Legenda para Saldos, Subtrações e Equações Contábeis do DRE**;
+  * Adicionada linha exclusiva `(-) PAGAMENTO DE FORNECEDORES (RECIBOS)` separada do bloco `(-) DESPESAS OPERACIONAIS` tanto no DRE Texto A4 Paisagem (`app/views/financeiro/dre_pdf.php`) quanto na exportação CSV (`app/controllers/DreController.php`).
+* [x] **Testes Automatizados:** Suítes `tests/arrecadacao_dre_regimes_test.php` (**136/136 asserções aprovadas**) e `tests/fase24_test.php` (**104/104 asserções aprovadas**) executadas com 100% de sucesso.
 
 ---
 

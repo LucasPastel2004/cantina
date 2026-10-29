@@ -282,8 +282,11 @@ class DreController extends Controller
         $linhaMargemBruta[] = number_format((float)($drePeriodo['margem_bruta_percent'] ?? 0), 1, ',', '.') . '%';
         fputcsv($output, $linhaMargemBruta, ';', '"', "\\");
 
+        // 5.1 Pagamento de Fornecedores (Recibos Emitidos) — Separado do bloco de Despesas Operacionais
+        $escreverLinha('[-] PAGAMENTO DE FORNECEDORES (RECIBOS EMITIDOS)', 'despesas_fornecedores');
+
         // 6. Despesas Operacionais
-        $escreverLinha('[-] DESPESAS OPERACIONAIS', 'total_despesas');
+        $escreverLinha('[-] DESPESAS OPERACIONAIS', 'despesas_operacionais_puras');
         $escreverLinha('    Despesas Administrativas', 'despesas_administrativas');
         $escreverLinha('    Despesas com Pessoal & Salários', 'despesas_pessoal');
         $escreverLinha('    Despesas com Vendas & Embalagens', 'despesas_vendas');
