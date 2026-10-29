@@ -62,9 +62,9 @@ $regime = $regime ?? 'unificado';
             background-color: #ffffff;
             width: 280mm;
             max-width: calc(100% - 24px);
-            min-height: 195mm;
-            margin: 20px auto;
-            padding: 10mm 14mm;
+            min-height: auto;
+            margin: 14px auto;
+            padding: 5mm 10mm;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             position: relative;
         }
@@ -87,12 +87,15 @@ $regime = $regime ?? 'unificado';
             .doc-page {
                 width: 297mm !important;
                 max-width: 297mm !important;
-                min-height: 210mm !important;
+                min-height: auto !important;
+                height: auto !important;
                 margin: 0 auto !important;
-                padding: 10mm 14mm !important;
+                padding: 4mm 10mm !important;
                 box-shadow: none !important;
                 border: none !important;
                 box-sizing: border-box !important;
+                page-break-after: avoid !important;
+                break-after: avoid !important;
             }
         }
 
@@ -217,66 +220,67 @@ $regime = $regime ?? 'unificado';
         }
 
         /* ==========================================================================
-           4. Cabeçalho Escolar Oficial
+           4. Cabeçalho Escolar Oficial (Compactado no Topo)
            ========================================================================== */
         .school-header {
             display: flex;
             align-items: center;
-            border-bottom: 2px solid #000000;
-            padding-bottom: 8px;
-            margin-bottom: 8px;
+            border-bottom: 1.5px solid #000000;
+            padding-bottom: 3px;
+            margin-bottom: 4px;
         }
         .school-logo-col {
-            width: 48px;
-            margin-right: 12px;
+            width: 38px;
+            margin-right: 8px;
         }
         .school-logo-col img {
-            width: 44px;
-            height: 44px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #000000;
         }
         .school-title-col {
             flex: 1;
-            line-height: 1.25;
+            line-height: 1.15;
         }
         .school-name {
-            font-size: 11pt;
-            font-weight: 700;
+            font-size: 9.8pt;
+            font-weight: 800;
             color: #000000;
             text-transform: uppercase;
             letter-spacing: 0.02em;
         }
         .report-title-main {
-            font-size: 9.5pt;
-            font-weight: 700;
+            font-size: 8.4pt;
+            font-weight: 800;
             color: #000000;
-            margin-top: 2px;
+            margin-top: 1px;
             text-transform: uppercase;
         }
         .report-subtitle {
-            font-size: 8pt;
+            font-size: 7.2pt;
             font-weight: 700;
             color: #000000;
-            margin-top: 1px;
+            margin-top: 0;
         }
         .school-meta-col {
             text-align: right;
-            font-size: 7.5pt;
+            font-size: 6.9pt;
             font-weight: 700;
             color: #000000;
-            line-height: 1.35;
+            line-height: 1.2;
             padding-right: 2px;
         }
 
         /* Faixa de Parâmetros */
         .param-bar {
-            font-size: 8pt;
+            font-size: 7.4pt;
+            font-weight: 700;
             background: #f8fafc;
             border: 1px solid #000000;
-            padding: 4px 8px;
-            margin-bottom: 8px;
+            padding: 2.5px 6px;
+            margin-bottom: 4px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -284,15 +288,21 @@ $regime = $regime ?? 'unificado';
 
         /* Banners de Seção */
         .section-banner {
-            font-weight: 700;
-            font-size: 8pt;
+            font-weight: 800;
+            font-size: 7.4pt;
             text-transform: uppercase;
             background: #0f172a;
-            color: #ffffff;
-            padding: 3.5px 8px;
-            margin-top: 8px;
-            margin-bottom: 2px;
+            color: #ffffff !important;
+            padding: 2.5px 6px;
+            margin-top: 3px;
+            margin-bottom: 1.5px;
             border-radius: 2px;
+        }
+        @media print {
+            .section-banner {
+                color: #ffffff !important;
+                background: #0f172a !important;
+            }
         }
 
         /* ==========================================================================
@@ -302,29 +312,31 @@ $regime = $regime ?? 'unificado';
             width: 100% !important;
             border-collapse: collapse !important;
             table-layout: fixed !important;
-            font-size: 6.9pt;
+            font-size: 6.7pt;
             font-weight: 700 !important;
             border: 1px solid #000000 !important;
-            margin-top: 3px;
+            margin-top: 1.5px;
         }
 
         table.table-dre-doc th,
         table.table-dre-doc td {
             border: 1px solid #000000 !important;
-            padding: 2px 3.5px !important;
+            padding: 1.2px 2.5px !important;
+            line-height: 1.15 !important;
             background-color: #ffffff !important;
             color: #000000 !important;
             font-weight: 700 !important;
         }
 
         table.table-dre-doc thead th {
-            font-weight: 700 !important;
+            font-weight: 800 !important;
             text-align: center !important;
-            font-size: 6.8pt;
+            font-size: 6.6pt;
             text-transform: uppercase;
             background-color: #f8fafc !important;
             color: #000000 !important;
             border: 1px solid #000000 !important;
+            padding: 1.5px 2px !important;
         }
 
         table.table-dre-doc thead {
@@ -343,17 +355,17 @@ $regime = $regime ?? 'unificado';
         .col-desc {
             width: 16.5%;
             text-align: left !important;
-            padding: 2px 4px !important;
-            font-size: 6.7pt;
+            padding: 1.2px 3.5px !important;
+            font-size: 6.5pt;
             font-weight: 700 !important;
             word-break: break-word;
         }
         .col-mes {
             width: 6.25%;
             text-align: center !important;
-            padding: 2px 2px !important;
+            padding: 1.2px 1.5px !important;
             white-space: nowrap !important;
-            font-size: 6.35pt !important;
+            font-size: 6.3pt !important;
             font-weight: 700 !important;
             letter-spacing: -0.015em;
         }
@@ -361,83 +373,85 @@ $regime = $regime ?? 'unificado';
             width: 8.5%;
             text-align: center !important;
             font-weight: 700 !important;
-            font-size: 6.45pt !important;
+            font-size: 6.4pt !important;
         }
         th.col-total {
             text-align: center !important;
             white-space: normal !important;
-            line-height: 1.1 !important;
-            font-size: 6.45pt !important;
-            padding: 2px 2px !important;
-            font-weight: 700 !important;
+            line-height: 1.05 !important;
+            font-size: 6.3pt !important;
+            padding: 1.2px 1.5px !important;
+            font-weight: 800 !important;
         }
         td.col-total {
             text-align: center !important;
             white-space: nowrap !important;
-            padding: 2px 3px !important;
-            font-size: 6.45pt !important;
+            padding: 1.2px 2px !important;
+            font-size: 6.4pt !important;
             font-weight: 700 !important;
             letter-spacing: -0.015em;
         }
 
         .row-secao td {
-            font-weight: 700 !important;
+            font-weight: 800 !important;
             background-color: #f8fafc !important;
             border-top: 1.5px solid #000000 !important;
             border-bottom: 1px solid #000000 !important;
         }
         .row-subitem td.col-desc {
-            padding-left: 11px !important;
+            padding-left: 10px !important;
         }
         .row-total-destaque td {
-            font-weight: 700 !important;
+            font-weight: 800 !important;
         }
         .row-total-destaque td.col-mes,
         .row-total-destaque td.col-total {
-            font-size: 6.5pt !important;
+            font-size: 6.4pt !important;
             text-align: center !important;
-            font-weight: 700 !important;
+            font-weight: 800 !important;
         }
         .row-resultado-final td {
-            font-weight: 700 !important;
-            border-top: 2px solid #000000 !important;
-            border-bottom: 2px solid #000000 !important;
+            font-weight: 800 !important;
+            border-top: 1.5px solid #000000 !important;
+            border-bottom: 1.5px solid #000000 !important;
         }
         .row-resultado-final td.col-mes,
         .row-resultado-final td.col-total {
-            font-size: 6.5pt !important;
+            font-size: 6.4pt !important;
             text-align: center !important;
-            font-weight: 700 !important;
+            font-weight: 800 !important;
         }
 
         /* ==========================================================================
-           6. Bloco de Assinaturas e Rodapé
+           6. Bloco de Assinaturas e Rodapé (Espaço amplo para assinar na Página 1)
            ========================================================================== */
         .footer-signatures {
-            margin-top: 50px;
+            margin-top: 26px;
             display: flex;
             justify-content: space-between;
-            padding-top: 20px;
-            page-break-inside: avoid;
+            padding-top: 0;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
         .signature-line {
             width: 42%;
             border-top: 1.5px solid #000000;
             text-align: center;
-            font-size: 7.8pt;
+            font-size: 7.5pt;
             font-weight: 700 !important;
             color: #000000;
-            padding-top: 4px;
+            padding-top: 3px;
+            line-height: 1.2;
         }
         .footer-doc {
-            margin-top: 6px;
+            margin-top: 4px;
             display: flex;
             justify-content: space-between;
-            font-size: 7pt;
+            font-size: 6.6pt;
             font-weight: 700;
             color: #000000;
             border-top: 1px solid #000000;
-            padding-top: 3px;
+            padding-top: 2px;
         }
     </style>
 </head>

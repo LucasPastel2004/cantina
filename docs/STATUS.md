@@ -2065,6 +2065,23 @@ Este documento reflete o estado em tempo real da implementação do sistema **Ca
 
 ---
 
+### [x] Sustentação — Padronização dos Espelhos A4 em Negrito Forte, Centralização de Colunas, Ajuste de Assinatura em Página Única e Gráfico Circular Gigante do DRE (2026-10-29)
+* [x] **Tipografia em Negrito Forte, Centralização de Valores e Espaço de Assinatura em Todos os Espelhos A4 (`app/views/financeiro/*_pdf.php` e `app/views/relatorios/*_pdf.php`):**
+  * Aplicada tipografia em negrito forte (`font-weight: 700 !important` / `800 !important`, cor `#000000 !important`) em todos os espelhos de impressão A4 e cupom térmico para máxima nitidez mesmo em impressoras com pouco toner;
+  * Protegidos os banners de seção escuros (`.section-banner`, `.group-header`, `.turma-header-banner`) com `color: #ffffff !important; background-color: #0f172a !important;` no `@media print`;
+  * Centralizados cabeçalhos e colunas de valores numéricos/monetários em todas as tabelas de impressão (`.text-end` e `.text-right` convertidos para centralização tabular, preservando descrições alinhadas à esquerda);
+  * Calibrado o bloco de assinaturas (`.footer-assinaturas-box` e `.footer-signatures`) removendo a borda superior dupla e definindo `margin-top: 26px` a `32px`, deixando amplo espaço livre para assinatura à caneta sem estourar página;
+  * Compactados cabeçalho escolar, logotipo e espaçamento vertical da tabela em `app/views/financeiro/dre_pdf.php` para que o DRE Contábil A4 Paisagem e suas assinaturas caibam integralmente na **Página 1 de 1**.
+* [x] **Reformulação do DRE Gráfico com Gráfico Circular Gigante Unificado e Subtextos em Negrito (`app/views/financeiro/dre_grafico_pdf.php`):**
+  * Subtextos numéricos dos 6 cards superiores (`.kpi-sub`) configurados em **negrito forte** (`font-weight: 800 !important; color: #000000 !important;`);
+  * Unificados o antigo gráfico de canais e o gráfico de barras horizontais em um **Único e Gigantesco Gráfico Circular (`#chartCanaisVenda`, 245x245px)** contendo todo o DRE em 9 fatias proporcionais:
+    - **Entradas:** Vendas Online (Web), Vendas Balcão via Saldo PDV, Vendas Diretas Balcão (Dinheiro + Pix) e Saldo Retido em Carteiras (Recarga − Gasto);
+    - **Saídas (CMV & Despesas por Categoria):** Custo das Mercadorias Vendidas (CMV), Despesa Pessoal & Salários, Despesa Administrativas, Despesa Manutenção & Equipamentos, e Despesa Vendas/Embalagens/Financeiras/Outras;
+  * Criada ao lado a **Legenda Analítica Completa do Gráfico Circular** dividida em 3 blocos: (1) Fatias de Entradas, (2) Fatias de Saídas/CMV/Despesas por Categoria, e (3) **Explicação da Legenda para Saldos, Subtrações e Equações Contábeis do DRE** (detalhando Arrecadação Real sem duplicidade, Receita Líquida de Vendas, Lucro Bruto, Resultado Líquido Operacional das Vendas — inclusive quando deficitário/negativo — e Resultado Financeiro Final em Conta).
+* [x] **Testes Automatizados:** Suíte `tests/arrecadacao_dre_regimes_test.php` executada com **136/136 asserções aprovadas (100%)** e validação de sintaxe (`php -l`) aprovada em todas as 15 views de relatórios PDF.
+
+---
+
 ## Próximo Passo Recomendado
 
 1. **Homologação Externa pela Equipe da Escola:** Equipe da cantina, secretaria e direção realizam testes remotos nas telas operacionais (tickets, corte de turno, PDV) e no Portal da Família a partir de seus computadores e celulares.

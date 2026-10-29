@@ -394,15 +394,19 @@ if ($emitirAlim && $emitirAluno) {
 
         /* Banners de Seção */
         .section-banner {
-            font-weight: 700;
+            font-weight: 700 !important;
             font-size: 8pt;
             text-transform: uppercase;
-            background: #0f172a;
-            color: #ffffff;
+            background: #0f172a !important;
+            color: #ffffff !important;
             padding: 3.5px 8px;
             margin-top: 8px;
             margin-bottom: 3px;
             border-radius: 2px;
+        }
+        .section-banner * {
+            color: #ffffff !important;
+            font-weight: 700 !important;
         }
 
         /* Tabela de Vendas Oficial (Estética Excel com Divisórias Pretas e Cabeçalho Neutro) */
@@ -492,9 +496,9 @@ if ($emitirAlim && $emitirAluno) {
 
         /* Banners de Turma e Quebras de Página */
         .turma-header-banner {
-            background: #0f172a;
-            color: #ffffff;
-            font-weight: 700;
+            background: #0f172a !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
             font-size: 8pt;
             padding: 3.5px 8px;
             margin-top: 12px;
@@ -502,6 +506,10 @@ if ($emitirAlim && $emitirAluno) {
             text-transform: uppercase;
             letter-spacing: 0.02em;
             border-radius: 2px;
+        }
+        .turma-header-banner * {
+            color: #ffffff !important;
+            font-weight: 700 !important;
         }
         .page-break-turma {
             page-break-before: always;
@@ -559,9 +567,9 @@ if ($emitirAlim && $emitirAluno) {
 
         /* Assinaturas e Rodapé Oficial */
         .footer-assinaturas-box {
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 1.5px solid #000000;
+            margin-top: 32px;
+            padding-top: 4px;
+            border-top: none;
             display: flex;
             justify-content: space-between;
         }

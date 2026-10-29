@@ -74,6 +74,25 @@ $pctBalcaoSaldo  = $receitaBruta > 0 ? ($consumoSaldoBalcao / $receitaBruta) * 1
 $pctBalcaoDireto = $receitaBruta > 0 ? ($vendasDiretasBalcao / $receitaBruta) * 100 : 0.0;
 $pctBalcaoTotal  = $receitaBruta > 0 ? ($receitaBalcao / $receitaBruta) * 100 : 0.0;
 
+// Despesas agrupadas para o Gráfico Circular Unificado do DRE
+$despesasVendasFinOutras = $despesasVendas + $despesasFinanceiras + $despesasOutras;
+$saldoRetidoPositivo     = max(0.0, $diferencaRecargaConsumo);
+
+// Volume financeiro total movimentado nas fatias do Gráfico Circular Completo do DRE
+$somaFatiasDreCircular = $consumoSaldoOnline
+    + $consumoSaldoBalcao
+    + $vendasDiretasBalcao
+    + $saldoRetidoPositivo
+    + $cmv
+    + $despesasPessoal
+    + $despesasAdmin
+    + $despesasManutencao
+    + $despesasVendasFinOutras;
+
+$calcPctFatia = function (float $valor) use ($somaFatiasDreCircular): float {
+    return $somaFatiasDreCircular > 0 ? (($valor / $somaFatiasDreCircular) * 100.0) : 0.0;
+};
+
 // Percentuais de composição sobre a Receita Líquida
 $pctCmv      = $receitaLiquida > 0 ? min(100.0, max(0.0, ($cmv / $receitaLiquida) * 100)) : 0.0;
 $pctDespesas = $receitaLiquida > 0 ? min(100.0, max(0.0, ($totalDespesas / $receitaLiquida) * 100)) : 0.0;
@@ -123,9 +142,9 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
             background-color: #ffffff;
             width: 210mm;
             max-width: calc(100% - 24px);
-            min-height: 297mm;
-            margin: 20px auto;
-            padding: 10mm 12mm;
+            min-height: auto;
+            margin: 16px auto;
+            padding: 6mm 10mm;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             position: relative;
         }
@@ -138,9 +157,13 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
                 font-weight: 700 !important;
                 color: #000000 !important;
             }
-            body, table, th, td, div, span, p {
+            body, table, th, td, div, span, p, strong {
                 font-weight: 700 !important;
                 color: #000000 !important;
+            }
+            .section-banner, .section-banner * {
+                color: #ffffff !important;
+                background-color: #0f172a !important;
             }
             .no-print {
                 display: none !important;
@@ -148,9 +171,9 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
             .doc-page {
                 width: 210mm !important;
                 max-width: 210mm !important;
-                min-height: 297mm !important;
+                min-height: auto !important;
                 margin: 0 auto !important;
-                padding: 10mm 12mm !important;
+                padding: 5mm 10mm !important;
                 box-shadow: none !important;
                 border: none !important;
             }
@@ -274,126 +297,132 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
             display: flex;
             align-items: center;
             border-bottom: 2px solid #000000;
-            padding-bottom: 7px;
-            margin-bottom: 7px;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
         }
         .school-logo-col {
-            width: 46px;
-            margin-right: 12px;
+            width: 42px;
+            margin-right: 10px;
         }
         .school-logo-col img {
-            width: 42px;
-            height: 42px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #000000;
         }
         .school-title-col {
             flex: 1;
-            line-height: 1.25;
+            line-height: 1.2;
         }
         .school-name {
-            font-size: 11pt;
-            font-weight: 700;
+            font-size: 10.5pt;
+            font-weight: 800;
             color: #000000;
             text-transform: uppercase;
             letter-spacing: 0.02em;
         }
         .report-title-main {
-            font-size: 9.2pt;
-            font-weight: 700;
+            font-size: 8.8pt;
+            font-weight: 800;
             color: #000000;
-            margin-top: 2px;
+            margin-top: 1px;
             text-transform: uppercase;
         }
         .report-subtitle {
-            font-size: 7.8pt;
-            color: #334155;
+            font-size: 7.4pt;
+            font-weight: 700;
+            color: #000000;
             margin-top: 1px;
         }
         .school-meta-col {
             text-align: right;
-            font-size: 7.4pt;
-            color: #334155;
-            line-height: 1.35;
+            font-size: 7.1pt;
+            font-weight: 700;
+            color: #000000;
+            line-height: 1.25;
         }
 
         .param-bar {
-            font-size: 7.8pt;
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: #000000;
             background: #f8fafc;
-            border: 1px solid #000000;
-            padding: 4px 8px;
-            margin-bottom: 8px;
+            border: 1.5px solid #000000;
+            padding: 3px 8px;
+            margin-bottom: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .section-banner {
-            font-weight: 700;
-            font-size: 8pt;
+            font-weight: 800;
+            font-size: 7.8pt;
             text-transform: uppercase;
-            background: #0f172a;
-            color: #ffffff;
-            padding: 4px 8px;
-            margin-top: 8px;
-            margin-bottom: 6px;
+            background: #0f172a !important;
+            color: #ffffff !important;
+            padding: 3.5px 8px;
+            margin-top: 6px;
+            margin-bottom: 5px;
             border-radius: 2px;
         }
 
         /* ==========================================================================
-           5. Componentes do DRE Visual Unificado
+           5. Componentes do DRE Visual Unificado (Cards + Gráfico Circular Gigante)
            ========================================================================== */
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-            margin-bottom: 8px;
+            gap: 5px;
+            margin-bottom: 6px;
         }
         .kpi-card {
-            border: 1px solid #000000;
+            border: 1.5px solid #000000;
             background: #ffffff;
-            padding: 6px 8px;
+            padding: 5px 7px;
             border-radius: 2px;
         }
         .kpi-card-highlight {
             background: #f8fafc;
-            border-left: 4px solid #0f172a;
+            border-left: 4px solid #000000;
         }
         .kpi-title {
-            font-size: 6.8pt;
-            font-weight: 700;
+            font-size: 6.7pt;
+            font-weight: 800 !important;
             text-transform: uppercase;
-            color: #334155;
-            margin-bottom: 2px;
+            color: #000000 !important;
+            margin-bottom: 1.5px;
         }
         .kpi-val {
             font-size: 10.5pt;
-            font-weight: 800;
-            color: #000000;
+            font-weight: 800 !important;
+            color: #000000 !important;
         }
         .kpi-sub {
-            font-size: 6.8pt;
-            color: #475569;
+            font-size: 6.9pt;
+            font-weight: 800 !important;
+            color: #000000 !important;
             margin-top: 2px;
         }
 
         .visual-dre-container {
             display: grid;
-            grid-template-columns: 38% 60.5%;
+            grid-template-columns: 42% 56.5%;
             gap: 1.5%;
-            border: 1px solid #000000;
+            border: 1.5px solid #000000;
             padding: 8px;
             background: #ffffff;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             page-break-inside: avoid;
         }
 
         .visual-col-left {
-            border-right: 1px solid #cbd5e1;
+            border-right: 1.5px solid #000000;
             padding-right: 8px;
             display: flex;
             flex-direction: column;
+            align-items: center;
             justify-content: space-between;
         }
 
@@ -405,83 +434,100 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
         }
 
         .panel-subtitle {
-            font-size: 7.5pt;
-            font-weight: 700;
+            width: 100%;
+            font-size: 7.4pt;
+            font-weight: 800;
             text-transform: uppercase;
-            color: #0f172a;
-            border-bottom: 1px solid #cbd5e1;
+            color: #000000;
+            border-bottom: 1.5px solid #000000;
             padding-bottom: 3px;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        /* Barras horizontais detalhadas do DRE Visual */
-        .dre-bar-row {
-            margin-bottom: 5px;
-        }
-        .dre-bar-header {
+        .giant-circle-wrapper {
+            width: 245px;
+            height: 245px;
+            position: relative;
+            margin: 4px auto;
             display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            font-size: 7.2pt;
-            margin-bottom: 1.5px;
-        }
-        .dre-bar-label {
-            font-weight: 600;
-            color: #0f172a;
-        }
-        .dre-bar-label-sub {
-            padding-left: 8px;
-            font-weight: 500;
-            color: #334155;
-        }
-        .dre-bar-track {
-            width: 100%;
-            height: 9px;
-            background: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .dre-bar-fill {
-            height: 100%;
-            border-radius: 1px;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Régua de Composição 100% da Receita */
-        .stacked-bar-box {
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px dashed #cbd5e1;
+        .circle-center-info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            width: 118px;
+            line-height: 1.15;
         }
-        .stacked-bar-track {
-            display: flex;
-            width: 100%;
-            height: 14px;
+
+        .legend-section-title {
+            font-size: 6.8pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            background: #f1f5f9;
             border: 1px solid #000000;
-            border-radius: 2px;
-            overflow: hidden;
-            background: #f8fafc;
-        }
-        .stacked-legend {
+            padding: 2px 5px;
+            margin-top: 4px;
+            margin-bottom: 3px;
+            color: #000000;
             display: flex;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 6px;
-            font-size: 6.7pt;
-            margin-top: 4px;
-            color: #1e293b;
         }
+
+        .legend-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 6.85pt;
+            font-weight: 700;
+        }
+        .legend-table td {
+            padding: 2px 3px;
+            border-bottom: 1px dotted #94a3b8;
+            color: #000000;
+            font-weight: 700;
+        }
+        .legend-table tr:last-child td {
+            border-bottom: none;
+        }
+
         .legend-dot {
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 9px;
+            height: 9px;
             border-radius: 2px;
-            margin-right: 3px;
+            margin-right: 4px;
             vertical-align: middle;
-            border: 1px solid rgba(0,0,0,0.25);
+            border: 1px solid #000000;
+        }
+
+        .legend-explain-box {
+            margin-top: 5px;
+            border: 1.5px solid #000000;
+            background: #f8fafc;
+            padding: 5px 6px;
+            border-radius: 2px;
+            font-size: 6.65pt;
+            font-weight: 700;
+            color: #000000;
+            line-height: 1.3;
+        }
+        .legend-explain-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #cbd5e1;
+            padding: 1.5px 0;
+        }
+        .legend-explain-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
         }
 
         /* ==========================================================================
@@ -490,7 +536,7 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
         table.table-doc-excel {
             width: 100% !important;
             border-collapse: collapse !important;
-            font-size: 7.6pt;
+            font-size: 7.4pt;
             font-weight: 700 !important;
             border: 1px solid #000000 !important;
             margin-top: 2px;
@@ -498,60 +544,48 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
         table.table-doc-excel th,
         table.table-doc-excel td {
             border: 1px solid #000000 !important;
-            padding: 3.5px 6px !important;
+            padding: 2.5px 5px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
             font-weight: 700 !important;
         }
         table.table-doc-excel thead th {
             background-color: #f8fafc !important;
-            font-weight: 700 !important;
+            font-weight: 800 !important;
             text-transform: uppercase;
-            font-size: 7pt;
+            font-size: 6.9pt;
         }
         table.table-doc-excel tfoot td {
             background-color: #f8fafc !important;
-            font-weight: 700 !important;
+            font-weight: 800 !important;
             border-top: 1.5px solid #000000 !important;
-        }
-
-        .mini-wallet-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 7pt;
-            font-weight: 700;
-            margin-top: 6px;
-        }
-        .mini-wallet-table td {
-            padding: 2.5px 4px;
-            border-bottom: 1px solid #000000;
-            color: #000000;
         }
 
         /* ==========================================================================
            7. Assinaturas e Rodapé
            ========================================================================== */
         .footer-signatures {
-            margin-top: 50px;
+            margin-top: 28px;
             display: flex;
             justify-content: space-between;
-            padding-top: 20px;
-            page-break-inside: avoid;
+            padding-top: 0;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
         .signature-line {
             width: 42%;
             border-top: 1.5px solid #000000;
             text-align: center;
-            font-size: 7.8pt;
+            font-size: 7.5pt;
             font-weight: 700 !important;
             color: #000000;
             padding-top: 4px;
         }
         .footer-doc {
-            margin-top: 8px;
+            margin-top: 6px;
             display: flex;
             justify-content: space-between;
-            font-size: 7pt;
+            font-size: 6.8pt;
             font-weight: 700;
             color: #000000;
             border-top: 1px solid #000000;
@@ -658,182 +692,189 @@ $pctLucro    = $receitaLiquida > 0 && $resultadoLiquido > 0 ? min(100.0, ($resul
         </div>
     </div>
 
-    <!-- Painel Unificado: Gráfico Circular (Online vs Presencial & Carteira) + Cascata Visual do DRE & Despesas -->
+    <!-- Painel Unificado: Único e Gigantesco Gráfico Circular Contendo Todo o DRE + Legenda Analítica Completa -->
     <div class="visual-dre-container">
-        <!-- Coluna Esquerda: Gráfico Circular de Vendas Online vs Presencial + Conciliação de Carteira -->
+        <!-- Coluna Esquerda: Gigantesco Gráfico Circular com Todo o DRE (Entradas, Vendas, CMV e Despesas) -->
         <div class="visual-col-left">
-            <div>
-                <div class="panel-subtitle">
-                    <span>A. Vendas Online vs Presencial</span>
-                    <span class="font-tabular">R$ <?php echo number_format($receitaBruta, 2, ',', '.'); ?></span>
-                </div>
-                <div style="height: 155px; position: relative; margin: 4px auto;">
-                    <canvas id="chartCanaisVenda"></canvas>
-                </div>
-                <div style="font-size: 7pt; margin-top: 4px;">
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #f1f5f9;">
-                        <span><span class="legend-dot" style="background: #1d4ed8;"></span><strong>Vendas Online (Web):</strong></span>
-                        <span class="font-tabular">R$ <?php echo number_format($consumoSaldoOnline, 2, ',', '.'); ?> (<?php echo number_format($pctOnline, 1, ',', '.'); ?>%)</span>
+            <div class="panel-subtitle">
+                <span>Gráfico Circular Integral do DRE</span>
+                <span class="font-tabular">Entradas &times; Saídas</span>
+            </div>
+
+            <div class="giant-circle-wrapper">
+                <canvas id="chartCanaisVenda"></canvas>
+                <div class="circle-center-info">
+                    <div style="font-size: 5.8pt; font-weight: 800; text-transform: uppercase; color: #000000;">Resultado em Conta</div>
+                    <div class="font-tabular" style="font-size: 8.6pt; font-weight: 800; color: #000000; margin: 1px 0;">
+                        R$ <?php echo number_format($resultadoCaixa, 2, ',', '.'); ?>
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #f1f5f9;">
-                        <span><span class="legend-dot" style="background: #0284c7;"></span><strong>Balcão via Saldo PDV:</strong></span>
-                        <span class="font-tabular">R$ <?php echo number_format($consumoSaldoBalcao, 2, ',', '.'); ?> (<?php echo number_format($pctBalcaoSaldo, 1, ',', '.'); ?>%)</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span><span class="legend-dot" style="background: #15803d;"></span><strong>Balcão Direto (Din/Pix):</strong></span>
-                        <span class="font-tabular">R$ <?php echo number_format($vendasDiretasBalcao, 2, ',', '.'); ?> (<?php echo number_format($pctBalcaoDireto, 1, ',', '.'); ?>%)</span>
+                    <div style="font-size: 5.6pt; font-weight: 800; color: #000000; border-top: 1px solid #000000; padding-top: 1px;">
+                        Vendas: R$ <?php echo number_format($receitaLiquida, 2, ',', '.'); ?>
                     </div>
                 </div>
             </div>
 
-            <!-- Resumo Conciliado de Carteira Pré-Paga (Sem Duplicidade) -->
-            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #cbd5e1;">
-                <div class="panel-subtitle" style="margin-bottom: 3px;">
-                    <span>Conciliação de Carteira</span>
+            <!-- Resumo Conciliado de Carteira Pré-Paga na Base do Gráfico Circular -->
+            <div style="width: 100%; margin-top: 4px; padding-top: 4px; border-top: 1.5px solid #000000;">
+                <div style="font-size: 6.7pt; font-weight: 800; text-transform: uppercase; display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span>Conciliação de Carteira Pré-Paga</span>
                     <span>Zero Duplicidade</span>
                 </div>
-                <table class="mini-wallet-table">
+                <table class="legend-table">
                     <tbody>
                         <tr>
-                            <td>(+) Recargas Pix Online</td>
-                            <td style="text-align: right;" class="font-tabular">R$ <?php echo number_format($recargasPixOnline, 2, ',', '.'); ?></td>
+                            <td>(+) Recargas Pix Online + Balcão</td>
+                            <td style="text-align: center;" class="font-tabular">R$ <?php echo number_format($totalRecargas, 2, ',', '.'); ?></td>
                         </tr>
                         <tr>
-                            <td>(+) Recargas Balcão (Pix + Dinheiro)</td>
-                            <td style="text-align: right;" class="font-tabular">R$ <?php echo number_format($recargasBalcao, 2, ',', '.'); ?></td>
+                            <td>(-) Saldo Gasto nas Vendas de Lanches</td>
+                            <td style="text-align: center;" class="font-tabular">- R$ <?php echo number_format($consumoSaldoTotal, 2, ',', '.'); ?></td>
                         </tr>
-                        <tr style="font-weight: 700; background: #f8fafc;">
-                            <td>(=) Total Depositado em Carteiras</td>
-                            <td style="text-align: right;" class="font-tabular">R$ <?php echo number_format($totalRecargas, 2, ',', '.'); ?></td>
-                        </tr>
-                        <tr>
-                            <td>(-) Saldo Gasto nas Vendas Acima</td>
-                            <td style="text-align: right;" class="font-tabular">- R$ <?php echo number_format($consumoSaldoTotal, 2, ',', '.'); ?></td>
-                        </tr>
-                        <tr style="font-weight: 700; border-top: 1px solid #000000; background: #f8fafc;">
-                            <td>(=) Variação de Saldo Retido</td>
-                            <td style="text-align: right;" class="font-tabular"><?php echo ($diferencaRecargaConsumo > 0 ? '+' : '') . 'R$ ' . number_format($diferencaRecargaConsumo, 2, ',', '.'); ?></td>
+                        <tr style="background: #f8fafc; border-top: 1px solid #000000;">
+                            <td><strong>(=) Saldo Retido em Carteiras</strong></td>
+                            <td style="text-align: center;" class="font-tabular"><strong><?php echo ($diferencaRecargaConsumo > 0 ? '+' : '') . 'R$ ' . number_format($diferencaRecargaConsumo, 2, ',', '.'); ?></strong></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Coluna Direita: Cascata Visual Completa do DRE + Estrutura de Custos e Despesas Operacionais -->
+        <!-- Coluna Direita: Legenda Completa do Gráfico Circular + Explicação Contábil de Saldos e Equações -->
         <div class="visual-col-right">
             <div>
                 <div class="panel-subtitle">
-                    <span>B. Estrutura Visual do DRE & Despesas por Categoria</span>
-                    <span class="font-tabular">Visão Consolidada</span>
+                    <span>Estrutura Visual do DRE & Despesas por Categoria (Legenda do Gráfico Circular)</span>
                 </div>
 
-                <?php
-                $linhasVisuaisDre = [
-                    [
-                        'rotulo' => '(+) Arrecadação Real na Conta (Recargas + Vendas Diretas)',
-                        'valor'  => $arrecadacaoLiquida,
-                        'cor'    => '#0f172a',
-                        'sub'    => false,
-                        'sinal'  => '',
-                    ],
-                    [
-                        'rotulo' => '(+) Receita Líquida de Vendas (Online + Presencial Balcão)',
-                        'valor'  => $receitaLiquida,
-                        'cor'    => '#1d4ed8',
-                        'sub'    => false,
-                        'sinal'  => '',
-                    ],
-                    [
-                        'rotulo' => '(-) Custo das Mercadorias Vendidas (CMV)',
-                        'valor'  => $cmv,
-                        'cor'    => '#d97706',
-                        'sub'    => true,
-                        'sinal'  => '- ',
-                    ],
-                    [
-                        'rotulo' => '(=) Lucro Bruto Operacional (' . number_format($margemBrutaPercent, 1, ',', '.') . '%)',
-                        'valor'  => $lucroBruto,
-                        'cor'    => '#0284c7',
-                        'sub'    => false,
-                        'sinal'  => '',
-                    ],
-                    [
-                        'rotulo' => '(-) Despesa: Pessoal & Salários',
-                        'valor'  => $despesasPessoal,
-                        'cor'    => '#dc2626',
-                        'sub'    => true,
-                        'sinal'  => '- ',
-                    ],
-                    [
-                        'rotulo' => '(-) Despesa: Administrativas',
-                        'valor'  => $despesasAdmin,
-                        'cor'    => '#64748b',
-                        'sub'    => true,
-                        'sinal'  => '- ',
-                    ],
-                    [
-                        'rotulo' => '(-) Despesa: Manutenção & Equipamentos',
-                        'valor'  => $despesasManutencao,
-                        'cor'    => '#ea580c',
-                        'sub'    => true,
-                        'sinal'  => '- ',
-                    ],
-                    [
-                        'rotulo' => '(-) Despesa: Vendas, Embalagens, Financeiras & Outras',
-                        'valor'  => $despesasVendas + $despesasFinanceiras + $despesasOutras,
-                        'cor'    => '#7c3aed',
-                        'sub'    => true,
-                        'sinal'  => '- ',
-                    ],
-                    [
-                        'rotulo' => '(=) Resultado Líquido Operacional (Lucro das Vendas)',
-                        'valor'  => $resultadoLiquido,
-                        'cor'    => $resultadoLiquido >= 0 ? '#15803d' : '#dc2626',
-                        'sub'    => false,
-                        'sinal'  => '',
-                    ],
-                    [
-                        'rotulo' => '(=) Resultado Financeiro Líquido em Conta (Caixa Real)',
-                        'valor'  => $resultadoCaixa,
-                        'cor'    => $resultadoCaixa >= 0 ? '#15803d' : '#dc2626',
-                        'sub'    => false,
-                        'sinal'  => '',
-                    ],
-                ];
-
-                foreach ($linhasVisuaisDre as $item):
-                    $larguraPct = min(100.0, max(1.5, (abs($item['valor']) / $maxReferenciaDre) * 100));
-                ?>
-                <div class="dre-bar-row">
-                    <div class="dre-bar-header">
-                        <span class="<?php echo $item['sub'] ? 'dre-bar-label-sub' : 'dre-bar-label'; ?>">
-                            <?php echo htmlspecialchars($item['rotulo'], ENT_QUOTES, 'UTF-8'); ?>
-                        </span>
-                        <span class="font-tabular" style="font-weight: <?php echo $item['sub'] ? '600' : '700'; ?>;">
-                            <?php echo $item['sinal']; ?>R$ <?php echo number_format((float)$item['valor'], 2, ',', '.'); ?>
-                        </span>
-                    </div>
-                    <div class="dre-bar-track">
-                        <div class="dre-bar-fill" style="width: <?php echo number_format($larguraPct, 2, '.', ''); ?>%; background-color: <?php echo $item['cor']; ?>;"></div>
-                    </div>
+                <!-- GRUPO 1 DA LEGENDA: FATIAS DE ENTRADAS E RECEITAS -->
+                <div class="legend-section-title" style="margin-top: 0;">
+                    <span>1. Fatias de Entradas: Vendas & Carteira no Gráfico</span>
+                    <span class="font-tabular">Valor (R$) | % Giro</span>
                 </div>
-                <?php endforeach; ?>
+                <table class="legend-table">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span class="legend-dot" style="background: #1d4ed8;"></span>
+                                (+) Vendas Online (Pedidos Web — <?php echo number_format($pctOnline, 1, ',', '.'); ?>% das vendas)
+                            </td>
+                            <td style="text-align: center; width: 34%;" class="font-tabular">
+                                R$ <?php echo number_format($consumoSaldoOnline, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($consumoSaldoOnline), 1, ',', '.'); ?>%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="legend-dot" style="background: #0284c7;"></span>
+                                (+) Vendas Balcão via Saldo PDV (<?php echo number_format($pctBalcaoSaldo, 1, ',', '.'); ?>% das vendas)
+                            </td>
+                            <td style="text-align: center;" class="font-tabular">
+                                R$ <?php echo number_format($consumoSaldoBalcao, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($consumoSaldoBalcao), 1, ',', '.'); ?>%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="legend-dot" style="background: #0d9488;"></span>
+                                (+) Vendas Diretas Balcão Din/Pix (<?php echo number_format($pctBalcaoDireto, 1, ',', '.'); ?>% das vendas)
+                            </td>
+                            <td style="text-align: center;" class="font-tabular">
+                                R$ <?php echo number_format($vendasDiretasBalcao, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($vendasDiretasBalcao), 1, ',', '.'); ?>%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="legend-dot" style="background: #15803d;"></span>
+                                (+) Saldo Líquido Retido em Carteiras (Recargas − Gasto)
+                            </td>
+                            <td style="text-align: center;" class="font-tabular">
+                                +R$ <?php echo number_format($saldoRetidoPositivo, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($saldoRetidoPositivo), 1, ',', '.'); ?>%)
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- GRUPO 2 DA LEGENDA: FATIAS DE SAÍDAS, CUSTOS (CMV) E DESPESAS POR CATEGORIA -->
+                <div class="legend-section-title">
+                    <span>2. Fatias de Saídas: Custos (CMV) & Despesas no Gráfico</span>
+                    <span class="font-tabular">Valor (R$) | % Giro</span>
+                </div>
+                <table class="legend-table">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span class="legend-dot" style="background: #d97706;"></span>
+                                (-) Custo das Mercadorias Vendidas (CMV — <?php echo number_format($pctCmv, 1, ',', '.'); ?>% das vendas)
+                            </td>
+                            <td style="text-align: center; width: 34%;" class="font-tabular">
+                                - R$ <?php echo number_format($cmv, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($cmv), 1, ',', '.'); ?>%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="legend-dot" style="background: #dc2626;"></span>
+                                (-) Despesa: Pessoal & Salários
+                            </td>
+                            <td style="text-align: center;" class="font-tabular">
+                                - R$ <?php echo number_format($despesasPessoal, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($despesasPessoal), 1, ',', '.'); ?>%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="legend-dot" style="background: #475569;"></span>
+                                (-) Despesa: Administrativas
+                            </td>
+                            <td style="text-align: center;" class="font-tabular">
+                                - R$ <?php echo number_format($despesasAdmin, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($despesasAdmin), 1, ',', '.'); ?>%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="legend-dot" style="background: #ea580c;"></span>
+                                (-) Despesa: Manutenção & Equipamentos
+                            </td>
+                            <td style="text-align: center;" class="font-tabular">
+                                - R$ <?php echo number_format($despesasManutencao, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($despesasManutencao), 1, ',', '.'); ?>%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="legend-dot" style="background: #7c3aed;"></span>
+                                (-) Despesa: Vendas, Embalagens, Financeiras & Outras
+                            </td>
+                            <td style="text-align: center;" class="font-tabular">
+                                - R$ <?php echo number_format($despesasVendasFinOutras, 2, ',', '.'); ?> (<?php echo number_format($calcPctFatia($despesasVendasFinOutras), 1, ',', '.'); ?>%)
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <!-- Régua Visual de Destinação do Faturamento (CMV vs Despesas vs Resultado) -->
-            <div class="stacked-bar-box">
-                <div style="font-size: 6.9pt; font-weight: 700; text-transform: uppercase; color: #0f172a; margin-bottom: 3px;">
-                    Para onde foi cada R$ 100,00 de Vendas Líquidas no Período:
+            <!-- GRUPO 3 DA LEGENDA: EXPLICAÇÃO DOS SALDOS E RESULTADOS QUE NÃO SÃO FATIAS ISOLADAS -->
+            <div class="legend-explain-box">
+                <div style="font-size: 6.8pt; font-weight: 800; text-transform: uppercase; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin-bottom: 3px;">
+                    3. Explicação da Legenda — Saldos, Subtrações e Resultados do DRE (Equações Contábeis):
                 </div>
-                <div class="stacked-bar-track">
-                    <div style="width: <?php echo number_format($pctCmv, 2, '.', ''); ?>%; background: #d97706;" title="CMV"></div>
-                    <div style="width: <?php echo number_format($pctDespesas, 2, '.', ''); ?>%; background: #dc2626;" title="Despesas Operacionais"></div>
-                    <div style="width: <?php echo number_format($pctLucro, 2, '.', ''); ?>%; background: #15803d;" title="Lucro Líquido"></div>
+                <div style="margin-bottom: 3px; font-size: 6.45pt;">
+                    * Como o gráfico circular representa proporções positivas de giro (Entradas vs Saídas), os totalizadores, deduções e resultados líquidos (inclusive saldos negativos) são demonstrados abaixo:
                 </div>
-                <div class="stacked-legend font-tabular">
-                    <span><span class="legend-dot" style="background: #d97706;"></span><strong>CMV (Mercadorias):</strong> <?php echo number_format($pctCmv, 1, ',', '.'); ?>%</span>
-                    <span><span class="legend-dot" style="background: #dc2626;"></span><strong>Despesas Operacionais:</strong> <?php echo number_format($pctDespesas, 1, ',', '.'); ?>%</span>
-                    <span><span class="legend-dot" style="background: #15803d;"></span><strong>Margem Líquida Vendas:</strong> <?php echo number_format($margemLiquidaPercent, 1, ',', '.'); ?>%</span>
+                <div class="legend-explain-row font-tabular">
+                    <span>(=) Arrecadação Real na Conta (Recargas R$ <?php echo number_format($totalRecargas, 2, ',', '.'); ?> + Direto R$ <?php echo number_format($vendasDiretasBalcao, 2, ',', '.'); ?>):</span>
+                    <span>R$ <?php echo number_format($arrecadacaoLiquida, 2, ',', '.'); ?></span>
+                </div>
+                <div class="legend-explain-row font-tabular">
+                    <span>(=) Receita Líquida de Vendas (Online + Balcão − Estornos R$ <?php echo number_format($totalDeducoes, 2, ',', '.'); ?>):</span>
+                    <span>R$ <?php echo number_format($receitaLiquida, 2, ',', '.'); ?></span>
+                </div>
+                <div class="legend-explain-row font-tabular">
+                    <span>(=) Lucro Bruto Operacional (Vendas Líquidas − CMV | Margem <?php echo number_format($margemBrutaPercent, 1, ',', '.'); ?>%):</span>
+                    <span>R$ <?php echo number_format($lucroBruto, 2, ',', '.'); ?></span>
+                </div>
+                <div class="legend-explain-row font-tabular">
+                    <span>(=) Resultado Líquido das Vendas (Lucro Bruto − Despesas R$ <?php echo number_format($totalDespesas, 2, ',', '.'); ?> | <?php echo number_format($margemLiquidaPercent, 1, ',', '.'); ?>%):</span>
+                    <span>R$ <?php echo number_format($resultadoLiquido, 2, ',', '.'); ?></span>
+                </div>
+                <div class="legend-explain-row font-tabular" style="padding-top: 2px;">
+                    <span>(=) RESULTADO FINANCEIRO LÍQUIDO EM CONTA (Lucro Vendas + Saldo Retido):</span>
+                    <span>R$ <?php echo number_format($resultadoCaixa, 2, ',', '.'); ?></span>
                 </div>
             </div>
         </div>
@@ -986,18 +1027,57 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const ctxCanais = document.getElementById('chartCanaisVenda');
     if (ctxCanais) {
-        const valOnline      = <?php echo $consumoSaldoOnline; ?>;
-        const valBalcaoSaldo = <?php echo $consumoSaldoBalcao; ?>;
-        const valBalcaoDir   = <?php echo $vendasDiretasBalcao; ?>;
-        const somaTotal      = valOnline + valBalcaoSaldo + valBalcaoDir;
+        const valOnline       = <?php echo $consumoSaldoOnline; ?>;
+        const valBalcaoSaldo  = <?php echo $consumoSaldoBalcao; ?>;
+        const valBalcaoDir    = <?php echo $vendasDiretasBalcao; ?>;
+        const valSaldoRetido  = <?php echo $saldoRetidoPositivo; ?>;
+        const valCmv          = <?php echo $cmv; ?>;
+        const valDespPessoal  = <?php echo $despesasPessoal; ?>;
+        const valDespAdmin    = <?php echo $despesasAdmin; ?>;
+        const valDespManut    = <?php echo $despesasManutencao; ?>;
+        const valDespOutras   = <?php echo $despesasVendasFinOutras; ?>;
+
+        const valoresDre = [
+            valOnline,
+            valBalcaoSaldo,
+            valBalcaoDir,
+            valSaldoRetido,
+            valCmv,
+            valDespPessoal,
+            valDespAdmin,
+            valDespManut,
+            valDespOutras
+        ];
+
+        const somaTotal = valoresDre.reduce(function(acc, v) { return acc + v; }, 0);
 
         new Chart(ctxCanais, {
             type: 'doughnut',
             data: {
-                labels: ['Online (Cantina Web)', 'Balcão (Saldo PDV)', 'Balcão (Dinheiro/Pix)'],
+                labels: [
+                    '(+) Vendas Online (Cantina Web)',
+                    '(+) Vendas Balcão (Saldo PDV)',
+                    '(+) Vendas Diretas Balcão (Din/Pix)',
+                    '(+) Saldo Retido em Carteiras',
+                    '(-) Custo das Mercadorias (CMV)',
+                    '(-) Despesa: Pessoal & Salários',
+                    '(-) Despesa: Administrativas',
+                    '(-) Despesa: Manutenção & Equipamentos',
+                    '(-) Despesa: Vendas, Embalagens, Fin. & Outras'
+                ],
                 datasets: [{
-                    data: somaTotal > 0 ? [valOnline, valBalcaoSaldo, valBalcaoDir] : [1, 1, 1],
-                    backgroundColor: ['#1d4ed8', '#0284c7', '#15803d'],
+                    data: somaTotal > 0 ? valoresDre : [1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    backgroundColor: [
+                        '#1d4ed8',
+                        '#0284c7',
+                        '#0d9488',
+                        '#15803d',
+                        '#d97706',
+                        '#dc2626',
+                        '#475569',
+                        '#ea580c',
+                        '#7c3aed'
+                    ],
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
@@ -1014,12 +1094,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (somaTotal <= 0) return c.label + ': R$ 0,00 (0%)';
                                 const v = c.parsed;
                                 const pct = ((v / somaTotal) * 100).toFixed(1);
-                                return c.label + ': R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' (' + pct + '%)';
+                                return c.label + ': R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' (' + pct + '% do giro DRE)';
                             }
                         }
                     }
                 },
-                cutout: '60%'
+                cutout: '52%'
             }
         });
     }

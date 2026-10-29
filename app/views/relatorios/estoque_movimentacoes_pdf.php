@@ -810,6 +810,10 @@ $totalPaginas = count($paginas);
                 font-weight: 700 !important;
                 color: #000000 !important;
             }
+            .section-banner, .group-header, .section-banner *, .group-header * {
+                color: #ffffff !important;
+                background-color: #0f172a !important;
+            }
             .no-print-bar {
                 display: none !important;
             }

@@ -375,11 +375,11 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         /* Banners de Seção Escuros */
         .section-banner {
-            font-weight: 700;
+            font-weight: 700 !important;
             font-size: 8pt;
             text-transform: uppercase;
-            background: #0f172a;
-            color: #ffffff;
+            background: #0f172a !important;
+            color: #ffffff !important;
             padding: 3.5px 8px;
             margin-top: 8px;
             margin-bottom: 2px;
@@ -387,6 +387,10 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        .section-banner * {
+            color: #ffffff !important;
+            font-weight: 700 !important;
         }
 
         /* Tabelas Analíticas Oficiais (Estética Excel com Bordas Nítidas) */
@@ -479,9 +483,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         /* Assinaturas */
         .footer-assinaturas-box {
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 1.5px solid #000000;
+            margin-top: 32px;
+            padding-top: 4px;
+            border-top: none;
             display: flex;
             justify-content: space-between;
         }

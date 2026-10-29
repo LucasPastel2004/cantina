@@ -322,16 +322,20 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         /* Banners de Seção */
         .section-banner {
-            font-weight: 700;
+            font-weight: 700 !important;
             font-size: 7.5pt;
             letter-spacing: 0.02em;
             text-transform: uppercase;
-            background: #0f172a;
-            color: #ffffff;
+            background: #0f172a !important;
+            color: #ffffff !important;
             padding: 3px 8px;
             margin-top: 6px;
             margin-bottom: 4px;
             border-radius: 2px;
+        }
+        .section-banner * {
+            color: #ffffff !important;
+            font-weight: 700 !important;
         }
 
         /* Tabela Estilo Excel Oficial */
@@ -377,9 +381,9 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
 
         /* Assinaturas */
         .footer-assinaturas-box {
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 1.5px solid #000000;
+            margin-top: 32px;
+            padding-top: 4px;
+            border-top: none;
             display: flex;
             justify-content: space-between;
         }
@@ -401,13 +405,6 @@ $logoDataUri = \App\Services\PdfService::getLogoDataUri(false);
             display: flex;
             justify-content: space-between;
             border-top: 1px solid #000000;
-            padding-top: 3px;
-        }
-            font-size: 6.8pt;
-            color: #64748b;
-            display: flex;
-            justify-content: space-between;
-            border-top: 1px solid #cbd5e1;
             padding-top: 3px;
         }
     </style>
